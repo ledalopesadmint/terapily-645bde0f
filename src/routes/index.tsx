@@ -1052,7 +1052,7 @@ function LandingPage() {
               </div>
 
               {/* ─── Practice — destacado ─── */}
-              <div className="group relative flex flex-col rounded-2xl bg-cream p-8 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5),0_0_0_1px_rgba(245,239,229,0.1)] ring-2 ring-terracotta/40 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6),0_0_0_1px_rgba(192,108,84,0.3)] hover:ring-terracotta/60">
+              <div className="group relative flex flex-col rounded-2xl bg-cream p-10 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5),0_0_0_1px_rgba(245,239,229,0.1)] ring-2 ring-terracotta/40 transition-all duration-300 ease-out md:scale-[1.05] hover:z-10 hover:scale-[1.11] hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6),0_0_0_1px_rgba(192,108,84,0.3)] hover:ring-terracotta/60">
                 {/* Badge "Most chosen" */}
                 <span
                   className="absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-terracotta px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-[0_8px_20px_-6px_rgba(192,108,84,0.6)]"
