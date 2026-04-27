@@ -81,7 +81,7 @@ function LandingPage() {
 
             <h1 className="mt-10 font-display text-[2.75rem] leading-[1.02] tracking-tight text-navy md:text-[5.25rem]">
               Therapeutic tools <br className="hidden md:block" />
-              your clients <em className="italic font-display">actually</em> finish.
+              your clients <em className="italic font-display text-terracotta">actually</em> finish.
             </h1>
 
             <p className="mx-auto mt-10 max-w-2xl text-base leading-[1.65] text-navy/75 md:text-lg">
