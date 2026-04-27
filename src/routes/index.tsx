@@ -381,7 +381,8 @@ function LandingPage() {
             <div className="text-center">
               <Eyebrow tone="sage">Three ways to use any activity</Eyebrow>
               <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-                Your session. Your call.
+                Your <em className="italic font-display text-terracotta">session.</em>{" "}
+                Your <em className="italic font-display text-terracotta">call.</em>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
                 Every activity in Terapily — a validated scale, a CBT
@@ -392,21 +393,24 @@ function LandingPage() {
 
             <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
               <ModeCard
+                icon={Stethoscope}
                 tag="Mode 01"
                 title="In session"
-                body="Run the activity live on your screen, on a tablet, or read the items aloud. Scoring and report appear before the client leaves the room."
+                body='Run the activity <strong class="font-display italic text-terracotta">live</strong> on your screen, on a tablet, or read the items aloud. Scoring and report appear <strong class="font-display italic text-terracotta">before</strong> the client leaves the room.'
                 useCase="Use when you want to anchor a clinical decision in the same hour."
               />
               <ModeCard
+                icon={Send}
                 tag="Mode 02"
                 title="Sent home"
-                body="Generate a secure single-use link. Your client opens it on any device — no account, no app to download, no password to forget. Default link expiry: 24 hours."
+                body='Generate a <strong class="font-display italic text-terracotta">secure single-use link.</strong> Your client opens it on any device — no account, no app to download, no password to forget. Default link expiry: <strong class="font-display italic text-terracotta">24 hours.</strong>'
                 useCase="Use for between-session homework, weekly tracking, intake forms."
               />
               <ModeCard
+                icon={Repeat}
                 tag="Mode 03"
                 title="Both"
-                body="Apply it together in session, then send the same activity home for repeat measurement. Results stack into a single timeline on the patient&rsquo;s record."
+                body='Apply it together in session, then send the same activity home for <strong class="font-display italic text-terracotta">repeat measurement.</strong> Results stack into a <strong class="font-display italic text-terracotta">single timeline</strong> on the patient&rsquo;s record.'
                 useCase="Use to measure change between two points without re-explaining the tool."
               />
             </div>
