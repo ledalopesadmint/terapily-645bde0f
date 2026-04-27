@@ -703,18 +703,18 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
             </p>
 
             <ul className="mt-8 flex-1 space-y-3 text-sm">
-              {PRICING_FEATURES.map((f) => (
-                <PricingRow
-                  key={f.label}
-                  label={f.label}
-                  value={f.practice}
-                  highlight={
-                    typeof f.basic !== typeof f.practice ||
-                    (typeof f.basic === "string" && f.basic !== f.practice) ||
-                    (typeof f.basic === "boolean" && f.basic !== f.practice)
-                  }
-                />
-              ))}
+              {PRICING_FEATURES.map((f) => {
+                const differs =
+                  (f.basic as string | boolean) !== (f.practice as string | boolean);
+                return (
+                  <PricingRow
+                    key={f.label}
+                    label={f.label}
+                    value={f.practice}
+                    highlight={differs}
+                  />
+                );
+              })}
             </ul>
 
             <Link
