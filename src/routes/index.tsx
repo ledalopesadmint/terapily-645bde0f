@@ -41,18 +41,6 @@ function SatelliteIcon({
   );
 }
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: `${BRAND.name} · ${BRAND.tagline}` },
-      { name: "description", content: BRAND.description },
-      { property: "og:title", content: `${BRAND.name} · ${BRAND.tagline}` },
-      { property: "og:description", content: BRAND.description },
-    ],
-  }),
-  component: LandingPage,
-});
-
 function ProblemCardMobile({
   gap,
   before,
@@ -105,6 +93,18 @@ function ProblemCardMobile({
     </div>
   );
 }
+
+export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: `${BRAND.name} · ${BRAND.tagline}` },
+      { name: "description", content: BRAND.description },
+      { property: "og:title", content: `${BRAND.name} · ${BRAND.tagline}` },
+      { property: "og:description", content: BRAND.description },
+    ],
+  }),
+  component: LandingPage,
+});
 
 function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth();
