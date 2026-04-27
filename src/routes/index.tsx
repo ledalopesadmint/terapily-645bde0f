@@ -420,36 +420,62 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 5 · HOW IT WORKS — 4 steps */}
         {/* ============================================================ */}
-        <section id="how-it-works" className="mx-auto max-w-5xl px-6 py-16">
-          <div className="text-center">
-            <Eyebrow>How it works</Eyebrow>
-            <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-              From assignment to audit trail in four steps.
-            </h2>
-          </div>
+        <section id="how-it-works" className="bg-cream-tan/40 border-t border-border/60">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <div className="text-center">
+              <Eyebrow tone="terracotta">How it works</Eyebrow>
+              <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
+                From <em className="italic font-display text-terracotta">assignment</em> to{" "}
+                <em className="italic font-display text-terracotta">audit trail</em>{" "}
+                in four steps.
+              </h2>
+            </div>
 
-          <ol className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-4">
-            <Step
-              number="01"
-              title="Pick the activity"
-              body="Search by name (PHQ-9), category (anxiety), or population (adolescents). Choose any of the three delivery modes."
-            />
-            <Step
-              number="02"
-              title="Send or apply"
-              body="Apply it on your device, or click Send. The patient gets one secure link by email — or copy it and share on any channel. No signup, no app install."
-            />
-            <Step
-              number="03"
-              title="Auto-scored"
-              body="Submission triggers scoring, severity bands, and a one-page report. You get notified when it lands."
-            />
-            <Step
-              number="04"
-              title="On the record"
-              body="Results live on the patient&rsquo;s timeline with a tamper-evident audit trail. Export to PDF or attach to your EHR anytime."
-            />
-          </ol>
+            {/* Linha conectora horizontal — só desktop */}
+            <div className="relative mt-20">
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute left-[12.5%] right-[12.5%] top-9 hidden md:block"
+              >
+                <svg className="h-2 w-full" preserveAspectRatio="none" viewBox="0 0 100 2">
+                  <line
+                    x1="0" y1="1" x2="100" y2="1"
+                    stroke="currentColor"
+                    className="text-terracotta/30"
+                    strokeWidth="0.4"
+                    strokeDasharray="1.2 1.2"
+                  />
+                </svg>
+              </div>
+
+              <ol className="relative grid grid-cols-1 gap-12 md:grid-cols-4 md:gap-6">
+                <Step
+                  icon={Search}
+                  number="01"
+                  title="Pick the activity"
+                  body='Search by <strong class="font-display italic text-terracotta">name</strong> (PHQ-9), <strong class="font-display italic text-terracotta">category</strong> (anxiety), or <strong class="font-display italic text-terracotta">population</strong> (adolescents). Choose any of the three delivery modes.'
+                />
+                <Step
+                  icon={Send}
+                  number="02"
+                  title="Send or apply"
+                  body='Apply it on your device, or click <strong class="font-display italic text-terracotta">Send.</strong> The patient gets one secure link by email — or copy and share on any channel. <strong class="font-display italic text-terracotta">No signup, no app.</strong>'
+                />
+                <Step
+                  icon={Sparkles}
+                  number="03"
+                  title="Auto-scored"
+                  body='Submission triggers scoring, <strong class="font-display italic text-terracotta">severity bands,</strong> and a <strong class="font-display italic text-terracotta">one-page report.</strong> You get notified when it lands.'
+                />
+                <Step
+                  icon={ShieldCheck}
+                  number="04"
+                  title="On the record"
+                  body='Results live on the patient&rsquo;s timeline with a <strong class="font-display italic text-terracotta">tamper-evident audit trail.</strong> Export to PDF or attach to your EHR anytime.'
+                />
+              </ol>
+            </div>
+          </div>
         </section>
 
         {/* ============================================================ */}
