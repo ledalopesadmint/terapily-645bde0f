@@ -1233,21 +1233,28 @@ function LandingPage() {
       {/* ============================================================ */}
       {/* FOOTER */}
       {/* ============================================================ */}
-      <footer className="border-t border-border/60">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 text-xs text-muted-foreground">
-          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p>© {new Date().getFullYear()} {BRAND.name}. Built with clinical rigor, one decision at a time.</p>
-            <p className="font-medium">{BRAND.tagline}</p>
-          </div>
-          <div className="border-t border-border/40 pt-6 text-center sm:text-left">
-            <p>TLS 1.3 in transit · AES-256-GCM at rest · Built to support HIPAA compliance</p>
-            <p className="mt-2">
-              Terapily is a software platform for licensed mental health
-              clinicians. It does not provide medical, legal, or
-              regulatory advice. Clinical judgment always belongs to
-              the clinician.
+      <footer className="border-t border-border/60 bg-cream-tan/40">
+        <div className="mx-auto max-w-6xl px-6 py-8">
+          {/* Linha 1 — identidade + navegação */}
+          <div className="flex flex-col items-center gap-4 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+            <p className="flex items-center gap-2">
+              <span className="font-display text-base lowercase text-navy">{BRAND.name}</span>
+              <span className="text-muted-foreground/50">·</span>
+              <span className="italic">{BRAND.tagline}</span>
             </p>
+            <nav className="flex items-center gap-5 font-medium">
+              <a href="#pricing" className="transition-colors hover:text-navy">Pricing</a>
+              <a href="#faq" className="transition-colors hover:text-navy">FAQ</a>
+              <span className="text-muted-foreground/40">© {new Date().getFullYear()}</span>
+            </nav>
           </div>
+
+          {/* Linha 2 — specs + disclaimer condensados */}
+          <p className="mt-5 border-t border-border/40 pt-4 text-center text-[0.7rem] leading-relaxed text-muted-foreground/80 sm:text-left">
+            TLS 1.3 · AES-256-GCM · Built to support HIPAA compliance
+            <span className="mx-2 text-muted-foreground/40">·</span>
+            Software for licensed clinicians. Not medical, legal, or regulatory advice — clinical judgment belongs to the clinician.
+          </p>
         </div>
       </footer>
     </div>
