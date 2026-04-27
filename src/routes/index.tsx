@@ -66,7 +66,6 @@ function LandingPage() {
         <RoiCalculator primaryCtaTo={primaryCtaTo} />
         <Features />
         <Pricing primaryCtaTo={primaryCtaTo} />
-        <SocialProof />
         <Faq />
         <ClosingCta primaryCtaTo={primaryCtaTo} primaryCtaLabel={primaryCtaLabel} />
       </main>
@@ -279,7 +278,7 @@ const SOLUTION_PHASES = [
   {
     n: "In session",
     title: "Co-build the board, live.",
-    body: "Drag situation → thought → emotion → body → behavior cards onto a shared canvas. Pull from a 200-card CBT vocabulary deck. Your client watches their own pattern emerge.",
+    body: "Drag situation → thought → emotion → body → behavior cards onto a shared canvas. Pull from a clinically authored CBT vocabulary deck. Your client watches their own pattern emerge.",
   },
   {
     n: "End of session",
@@ -576,7 +575,7 @@ const FEATURES = [
   {
     eyebrow: "Therapeutic boards",
     title: "Built around how CBT actually works.",
-    body: "Anxiety Loop today. Cognitive Distortion sorter, Behavior Activation tracker, and Emotion Wheel rolling out through Q3. Every board co-designed with practicing clinicians — never with a generic content team.",
+    body: "Anxiety Loop today. New boards added based on what your practice asks for — every one co-designed with practicing clinicians, never with a generic content team.",
   },
   {
     eyebrow: "Clinical reports",
@@ -644,15 +643,6 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
           </p>
         </div>
 
-        {/* Founding 100 banner */}
-        <div className="mx-auto mt-10 max-w-2xl rounded-lg border border-secondary/40 bg-secondary/10 px-6 py-4 text-center">
-          <p className="text-sm text-foreground">
-            <span className="font-display text-base">Founding 100 offer</span> — first 100 Practice
-            subscribers lock in <span className="font-medium">$49/month for life</span>.{" "}
-            <span className="font-medium text-secondary">23 spots left.</span>
-          </p>
-        </div>
-
         <div className="mt-12 grid gap-6 md:grid-cols-2 md:items-stretch">
           {/* BASIC */}
           <article className="flex flex-col rounded-lg border border-border/60 bg-background p-8">
@@ -689,15 +679,10 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
             </span>
 
             <Eyebrow tone="sage">Practice</Eyebrow>
-            <div className="mt-4 flex items-baseline gap-3">
-              <p className="font-display text-5xl text-foreground">
-                $79
-                <span className="text-base font-sans text-muted-foreground"> / month</span>
-              </p>
-              <span className="rounded-full bg-mauve/20 px-2 py-1 text-[0.65rem] font-medium uppercase tracking-[0.08em] text-[oklch(0.4_0.04_0)]">
-                or $49/mo · founding 100
-              </span>
-            </div>
+            <p className="mt-4 font-display text-5xl text-foreground">
+              $79
+              <span className="text-base font-sans text-muted-foreground"> / month</span>
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">
               Everything in Basic, plus the features full-time clinicians ask for first.
             </p>
@@ -724,7 +709,7 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
               Start Practice free for {TRIAL_DURATION_DAYS} days
             </Link>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              No credit card · Lock in $49/mo if you&rsquo;re in the first 100
+              {TRIAL_DURATION_DAYS}-day free trial · No credit card
             </p>
           </article>
         </div>
@@ -769,78 +754,6 @@ function PricingRow({
         {isBool ? (value ? "✓" : "—") : value}
       </span>
     </li>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/* 09 · Social Proof                                                          */
-/* -------------------------------------------------------------------------- */
-
-const QUOTES = [
-  {
-    quote:
-      "My teen clients actually engage with the board. Seeing the report makes them feel ownership of their own thinking.",
-    name: "L. M., LCSW",
-    state: "California",
-  },
-  {
-    quote:
-      "I save about 12 minutes per session on documentation. That's a full extra client per week.",
-    name: "R. K., LMFT",
-    state: "Texas",
-  },
-  {
-    quote:
-      "The encryption and audit log gave my supervisor everything she needed in one conversation. We were live in a week.",
-    name: "J. P., PsyD",
-    state: "New York",
-  },
-] as const;
-
-const STATES = ["CA", "NY", "TX", "FL", "IL", "MA", "CO", "WA"] as const;
-
-function SocialProof() {
-  return (
-    <section className="mx-auto max-w-6xl px-6 py-24">
-      <div className="mx-auto max-w-2xl text-center">
-        <Eyebrow>From practicing clinicians</Eyebrow>
-        <h2 className="mt-4 font-display text-4xl text-foreground md:text-5xl">
-          Trusted in private practices across the U.S.
-        </h2>
-      </div>
-
-      <div className="mt-14 grid gap-8 md:grid-cols-3">
-        {QUOTES.map((q) => (
-          <figure
-            key={q.name}
-            className="flex h-full flex-col rounded-lg border border-border/60 bg-card/40 p-8"
-          >
-            <blockquote className="flex-1 font-display text-xl leading-snug text-foreground">
-              &ldquo;{q.quote}&rdquo;
-            </blockquote>
-            <figcaption className="mt-6 text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{q.name}</span> · {q.state}
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-
-      <div className="mt-16 text-center">
-        <Eyebrow tone="sage">Practiced in</Eyebrow>
-        <ul className="mt-4 flex flex-wrap items-center justify-center gap-4 font-display text-lg text-muted-foreground">
-          {STATES.map((s, i) => (
-            <li key={s} className="flex items-center gap-4">
-              <span>{s}</span>
-              {i < STATES.length - 1 && (
-                <span className="text-border" aria-hidden="true">
-                  ·
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
   );
 }
 
