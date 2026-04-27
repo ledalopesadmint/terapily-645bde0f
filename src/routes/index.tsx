@@ -773,39 +773,39 @@ function LandingPage() {
               </div>
             </div>
 
-            <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-cream/10 bg-cream/10 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-navy/10 bg-navy/10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.5)] md:grid-cols-2 lg:grid-cols-3">
               <TrustCard
-                index="01"
+                icon={Lock}
                 title="Encryption you can name"
                 proof="AES-256-GCM · TLS 1.3 · RLS"
                 body="At rest and in transit. Per-workspace data isolation enforced at the database row level. No shared tenant tables."
               />
               <TrustCard
-                index="02"
+                icon={FileSignature}
                 title="A signed BAA, on request"
                 proof="Plain-language BAA"
                 body="Business Associate Agreement available before you sign up, with a list of every subprocessor that touches PHI."
               />
               <TrustCard
-                index="03"
+                icon={ScrollText}
                 title="Append-only audit trail"
                 proof="Actor · timestamp · target"
                 body="Every read, edit, send, and export of patient data is logged. Logs cannot be modified or deleted from the app."
               />
               <TrustCard
-                index="04"
+                icon={Link2}
                 title="Magic link, no patient account"
                 proof="SHA-256 hash · 24h expiry"
                 body="Patients access activities through a single-use link. No email/password store. No mobile app to lose."
               />
               <TrustCard
-                index="05"
+                icon={Clock}
                 title="Configurable retention"
                 proof="6-year HIPAA floor"
                 body="You set how long records live. Auto-purge with a downloadable JSON+PDF export sent 30 days before any deletion."
               />
               <TrustCard
-                index="06"
+                icon={Download}
                 title="Your data, exportable"
                 proof="JSON + PDF · within 7 days"
                 body="Cancel any time and request a full archive — raw data and human-readable records. No exit fee, no negotiation."
