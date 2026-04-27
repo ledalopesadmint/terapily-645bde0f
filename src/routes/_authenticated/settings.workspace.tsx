@@ -166,7 +166,6 @@ function WorkspaceSettingsPage() {
           ) : (
             <ul className="divide-y divide-border/60">
               {members.map((m) => {
-                const profile = m.profile as { full_name: string | null } | null;
                 return (
                   <li
                     key={m.user_id}
@@ -174,7 +173,7 @@ function WorkspaceSettingsPage() {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">
-                        {profile?.full_name ?? "Sem nome"}
+                        {m.full_name ?? "Sem nome"}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Entrou em{" "}
