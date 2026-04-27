@@ -810,8 +810,8 @@ const FAQS = [
     pillar: "Encrypted by design",
   },
   {
-    q: "Are you HIPAA-compliant?",
-    a: "Terapily is built to HIPAA's security requirements: encryption at rest, access controls, audit logging, and per-workspace isolation. We sign BAAs on the Practice plan on request.",
+    q: "How does Terapily support HIPAA compliance?",
+    a: "Terapily is built to the HIPAA Security Rule. Technical controls: TLS 1.3 in transit, AES-GCM-256 at rest, per-workspace isolation at the database, mandatory MFA on Practice, 15-minute idle auto-logout, full audit logging, 30-day soft-delete recovery. Administrative controls: signed BAAs with every PHI subprocessor (database, email, hosting), designated Privacy and Security Officers, written sanction and contingency policies, formal Risk Assessment. We sign a BAA with you at signup on the Practice plan — before you create your first patient.",
     pillar: "Audit-ready",
   },
   {
