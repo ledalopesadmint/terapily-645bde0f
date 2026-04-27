@@ -1,6 +1,6 @@
 import type { ReactNode, ComponentType } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Stethoscope, Send, Repeat, Search, Sparkles, ShieldCheck, Lock, FileSignature, ScrollText, Link2, Clock, Download } from "lucide-react";
+import { Stethoscope, Send, Repeat, Search, Sparkles, ShieldCheck, Lock, FileSignature, ScrollText, Link2, Clock, Download, Library, Zap, type LucideIcon } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { BRAND, TRIAL_DURATION_DAYS } from "@/lib/constants";
@@ -156,9 +156,9 @@ function LandingPage() {
         <section className="bg-cream-tan">
           <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              <TrustFactInverted label="Validated scales" value="35" sub="Grounded in published evidence." />
-              <TrustFactInverted label="Score to report" value="<3s" sub="Less admin. More care." />
-              <TrustFactInverted label="Encryption at rest" value="AES-256" sub="Enterprise-grade security." />
+              <TrustFactInverted icon={Library} label="Validated scales" value="35" sub="Grounded in published evidence." />
+              <TrustFactInverted icon={Zap} label="Score to report" value="<3s" sub="Less admin. More care." />
+              <TrustFactInverted icon={ShieldCheck} label="Encryption at rest" value="AES-256" sub="Enterprise-grade security." />
             </div>
           </div>
         </section>
@@ -1291,16 +1291,26 @@ function TrustFactInverted({
   value,
   label,
   sub,
+  icon: Icon,
 }: {
   value: string;
   label: string;
   sub?: string;
+  icon?: LucideIcon;
 }) {
   return (
-    <div className="rounded-[1.5rem] bg-navy px-7 py-7 shadow-[0_6px_20px_-10px_oklch(0.28_0.027_251_/_0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_-12px_oklch(0.28_0.027_251_/_0.38)]">
-      <p className="font-display text-4xl leading-none text-cream md:text-[2.75rem]">
-        {value}
-      </p>
+    <div className="group rounded-[1.5rem] bg-navy px-7 py-7 shadow-[0_6px_20px_-10px_oklch(0.28_0.027_251_/_0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_-12px_oklch(0.28_0.027_251_/_0.38)]">
+      <div className="flex items-start justify-between gap-4">
+        <p className="font-display text-4xl leading-none text-cream md:text-[2.75rem]">
+          {value}
+        </p>
+        {Icon && (
+          <Icon
+            className="h-6 w-6 shrink-0 text-cream/90 transition-transform duration-300 group-hover:scale-110"
+            strokeWidth={1.5}
+          />
+        )}
+      </div>
       <p
         className="mt-4 text-[0.65rem] font-bold uppercase text-cream/85"
         style={{ letterSpacing: "0.14em" }}
