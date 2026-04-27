@@ -1254,30 +1254,64 @@ function KeyStat({ value, label }: { value: string; label: string }) {
 }
 
 function StackRow({
+  index,
   role,
   tool,
   highlight,
 }: {
+  index?: string;
   role: string;
   tool: string;
   highlight?: boolean;
 }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 border-b border-border/40 pb-3 last:border-b-0 last:pb-0">
-      <span
-        className="text-sm text-muted-foreground"
-        dangerouslySetInnerHTML={{ __html: role }}
-      />
+    <li
+      className={
+        "group relative flex items-center gap-4 py-4 transition-colors " +
+        (highlight ? "" : "")
+      }
+    >
+      {/* Index */}
+      {index && (
+        <span
+          aria-hidden
+          className={
+            "w-8 shrink-0 font-display text-sm italic " +
+            (highlight ? "text-terracotta" : "text-muted-foreground/50")
+          }
+        >
+          {index}
+        </span>
+      )}
+
+      {/* Role */}
       <span
         className={
-          highlight
-            ? "shrink-0 text-sm font-medium text-primary"
-            : "shrink-0 text-sm font-medium text-foreground"
+          "flex-1 text-sm leading-snug " +
+          (highlight ? "text-foreground" : "text-muted-foreground")
+        }
+        dangerouslySetInnerHTML={{ __html: role }}
+      />
+
+      {/* Tool badge */}
+      <span
+        className={
+          "inline-flex shrink-0 items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium tracking-wide " +
+          (highlight
+            ? "border-terracotta/30 bg-terracotta/10 text-terracotta"
+            : "border-border/60 bg-background/60 text-foreground/70")
         }
       >
+        <span
+          aria-hidden
+          className={
+            "h-1.5 w-1.5 rounded-full " +
+            (highlight ? "bg-terracotta" : "bg-muted-foreground/40")
+          }
+        />
         {tool}
       </span>
-    </div>
+    </li>
   );
 }
 
