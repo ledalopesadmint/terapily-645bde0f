@@ -6,11 +6,11 @@ Documento vivo com as regras do Brand Book v3 traduzidas para o código.
 
 ```css
 :root {
-  --sage:     oklch(0.65 0.04 152);   /* #7E9B86 */
-  --navy:     oklch(0.22 0.02 232);   /* #1F2A36 */
-  --cream:    oklch(0.95 0.01 80);    /* #F4EFE6 */
-  --mauve:    oklch(0.70 0.04 0);     /* #B89BA3 */
-  --charcoal: oklch(0.32 0.01 232);   /* #3A3F47 */
+  --sage:     oklch(0.661 0.045 153.6);  /* #7E9B86 */
+  --navy:     oklch(0.280 0.027 251.0);  /* #1F2A36 */
+  --cream:    oklch(0.954 0.013 82.4);   /* #F4EFE6 */
+  --mauve:    oklch(0.718 0.036 359.6);  /* #B89BA3 */
+  --charcoal: oklch(0.366 0.015 259.8);  /* #3A3F47 */
 }
 ```
 
