@@ -74,7 +74,7 @@ function LandingPage() {
         {/* 1 · HERO — Cream editorial, texto Navy, eyebrow terracotta   */}
         {/* ============================================================ */}
         <section className="relative overflow-hidden bg-background">
-          <div className="relative mx-auto max-w-5xl px-6 pt-12 pb-28 text-center md:pt-16 md:pb-32">
+          <div className="relative mx-auto max-w-5xl px-6 pt-12 pb-12 text-center md:pt-16 md:pb-16">
             <Eyebrow tone="terracotta" className="text-[0.78rem]">
               Every activity grounded in published evidence
             </Eyebrow>
