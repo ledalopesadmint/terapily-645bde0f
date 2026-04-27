@@ -45,48 +45,46 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Terapily · Therapeutic tools your clients actually finish." },
+      { title: "Terapily — Therapeutic tools your clients actually finish." },
       {
         name: "description",
         content:
-          "Evidence-based CBT activities and validated scales — auto-scored, securely shared, and ready to send to your existing EHR.",
+          "CBT activities and validated scales (PHQ-9, GAD-7, PCL-5…) — auto-scored, sent by magic link, exportable to your EHR. HIPAA-aligned, BAA on request.",
       },
+      { name: "keywords", content: "CBT tools, validated scales, PHQ-9, GAD-7, therapy homework, magic link, HIPAA, audit trail, EHR export, therapist software" },
       { name: "author", content: "Terapily" },
       { name: "theme-color", content: "#1F2A36" },
+      { name: "robots", content: "index, follow" },
       // Open Graph
       { property: "og:site_name", content: "Terapily" },
       {
         property: "og:title",
-        content: "Terapily · Therapeutic tools your clients actually finish.",
+        content: "Terapily — Therapeutic tools your clients actually finish.",
       },
       {
         property: "og:description",
         content:
-          "Evidence-based CBT activities and validated scales — auto-scored, securely shared, and ready to send to your existing EHR.",
+          "CBT activities and validated scales (PHQ-9, GAD-7, PCL-5…) — auto-scored, sent by magic link, exportable to your EHR. HIPAA-aligned, BAA on request.",
       },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "en_US" },
       { property: "og:image", content: "/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Terapily — therapeutic tools" },
+      { property: "og:image:alt", content: "Terapily — therapeutic tools your clients actually finish" },
       // Twitter
       { name: "twitter:card", content: "summary_large_image" },
       {
         name: "twitter:title",
-        content: "Terapily · Therapeutic tools your clients actually finish.",
+        content: "Terapily — Therapeutic tools your clients actually finish.",
       },
       {
         name: "twitter:description",
         content:
-          "Evidence-based CBT activities and validated scales — auto-scored and securely shared.",
+          "CBT activities and validated scales — auto-scored, sent by magic link, exportable to your EHR. HIPAA-aligned, BAA on request.",
       },
       { name: "twitter:image", content: "/og-image.png" },
-      { property: "og:title", content: "Terapily · Therapeutic tools your clients actually finish." },
-      { name: "twitter:title", content: "Terapily · Therapeutic tools your clients actually finish." },
-      { name: "description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
-      { property: "og:description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
-      { name: "twitter:description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
+      { name: "twitter:image:alt", content: "Terapily — therapeutic tools your clients actually finish" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
