@@ -1011,25 +1011,25 @@ function ProblemRow({
 }) {
   const borderClass = isLast ? "" : "border-b border-border/60";
   return (
-    <div className={`group grid grid-cols-12 gap-0 transition-colors hover:bg-cream-tan/20 ${borderClass}`}>
+    <div className={`group grid grid-cols-12 gap-0 transition-colors ${borderClass}`}>
       {/* Coluna 1: gap */}
-      <div className="col-span-4 flex items-center px-6 py-7 md:px-8">
-        <p className="font-display text-xl text-foreground md:text-2xl">{gap}</p>
+      <div className="col-span-4 flex items-center bg-cream-tan/60 px-6 py-7 transition-colors group-hover:bg-cream-tan/90 md:px-8">
+        <p className="font-display text-xl text-navy md:text-2xl">{gap}</p>
       </div>
 
       {/* Coluna 2: antes */}
-      <div className="col-span-4 border-l border-border/60 px-6 py-7 md:px-8">
-        <p className="text-sm leading-relaxed text-muted-foreground line-through decoration-terracotta/30 decoration-1">
+      <div className="col-span-4 border-l border-border/60 bg-background px-6 py-7 transition-colors group-hover:bg-background/70 md:px-8">
+        <p className="text-sm leading-relaxed text-muted-foreground line-through decoration-terracotta/40 decoration-1">
           {before}
         </p>
       </div>
 
       {/* Coluna 3: depois */}
-      <div className="col-span-4 border-l border-border/60 bg-background/60 px-6 py-7 md:px-8">
+      <div className="col-span-4 border-l border-border/60 bg-terracotta/[0.06] px-6 py-7 transition-colors group-hover:bg-terracotta/[0.12] md:px-8">
         <div className="flex gap-3">
           <span
             aria-hidden="true"
-            className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-terracotta/15 text-terracotta"
+            className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-terracotta text-cream"
           >
             <svg
               className="h-3 w-3"
@@ -1043,7 +1043,7 @@ function ProblemRow({
               <path d="M5 13l4 4L19 7" />
             </svg>
           </span>
-          <p className="text-sm leading-relaxed text-foreground">{after}</p>
+          <p className="text-sm leading-relaxed text-navy font-medium">{after}</p>
         </div>
       </div>
     </div>
