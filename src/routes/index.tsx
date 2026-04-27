@@ -1222,3 +1222,4 @@ function PricingItem({ children }: { children: ReactNode }) {
     </li>
   );
 }
+
