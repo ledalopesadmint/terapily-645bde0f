@@ -1109,7 +1109,76 @@ function LandingPage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 11 · FAQ — 10 perguntas obrigatórias */}
+        {/* 11 · CLOSING CTA — antes do FAQ pra fechar a decisão */}
+        {/* ============================================================ */}
+        <section className="relative overflow-hidden border-t border-border/60 bg-navy">
+          {/* Decorative glyphs */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-16 -top-12 select-none font-display italic text-[18rem] leading-none text-cream/[0.04] md:text-[26rem]"
+          >
+            ✦
+          </div>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-20 -bottom-16 select-none font-display italic text-[18rem] leading-none text-terracotta/[0.06] md:text-[26rem]"
+          >
+            ⟶
+          </div>
+          {/* Soft radial glows */}
+          <div aria-hidden className="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-sage/15 blur-[140px]" />
+          <div aria-hidden className="pointer-events-none absolute right-1/3 bottom-0 h-[300px] w-[600px] rounded-full bg-terracotta/10 blur-[120px]" />
+
+          <div className="relative mx-auto max-w-3xl px-6 py-20 text-center md:py-24">
+            <Eyebrow tone="terracotta">Start when you&rsquo;re ready</Eyebrow>
+            <h2 className="mt-6 font-display text-4xl leading-[1.05] text-cream md:text-5xl lg:text-6xl">
+              The same activity.
+              <br className="hidden md:block" />
+              <span className="italic text-terracotta">In session, at home, or both.</span>
+            </h2>
+            <p className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-cream/75 md:text-lg">
+              Try Terapily for {TRIAL_DURATION_DAYS} days. No card.
+              No commitment. If it doesn&rsquo;t fit your practice,
+              walk away with your data.
+            </p>
+
+            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+              <Link
+                to={primaryCtaTo}
+                className="inline-flex items-center justify-center rounded-md bg-sage px-8 py-4 text-sm font-semibold text-cream shadow-[0_12px_28px_-6px_rgba(126,155,134,0.55)] transition-all hover:scale-[1.04] hover:bg-sage/90 hover:shadow-[0_18px_36px_-6px_rgba(126,155,134,0.7)]"
+              >
+                {ctaPrimaryLabel}
+              </Link>
+              {!isAuthenticated && (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center rounded-md border border-cream/25 bg-cream/[0.04] px-8 py-4 text-sm font-medium text-cream transition-colors hover:border-cream/50 hover:bg-cream/10"
+                >
+                  I already have an account
+                </Link>
+              )}
+            </div>
+
+            {/* Reassurance pills */}
+            <ul className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-cream/70">
+              <li className="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/[0.04] px-3 py-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-sage" />
+                No card required
+              </li>
+              <li className="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/[0.04] px-3 py-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-sage" />
+                Cancel anytime
+              </li>
+              <li className="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/[0.04] px-3 py-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-sage" />
+                Operates under HIPAA Security Rule
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* 12 · FAQ — limpeza de objeções residuais (último) */}
         {/* ============================================================ */}
         <section id="faq" className="mx-auto max-w-3xl px-6 py-16">
           <div className="text-center">
