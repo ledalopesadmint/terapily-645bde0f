@@ -575,7 +575,7 @@ const FEATURES = [
   {
     eyebrow: "Therapeutic boards",
     title: "Built around how CBT actually works.",
-    body: "Anxiety Loop today. Cognitive Distortion sorter, Behavior Activation tracker, and Emotion Wheel rolling out through Q3. Every board co-designed with practicing clinicians — never with a generic content team.",
+    body: "Anxiety Loop today. New boards added based on what your practice asks for — every one co-designed with practicing clinicians, never with a generic content team.",
   },
   {
     eyebrow: "Clinical reports",
