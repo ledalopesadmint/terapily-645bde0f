@@ -111,33 +111,33 @@ function SiteHeader({
   primaryCtaTo: "/dashboard" | "/signup";
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/40 bg-[oklch(0.95_0.01_80_/_0.85)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border/40 bg-[oklch(0.97_0.005_80_/_0.9)] backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Logo size="sm" />
         <nav className="flex items-center gap-6 text-sm">
           <a
             href="#pricing"
-            className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline"
+            className="hidden font-medium text-[var(--navy)]/70 transition-colors hover:text-[var(--navy)] sm:inline"
           >
             Pricing
           </a>
           <a
             href="#faq"
-            className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline"
+            className="hidden font-medium text-[var(--navy)]/70 transition-colors hover:text-[var(--navy)] sm:inline"
           >
             FAQ
           </a>
           {!isLoading && !isAuthenticated && (
             <Link
               to="/login"
-              className="text-muted-foreground transition-colors hover:text-foreground"
+              className="font-medium text-[var(--navy)]/70 transition-colors hover:text-[var(--navy)]"
             >
               Log in
             </Link>
           )}
           <Link
             to={primaryCtaTo}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
+            className="inline-flex items-center justify-center rounded-md bg-[var(--solar)] px-4 py-2 text-sm font-semibold text-[var(--navy)] shadow-sm transition-all hover:shadow-[var(--shadow-glow-solar)]"
           >
             {isAuthenticated ? "Dashboard" : "Start free trial"}
           </Link>
