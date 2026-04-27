@@ -36,15 +36,18 @@ function WorkspaceSettingsPage() {
 
   const isOwner = workspace?.role === "owner";
 
-  // Lista membros (RLS: só membros do mesmo workspace conseguem ler)
+  // Lista membros (RLS: só membros do mesmo workspace conseguem ler).
+  // Sem FK declarada entre workspace_members e profiles, fazemos 2 queries
+  // separadas (RLS de profiles permite admin ou self — em workspaces com
+  // múltiplos membros, ajustaremos a policy em M3+ junto com convites).
   const { data: members, isLoading: isLoadingMembers } = useQuery({
     queryKey: ["workspace-members", workspace?.id],
     enabled: !!workspace?.id,
     queryFn: async () => {
       if (!workspace?.id) return [];
-      const { data, error: err } = await supabase
+      const { data: mems, error: err } = await supabase
         .from("workspace_members")
-        .select("user_id, role, created_at, profile:profiles(full_name, avatar_url)")
+        .select("user_id, role, created_at")
         .eq("workspace_id", workspace.id)
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
@@ -52,7 +55,19 @@ function WorkspaceSettingsPage() {
         console.error("members fetch failed:", err);
         return [];
       }
-      return data ?? [];
+      const ids = (mems ?? []).map((m) => m.user_id);
+      if (ids.length === 0) return [];
+
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("id, full_name")
+        .in("id", ids);
+      const profMap = new Map((profs ?? []).map((p) => [p.id, p.full_name]));
+
+      return (mems ?? []).map((m) => ({
+        ...m,
+        full_name: profMap.get(m.user_id) ?? null,
+      }));
     },
   });
 
