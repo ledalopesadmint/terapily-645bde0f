@@ -1152,7 +1152,7 @@ function LandingPage() {
               {!isAuthenticated && (
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center rounded-md border border-cream/25 bg-cream/[0.04] px-8 py-4 text-sm font-medium text-cream transition-colors hover:border-cream/50 hover:bg-cream/10"
+                  className="inline-flex items-center justify-center rounded-md bg-cream px-8 py-4 text-sm font-semibold text-navy shadow-[0_12px_28px_-6px_rgba(244,239,230,0.35)] transition-all hover:scale-[1.04] hover:bg-cream/95 hover:shadow-[0_18px_36px_-6px_rgba(244,239,230,0.5)]"
                 >
                   I already have an account
                 </Link>
@@ -1160,17 +1160,17 @@ function LandingPage() {
             </div>
 
             {/* Reassurance pills */}
-            <ul className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-2 text-xs text-cream/70">
-              <li className="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/[0.04] px-3 py-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-sage" />
+            <ul className="mx-auto mt-10 flex max-w-2xl flex-wrap items-center justify-center gap-x-3 gap-y-2.5 text-xs font-medium text-cream">
+              <li className="inline-flex items-center gap-2 rounded-full border border-sage/40 bg-sage/15 px-4 py-2 shadow-[0_6px_18px_-8px_rgba(126,155,134,0.5)] transition-all hover:scale-[1.04] hover:border-sage/60 hover:bg-sage/25">
+                <span className="h-2 w-2 rounded-full bg-sage shadow-[0_0_8px_rgba(126,155,134,0.8)]" />
                 No card required
               </li>
-              <li className="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/[0.04] px-3 py-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-sage" />
+              <li className="inline-flex items-center gap-2 rounded-full border border-sage/40 bg-sage/15 px-4 py-2 shadow-[0_6px_18px_-8px_rgba(126,155,134,0.5)] transition-all hover:scale-[1.04] hover:border-sage/60 hover:bg-sage/25">
+                <span className="h-2 w-2 rounded-full bg-sage shadow-[0_0_8px_rgba(126,155,134,0.8)]" />
                 Cancel anytime
               </li>
-              <li className="inline-flex items-center gap-2 rounded-full border border-cream/15 bg-cream/[0.04] px-3 py-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-sage" />
+              <li className="inline-flex items-center gap-2 rounded-full border border-sage/40 bg-sage/15 px-4 py-2 shadow-[0_6px_18px_-8px_rgba(126,155,134,0.5)] transition-all hover:scale-[1.04] hover:border-sage/60 hover:bg-sage/25">
+                <span className="h-2 w-2 rounded-full bg-sage shadow-[0_0_8px_rgba(126,155,134,0.8)]" />
                 Operates under HIPAA Security Rule
               </li>
             </ul>
