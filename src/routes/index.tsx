@@ -870,15 +870,28 @@ function LandingPage() {
             </div>
 
             {/* ─── Comparison grid (desktop) ─── */}
-            <div className="relative mt-16 hidden md:block">
-              {/* Recommended badge — positioned above the Terapily column */}
+            <div className="relative mt-20 hidden px-4 pb-6 pt-2 md:block">
+              {/* ─── Floating "Recommended" card overlaying the Terapily column ─── */}
+              <div
+                aria-hidden
+                className="pointer-events-none absolute -top-4 bottom-2 z-10 rounded-3xl border-2 border-sage/50 bg-sage/15 shadow-[0_30px_60px_-20px_rgba(126,155,134,0.45),0_10px_30px_-10px_rgba(31,42,54,0.25)] backdrop-blur-sm transition-transform"
+                style={{
+                  left: "calc(4px + (100% - 8px) * 0.5652)",
+                  width: "calc((100% - 8px) * 0.2174)",
+                }}
+              />
+              {/* Recommended badge */}
               <span
-                className="absolute -top-3 z-10 whitespace-nowrap rounded-full bg-sage px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-lg"
-                style={{ left: "67.4%", transform: "translateX(-50%)" }}
+                className="absolute -top-7 z-20 whitespace-nowrap rounded-full bg-sage px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-lg"
+                style={{
+                  left: "calc(4px + (100% - 8px) * 0.6739)",
+                  transform: "translateX(-50%)",
+                }}
               >
                 ★ Recommended
               </span>
-              <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr] overflow-hidden rounded-3xl border border-border/60 shadow-[0_30px_80px_-50px_rgba(31,42,54,0.25)]">
+
+              <div className="relative grid grid-cols-[1.6fr_1fr_1fr_1fr] overflow-hidden rounded-3xl border border-border/60 shadow-[0_30px_80px_-50px_rgba(31,42,54,0.25)]">
                 {/* Header */}
                 <div className="bg-card/60 px-6 py-5 text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
                   Capability
@@ -886,7 +899,7 @@ function LandingPage() {
                 <div className="bg-card/60 px-6 py-5 text-center text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
                   Static PDF libraries
                 </div>
-                <div className="bg-sage/15 px-6 py-5 text-center">
+                <div className="relative z-20 px-6 py-5 text-center">
                   <span className="font-display text-lg italic text-navy">
                     Terapily
                   </span>
