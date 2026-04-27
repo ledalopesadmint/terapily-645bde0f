@@ -74,7 +74,7 @@ function LandingPage() {
         {/* 1 · HERO — Cream editorial, texto Navy, eyebrow terracotta   */}
         {/* ============================================================ */}
         <section className="relative overflow-hidden bg-background">
-          <div className="relative mx-auto max-w-5xl px-6 pt-12 pb-28 text-center md:pt-16 md:pb-32">
+          <div className="relative mx-auto max-w-5xl px-6 pt-12 pb-12 text-center md:pt-16 md:pb-16">
             <Eyebrow tone="terracotta" className="text-[0.78rem]">
               Every activity grounded in published evidence
             </Eyebrow>
@@ -118,7 +118,7 @@ function LandingPage() {
         {/* 1.5 · TRUST STRIP — Cream-tan + cards Navy editoriais         */}
         {/* ============================================================ */}
         <section className="bg-cream-tan">
-          <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
+          <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               <TrustFactInverted label="Validated scales" value="35" sub="Grounded in published evidence." />
               <TrustFactInverted label="Score to report" value="<3s" sub="Less admin. More care." />
