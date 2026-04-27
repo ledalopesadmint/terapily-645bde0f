@@ -502,15 +502,23 @@ function LandingPage() {
               <KeyStat value="100%" label="Original wording preserved" />
             </div>
 
-            <details className="group mx-auto mt-14 max-w-3xl overflow-hidden rounded-2xl border border-border/60 bg-cream-tan/40 text-left shadow-[0_18px_50px_-28px_oklch(0.28_0.027_251_/_0.35)] ring-1 ring-terracotta/10 transition-all hover:ring-terracotta/20">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-navy transition-colors hover:bg-cream-tan/70">
-                <span className="flex items-baseline gap-3">
-                  <span className="font-display text-xl italic text-terracotta">35</span>
-                  <span>See the full library of auto-scored assessments</span>
+          </div>
+
+          {/* Faixa navy full-width — trigger do accordion */}
+          <details className="group block w-full">
+            <summary className="flex w-full cursor-pointer list-none items-center justify-between gap-4 border-y border-navy bg-navy px-6 py-5 text-cream transition-colors hover:bg-navy/95 md:px-12">
+              <span className="flex items-center gap-5">
+                <span className="font-display text-3xl italic leading-none text-terracotta md:text-4xl">35</span>
+                <span className="text-xs font-medium uppercase tracking-[0.2em] md:text-sm">
+                  See the full library of auto-scored assessments
                 </span>
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-terracotta/10 text-terracotta transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
-              </summary>
-              <div className="space-y-8 border-t border-border/40 px-6 py-8">
+              </span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-terracotta/20 text-terracotta transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
+            </summary>
+
+            {/* Painel expandido — fundo cream-tan claro */}
+            <div className="bg-cream-tan/60 border-b border-border/60">
+              <div className="mx-auto max-w-5xl space-y-8 px-6 py-12 text-left md:px-12">
                 <ScaleCategory
                   title="Depression & Mood"
                   scales={[
@@ -599,8 +607,8 @@ function LandingPage() {
                   belongs to you.
                 </p>
               </div>
-            </details>
-          </div>
+            </div>
+          </details>
         </section>
 
         {/* ============================================================ */}
