@@ -607,8 +607,8 @@ function LandingPage() {
                   belongs to you.
                 </p>
               </div>
-            </details>
-          </div>
+            </div>
+          </details>
         </section>
 
         {/* ============================================================ */}
