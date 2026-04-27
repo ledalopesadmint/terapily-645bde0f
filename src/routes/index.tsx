@@ -709,7 +709,7 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
               Start Practice free for {TRIAL_DURATION_DAYS} days
             </Link>
             <p className="mt-3 text-center text-xs text-muted-foreground">
-              No credit card · Lock in $49/mo if you&rsquo;re in the first 100
+              {TRIAL_DURATION_DAYS}-day free trial · No credit card
             </p>
           </article>
         </div>
