@@ -835,7 +835,7 @@ function LandingPage() {
             ✓
           </div>
 
-          <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
+          <div className="relative mx-auto max-w-6xl px-6 pt-12 pb-20 md:pt-16 md:pb-28">
             <div className="text-center">
               <Eyebrow tone="mauve">Compared to alternatives</Eyebrow>
               <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
