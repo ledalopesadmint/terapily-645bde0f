@@ -1349,11 +1349,36 @@ function StackRow({
   );
 }
 
-function TrustCard({ title, body }: { title: string; body: string }) {
+function TrustCard({
+  index,
+  title,
+  body,
+  proof,
+}: {
+  index?: string;
+  title: string;
+  body: string;
+  proof?: string;
+}) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-sm">
-      <h3 className="font-display text-xl text-foreground">{title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
+    <div className="group relative bg-navy p-7 transition-colors hover:bg-navy/60 md:p-8">
+      <div className="flex items-start justify-between gap-4">
+        {index && (
+          <span className="font-display text-sm italic text-terracotta">
+            {index}
+          </span>
+        )}
+        {proof && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-sage">
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-sage" />
+            {proof}
+          </span>
+        )}
+      </div>
+      <h3 className="mt-5 font-display text-xl leading-tight text-cream">
+        {title}
+      </h3>
+      <p className="mt-3 text-sm leading-relaxed text-cream/65">{body}</p>
     </div>
   );
 }
