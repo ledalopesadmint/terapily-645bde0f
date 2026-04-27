@@ -291,7 +291,7 @@ function LandingPage() {
               <KeyStat value="100%" label="Original wording preserved" />
             </div>
 
-            <details className="group mx-auto mt-12 max-w-3xl rounded-lg border border-border/60 bg-background text-left">
+            <details className="group mx-auto mt-12 max-w-3xl rounded-2xl border border-border/60 bg-card/60 text-left backdrop-blur-sm">
               <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">
                 <span>See the full library of 35 auto-scored assessments</span>
                 <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
@@ -413,7 +413,7 @@ function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-card/40 p-8">
+            <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-8">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">
                 Your stack with Terapily
               </p>
@@ -496,7 +496,7 @@ function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-12 overflow-x-auto rounded-xl border border-border/60">
+          <div className="mt-12 overflow-hidden rounded-2xl border border-border/60">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="bg-card/60 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
@@ -544,7 +544,7 @@ function LandingPage() {
 
             <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Basic */}
-              <div className="flex flex-col rounded-xl border border-border/60 bg-background p-8">
+              <div className="flex flex-col rounded-2xl border border-border/60 bg-card/60 p-8 backdrop-blur-sm">
                 <Eyebrow>Basic</Eyebrow>
                 <div className="mt-4 flex items-baseline gap-2">
                   <span className="font-display text-5xl text-foreground">$69</span>
@@ -571,7 +571,7 @@ function LandingPage() {
               </div>
 
               {/* Practice — destacado */}
-              <div className="relative flex flex-col rounded-xl border-2 border-primary bg-background p-8 shadow-lg md:scale-[1.02]">
+              <div className="relative flex flex-col rounded-2xl border-2 border-primary bg-card/80 backdrop-blur-sm p-8 shadow-lg md:scale-[1.02]">
                 <span className="absolute -top-3 left-8 rounded-full bg-primary px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary-foreground">
                   Most chosen
                 </span>
@@ -808,7 +808,7 @@ function ModeCard({
   useCase: string;
 }) {
   return (
-    <div className="flex h-full flex-col rounded-xl border border-border/60 bg-background p-7">
+    <div className="flex h-full flex-col rounded-2xl border border-border/60 bg-card/60 p-7 backdrop-blur-sm">
       <Eyebrow tone="sage">{tag}</Eyebrow>
       <h3 className="mt-3 font-display text-2xl text-foreground">{title}</h3>
       <p
@@ -884,7 +884,7 @@ function StackRow({
 
 function TrustCard({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-background p-6">
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-sm">
       <h3 className="font-display text-xl text-foreground">{title}</h3>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
     </div>
@@ -914,7 +914,7 @@ function CompareRow({
 
 function Faq({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group rounded-lg border border-border/60 bg-card/40">
+    <details className="group rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm">
       <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">
         <span dangerouslySetInnerHTML={{ __html: q }} />
         <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
