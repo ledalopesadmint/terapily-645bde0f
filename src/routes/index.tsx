@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
@@ -397,7 +398,7 @@ function ScaleCategory({ title, scales }: { title: string; scales: Scale[] }) {
   );
 }
 
-function PricingItem({ children }: { children: React.ReactNode }) {
+function PricingItem({ children }: { children: ReactNode }) {
   return (
     <li className="flex items-start gap-3">
       <span
