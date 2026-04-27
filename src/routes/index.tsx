@@ -254,7 +254,102 @@ function LandingPage() {
             </details>
           </div>
         </section>
+
+        {/* Pricing — 2 planos honestos. Practice destacado. Sem founding, sem social proof inventado. */}
+        <section className="border-t border-border/60 bg-card/40">
+          <div className="mx-auto max-w-5xl px-6 py-24">
+            <div className="text-center">
+              <Eyebrow tone="sage">Pricing · Two plans, no surprises</Eyebrow>
+              <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
+                Built to last. Priced like it.
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                Same security baseline on every plan. Practice adds the
+                governance layer solo clinicians grow into.
+              </p>
+            </div>
+
+            <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* Basic */}
+              <div className="flex flex-col rounded-xl border border-border/60 bg-background p-8">
+                <Eyebrow>Basic</Eyebrow>
+                <div className="mt-4 flex items-baseline gap-2">
+                  <span className="font-display text-5xl text-foreground">$69</span>
+                  <span className="text-sm text-muted-foreground">/ month</span>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Solo clinician getting started.
+                </p>
+                <ul className="mt-8 space-y-3 text-sm text-foreground">
+                  <PricingItem>Up to 20 active patients</PricingItem>
+                  <PricingItem>1 clinician</PricingItem>
+                  <PricingItem>35 auto-scored validated assessments</PricingItem>
+                  <PricingItem>Magic link delivery — no patient login</PricingItem>
+                  <PricingItem>AES-GCM-256 at rest · TLS 1.3 in transit</PricingItem>
+                  <PricingItem>Append-only audit log</PricingItem>
+                  <PricingItem>Default retention policy (workspace-wide)</PricingItem>
+                </ul>
+                <Link
+                  to={primaryCtaTo}
+                  className="mt-10 inline-flex items-center justify-center rounded-md border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                >
+                  {isAuthenticated ? "Open my workspace" : `Start ${TRIAL_DURATION_DAYS}-day trial`}
+                </Link>
+              </div>
+
+              {/* Practice — destacado */}
+              <div className="relative flex flex-col rounded-xl border-2 border-primary bg-background p-8 shadow-lg md:scale-[1.02]">
+                <span className="absolute -top-3 left-8 rounded-full bg-primary px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary-foreground">
+                  Most chosen
+                </span>
+                <Eyebrow tone="sage">Practice</Eyebrow>
+                <div className="mt-4 flex items-baseline gap-2">
+                  <span className="font-display text-5xl text-foreground">$159</span>
+                  <span className="text-sm text-muted-foreground">/ month</span>
+                </div>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  Established practice that needs governance.
+                </p>
+                <ul className="mt-8 space-y-3 text-sm text-foreground">
+                  <PricingItem>Up to 50 active patients</PricingItem>
+                  <PricingItem>1 clinician (read-only supervision coming)</PricingItem>
+                  <PricingItem>Everything in Basic</PricingItem>
+                  <PricingItem>Encrypted session notes</PricingItem>
+                  <PricingItem>Integrated scheduling</PricingItem>
+                  <PricingItem>Two-factor authentication (TOTP)</PricingItem>
+                  <PricingItem>
+                    Configurable retention policy with state &amp; minor overrides
+                  </PricingItem>
+                  <PricingItem>
+                    Exportable compliance report — retention policy, audit
+                    trail, subprocessor BAAs, automated purge log
+                  </PricingItem>
+                </ul>
+                <Link
+                  to={primaryCtaTo}
+                  className="mt-10 inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                >
+                  {isAuthenticated ? "Open my workspace" : `Start ${TRIAL_DURATION_DAYS}-day trial`}
+                </Link>
+              </div>
+            </div>
+
+            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
+              No card required to start · Cancel anytime · Prices in USD ·
+              Multi-clinician (Clinic) plan in development.
+            </p>
+
+            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
+              The compliance report aggregates your existing data into a
+              format you can share with your auditor or attorney. It is not a
+              certification, not a substitute for legal review, and not a
+              guarantee of HIPAA compliance — that responsibility remains
+              with each Covered Entity.
+            </p>
+          </div>
+        </section>
       </main>
+
 
       {/* Footer */}
       <footer className="border-t border-border/60">
@@ -301,3 +396,16 @@ function ScaleCategory({ title, scales }: { title: string; scales: Scale[] }) {
     </div>
   );
 }
+
+function PricingItem({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="flex items-start gap-3">
+      <span
+        className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+        aria-hidden="true"
+      />
+      <span className="leading-relaxed">{children}</span>
+    </li>
+  );
+}
+
