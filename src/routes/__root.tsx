@@ -65,13 +65,6 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "pt_BR" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: "og:title", content: "Terapily · Onde começa uma terapia melhor." },
-      { name: "twitter:title", content: "Terapily · Onde começa uma terapia melhor." },
-      { name: "description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
-      { property: "og:description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
-      { name: "twitter:description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2aff40b-0630-4708-9276-7284ca785da8/id-preview-6a70f4a2--7413e2c8-7654-4145-ab8e-263a6f0f0a33.lovable.app-1777297376752.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/d2aff40b-0630-4708-9276-7284ca785da8/id-preview-6a70f4a2--7413e2c8-7654-4145-ab8e-263a6f0f0a33.lovable.app-1777297376752.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
