@@ -376,7 +376,7 @@ export type Database = {
         | "incomplete"
         | "paused"
       subscription_tier: "solo" | "practice" | "clinic"
-      workspace_role: "owner" | "supervisor" | "member"
+      workspace_role: "owner" | "therapist" | "supervisor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -515,7 +515,7 @@ export const Constants = {
         "paused",
       ],
       subscription_tier: ["solo", "practice", "clinic"],
-      workspace_role: ["owner", "supervisor", "member"],
+      workspace_role: ["owner", "therapist", "supervisor"],
     },
   },
 } as const
