@@ -1023,16 +1023,16 @@ function LandingPage() {
 
             <div className="mt-16 grid grid-cols-1 items-stretch gap-8 md:grid-cols-2">
               {/* ─── Basic ─── */}
-              <div className="group relative flex flex-col rounded-2xl border border-cream/15 bg-cream/[0.04] p-8 backdrop-blur-sm transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:border-cream/30 hover:bg-cream/[0.08] hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.55)]">
+              <div className="group relative flex flex-col rounded-2xl border border-cream/30 bg-cream/[0.10] p-8 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:border-cream/50 hover:bg-cream/[0.16] hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.55)]">
                 <Eyebrow tone="sage">Basic</Eyebrow>
                 <div className="mt-4 flex items-baseline gap-2">
                   <span className="font-display text-6xl text-cream">$69</span>
-                  <span className="text-sm text-cream/60">/ month</span>
+                  <span className="text-sm text-cream/75">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-cream/70">
+                <p className="mt-3 text-sm text-cream/80">
                   Solo clinician getting started.
                 </p>
-                <ul className="mt-8 space-y-3 text-sm text-cream/85">
+                <ul className="mt-8 space-y-3 text-sm text-cream">
                   <PricingItem tone="dark">Up to 20 active patients</PricingItem>
                   <PricingItem tone="dark">1 clinician</PricingItem>
                   <PricingItem tone="dark">35 auto-scored validated assessments</PricingItem>
@@ -1044,7 +1044,7 @@ function LandingPage() {
                 <div className="mt-auto pt-10">
                   <Link
                     to={primaryCtaTo}
-                    className="inline-flex w-full items-center justify-center rounded-md border border-cream/30 bg-transparent px-6 py-3 text-sm font-medium text-cream transition-colors hover:bg-cream/10"
+                    className="inline-flex w-full items-center justify-center rounded-md border border-cream/50 bg-cream/10 px-6 py-3 text-sm font-medium text-cream transition-colors hover:bg-cream/20 hover:border-cream/70"
                   >
                     {ctaPrimaryLabel}
                   </Link>
