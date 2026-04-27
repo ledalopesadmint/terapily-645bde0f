@@ -1469,35 +1469,33 @@ function StackRow({
 }
 
 function TrustCard({
-  index,
+  icon: Icon,
   title,
   body,
   proof,
 }: {
-  index?: string;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
   body: string;
   proof?: string;
 }) {
   return (
-    <div className="group relative bg-navy p-7 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-navy/80 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.55),0_8px_20px_-8px_rgba(126,155,134,0.25)] hover:ring-1 hover:ring-sage/30 md:p-8">
+    <div className="group relative bg-cream p-7 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-cream hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.45),0_8px_20px_-8px_rgba(126,155,134,0.3)] hover:ring-1 hover:ring-sage/40 md:p-8">
       <div className="flex items-start justify-between gap-4">
-        {index && (
-          <span className="font-display text-sm italic text-terracotta">
-            {index}
-          </span>
-        )}
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sage/15 text-sage ring-1 ring-sage/30 transition-colors group-hover:bg-sage/25 group-hover:text-sage">
+          <Icon className="h-5 w-5" strokeWidth={1.75} />
+        </span>
         {proof && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-sage">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 bg-navy/5 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-navy/70">
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-sage" />
             {proof}
           </span>
         )}
       </div>
-      <h3 className="mt-5 font-display text-xl leading-tight text-cream">
+      <h3 className="mt-5 font-display text-xl leading-tight text-navy">
         {title}
       </h3>
-      <p className="mt-3 text-sm leading-relaxed text-cream/65">{body}</p>
+      <p className="mt-3 text-sm leading-relaxed text-navy/70">{body}</p>
     </div>
   );
 }
