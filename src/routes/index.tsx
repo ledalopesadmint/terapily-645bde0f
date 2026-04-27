@@ -732,6 +732,15 @@ function LandingPage() {
 /* SUB-COMPONENTS                                                */
 /* ============================================================ */
 
+function BenefitPill({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-card/40 p-5">
+      <p className="font-display text-base text-foreground">{title}</p>
+      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{body}</p>
+    </div>
+  );
+}
+
 function TrustFact({ value, label }: { value: string; label: string }) {
   return (
     <div>
