@@ -118,7 +118,7 @@ function LandingPage() {
         {/* 1.5 · TRUST STRIP — Cream-tan + cards Navy editoriais         */}
         {/* ============================================================ */}
         <section className="bg-cream-tan">
-          <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
+          <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
               <TrustFactInverted label="Validated scales" value="35" sub="Grounded in published evidence." />
               <TrustFactInverted label="Score to report" value="<3s" sub="Less admin. More care." />
