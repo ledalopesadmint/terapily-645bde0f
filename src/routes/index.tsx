@@ -1021,7 +1021,7 @@ function LandingPage() {
               </p>
             </div>
 
-            <div className="mt-16 grid grid-cols-1 items-stretch gap-8 md:grid-cols-2">
+            <div className="mt-16 grid grid-cols-1 items-center gap-8 md:grid-cols-2">
               {/* ─── Basic ─── */}
               <div className="group relative flex flex-col rounded-2xl bg-cream/90 p-8 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.4)] ring-1 ring-navy/10 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-cream/95 hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.55)] hover:ring-navy/20">
                 <Eyebrow tone="sage">Basic</Eyebrow>
