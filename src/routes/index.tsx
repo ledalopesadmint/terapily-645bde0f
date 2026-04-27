@@ -992,6 +992,62 @@ function ProblemCard({
   );
 }
 
+/**
+ * Linha do comparativo "antes / depois" da seção problem.
+ * 3 colunas: gap (label) | the system you were handed | with Terapily.
+ */
+function ProblemRow({
+  gap,
+  before,
+  after,
+  isLast = false,
+}: {
+  gap: string;
+  before: string;
+  after: string;
+  isLast?: boolean;
+}) {
+  const borderClass = isLast ? "" : "border-b border-border/60";
+  return (
+    <div className={`group grid grid-cols-12 gap-0 transition-colors hover:bg-cream-tan/20 ${borderClass}`}>
+      {/* Coluna 1: gap */}
+      <div className="col-span-4 flex items-center px-6 py-7 md:px-8">
+        <p className="font-display text-xl text-foreground md:text-2xl">{gap}</p>
+      </div>
+
+      {/* Coluna 2: antes */}
+      <div className="col-span-4 border-l border-border/60 px-6 py-7 md:px-8">
+        <p className="text-sm leading-relaxed text-muted-foreground line-through decoration-terracotta/30 decoration-1">
+          {before}
+        </p>
+      </div>
+
+      {/* Coluna 3: depois */}
+      <div className="col-span-4 border-l border-border/60 bg-background/60 px-6 py-7 md:px-8">
+        <div className="flex gap-3">
+          <span
+            aria-hidden="true"
+            className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-terracotta/15 text-terracotta"
+          >
+            <svg
+              className="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+          <p className="text-sm leading-relaxed text-foreground">{after}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ModeCard({
   tag,
   title,
