@@ -23,7 +23,7 @@ export function Eyebrow({ children, className, tone = "mauve" }: EyebrowProps) {
   return (
     <p
       className={cn(
-        "text-[0.6875rem] font-bold uppercase",
+        "text-[0.6875rem] uppercase font-extrabold",
         toneClass,
         className,
       )}
