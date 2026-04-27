@@ -134,7 +134,7 @@ function SiteFooter() {
     <footer className="border-t border-border/60">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-xs text-muted-foreground sm:flex-row">
         <p>
-          © {new Date().getFullYear()} {BRAND.name}, Inc. PHI encrypted at rest. BAA available.
+          © {new Date().getFullYear()} {BRAND.name}, Inc. TLS 1.3 in transit · AES-GCM-256 at rest · BAA signed with every Practice account.
         </p>
         <p className="font-display italic">Where better therapy begins.</p>
       </div>
