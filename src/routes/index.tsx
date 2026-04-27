@@ -813,7 +813,7 @@ function LandingPage() {
             </div>
 
             <div className="mt-14 rounded-2xl border border-cream/10 bg-cream/[0.03] p-6 md:p-8">
-              <p className="text-sm leading-relaxed text-cream/80 md:text-base">
+              <p className="text-sm leading-relaxed text-cream/80 md:text-base text-center">
                 Terapily operates under HIPAA Security Rule and signs
                 BAAs with every clinician who handles PHI. HIPAA
                 compliance is a shared responsibility — final
