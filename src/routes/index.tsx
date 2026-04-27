@@ -334,8 +334,8 @@ function LandingPage() {
             </p>
           </div>
 
-          {/* Tabela comparativa */}
-          <div className="mt-16 overflow-hidden rounded-3xl border border-border/60 bg-background shadow-[0_24px_70px_-30px_oklch(0.28_0.027_251_/_0.35)] ring-1 ring-terracotta/10">
+          {/* ─── Desktop / tablet: tabela comparativa ─── */}
+          <div className="mt-16 hidden overflow-hidden rounded-3xl border border-border/60 bg-background shadow-[0_24px_70px_-30px_oklch(0.28_0.027_251_/_0.35)] ring-1 ring-terracotta/10 md:block">
             {/* Header da tabela */}
             <div className="grid grid-cols-12 gap-0 border-b-2 border-terracotta/20 bg-navy">
               <div className="col-span-4 px-6 py-5 md:px-8">
@@ -368,6 +368,25 @@ function LandingPage() {
               before="PHQ-9, GAD-7, PCL-5 — same scoring math, every patient, every week. Your evenings, gone."
               after="Auto-scored in under 3 seconds. The math is not your problem anymore."
               isLast
+            />
+          </div>
+
+          {/* ─── Mobile: cards empilhados, um por gap ─── */}
+          <div className="mt-12 space-y-5 md:hidden">
+            <ProblemCardMobile
+              gap="Compliance"
+              before="A folder of PDFs and a memory of last Tuesday — when an auditor or supervisor asks what you did and when."
+              after="Every read, edit, and export logged. Exportable on demand."
+            />
+            <ProblemCardMobile
+              gap="Engagement"
+              before="Static worksheets feel like school. Folded, lost, or filled out in the waiting room two minutes before your session."
+              after="Activities clients open on any device — no account, no app, no friction."
+            />
+            <ProblemCardMobile
+              gap="Signal"
+              before="PHQ-9, GAD-7, PCL-5 — same scoring math, every patient, every week. Your evenings, gone."
+              after="Auto-scored in under 3 seconds. The math is not your problem anymore."
             />
           </div>
           </div>
