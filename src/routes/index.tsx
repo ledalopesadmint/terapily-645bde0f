@@ -1567,16 +1567,16 @@ function ScoreCard({
   return (
     <div
       className={
-        "rounded-2xl border p-4 text-center md:p-6 " +
+        "rounded-2xl border p-4 text-center backdrop-blur-sm md:p-6 " +
         (isHero
           ? "border-sage/40 bg-sage/15 shadow-[0_20px_50px_-30px_rgba(126,155,134,0.6)]"
-          : "border-border/60 bg-card/50")
+          : "border-terracotta/25 bg-terracotta/[0.08]")
       }
     >
       <p
         className={
-          "text-[0.6rem] uppercase tracking-[0.18em] md:text-xs " +
-          (isHero ? "text-sage" : "text-muted-foreground")
+          "text-[0.6rem] font-bold uppercase tracking-[0.18em] md:text-xs " +
+          (isHero ? "text-sage" : "text-rust/80")
         }
       >
         {label}
@@ -1586,20 +1586,25 @@ function ScoreCard({
           "mt-2 font-display leading-none " +
           (isHero
             ? "text-4xl text-navy md:text-6xl"
-            : "text-3xl text-muted-foreground/70 md:text-5xl")
+            : "text-3xl text-rust md:text-5xl")
         }
       >
         {score}
         <span
           className={
             "text-xl md:text-2xl " +
-            (isHero ? "italic text-terracotta" : "text-muted-foreground/50")
+            (isHero ? "italic text-terracotta" : "italic text-rust/60")
           }
         >
           /{total}
         </span>
       </p>
-      <p className="mt-2 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+      <p
+        className={
+          "mt-2 text-[0.65rem] font-bold uppercase tracking-wider " +
+          (isHero ? "text-muted-foreground" : "text-rust/70")
+        }
+      >
         capabilities
       </p>
     </div>
