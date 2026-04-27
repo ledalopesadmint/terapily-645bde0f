@@ -271,3 +271,33 @@ function LandingPage() {
     </div>
   );
 }
+
+interface Scale {
+  code: string;
+  name: string;
+  items: number;
+}
+
+function ScaleCategory({ title, scales }: { title: string; scales: Scale[] }) {
+  return (
+    <div>
+      <Eyebrow>{title}</Eyebrow>
+      <ul className="mt-4 divide-y divide-border/40">
+        {scales.map((scale) => (
+          <li
+            key={scale.code}
+            className="flex items-baseline justify-between gap-4 py-3 text-sm"
+          >
+            <div className="min-w-0">
+              <span className="font-medium text-foreground">{scale.code}</span>
+              <span className="ml-3 text-muted-foreground">{scale.name}</span>
+            </div>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {scale.items} items
+            </span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
