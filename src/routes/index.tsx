@@ -1,6 +1,6 @@
 import type { ReactNode, ComponentType } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Stethoscope, Send, Repeat, Search, Sparkles, ShieldCheck } from "lucide-react";
+import { Stethoscope, Send, Repeat, Search, Sparkles, ShieldCheck, Lock, FileSignature, ScrollText, Link2, Clock, Download } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { BRAND, TRIAL_DURATION_DAYS } from "@/lib/constants";
@@ -773,39 +773,39 @@ function LandingPage() {
               </div>
             </div>
 
-            <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-cream/10 bg-cream/10 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-navy/10 bg-navy/10 shadow-[0_30px_80px_-30px_rgba(0,0,0,0.5)] md:grid-cols-2 lg:grid-cols-3">
               <TrustCard
-                index="01"
+                icon={Lock}
                 title="Encryption you can name"
                 proof="AES-256-GCM · TLS 1.3 · RLS"
                 body="At rest and in transit. Per-workspace data isolation enforced at the database row level. No shared tenant tables."
               />
               <TrustCard
-                index="02"
+                icon={FileSignature}
                 title="A signed BAA, on request"
                 proof="Plain-language BAA"
                 body="Business Associate Agreement available before you sign up, with a list of every subprocessor that touches PHI."
               />
               <TrustCard
-                index="03"
+                icon={ScrollText}
                 title="Append-only audit trail"
                 proof="Actor · timestamp · target"
                 body="Every read, edit, send, and export of patient data is logged. Logs cannot be modified or deleted from the app."
               />
               <TrustCard
-                index="04"
+                icon={Link2}
                 title="Magic link, no patient account"
                 proof="SHA-256 hash · 24h expiry"
                 body="Patients access activities through a single-use link. No email/password store. No mobile app to lose."
               />
               <TrustCard
-                index="05"
+                icon={Clock}
                 title="Configurable retention"
                 proof="6-year HIPAA floor"
                 body="You set how long records live. Auto-purge with a downloadable JSON+PDF export sent 30 days before any deletion."
               />
               <TrustCard
-                index="06"
+                icon={Download}
                 title="Your data, exportable"
                 proof="JSON + PDF · within 7 days"
                 body="Cancel any time and request a full archive — raw data and human-readable records. No exit fee, no negotiation."
@@ -1469,35 +1469,33 @@ function StackRow({
 }
 
 function TrustCard({
-  index,
+  icon: Icon,
   title,
   body,
   proof,
 }: {
-  index?: string;
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
   body: string;
   proof?: string;
 }) {
   return (
-    <div className="group relative bg-navy p-7 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-navy/80 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.55),0_8px_20px_-8px_rgba(126,155,134,0.25)] hover:ring-1 hover:ring-sage/30 md:p-8">
+    <div className="group relative bg-cream p-7 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-cream hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.45),0_8px_20px_-8px_rgba(126,155,134,0.3)] hover:ring-1 hover:ring-sage/40 md:p-8">
       <div className="flex items-start justify-between gap-4">
-        {index && (
-          <span className="font-display text-sm italic text-terracotta">
-            {index}
-          </span>
-        )}
+        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sage/15 text-sage ring-1 ring-sage/30 transition-colors group-hover:bg-sage/25 group-hover:text-sage">
+          <Icon className="h-5 w-5" strokeWidth={1.75} />
+        </span>
         {proof && (
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-sage">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 bg-navy/5 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-navy/70">
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-sage" />
             {proof}
           </span>
         )}
       </div>
-      <h3 className="mt-5 font-display text-xl leading-tight text-cream">
+      <h3 className="mt-5 font-display text-xl leading-tight text-navy">
         {title}
       </h3>
-      <p className="mt-3 text-sm leading-relaxed text-cream/65">{body}</p>
+      <p className="mt-3 text-sm leading-relaxed text-navy/70">{body}</p>
     </div>
   );
 }
