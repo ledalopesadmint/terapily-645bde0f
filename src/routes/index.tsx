@@ -835,9 +835,9 @@ const FAQS = [
     pillar: "Audit-ready",
   },
   {
-    q: "Who built this?",
-    a: "Terapily was built by a practicing CBT clinician for the workflow she couldn't find in existing software. Every design decision — the 5-component cognitive structure, the magic-link homework, the per-workspace encryption — comes from real clinical practice, not from a generic SaaS playbook.",
-    pillar: "CBT, not generic forms",
+    q: "What happens in a HIPAA breach?",
+    a: "Our commitment: notification within 72 hours of detection — faster than the 60 days the law requires. The notification tells you exactly which of your patients were affected, how the breach occurred, what we did to contain it, and the forensic detail you need to fulfill your own Breach Notification obligations to clients and your board. Full incident response plan published at /trust.",
+    pillar: "Audit-ready",
   },
   {
     q: "What happens if Terapily goes down mid-session?",
