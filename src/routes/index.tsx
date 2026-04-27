@@ -1521,12 +1521,17 @@ function CompareCell({
   lose?: boolean;
   highlight?: boolean;
 }) {
-  const icon = win ? "✓" : lose ? "—" : "·";
+  const icon = win ? "✓" : lose ? "✕" : "·";
   const iconColor = win
     ? "bg-sage text-cream"
     : lose
-      ? "bg-muted text-muted-foreground/70"
+      ? "bg-rust/15 text-rust ring-1 ring-rust/30"
       : "bg-muted/60 text-muted-foreground";
+  const valueColor = highlight
+    ? "font-medium text-navy"
+    : lose
+      ? "text-rust/80"
+      : "text-muted-foreground";
   return (
     <div className="flex flex-col items-center gap-2">
       <span
@@ -1538,15 +1543,7 @@ function CompareCell({
       >
         {icon}
       </span>
-      <span
-        className={
-          highlight
-            ? "font-medium text-navy"
-            : "text-muted-foreground"
-        }
-      >
-        {value}
-      </span>
+      <span className={valueColor}>{value}</span>
     </div>
   );
 }
