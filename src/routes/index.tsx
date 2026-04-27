@@ -52,18 +52,18 @@ function LandingPage() {
       {/* Hero — proporção 60% Cream (fundo) / 30% Navy (tipo) / 10% Sage (acento) */}
       <main>
         <section className="mx-auto max-w-4xl px-6 py-24 text-center md:py-32">
-          <Eyebrow tone="mauve">Para psicólogos · Construído por uma clínica</Eyebrow>
+          <Eyebrow tone="mauve">Built for CBT clinicians · Adolescents & adults</Eyebrow>
 
           <h1 className="mt-6 font-display text-5xl text-foreground md:text-7xl">
-            Onde começa <br className="hidden md:block" />
-            uma terapia melhor.
+            Therapeutic tools <br className="hidden md:block" />
+            your clients actually finish.
           </h1>
 
           <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            <em className="font-display">Terapily</em> é o sistema silencioso
-            por trás do trabalho clínico — atividades, jogos terapêuticos e
-            fluxo de homework para psicólogos TCC. Pensado dentro da sessão,
-            não dentro do backlog.
+            Dynamic, evidence-based CBT activities you can run live in session
+            or send home with a single link — no patient login required.
+            Every activity generates clinical signal you can use to track and
+            defend treatment progress.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -71,20 +71,20 @@ function LandingPage() {
               to={primaryCtaTo}
               className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              {primaryCtaLabel}
+              {isAuthenticated ? "Open my workspace" : `Start ${TRIAL_DURATION_DAYS}-day trial`}
             </Link>
             {!isAuthenticated && (
               <Link
                 to="/login"
                 className="inline-flex items-center justify-center rounded-md border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
               >
-                Já tenho conta
+                I already have an account
               </Link>
             )}
           </div>
 
           <p className="mt-6 text-xs text-muted-foreground">
-            Sem cobrança automática · Cancele a qualquer momento
+            No card required · Cancel anytime
           </p>
         </section>
 
@@ -92,30 +92,33 @@ function LandingPage() {
         <section className="border-t border-border/60 bg-card/40">
           <div className="mx-auto grid max-w-5xl grid-cols-1 gap-12 px-6 py-20 md:grid-cols-3">
             <div>
-              <Eyebrow>01 · Construído por uma clínica</Eyebrow>
+              <Eyebrow>01 · Built around the clinician</Eyebrow>
               <h3 className="mt-3 font-display text-xl text-foreground">
-                Todo fluxo nasce dentro da sessão.
+                Use it in session, or send it home.
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Cada decisão começa pela cadeira do terapeuta — não pelo backlog.
+                Run an activity live with your client, prescribe it as homework,
+                or both. The session adapts to your practice — not the other way around.
               </p>
             </div>
             <div>
-              <Eyebrow>02 · Atividades que engajam</Eyebrow>
+              <Eyebrow>02 · Activities clients finish</Eyebrow>
               <h3 className="mt-3 font-display text-xl text-foreground">
-                Interativas, belas, imprimíveis.
+                Dynamic. Visual. Grounded in CBT.
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Pacientes voltam a elas. Engajamento é desfecho clínico.
+                Not another printable PDF. Each activity is built on a specific
+                cognitive model — engagement is the outcome, not a side effect.
               </p>
             </div>
             <div>
-              <Eyebrow>03 · Privacidade como postura</Eyebrow>
+              <Eyebrow>03 · Clinical signal you can defend</Eyebrow>
               <h3 className="mt-3 font-display text-xl text-foreground">
-                Dado clínico é sagrado.
+                Every activity becomes a record.
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Tratamento ponta-a-ponta — não checkbox. Por padrão.
+                Patterns, intensity shifts, CBT concepts touched — auto-summarized
+                into a report you can keep, export, or attach to your existing EHR.
               </p>
             </div>
           </div>
@@ -125,10 +128,7 @@ function LandingPage() {
       {/* Footer */}
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
-          <p>
-            © {new Date().getFullYear()} {BRAND.name}. Fundado por{" "}
-            {BRAND.founder}.
-          </p>
+          <p>© {new Date().getFullYear()} {BRAND.name}. Built by a practicing CBT clinician.</p>
           <p className="font-medium">{BRAND.tagline}</p>
         </div>
       </footer>

@@ -6,9 +6,10 @@
 export const BRAND = {
   name: "Terapily",
   wordmark: "terapily",
-  tagline: "Onde começa uma terapia melhor.",
+  // Landing pública é EN-US (ver mem://preferences/language-strategy)
+  tagline: "Therapeutic tools your clients actually finish.",
   description:
-    "O sistema silencioso por trás de uma terapia melhor — atividades, jogos e fluxo clínico para psicólogos TCC.",
+    "Dynamic, evidence-based therapeutic activities for CBT clinicians. Use them live in session or send them home with a single link — every activity generates clinical signal you can defend.",
   founder: "Leda Carolina Lopes",
   domain: "terapily.com",
 } as const;
