@@ -321,7 +321,7 @@ function LandingPage() {
         {/* 3 · PROBLEM — comparativo "antes / depois", didático e calmo */}
         {/* ============================================================ */}
         <section className="bg-cream-tan">
-          <div className="mx-auto max-w-5xl px-6 py-24">
+          <div className="mx-auto max-w-5xl px-6 py-16">
           <div className="text-center">
             <Eyebrow tone="terracotta">The reality between sessions</Eyebrow>
             <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
@@ -376,7 +376,7 @@ function LandingPage() {
         {/* 4 · 3 MODOS DE USO — diferencial único no mercado */}
         {/* ============================================================ */}
         <section className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-5xl px-6 py-24">
+          <div className="mx-auto max-w-5xl px-6 py-16">
             <div className="text-center">
               <Eyebrow tone="sage">Three ways to use any activity</Eyebrow>
               <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
@@ -415,7 +415,7 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 5 · HOW IT WORKS — 4 steps */}
         {/* ============================================================ */}
-        <section id="how-it-works" className="mx-auto max-w-5xl px-6 py-24">
+        <section id="how-it-works" className="mx-auto max-w-5xl px-6 py-16">
           <div className="text-center">
             <Eyebrow>How it works</Eyebrow>
             <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
@@ -451,7 +451,7 @@ function LandingPage() {
         {/* 6 · VALIDATED ASSESSMENTS — mantido */}
         {/* ============================================================ */}
         <section className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-4xl px-6 py-24 text-center">
+          <div className="mx-auto max-w-4xl px-6 py-16 text-center">
             <Eyebrow tone="sage">Validated assessments · Built in</Eyebrow>
             <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
               The scales you already use. <br className="hidden md:block" />
@@ -573,7 +573,7 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 7 · WHERE IT FITS — não substitui EHR */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-5xl px-6 py-24">
+        <section className="mx-auto max-w-5xl px-6 py-16">
           <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
             <div>
               <Eyebrow tone="mauve">Where Terapily fits</Eyebrow>
@@ -613,7 +613,7 @@ function LandingPage() {
         {/* 8 · COMPLIANCE & TRUST — 5 fatos verificáveis */}
         {/* ============================================================ */}
         <section className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-5xl px-6 py-24">
+          <div className="mx-auto max-w-5xl px-6 py-16">
             <div className="text-center">
               <Eyebrow tone="sage">Compliance &amp; trust</Eyebrow>
               <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
@@ -665,7 +665,7 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 9 · COMPARED — tabela honesta */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-5xl px-6 py-24">
+        <section className="mx-auto max-w-5xl px-6 py-16">
           <div className="text-center">
             <Eyebrow>Compared to alternatives</Eyebrow>
             <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
@@ -711,7 +711,7 @@ function LandingPage() {
         {/* 10 · PRICING */}
         {/* ============================================================ */}
         <section id="pricing" className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-5xl px-6 py-24">
+          <div className="mx-auto max-w-5xl px-6 py-16">
             <div className="text-center">
               <Eyebrow tone="sage">Pricing · Two plans, no surprises</Eyebrow>
               <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
@@ -804,7 +804,7 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 11 · FAQ — 10 perguntas obrigatórias */}
         {/* ============================================================ */}
-        <section id="faq" className="mx-auto max-w-3xl px-6 py-24">
+        <section id="faq" className="mx-auto max-w-3xl px-6 py-16">
           <div className="text-center">
             <Eyebrow>FAQ</Eyebrow>
             <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
@@ -856,7 +856,7 @@ function LandingPage() {
         {/* 12 · CLOSING CTA */}
         {/* ============================================================ */}
         <section className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-3xl px-6 py-24 text-center">
+          <div className="mx-auto max-w-3xl px-6 py-16 text-center">
             <Eyebrow tone="mauve">Start when you&rsquo;re ready</Eyebrow>
             <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
               The same activity. <br className="hidden md:block" />
