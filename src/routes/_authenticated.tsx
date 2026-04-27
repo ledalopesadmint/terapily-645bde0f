@@ -1,41 +1,31 @@
-import {
-  createFileRoute,
-  Outlet,
-  redirect,
-  Link,
-} from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Logo } from "@/components/brand/Logo";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: ({ context, location }) => {
-    // CRITICAL: usamos auth do contexto setado pelo router (ver router.tsx).
-    // Se ainda está carregando, deixamos passar e o componente trata.
-    if (context.auth && !context.auth.isLoading && !context.auth.isAuthenticated) {
-      throw redirect({
-        to: "/login",
-        search: { redirect: location.href },
-      });
-    }
-  },
+  // Auth check é client-side (sessão Supabase vive no localStorage do browser).
+  // beforeLoad não consegue ler isso de forma confiável no SSR — fazemos no
+  // componente com useAuth + useEffect pra evitar flash de conteúdo protegido.
   component: AuthenticatedLayout,
 });
 
 function AuthenticatedLayout() {
   const auth = useAuth();
+  const navigate = useNavigate();
 
-  // Loading guard: enquanto sessão hidrata, evita flash.
-  if (auth.isLoading) {
+  useEffect(() => {
+    if (!auth.isLoading && !auth.isAuthenticated) {
+      void navigate({ to: "/login", replace: true });
+    }
+  }, [auth.isLoading, auth.isAuthenticated, navigate]);
+
+  if (auth.isLoading || !auth.isAuthenticated) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <p className="eyebrow text-muted-foreground">Um momento</p>
       </div>
     );
-  }
-
-  // Se beforeLoad não pegou (race), client-side fallback.
-  if (!auth.isAuthenticated) {
-    return null;
   }
 
   return (

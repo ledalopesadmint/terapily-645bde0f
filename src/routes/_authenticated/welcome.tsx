@@ -44,9 +44,9 @@ function WelcomePage() {
 
       <div className="mt-12">
         <EmptyState
-          eyebrow="Em breve"
           title="O painel completo chega na próxima semana."
           description="Estamos construindo com cuidado. Por enquanto, sua conta está pronta e segura."
+          comingSoonWeek="Semana 2"
         />
       </div>
     </main>
