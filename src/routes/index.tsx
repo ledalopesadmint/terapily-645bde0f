@@ -323,10 +323,10 @@ function LandingPage() {
         <section className="bg-cream-tan">
           <div className="mx-auto max-w-5xl px-6 py-24">
           <div className="text-center">
-            <Eyebrow>The reality between sessions</Eyebrow>
+            <Eyebrow tone="terracotta">The reality between sessions</Eyebrow>
             <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
-              Most homework never comes back. <br className="hidden md:block" />
-              Most paperwork never gets scored.
+              Most <em className="italic font-display text-terracotta">homework</em> never comes back. <br className="hidden md:block" />
+              Most <em className="italic font-display text-terracotta">paperwork</em> never gets scored.
             </h2>
             <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground">
               Same three gaps, every week — until the system itself changes.
@@ -334,19 +334,19 @@ function LandingPage() {
           </div>
 
           {/* Tabela comparativa */}
-          <div className="mt-16 overflow-hidden rounded-3xl border border-border/60 bg-card/40 shadow-[0_10px_40px_-20px_oklch(0.28_0.027_251_/_0.18)]">
+          <div className="mt-16 overflow-hidden rounded-3xl border border-border/60 bg-background shadow-[0_24px_70px_-30px_oklch(0.28_0.027_251_/_0.35)] ring-1 ring-terracotta/10">
             {/* Header da tabela */}
-            <div className="grid grid-cols-12 gap-0 border-b border-border/60 bg-cream-tan/40">
+            <div className="grid grid-cols-12 gap-0 border-b-2 border-terracotta/20 bg-navy">
               <div className="col-span-4 px-6 py-5 md:px-8">
-                <p className="eyebrow text-[0.7rem]">The gap</p>
+                <p className="eyebrow text-[0.7rem] text-cream">The gap</p>
               </div>
-              <div className="col-span-4 border-l border-border/60 px-6 py-5 md:px-8">
-                <p className="eyebrow text-[0.7rem] text-muted-foreground">
+              <div className="col-span-4 border-l border-cream/10 px-6 py-5 md:px-8">
+                <p className="eyebrow text-[0.7rem] text-cream/70">
                   The system you were handed
                 </p>
               </div>
-              <div className="col-span-4 border-l border-border/60 bg-background/60 px-6 py-5 md:px-8">
-                <p className="eyebrow text-[0.7rem] text-terracotta">
+              <div className="col-span-4 border-l border-cream/10 bg-terracotta/95 px-6 py-5 md:px-8">
+                <p className="eyebrow text-[0.7rem] text-cream">
                   With Terapily
                 </p>
               </div>
