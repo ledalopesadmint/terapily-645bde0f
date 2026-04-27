@@ -71,55 +71,64 @@ function LandingPage() {
 
       <main>
         {/* ============================================================ */}
-        {/* 1 · HERO */}
+        {/* 1 · HERO — invertido Navy + Trust strip translúcido */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-4xl px-6 py-24 text-center md:py-32">
-          <Eyebrow tone="mauve">Every activity grounded in published evidence</Eyebrow>
+        <section className="relative overflow-hidden bg-navy text-cream">
+          {/* glow Sage sutil canto sup. direito */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -right-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-sage/15 blur-3xl"
+          />
+          {/* glow Mauve baixo esquerda — decorativo, ≤8% */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-40 -left-40 h-[24rem] w-[24rem] rounded-full bg-mauve/10 blur-3xl"
+          />
 
-          <h1 className="mt-6 font-display text-5xl text-foreground md:text-7xl">
-            Therapeutic tools <br className="hidden md:block" />
-            your clients actually finish.
-          </h1>
+          <div className="relative mx-auto max-w-4xl px-6 py-24 text-center md:py-32">
+            <Eyebrow tone="mauve">Every activity grounded in published evidence</Eyebrow>
 
-          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            Run validated scales and CBT activities live in session,
-            send them home with a single secure link, or both. Every
-            activity becomes a record you can actually use — without
-            replacing your existing EHR.
-          </p>
+            <h1 className="mt-6 font-display text-5xl text-cream md:text-7xl">
+              Therapeutic tools <br className="hidden md:block" />
+              your clients actually finish.
+            </h1>
 
-          <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              to={primaryCtaTo}
-              className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-            >
-              {ctaPrimaryLabel}
-            </Link>
-            {!isAuthenticated && (
+            <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-cream/75 md:text-lg">
+              Run validated scales and CBT activities live in session,
+              send them home with a single secure link, or both. Every
+              activity becomes a record you can actually use — without
+              replacing your existing EHR.
+            </p>
+
+            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
-                to="/login"
-                className="inline-flex items-center justify-center rounded-md border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                to={primaryCtaTo}
+                className="inline-flex items-center justify-center rounded-2xl bg-cream px-6 py-3 text-sm font-medium text-navy shadow-lg shadow-navy/20 transition-all hover:scale-[1.02] hover:bg-cream/95"
               >
-                I already have an account
+                {ctaPrimaryLabel}
               </Link>
-            )}
-          </div>
+              {!isAuthenticated && (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center justify-center rounded-2xl border border-cream/25 bg-cream/5 px-6 py-3 text-sm font-medium text-cream backdrop-blur-sm transition-colors hover:bg-cream/10"
+                >
+                  I already have an account
+                </Link>
+              )}
+            </div>
 
-          <p className="mt-6 text-xs text-muted-foreground">
-            No card required · Cancel anytime · Operates under HIPAA Security Rule
-          </p>
-        </section>
+            <p className="mt-6 text-xs text-cream/55">
+              No card required · Cancel anytime · Operates under HIPAA Security Rule
+            </p>
 
-        {/* ============================================================ */}
-        {/* 2 · TRUST STRIP — 5 fatos verificáveis (substitui testimonials) */}
-        {/* ============================================================ */}
-        <section className="border-y border-border/60 bg-card/40">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-10 text-center md:grid-cols-5">
-            <TrustFact label="Validated scales" value="35" />
-            <TrustFact label="Score to report" value="<3s" />
-            <TrustFact label="Encryption at rest" value="AES-256" />
-            <TrustFact label="Patient logins required" value="0" />
-            <TrustFact label="Audit log coverage" value="100%" />
+            {/* Trust strip — cards squircle translúcidos, sobrepostos sutilmente */}
+            <div className="mt-16 grid grid-cols-2 gap-3 md:mt-20 md:grid-cols-5">
+              <TrustFactInverted label="Validated scales" value="35" />
+              <TrustFactInverted label="Score to report" value="<3s" />
+              <TrustFactInverted label="Encryption at rest" value="AES-256" />
+              <TrustFactInverted label="Patient logins required" value="0" />
+              <TrustFactInverted label="Audit log coverage" value="100%" />
+            </div>
           </div>
         </section>
 
@@ -282,7 +291,7 @@ function LandingPage() {
               <KeyStat value="100%" label="Original wording preserved" />
             </div>
 
-            <details className="group mx-auto mt-12 max-w-3xl rounded-lg border border-border/60 bg-background text-left">
+            <details className="group mx-auto mt-12 max-w-3xl rounded-2xl border border-border/60 bg-card/60 text-left backdrop-blur-sm">
               <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">
                 <span>See the full library of 35 auto-scored assessments</span>
                 <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
@@ -404,7 +413,7 @@ function LandingPage() {
               </p>
             </div>
 
-            <div className="rounded-xl border border-border/60 bg-card/40 p-8">
+            <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-8">
               <p className="text-xs uppercase tracking-wider text-muted-foreground">
                 Your stack with Terapily
               </p>
@@ -487,7 +496,7 @@ function LandingPage() {
             </p>
           </div>
 
-          <div className="mt-12 overflow-x-auto rounded-xl border border-border/60">
+          <div className="mt-12 overflow-hidden rounded-2xl border border-border/60">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead className="bg-card/60 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
@@ -535,7 +544,7 @@ function LandingPage() {
 
             <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* Basic */}
-              <div className="flex flex-col rounded-xl border border-border/60 bg-background p-8">
+              <div className="flex flex-col rounded-2xl border border-border/60 bg-card/60 p-8 backdrop-blur-sm">
                 <Eyebrow>Basic</Eyebrow>
                 <div className="mt-4 flex items-baseline gap-2">
                   <span className="font-display text-5xl text-foreground">$69</span>
@@ -562,7 +571,7 @@ function LandingPage() {
               </div>
 
               {/* Practice — destacado */}
-              <div className="relative flex flex-col rounded-xl border-2 border-primary bg-background p-8 shadow-lg md:scale-[1.02]">
+              <div className="relative flex flex-col rounded-2xl border-2 border-primary bg-card/80 backdrop-blur-sm p-8 shadow-lg md:scale-[1.02]">
                 <span className="absolute -top-3 left-8 rounded-full bg-primary px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary-foreground">
                   Most chosen
                 </span>
@@ -730,7 +739,7 @@ function LandingPage() {
 
 function BenefitPill({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card/40 p-5">
+    <div className="rounded-2xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm transition-colors hover:bg-card/80">
       <p className="font-display text-base text-foreground">{title}</p>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{body}</p>
     </div>
@@ -742,6 +751,21 @@ function TrustFact({ value, label }: { value: string; label: string }) {
     <div>
       <p className="font-display text-3xl text-foreground md:text-4xl">{value}</p>
       <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Variante do TrustFact pra fundo Navy do hero.
+ * Card squircle translúcido cream — leveza visual, refere ao app.
+ */
+function TrustFactInverted({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-5 backdrop-blur-sm transition-colors hover:bg-cream/[0.10]">
+      <p className="font-display text-2xl text-cream md:text-3xl">{value}</p>
+      <p className="mt-1 text-[0.65rem] uppercase tracking-wider text-cream/60">
         {label}
       </p>
     </div>
@@ -784,7 +808,7 @@ function ModeCard({
   useCase: string;
 }) {
   return (
-    <div className="flex h-full flex-col rounded-xl border border-border/60 bg-background p-7">
+    <div className="flex h-full flex-col rounded-2xl border border-border/60 bg-card/60 p-7 backdrop-blur-sm">
       <Eyebrow tone="sage">{tag}</Eyebrow>
       <h3 className="mt-3 font-display text-2xl text-foreground">{title}</h3>
       <p
@@ -860,7 +884,7 @@ function StackRow({
 
 function TrustCard({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-background p-6">
+    <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-sm">
       <h3 className="font-display text-xl text-foreground">{title}</h3>
       <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
     </div>
@@ -890,7 +914,7 @@ function CompareRow({
 
 function Faq({ q, a }: { q: string; a: string }) {
   return (
-    <details className="group rounded-lg border border-border/60 bg-card/40">
+    <details className="group rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm">
       <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">
         <span dangerouslySetInnerHTML={{ __html: q }} />
         <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
