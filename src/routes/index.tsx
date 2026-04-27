@@ -826,46 +826,138 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 9 · COMPARED — tabela honesta */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-5xl px-6 py-16">
-          <div className="text-center">
-            <Eyebrow>Compared to alternatives</Eyebrow>
-            <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-              An honest side-by-side.
-            </h2>
-            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              Public landing pages reviewed April 27, 2026. We&rsquo;ll
-              update this table as competitors update theirs.
+        <section className="relative overflow-hidden border-t border-border/60 bg-gradient-to-b from-background via-cream-tan/30 to-background">
+          {/* Decorative serif glyph */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-8 top-12 select-none font-display italic text-[16rem] leading-none text-navy/[0.04] md:-right-16 md:text-[24rem]"
+          >
+            ✓
+          </div>
+
+          <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
+            <div className="text-center">
+              <Eyebrow tone="mauve">Compared to alternatives</Eyebrow>
+              <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
+                An honest <span className="italic text-terracotta">side-by-side.</span>
+              </h2>
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
+                Public landing pages reviewed April 27, 2026. We&rsquo;ll
+                update this table as competitors update theirs.
+              </p>
+            </div>
+
+            {/* ─── Score banner ─── */}
+            <div className="mx-auto mt-12 grid max-w-3xl grid-cols-3 gap-3 md:gap-6">
+              <ScoreCard
+                label="Static PDF libraries"
+                score="0"
+                total="7"
+                tone="muted"
+              />
+              <ScoreCard
+                label="Terapily"
+                score="7"
+                total="7"
+                tone="hero"
+              />
+              <ScoreCard
+                label="Homework platforms"
+                score="0"
+                total="7"
+                tone="muted"
+              />
+            </div>
+
+            {/* ─── Comparison grid (desktop) ─── */}
+            <div className="mt-12 hidden overflow-hidden rounded-3xl border border-border/60 shadow-[0_30px_80px_-50px_rgba(31,42,54,0.25)] md:block">
+              <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr]">
+                {/* Header */}
+                <div className="bg-card/60 px-6 py-5 text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
+                  Capability
+                </div>
+                <div className="bg-card/60 px-6 py-5 text-center text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
+                  Static PDF libraries
+                </div>
+                <div className="relative bg-sage/15 px-6 py-5 text-center">
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-sage px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-md">
+                    ★ Recommended
+                  </span>
+                  <span className="font-display text-lg italic text-navy">
+                    Terapily
+                  </span>
+                </div>
+                <div className="bg-card/60 px-6 py-5 text-center text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
+                  Homework platforms
+                </div>
+
+                {/* Rows */}
+                <CompareRow capability="Auto-scored validated scales (PHQ-9, GAD-7, PCL-5...)" terapily="35 built-in" terapilyWin alt1="No" alt1Lose alt2="Some, varies" />
+                <CompareRow capability="Use the same activity in session AND between sessions" terapily="Yes" terapilyWin alt1="Manual" alt1Lose alt2="Between only" />
+                <CompareRow capability="Patient access without creating an account" terapily="Magic link, 24h expiry" terapilyWin alt1="N/A" alt1Lose alt2="Account required" alt2Lose />
+                <CompareRow capability="Configurable data retention with auto-purge" terapily="Yes, with export" terapilyWin alt1="No" alt1Lose alt2="Rarely published" />
+                <CompareRow capability="Exportable compliance report (audit + retention + BAAs)" terapily="Practice plan" terapilyWin alt1="No" alt1Lose alt2="No" alt2Lose />
+                <CompareRow capability="Public BAA + subprocessor list" terapily="Yes" terapilyWin alt1="N/A" alt1Lose alt2="On request only" />
+                <CompareRow capability="Replaces your EHR" terapily="No, complements it" alt1="N/A" alt2="Sometimes claims to" />
+              </div>
+            </div>
+
+            {/* ─── Mobile stack ─── */}
+            <div className="mt-12 space-y-4 md:hidden">
+              {[
+                { cap: "Auto-scored validated scales (PHQ-9, GAD-7, PCL-5...)", t: "35 built-in", a1: "No", a2: "Some, varies" },
+                { cap: "Same activity in session AND between sessions", t: "Yes", a1: "Manual", a2: "Between only" },
+                { cap: "Patient access without an account", t: "Magic link, 24h", a1: "N/A", a2: "Account required" },
+                { cap: "Configurable retention with auto-purge", t: "Yes, with export", a1: "No", a2: "Rarely published" },
+                { cap: "Exportable compliance report", t: "Practice plan", a1: "No", a2: "No" },
+                { cap: "Public BAA + subprocessor list", t: "Yes", a1: "N/A", a2: "On request only" },
+                { cap: "Replaces your EHR", t: "No, complements it", a1: "N/A", a2: "Sometimes claims to" },
+              ].map((row) => (
+                <div
+                  key={row.cap}
+                  className="rounded-2xl border border-border/60 bg-card/60 p-5"
+                >
+                  <p className="text-sm font-medium text-foreground">
+                    {row.cap}
+                  </p>
+                  <div className="mt-4 space-y-2 text-sm">
+                    <div className="flex items-center justify-between gap-3 rounded-lg bg-sage/15 px-3 py-2">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-sage">
+                        Terapily
+                      </span>
+                      <span className="text-right font-medium text-navy">
+                        {row.t}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 px-3 py-1">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                        PDF libraries
+                      </span>
+                      <span className="text-right text-muted-foreground">
+                        {row.a1}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between gap-3 px-3 py-1">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground">
+                        Homework apps
+                      </span>
+                      <span className="text-right text-muted-foreground">
+                        {row.a2}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
+              &ldquo;Static PDF libraries&rdquo; refers to subscription
+              worksheet sites. &ldquo;Homework platforms&rdquo; refers to
+              between-session engagement tools that require patient
+              accounts. We&rsquo;re happy to update specific competitor
+              names with their permission.
             </p>
           </div>
-
-          <div className="mt-12 overflow-hidden rounded-2xl border border-border/60">
-            <table className="w-full min-w-[640px] text-left text-sm">
-              <thead className="bg-card/60 text-xs uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="px-6 py-4 font-medium">Capability</th>
-                  <th className="px-6 py-4 font-medium text-foreground">Terapily</th>
-                  <th className="px-6 py-4 font-medium">Static PDF libraries</th>
-                  <th className="px-6 py-4 font-medium">Homework platforms</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40">
-                <CompareRow capability="Auto-scored validated scales (PHQ-9, GAD-7, PCL-5...)" terapily="35 built-in" alt1="No" alt2="Some, varies" />
-                <CompareRow capability="Use the same activity in session AND between sessions" terapily="Yes" alt1="Manual" alt2="Between only" />
-                <CompareRow capability="Patient access without creating an account" terapily="Magic link, 24h expiry" alt1="N/A" alt2="Account required" />
-                <CompareRow capability="Configurable data retention with auto-purge" terapily="Yes, with export" alt1="No" alt2="Rarely published" />
-                <CompareRow capability="Exportable compliance report (audit + retention + BAAs)" terapily="Practice plan" alt1="No" alt2="No" />
-                <CompareRow capability="Public BAA + subprocessor list" terapily="Yes" alt1="N/A" alt2="On request only" />
-                <CompareRow capability="Replaces your EHR" terapily="No, complements it" alt1="N/A" alt2="Sometimes claims to" />
-              </tbody>
-            </table>
-          </div>
-
-          <p className="mx-auto mt-6 max-w-3xl text-center text-xs text-muted-foreground">
-            &ldquo;Static PDF libraries&rdquo; refers to subscription worksheet
-            sites. &ldquo;Homework platforms&rdquo; refers to between-session
-            engagement tools that require patient accounts. We&rsquo;re happy
-            to update specific competitor names with their permission.
-          </p>
         </section>
 
         {/* ============================================================ */}
