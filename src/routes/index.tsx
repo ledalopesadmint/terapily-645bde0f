@@ -127,9 +127,14 @@ function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border/60">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
-          <p>© {new Date().getFullYear()} {BRAND.name}. Built by a practicing CBT clinician.</p>
-          <p className="font-medium">{BRAND.tagline}</p>
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8 text-xs text-muted-foreground">
+          <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+            <p>© {new Date().getFullYear()} {BRAND.name}. Built by a practicing CBT clinician.</p>
+            <p className="font-medium">{BRAND.tagline}</p>
+          </div>
+          <div className="border-t border-border/40 pt-4 text-center sm:text-left">
+            <p>TLS 1.3 in transit · AES-GCM-256 at rest · Built to support HIPAA compliance</p>
+          </div>
         </div>
       </footer>
     </div>
