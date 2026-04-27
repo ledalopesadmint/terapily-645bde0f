@@ -1530,12 +1530,12 @@ function CompareCell({
     ? "bg-sage text-cream"
     : lose
       ? "bg-rust/15 text-rust ring-1 ring-rust/30"
-      : "bg-muted/60 text-muted-foreground";
+      : "bg-terracotta/15 text-rust/70 ring-1 ring-terracotta/25";
   const valueColor = highlight
     ? "font-medium text-navy"
     : lose
       ? "text-rust/80"
-      : "text-muted-foreground";
+      : "text-rust/70";
   return (
     <div className="flex flex-col items-center gap-2">
       <span
