@@ -4,6 +4,41 @@ import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { BRAND, TRIAL_DURATION_DAYS } from "@/lib/constants";
 import { useAuth } from "@/features/auth/AuthProvider";
+import iconSrc from "@/assets/terapily-icon.png";
+
+/**
+ * Pequeno satélite circular cream com ícone, em volta do ícone Terapily
+ * central na seção "Terapily is the system that was missing".
+ */
+function SatelliteIcon({
+  className,
+  label,
+  children,
+}: {
+  className?: string;
+  label: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className={`flex h-12 w-12 items-center justify-center rounded-full bg-cream shadow-[0_8px_20px_-10px_oklch(0.28_0.027_251_/_0.4)] ring-1 ring-navy/5 ${className ?? ""}`}
+      aria-label={label}
+    >
+      <svg
+        aria-hidden="true"
+        className="h-5 w-5 text-terracotta"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {children}
+      </svg>
+    </div>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => ({
