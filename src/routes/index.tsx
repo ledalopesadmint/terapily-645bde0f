@@ -1385,7 +1385,7 @@ function ModeCard({
         className="mt-4 text-sm leading-relaxed text-muted-foreground"
         dangerouslySetInnerHTML={{ __html: body }}
       />
-      <p className="mt-6 border-t border-terracotta/15 pt-4 text-xs italic leading-relaxed text-navy/70">
+      <p className="mt-6 border-t border-terracotta/15 pt-4 text-xs italic leading-relaxed text-navy/70 font-bold">
         {useCase}
       </p>
     </div>
