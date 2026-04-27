@@ -205,8 +205,8 @@ function Hero({
 const PILLARS = [
   {
     n: "01",
-    title: "Encrypted by design",
-    body: "PHI encrypted at rest with AES-GCM-256. Per-workspace isolation enforced at the database level.",
+    title: "Encrypted end-to-server",
+    body: "TLS 1.3 in transit. AES-GCM-256 at rest. Per-workspace isolation enforced at the database. Signed BAA covers every PHI subprocessor.",
   },
   {
     n: "02",
