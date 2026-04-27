@@ -111,33 +111,33 @@ function SiteHeader({
   primaryCtaTo: "/dashboard" | "/signup";
 }) {
   return (
-    <header className="sticky top-0 z-40 border-b border-border/40 bg-[oklch(0.97_0.005_80_/_0.9)] backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-border/40 bg-[oklch(0.95_0.01_80_/_0.85)] backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Logo size="sm" />
         <nav className="flex items-center gap-6 text-sm">
           <a
             href="#pricing"
-            className="hidden font-medium text-[var(--navy)]/70 transition-colors hover:text-[var(--navy)] sm:inline"
+            className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline"
           >
             Pricing
           </a>
           <a
             href="#faq"
-            className="hidden font-medium text-[var(--navy)]/70 transition-colors hover:text-[var(--navy)] sm:inline"
+            className="hidden text-muted-foreground transition-colors hover:text-foreground sm:inline"
           >
             FAQ
           </a>
           {!isLoading && !isAuthenticated && (
             <Link
               to="/login"
-              className="font-medium text-[var(--navy)]/70 transition-colors hover:text-[var(--navy)]"
+              className="text-muted-foreground transition-colors hover:text-foreground"
             >
               Log in
             </Link>
           )}
           <Link
             to={primaryCtaTo}
-            className="inline-flex items-center justify-center rounded-md bg-[var(--solar)] px-4 py-2 text-sm font-semibold text-[var(--navy)] shadow-sm transition-all hover:shadow-[var(--shadow-glow-solar)]"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
           >
             {isAuthenticated ? "Dashboard" : "Start free trial"}
           </Link>
@@ -186,21 +186,16 @@ function Hero({
       className="relative overflow-hidden"
       style={{ background: "var(--gradient-hero)" }}
     >
-      {/* Blobs decorativos — ciano + lavanda + lima */}
+      {/* Blobs decorativos */}
       <div
         aria-hidden
-        className="blob-drift pointer-events-none absolute -left-24 top-32 h-72 w-72 rounded-full opacity-50 blur-3xl"
-        style={{ background: "oklch(0.71 0.13 220 / 0.55)" }}
+        className="blob-drift pointer-events-none absolute -left-24 top-32 h-72 w-72 rounded-full opacity-40 blur-3xl"
+        style={{ background: "oklch(0.65 0.04 152 / 0.4)" }}
       />
       <div
         aria-hidden
-        className="blob-drift pointer-events-none absolute -right-20 top-10 h-64 w-64 rounded-full opacity-40 blur-3xl"
-        style={{ background: "oklch(0.62 0.21 290 / 0.45)", animationDelay: "-7s" }}
-      />
-      <div
-        aria-hidden
-        className="blob-drift pointer-events-none absolute bottom-0 left-1/3 h-56 w-56 rounded-full opacity-35 blur-3xl"
-        style={{ background: "oklch(0.87 0.2 130 / 0.4)", animationDelay: "-4s" }}
+        className="blob-drift pointer-events-none absolute -right-20 top-10 h-64 w-64 rounded-full opacity-30 blur-3xl"
+        style={{ background: "oklch(0.78 0.11 50 / 0.35)", animationDelay: "-7s" }}
       />
 
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 py-20 md:py-28 lg:grid-cols-12 lg:gap-8">
@@ -213,14 +208,14 @@ function Hero({
           </Reveal>
 
           <Reveal delay={80}>
-            <h1 className="mt-6 font-display text-5xl text-[var(--cream)] md:text-6xl lg:text-[4.5rem]">
+            <h1 className="mt-6 font-display text-5xl text-foreground md:text-6xl lg:text-[4.5rem]">
               Therapy your client{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">helps build.</span>
                 <span
                   aria-hidden
                   className="absolute inset-x-0 bottom-1 h-3 rounded-sm"
-                  style={{ background: "oklch(0.86 0.17 90 / 0.6)" }}
+                  style={{ background: "oklch(0.78 0.11 50 / 0.35)" }}
                 />
               </span>{" "}
               Records you can{" "}
@@ -229,15 +224,15 @@ function Hero({
                 <span
                   aria-hidden
                   className="absolute inset-x-0 bottom-1 h-3 rounded-sm"
-                  style={{ background: "oklch(0.87 0.2 130 / 0.55)" }}
+                  style={{ background: "oklch(0.65 0.04 152 / 0.45)" }}
                 />
               </span>
             </h1>
           </Reveal>
 
           <Reveal delay={160}>
-            <p className="mt-8 max-w-xl text-base leading-relaxed text-[var(--cream)]/75 md:text-lg">
-              <em className="font-display not-italic text-[var(--cream)]">Terapily</em> turns each CBT
+            <p className="mt-8 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              <em className="font-display not-italic text-foreground">Terapily</em> turns each CBT
               session into a visual board you co-build with your client, then auto-generates a
               clean clinical report you can attach to the chart, share with families, or hand to
               your supervisor.
@@ -248,7 +243,7 @@ function Hero({
             <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row">
               <Link
                 to={primaryCtaTo}
-                className="group inline-flex items-center justify-center gap-2 rounded-md bg-[var(--solar)] px-6 py-3 text-sm font-semibold text-[var(--navy)] shadow-[var(--shadow-card-lift)] transition-all hover:shadow-[var(--shadow-glow-solar)]"
+                className="group inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-[var(--shadow-card-lift)] transition-all hover:bg-primary/90 hover:shadow-[var(--shadow-glow-sage)]"
               >
                 {primaryCtaLabel}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -256,7 +251,7 @@ function Hero({
               {!isAuthenticated && (
                 <a
                   href="#see-it-work"
-                  className="inline-flex items-center justify-center rounded-md border border-[var(--cream)]/25 bg-[var(--cream)]/5 px-6 py-3 text-sm font-medium text-[var(--cream)] backdrop-blur transition-colors hover:bg-[var(--cream)]/10"
+                  className="inline-flex items-center justify-center rounded-md border border-border bg-background/60 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-colors hover:bg-background"
                 >
                   See how it works
                 </a>
@@ -265,17 +260,17 @@ function Hero({
           </Reveal>
 
           <Reveal delay={320}>
-            <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--cream)]/65">
+            <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-[var(--lime)]" /> No credit card
+                <Check className="h-3.5 w-3.5 text-secondary" /> No credit card
               </span>
-              <span className="text-[var(--cream)]/30">·</span>
+              <span className="text-border">·</span>
               <span className="inline-flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-[var(--lime)]" /> Cancel anytime
+                <Check className="h-3.5 w-3.5 text-secondary" /> Cancel anytime
               </span>
-              <span className="text-[var(--cream)]/30">·</span>
+              <span className="text-border">·</span>
               <span className="inline-flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5 text-[var(--sage)]" /> BAA available on Practice
+                <Lock className="h-3.5 w-3.5 text-secondary" /> BAA available on Practice
               </span>
             </p>
           </Reveal>
@@ -283,6 +278,7 @@ function Hero({
 
         {/* Coluna direita — ilustração: board mockup empilhado */}
         <div className="relative lg:col-span-5">
+          {/* IMG: Substituir por screenshot real do board quando disponível */}
           <Reveal variant="scale" delay={200}>
             <HeroIllustration />
           </Reveal>
@@ -294,11 +290,11 @@ function Hero({
 
 function HeroIllustration() {
   const cards = [
-    { label: "Situation", color: "oklch(0.71 0.13 220)", h: 38 },     // ciano
-    { label: "Thought",   color: "oklch(0.62 0.21 290)", h: 56 },     // lavanda
-    { label: "Emotion",   color: "oklch(0.86 0.17 90)",  h: 70 },     // amarelo solar
-    { label: "Body",      color: "oklch(0.7 0.12 180)",  h: 44 },     // verde água
-    { label: "Behavior",  color: "oklch(0.87 0.2 130)",  h: 60 },     // verde limão
+    { label: "Situation", color: "oklch(0.65 0.04 152)", h: 38 },
+    { label: "Thought", color: "oklch(0.7 0.04 0)", h: 56 },
+    { label: "Emotion", color: "oklch(0.78 0.11 50)", h: 70 },
+    { label: "Body", color: "oklch(0.65 0.04 152 / 0.7)", h: 44 },
+    { label: "Behavior", color: "oklch(0.7 0.04 0 / 0.85)", h: 60 },
   ];
 
   return (

@@ -5,28 +5,15 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Terapily Design System (Brand Book v4 · 2026 — Paleta "Confiança & Bem-estar")
+ * Terapily Design System (Brand Book v3 · 2026)
  * --------------------------------------------------
- * Base       Azul Navy       #0B1F3A  (autoridade clínica)
- * Primária   Azul Ciano      #06B6D4  (ação, links, foco)
- * Secundária Verde Água      #14B8A6  (terapêutico, cards)
- * Acento     Verde Limão     #A3E635  (energia, gamificação leve)
- * Acento 2   Amarelo Solar   #FACC15  (CTA principal, destaque)
- * Detalhe    Lavanda         #8B5CF6  (humanização, mood/emotion)
- * Neutros    Bone #F8F6F2 · Slate #3F4257
- *
- * Aliases legados (sage/mauve/cream/charcoal) MANTIDOS por compat —
- * agora apontam para as novas cores. Nada quebra.
- *   sage     → ciano (primária)
- *   mauve    → lavanda (detalhe)
- *   cream    → bone (background)
- *   charcoal → slate (texto)
- *
+ * Paleta: Sage · Navy · Cream · Mauve · Charcoal
+ * Tipografia: Cormorant (display, serif) + Inter (UI, sans)
  * Regras:
  *   - Preto puro #000 PROIBIDO — usar Navy
- *   - Lavanda só decorativo (≤8%), nunca em corpo
- *   - Amarelo Solar reservado para CTA primário e badges de progresso
- *   - Proporção 60/25/10/5 (Bone/Navy/Ciano-Aqua/Limão-Amarelo-Lavanda)
+ *   - Mauve só decorativo (≤8% da página, nunca em corpo)
+ *   - Sage e Mauve nunca lado a lado
+ *   - Proporção 60/30/10 (Cream/Navy/Sage ou Mauve)
  * Cores em oklch (Tailwind v4 padrão).
  */
 
@@ -91,142 +78,99 @@
   --color-mauve: var(--mauve);
   --color-mauve-foreground: var(--mauve-foreground);
   --color-charcoal: var(--charcoal);
-
-  /* Novos tokens da Paleta 2 (acessíveis como bg-aqua, text-lime, etc.) */
-  --color-aqua: var(--aqua);
-  --color-aqua-foreground: var(--aqua-foreground);
-  --color-lime: var(--lime);
-  --color-lime-foreground: var(--lime-foreground);
-  --color-solar: var(--solar);
-  --color-solar-foreground: var(--solar-foreground);
 }
 
 /*
- * Light mode (padrão) — fundo Bone, texto Slate, primária Navy
- * Hex de origem (Paleta 2 · Confiança & Bem-estar):
- *   Navy        #0B1F3A   (base / autoridade)
- *   Ciano       #06B6D4   (primária / ação) — alias: sage
- *   Verde Água  #14B8A6   (secundária / terapêutico) — alias: aqua
- *   Verde Limão #A3E635   (acento / energia) — alias: lime
- *   Amarelo Solar #FACC15 (acento 2 / CTA) — alias: solar
- *   Lavanda     #8B5CF6   (detalhe / humanização) — alias: mauve
- *   Bone        #F8F6F2   (background) — alias: cream
- *   Slate       #3F4257   (texto) — alias: charcoal
+ * Light mode (padrão) — fundo Cream, texto Charcoal, primária Navy
+ * Hex de origem (Brand Book v3):
+ *   Sage     #7E9B86
+ *   Navy     #1F2A36
+ *   Cream    #F4EFE6
+ *   Mauve    #B89BA3
+ *   Charcoal #3A3F47
  */
 :root {
   --radius: 0.5rem;
 
-  /* === Cores puras Paleta 2 (oklch convertido dos hex oficiais) === */
-  /* Navy #0B1F3A */
-  --navy: oklch(0.21 0.05 260);
-  --navy-foreground: oklch(0.97 0.005 80);
+  /* Cores puras Terapily (oklch convertido dos hex oficiais) */
+  --sage: oklch(0.65 0.04 152);
+  --sage-foreground: oklch(0.22 0.02 232); /* Navy sobre Sage = AA Large */
+  --navy: oklch(0.22 0.02 232);
+  --navy-foreground: oklch(0.95 0.01 80); /* Cream sobre Navy */
+  --cream: oklch(0.95 0.01 80);
+  --cream-foreground: oklch(0.32 0.01 232); /* Charcoal sobre Cream */
+  --mauve: oklch(0.7 0.04 0);
+  --mauve-foreground: oklch(0.22 0.02 232);
+  --charcoal: oklch(0.32 0.01 232);
 
-  /* Ciano #06B6D4 — primária (alias: sage p/ compat) */
-  --sage: oklch(0.71 0.13 220);
-  --sage-foreground: oklch(0.21 0.05 260);
-
-  /* Verde Água #14B8A6 — secundária */
-  --aqua: oklch(0.7 0.12 180);
-  --aqua-foreground: oklch(0.21 0.05 260);
-
-  /* Verde Limão #A3E635 — acento energia */
-  --lime: oklch(0.87 0.2 130);
-  --lime-foreground: oklch(0.21 0.05 260);
-
-  /* Amarelo Solar #FACC15 — CTA primário */
-  --solar: oklch(0.86 0.17 90);
-  --solar-foreground: oklch(0.21 0.05 260);
-
-  /* Lavanda #8B5CF6 — detalhe humano (alias: mauve p/ compat) */
-  --mauve: oklch(0.62 0.21 290);
-  --mauve-foreground: oklch(0.97 0.005 80);
-
-  /* Bone #F8F6F2 — background (alias: cream p/ compat) */
-  --cream: oklch(0.97 0.005 80);
-  --cream-foreground: oklch(0.32 0.02 260);
-
-  /* Slate #3F4257 — texto (alias: charcoal p/ compat) */
-  --charcoal: oklch(0.32 0.02 260);
-
-  /* === Mapping semântico shadcn === */
+  /* Mapping semântico shadcn → paleta Terapily */
   --background: var(--cream);
   --foreground: var(--charcoal);
-  --card: oklch(0.99 0.003 80);
+  --card: oklch(0.98 0.005 80); /* Cream-light */
   --card-foreground: var(--charcoal);
   --popover: var(--cream);
   --popover-foreground: var(--charcoal);
   --primary: var(--navy);
   --primary-foreground: var(--cream);
-  --secondary: var(--sage);          /* ciano */
+  --secondary: var(--sage);
   --secondary-foreground: var(--navy);
-  --muted: oklch(0.93 0.008 240);
-  --muted-foreground: oklch(0.5 0.02 260);
-  --accent: var(--aqua);             /* verde água */
+  --muted: oklch(0.92 0.008 80); /* Cream-deep */
+  --muted-foreground: oklch(0.5 0.01 232);
+  --accent: var(--sage);
   --accent-foreground: var(--navy);
-  --destructive: oklch(0.55 0.2 28);
+  --destructive: oklch(0.5 0.18 28);
   --destructive-foreground: var(--cream);
-  --border: oklch(0.89 0.012 240);
-  --input: oklch(0.89 0.012 240);
+  --border: oklch(0.88 0.01 80);
+  --input: oklch(0.88 0.01 80);
   --ring: var(--sage);
 
-  --chart-1: var(--sage);    /* ciano */
-  --chart-2: var(--aqua);    /* verde água */
-  --chart-3: var(--lime);    /* verde limão */
-  --chart-4: var(--solar);   /* amarelo */
-  --chart-5: var(--mauve);   /* lavanda */
+  --chart-1: var(--sage);
+  --chart-2: var(--navy);
+  --chart-3: var(--mauve);
+  --chart-4: var(--charcoal);
+  --chart-5: oklch(0.75 0.06 152); /* Sage-light */
 
-  --sidebar: oklch(0.98 0.005 80);
+  --sidebar: oklch(0.97 0.008 80);
   --sidebar-foreground: var(--charcoal);
   --sidebar-primary: var(--navy);
   --sidebar-primary-foreground: var(--cream);
-  --sidebar-accent: oklch(0.93 0.008 240);
+  --sidebar-accent: oklch(0.92 0.008 80);
   --sidebar-accent-foreground: var(--navy);
-  --sidebar-border: oklch(0.89 0.012 240);
+  --sidebar-border: oklch(0.88 0.01 80);
   --sidebar-ring: var(--sage);
 
-  /* ---- Surface tonals (landing — alternating section backgrounds) ---- */
+  /* ---- Surface tonals (landing only — alternating section backgrounds) ---- */
   --surface-cream: var(--cream);
-  --surface-cream-deep: oklch(0.94 0.008 80);
-  --surface-sage-tint: oklch(0.95 0.025 220);    /* Ciano 8% */
-  --surface-sage-deep: oklch(0.88 0.06 220);
-  --surface-aqua-tint: oklch(0.94 0.03 180);     /* Verde Água 10% */
-  --surface-lime-tint: oklch(0.96 0.06 130);     /* Limão 12% */
-  --surface-mauve-tint: oklch(0.95 0.02 290);    /* Lavanda 8% */
+  --surface-cream-deep: oklch(0.92 0.012 80);
+  --surface-sage-tint: oklch(0.93 0.025 152);   /* Sage 12% sobre cream */
+  --surface-sage-deep: oklch(0.86 0.04 152);
+  --surface-mauve-tint: oklch(0.93 0.018 0);     /* Mauve 10% sobre cream */
   --surface-navy: var(--navy);
-  --surface-navy-soft: oklch(0.28 0.05 260);
-  --surface-navy-deep: oklch(0.16 0.04 260);
+  --surface-navy-soft: oklch(0.28 0.025 232);
 
-  /* Acento warm legado → mapeado pra solar (compat) */
-  --accent-warm: var(--solar);
-  --accent-warm-deep: oklch(0.78 0.16 80);
+  /* Marca acento warm (apricot/peach) — usado SÓ em ilustrações/ícones, ≤8% */
+  --accent-warm: oklch(0.78 0.11 50);
+  --accent-warm-deep: oklch(0.65 0.14 45);
 
-  /* === Gradientes orgânicos === */
+  /* Gradientes orgânicos pra heros e closing */
   --gradient-hero:
-    radial-gradient(ellipse 70% 60% at 15% 10%, oklch(0.71 0.13 220 / 0.45), transparent 60%),
-    radial-gradient(ellipse 60% 50% at 90% 20%, oklch(0.62 0.21 290 / 0.35), transparent 60%),
-    radial-gradient(ellipse 80% 50% at 50% 100%, oklch(0.87 0.2 130 / 0.28), transparent 60%),
-    radial-gradient(ellipse 40% 30% at 70% 70%, oklch(0.86 0.17 90 / 0.22), transparent 60%),
-    var(--navy);
+    radial-gradient(ellipse 80% 60% at 20% 0%, oklch(0.93 0.025 152 / 0.55), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 30%, oklch(0.93 0.018 0 / 0.55), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, oklch(0.78 0.11 50 / 0.18), transparent 60%),
+    var(--cream);
   --gradient-navy-glow:
-    radial-gradient(ellipse 70% 50% at 0% 0%, oklch(0.71 0.13 220 / 0.35), transparent 55%),
-    radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.62 0.21 290 / 0.3), transparent 55%),
-    radial-gradient(ellipse 40% 30% at 50% 50%, oklch(0.87 0.2 130 / 0.15), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 0% 0%, oklch(0.65 0.04 152 / 0.25), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.78 0.11 50 / 0.18), transparent 55%),
     var(--navy);
   --gradient-mauve-soft:
-    linear-gradient(180deg, oklch(0.97 0.012 290) 0%, oklch(0.94 0.025 290) 100%);
+    linear-gradient(180deg, oklch(0.95 0.012 0) 0%, oklch(0.93 0.018 0) 100%);
   --gradient-sage-soft:
-    linear-gradient(180deg, oklch(0.97 0.015 220) 0%, oklch(0.92 0.04 220) 100%);
-  --gradient-aqua-soft:
-    linear-gradient(180deg, oklch(0.97 0.02 180) 0%, oklch(0.92 0.05 180) 100%);
-  --gradient-cta:
-    linear-gradient(135deg, oklch(0.86 0.17 90) 0%, oklch(0.87 0.2 130) 100%);
+    linear-gradient(180deg, oklch(0.95 0.018 152) 0%, oklch(0.91 0.03 152) 100%);
 
-  /* Sombras editoriais (tinted ciano) */
-  --shadow-card-soft: 0 1px 2px oklch(0.21 0.05 260 / 0.05), 0 8px 24px -12px oklch(0.21 0.05 260 / 0.14);
-  --shadow-card-lift: 0 2px 4px oklch(0.21 0.05 260 / 0.06), 0 20px 40px -16px oklch(0.21 0.05 260 / 0.2);
-  --shadow-glow-sage: 0 8px 32px -8px oklch(0.71 0.13 220 / 0.45);
-  --shadow-glow-solar: 0 8px 32px -8px oklch(0.86 0.17 90 / 0.55);
-  --shadow-glow-lime: 0 8px 32px -8px oklch(0.87 0.2 130 / 0.45);
+  /* Sombras editoriais */
+  --shadow-card-soft: 0 1px 2px oklch(0.22 0.02 232 / 0.04), 0 8px 24px -12px oklch(0.22 0.02 232 / 0.12);
+  --shadow-card-lift: 0 2px 4px oklch(0.22 0.02 232 / 0.05), 0 20px 40px -16px oklch(0.22 0.02 232 / 0.18);
+  --shadow-glow-sage: 0 8px 32px -8px oklch(0.65 0.04 152 / 0.35);
 }
 
 /*
