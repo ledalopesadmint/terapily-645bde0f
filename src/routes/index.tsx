@@ -621,13 +621,13 @@ const FEATURES = [
   },
   {
     eyebrow: "Clinical reports",
-    title: "Defensible PDFs, in your voice.",
+    title: "Documentation built for the chart.",
     body: "Pre-interpreted summary your supervisor reads in 30 seconds. Full board below for the chart. Branded with your practice. Attach to your EHR or share with families.",
   },
   {
     eyebrow: "Encrypted workspace",
-    title: "Records you can actually defend.",
-    body: "Every record encrypted at rest with AES-GCM-256. Per-workspace isolation enforced at the database. Full audit trail. Soft delete with 30-day recovery. BAA on Practice.",
+    title: "Records with the audit trail you need.",
+    body: "TLS 1.3 in transit. AES-GCM-256 at rest. Per-workspace isolation at the database. Full audit trail you can export. Soft delete with 30-day recovery. BAA signed at signup on Practice.",
   },
 ] as const;
 
