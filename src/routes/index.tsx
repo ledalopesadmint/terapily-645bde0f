@@ -74,7 +74,7 @@ function LandingPage() {
         {/* 1 · HERO */}
         {/* ============================================================ */}
         <section className="mx-auto max-w-4xl px-6 py-24 text-center md:py-32">
-          <Eyebrow tone="mauve">Built for CBT clinicians · Adolescents &amp; adults</Eyebrow>
+          <Eyebrow tone="mauve">Every activity grounded in published evidence</Eyebrow>
 
           <h1 className="mt-6 font-display text-5xl text-foreground md:text-7xl">
             Therapeutic tools <br className="hidden md:block" />
@@ -659,10 +659,6 @@ function LandingPage() {
               q="What if my supervisor or board asks for my records?"
               a="On the Practice plan, the exportable compliance report bundles your retention policy, audit trail of every patient interaction, list of subprocessors with BAAs, and any auto-purge events. Hand it over as a PDF."
             />
-            <Faq
-              q="Who built this?"
-              a="A practicing CBT clinician with two decades of clinical experience, working alongside engineers and a HIPAA security advisor. We&rsquo;re not a venture-backed AI company — we built Terapily because the tools we needed didn&rsquo;t exist."
-            />
           </div>
         </section>
 
@@ -710,7 +706,7 @@ function LandingPage() {
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-10 text-xs text-muted-foreground">
           <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-            <p>© {new Date().getFullYear()} {BRAND.name}. Built by a practicing CBT clinician.</p>
+            <p>© {new Date().getFullYear()} {BRAND.name}. Built with clinical rigor, one decision at a time.</p>
             <p className="font-medium">{BRAND.tagline}</p>
           </div>
           <div className="border-t border-border/40 pt-6 text-center sm:text-left">
