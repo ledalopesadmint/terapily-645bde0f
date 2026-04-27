@@ -320,7 +320,8 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 3 · PROBLEM — comparativo "antes / depois", didático e calmo */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-5xl px-6 py-24">
+        <section className="bg-cream-tan">
+          <div className="mx-auto max-w-5xl px-6 py-24">
           <div className="text-center">
             <Eyebrow>The reality between sessions</Eyebrow>
             <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
