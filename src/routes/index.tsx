@@ -1023,28 +1023,28 @@ function LandingPage() {
 
             <div className="mt-16 grid grid-cols-1 items-stretch gap-8 md:grid-cols-2">
               {/* ─── Basic ─── */}
-              <div className="group relative flex flex-col rounded-2xl border border-cream/30 bg-cream/[0.10] p-8 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.4)] backdrop-blur-md transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:border-cream/50 hover:bg-cream/[0.16] hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.55)]">
+              <div className="group relative flex flex-col rounded-2xl bg-cream/90 p-8 shadow-[0_20px_40px_-20px_rgba(0,0,0,0.4)] ring-1 ring-navy/10 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-cream/95 hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.55)] hover:ring-navy/20">
                 <Eyebrow tone="sage">Basic</Eyebrow>
                 <div className="mt-4 flex items-baseline gap-2">
-                  <span className="font-display text-6xl text-cream">$69</span>
-                  <span className="text-sm text-cream/75">/ month</span>
+                  <span className="font-display text-6xl text-navy">$69</span>
+                  <span className="text-sm text-navy/65">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-cream/80">
+                <p className="mt-3 text-sm text-navy/75">
                   Solo clinician getting started.
                 </p>
-                <ul className="mt-8 space-y-3 text-sm text-cream">
-                  <PricingItem tone="dark">Up to 20 active patients</PricingItem>
-                  <PricingItem tone="dark">1 clinician</PricingItem>
-                  <PricingItem tone="dark">35 auto-scored validated assessments</PricingItem>
-                  <PricingItem tone="dark">Magic link delivery — no patient login</PricingItem>
-                  <PricingItem tone="dark">AES-256-GCM at rest · TLS 1.3 in transit</PricingItem>
-                  <PricingItem tone="dark">Append-only audit log</PricingItem>
-                  <PricingItem tone="dark">Default retention policy (workspace-wide)</PricingItem>
+                <ul className="mt-8 space-y-3 text-sm text-navy/85">
+                  <PricingItem tone="light">Up to 20 active patients</PricingItem>
+                  <PricingItem tone="light">1 clinician</PricingItem>
+                  <PricingItem tone="light">35 auto-scored validated assessments</PricingItem>
+                  <PricingItem tone="light">Magic link delivery — no patient login</PricingItem>
+                  <PricingItem tone="light">AES-256-GCM at rest · TLS 1.3 in transit</PricingItem>
+                  <PricingItem tone="light">Append-only audit log</PricingItem>
+                  <PricingItem tone="light">Default retention policy (workspace-wide)</PricingItem>
                 </ul>
                 <div className="mt-auto pt-10">
                   <Link
                     to={primaryCtaTo}
-                    className="inline-flex w-full items-center justify-center rounded-md border border-cream/50 bg-cream/10 px-6 py-3 text-sm font-medium text-cream transition-colors hover:bg-cream/20 hover:border-cream/70"
+                    className="inline-flex w-full items-center justify-center rounded-md border border-navy/30 bg-transparent px-6 py-3 text-sm font-medium text-navy transition-colors hover:bg-navy/5 hover:border-navy/50"
                   >
                     {ctaPrimaryLabel}
                   </Link>
