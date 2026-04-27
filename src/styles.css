@@ -249,3 +249,58 @@
     line-height: 1.5;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Reveal animations (landing) — IntersectionObserver toggles .is-visible      */
+/* Respect prefers-reduced-motion: estado final aplicado sem transição.       */
+/* -------------------------------------------------------------------------- */
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes reveal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes reveal-scale {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-8px); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 0.9; }
+}
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(20px, -15px) scale(1.05); }
+  66%      { transform: translate(-15px, 10px) scale(0.97); }
+}
+
+.reveal {
+  opacity: 0;
+  will-change: opacity, transform;
+}
+.reveal.is-visible {
+  animation: reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.reveal[data-variant="fade"].is-visible {
+  animation-name: reveal-fade;
+}
+.reveal[data-variant="scale"].is-visible {
+  animation-name: reveal-scale;
+}
+
+.float-slow { animation: float-slow 6s ease-in-out infinite; }
+.pulse-soft { animation: pulse-soft 4s ease-in-out infinite; }
+.blob-drift { animation: blob-drift 14s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal { opacity: 1 !important; transform: none !important; animation: none !important; }
+  .float-slow, .pulse-soft, .blob-drift { animation: none !important; }
+}
+
