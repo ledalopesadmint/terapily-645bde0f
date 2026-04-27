@@ -1148,9 +1148,9 @@ function Step({
 
 function KeyStat({ value, label }: { value: string; label: string }) {
   return (
-    <div>
-      <p className="font-display text-3xl text-foreground">{value}</p>
-      <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+    <div className="group relative flex flex-col items-center rounded-2xl border border-border/60 bg-background px-4 py-6 text-center shadow-[0_14px_36px_-22px_oklch(0.28_0.027_251_/_0.3)] ring-1 ring-terracotta/5 transition-all duration-300 hover:-translate-y-1 hover:border-terracotta/30 hover:ring-terracotta/20 hover:shadow-[0_22px_50px_-24px_oklch(0.28_0.027_251_/_0.45)]">
+      <p className="font-display text-4xl italic text-terracotta md:text-5xl">{value}</p>
+      <p className="mt-2 text-[0.68rem] uppercase tracking-[0.18em] text-navy/70">
         {label}
       </p>
     </div>
