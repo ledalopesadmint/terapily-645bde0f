@@ -242,7 +242,7 @@ function LandingPage() {
             <Step
               number="02"
               title="Send or apply"
-              body="Apply it on your device, or click Send. The patient gets one link by email or SMS — no signup, no app install."
+              body="Apply it on your device, or click Send. The patient gets one secure link by email — or copy it and share on any channel. No signup, no app install."
             />
             <Step
               number="03"
