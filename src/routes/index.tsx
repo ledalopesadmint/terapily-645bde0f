@@ -136,7 +136,15 @@ function SiteFooter() {
         <p>
           © {new Date().getFullYear()} {BRAND.name}, Inc. PHI encrypted at rest. BAA available.
         </p>
-        <p className="font-display italic">Where better therapy begins.</p>
+        <div className="flex items-center gap-6">
+          <Link
+            to="/trust"
+            className="transition-colors hover:text-foreground"
+          >
+            Trust &amp; Security
+          </Link>
+          <p className="font-display italic">Where better therapy begins.</p>
+        </div>
       </div>
     </footer>
   );
