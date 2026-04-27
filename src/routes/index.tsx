@@ -879,10 +879,7 @@ function LandingPage() {
                 <div className="bg-card/60 px-6 py-5 text-center text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
                   Static PDF libraries
                 </div>
-                <div className="relative bg-sage/15 px-6 py-5 text-center">
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-sage px-3 py-1 text-[0.6rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-md">
-                    ★ Recommended
-                  </span>
+                <div className="bg-sage/15 px-6 py-5 text-center">
                   <span className="font-display text-lg italic text-navy">
                     Terapily
                   </span>
