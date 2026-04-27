@@ -239,3 +239,139 @@
     line-height: 1.5;
   }
 }
+
+/* -------------------------------------------------------------------------- */
+/* Landing animations & utilities (2026-04-27)                                */
+/* Todas respeitam prefers-reduced-motion no fim do arquivo.                  */
+/* -------------------------------------------------------------------------- */
+
+@keyframes reveal-up {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes reveal-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes reveal-scale {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-10px); }
+}
+@keyframes pulse-soft {
+  0%, 100% { opacity: 0.55; }
+  50%      { opacity: 1; }
+}
+@keyframes blob-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(20px, -15px) scale(1.05); }
+  66%      { transform: translate(-15px, 10px) scale(0.97); }
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+@keyframes draw-line {
+  from { stroke-dashoffset: 100; }
+  to   { stroke-dashoffset: 0; }
+}
+@keyframes ping-soft {
+  0%   { transform: scale(1); opacity: 1; }
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Estados iniciais — escondidos até o IntersectionObserver adicionar .is-visible */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: none;
+}
+.reveal.is-visible {
+  animation: reveal-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+.reveal--fade.is-visible {
+  animation: reveal-fade 0.8s ease-out forwards;
+}
+.reveal--scale.is-visible {
+  animation: reveal-scale 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Stagger via delay aplicado inline pelo componente */
+.float-slow  { animation: float-slow 6s ease-in-out infinite; }
+.pulse-soft  { animation: pulse-soft 3.5s ease-in-out infinite; }
+.blob-drift  { animation: blob-drift 14s ease-in-out infinite; }
+.ping-soft   { animation: ping-soft 2.4s cubic-bezier(0, 0, 0.2, 1) infinite; }
+
+/* Marquee track — duplique o conteúdo no JSX pra loop infinito sem corte */
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+
+/* Hover lift sutil para cards */
+.hover-lift {
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-card-lift);
+}
+
+/* Shimmer text para destaques (gradient-text animado) */
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--charcoal) 0%,
+    var(--charcoal) 40%,
+    var(--sage) 50%,
+    var(--charcoal) 60%,
+    var(--charcoal) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 6s linear infinite;
+}
+
+/* Underline de manchete tipográfico */
+.heading-rule::after {
+  content: "";
+  display: block;
+  width: 48px;
+  height: 2px;
+  background: var(--sage);
+  margin: 1.25rem auto 0;
+  border-radius: 2px;
+}
+
+/* Respeito ao usuário com motion reduzido — desliga tudo que se mexe */
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal.is-visible,
+  .reveal--fade.is-visible,
+  .reveal--scale.is-visible,
+  .float-slow,
+  .pulse-soft,
+  .blob-drift,
+  .ping-soft,
+  .marquee-track,
+  .shimmer-text,
+  .hover-lift {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    background: inherit;
+    color: inherit;
+  }
+}
