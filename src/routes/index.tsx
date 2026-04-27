@@ -481,32 +481,34 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 6 · VALIDATED ASSESSMENTS — mantido */}
         {/* ============================================================ */}
-        <section className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-4xl px-6 py-16 text-center">
+        <section className="border-t border-border/60 bg-background">
+          <div className="mx-auto max-w-5xl px-6 py-16 text-center">
             <Eyebrow tone="sage">Validated assessments · Built in</Eyebrow>
             <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-              The scales you already use. <br className="hidden md:block" />
-              Scored for you.
+              The scales you <em className="italic font-display text-terracotta">already</em> use. <br className="hidden md:block" />
+              <em className="italic font-display text-terracotta">Scored</em> for you.
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              35 evidence-based screening tools — PHQ-9, GAD-7, PCL-5
+              <strong className="font-display italic text-terracotta">35</strong> evidence-based screening tools — PHQ-9, GAD-7, PCL-5
               and many more — delivered as interactive activities with
-              auto-scoring, severity bands, and a one-page report. No
-              spreadsheets. No manual math. No per-assessment licensing
-              fees passed to you.
+              auto-scoring, severity bands, and a one-page report.{" "}
+              <span className="text-navy">No spreadsheets. No manual math. No per-assessment licensing fees passed to you.</span>
             </p>
 
-            <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-6 text-left sm:grid-cols-4">
+            <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5">
               <KeyStat value="35" label="Validated scales" />
               <KeyStat value="$0" label="Per-assessment fees" />
               <KeyStat value="<3s" label="Score to report" />
               <KeyStat value="100%" label="Original wording preserved" />
             </div>
 
-            <details className="group mx-auto mt-12 max-w-3xl rounded-2xl border border-border/60 bg-card/60 text-left backdrop-blur-sm">
-              <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">
-                <span>See the full library of 35 auto-scored assessments</span>
-                <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
+            <details className="group mx-auto mt-14 max-w-3xl overflow-hidden rounded-2xl border border-border/60 bg-cream-tan/40 text-left shadow-[0_18px_50px_-28px_oklch(0.28_0.027_251_/_0.35)] ring-1 ring-terracotta/10 transition-all hover:ring-terracotta/20">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-navy transition-colors hover:bg-cream-tan/70">
+                <span className="flex items-baseline gap-3">
+                  <span className="font-display text-xl italic text-terracotta">35</span>
+                  <span>See the full library of auto-scored assessments</span>
+                </span>
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-terracotta/10 text-terracotta transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
               </summary>
               <div className="space-y-8 border-t border-border/40 px-6 py-8">
                 <ScaleCategory
@@ -1148,9 +1150,9 @@ function Step({
 
 function KeyStat({ value, label }: { value: string; label: string }) {
   return (
-    <div>
-      <p className="font-display text-3xl text-foreground">{value}</p>
-      <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+    <div className="group relative flex flex-col items-center rounded-2xl border border-border/60 bg-background px-4 py-6 text-center shadow-[0_14px_36px_-22px_oklch(0.28_0.027_251_/_0.3)] ring-1 ring-terracotta/5 transition-all duration-300 hover:-translate-y-1 hover:border-terracotta/30 hover:ring-terracotta/20 hover:shadow-[0_22px_50px_-24px_oklch(0.28_0.027_251_/_0.45)]">
+      <p className="font-display text-4xl italic text-terracotta md:text-5xl">{value}</p>
+      <p className="mt-2 text-[0.68rem] uppercase tracking-[0.18em] text-navy/70">
         {label}
       </p>
     </div>
