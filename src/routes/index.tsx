@@ -19,22 +19,22 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "Terapily · Therapy your client helps build. Records you can defend.",
+          "Terapily · Therapy your client helps build. The audit trail you need.",
       },
       {
         name: "description",
         content:
-          "Terapily turns each CBT session into a visual board you co-build with your client, then auto-generates a clinical report you can defend. PHI encrypted at rest. Audit-logged by default. BAA available. 14-day free trial.",
+          "Terapily turns each CBT session into a visual board you co-build with your client, then auto-generates a clinical report ready for the chart. TLS 1.3 in transit. AES-GCM-256 at rest. Built to support HIPAA. BAA signed with every Practice account.",
       },
       {
         property: "og:title",
         content:
-          "Terapily · Therapy your client helps build. Records you can defend.",
+          "Terapily · Therapy your client helps build. The audit trail you need.",
       },
       {
         property: "og:description",
         content:
-          "Visual CBT boards your client co-builds in session. Auto-generated clinical reports. Encrypted, audit-logged patient workspace. Built for clinicians treating adolescents and adults.",
+          "Visual CBT boards your client co-builds in session. Auto-generated clinical reports. TLS 1.3 in transit, AES-GCM-256 at rest, BAA signed at signup. Built for CBT clinicians treating adolescents and adults.",
       },
     ],
   }),
@@ -134,7 +134,7 @@ function SiteFooter() {
     <footer className="border-t border-border/60">
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-6 py-10 text-xs text-muted-foreground sm:flex-row">
         <p>
-          © {new Date().getFullYear()} {BRAND.name}, Inc. PHI encrypted at rest. BAA available.
+          © {new Date().getFullYear()} {BRAND.name}, Inc. TLS 1.3 in transit · AES-GCM-256 at rest · BAA signed with every Practice account.
         </p>
         <p className="font-display italic">Where better therapy begins.</p>
       </div>
@@ -163,15 +163,15 @@ function Hero({
 
       <h1 className="mt-6 font-display text-5xl text-foreground md:text-7xl">
         Therapy your client <br className="hidden md:block" />
-        helps build. Records <br className="hidden md:block" />
-        you can defend.
+        helps build. The audit <br className="hidden md:block" />
+        trail you need.
       </h1>
 
       <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
         <em className="font-display not-italic">Terapily</em> turns each CBT session into a visual
-        board you co-build with your client, then auto-generates a clean clinical report you can
-        attach to the chart, share with families, or hand to your supervisor. Encrypted at rest.
-        Audit-logged by default. BAA on request.
+        board you co-build with your client, then auto-generates a clean clinical report ready for
+        the chart, the family, or your supervisor. TLS 1.3 in transit. AES-GCM-256 at rest. BAA
+        signed at signup.
       </p>
 
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -192,7 +192,7 @@ function Hero({
       </div>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        No credit card · Cancel anytime · BAA available on Practice
+        No credit card · Cancel anytime · BAA signed before your first patient
       </p>
     </section>
   );
@@ -205,8 +205,8 @@ function Hero({
 const PILLARS = [
   {
     n: "01",
-    title: "Encrypted by design",
-    body: "PHI encrypted at rest with AES-GCM-256. Per-workspace isolation enforced at the database level.",
+    title: "Encrypted end-to-server",
+    body: "TLS 1.3 in transit. AES-GCM-256 at rest. Per-workspace isolation enforced at the database. Signed BAA covers every PHI subprocessor.",
   },
   {
     n: "02",
@@ -621,13 +621,13 @@ const FEATURES = [
   },
   {
     eyebrow: "Clinical reports",
-    title: "Defensible PDFs, in your voice.",
+    title: "Documentation built for the chart.",
     body: "Pre-interpreted summary your supervisor reads in 30 seconds. Full board below for the chart. Branded with your practice. Attach to your EHR or share with families.",
   },
   {
     eyebrow: "Encrypted workspace",
-    title: "Records you can actually defend.",
-    body: "Every record encrypted at rest with AES-GCM-256. Per-workspace isolation enforced at the database. Full audit trail. Soft delete with 30-day recovery. BAA on Practice.",
+    title: "Records with the audit trail you need.",
+    body: "TLS 1.3 in transit. AES-GCM-256 at rest. Per-workspace isolation at the database. Full audit trail you can export. Soft delete with 30-day recovery. BAA signed at signup on Practice.",
   },
 ] as const;
 
@@ -666,7 +666,7 @@ const PRICING_FEATURES = [
   { label: "Encrypted workspace + audit log", basic: true, practice: true },
   { label: "Audit trail export", basic: false, practice: true },
   { label: "Custom branding on reports", basic: false, practice: true },
-  { label: "BAA available", basic: false, practice: true },
+  { label: "Signed BAA at signup", basic: false, practice: true },
   { label: "Priority support", basic: false, practice: true },
 ] as const;
 
@@ -810,9 +810,14 @@ const FAQS = [
     pillar: "Encrypted by design",
   },
   {
-    q: "Are you HIPAA-compliant?",
-    a: "Terapily is built to HIPAA's security requirements: encryption at rest, access controls, audit logging, and per-workspace isolation. We sign BAAs on the Practice plan on request.",
+    q: "How does Terapily support HIPAA compliance?",
+    a: "Terapily is built to the HIPAA Security Rule. Technical controls: TLS 1.3 in transit, AES-GCM-256 at rest, per-workspace isolation at the database, mandatory MFA on Practice, 15-minute idle auto-logout, full audit logging, 30-day soft-delete recovery. Administrative controls: signed BAAs with every PHI subprocessor (database, email, hosting), designated Privacy and Security Officers, written sanction and contingency policies, formal Risk Assessment. We sign a BAA with you at signup on the Practice plan — before you create your first patient.",
     pillar: "Audit-ready",
+  },
+  {
+    q: "How is my client's data handled when they use the magic-link homework?",
+    a: "When your client opens the magic link, they see a Notice of Privacy Practices and confirm a second factor (date of birth or one-time SMS code) before any PHI is exchanged. The session runs over TLS 1.3, anything they submit is encrypted at rest, and every patient access is logged separately for your audit trail. Magic links expire automatically and never appear in URLs you'd share by mistake.",
+    pillar: "Encrypted by design",
   },
   {
     q: "Will I need to migrate my existing notes?",
@@ -830,9 +835,9 @@ const FAQS = [
     pillar: "Audit-ready",
   },
   {
-    q: "Who built this?",
-    a: "Terapily was built by a practicing CBT clinician for the workflow she couldn't find in existing software. Every design decision — the 5-component cognitive structure, the magic-link homework, the per-workspace encryption — comes from real clinical practice, not from a generic SaaS playbook.",
-    pillar: "CBT, not generic forms",
+    q: "What happens in a HIPAA breach?",
+    a: "Our commitment: notification within 72 hours of detection — faster than the 60 days the law requires. The notification tells you exactly which of your patients were affected, how the breach occurred, what we did to contain it, and the forensic detail you need to fulfill your own Breach Notification obligations to clients and your board. Full incident response plan published at /trust.",
+    pillar: "Audit-ready",
   },
   {
     q: "What happens if Terapily goes down mid-session?",
