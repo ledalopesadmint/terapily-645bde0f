@@ -144,7 +144,7 @@ function LandingPage() {
               )}
             </div>
 
-            <p className="mt-7 text-xs text-navy/55">
+            <p className="mt-7 text-xs text-navy/55 font-bold">
               No card required • Cancel anytime • Operates under HIPAA Security Rule
             </p>
           </div>
