@@ -766,19 +766,19 @@ function TrustFactInverted({
   sub?: string;
 }) {
   return (
-    <div className="rounded-[1.75rem] bg-navy px-9 py-10 shadow-[0_12px_32px_-18px_oklch(0.28_0.027_251_/_0.45)] transition-transform hover:-translate-y-0.5">
-      <p className="font-display text-5xl leading-none text-cream md:text-6xl">
+    <div className="rounded-[1.5rem] bg-navy px-7 py-7 shadow-[0_6px_20px_-10px_oklch(0.28_0.027_251_/_0.28)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_28px_-12px_oklch(0.28_0.027_251_/_0.38)]">
+      <p className="font-display text-4xl leading-none text-cream md:text-[2.75rem]">
         {value}
       </p>
       <p
-        className="mt-6 text-[0.72rem] font-bold uppercase text-cream/85"
+        className="mt-4 text-[0.65rem] font-bold uppercase text-cream/85"
         style={{ letterSpacing: "0.14em" }}
       >
         {label}
       </p>
-      <div className="mt-3 h-px w-full bg-cream/15" />
+      <div className="mt-2.5 h-px w-full bg-cream/15" />
       {sub && (
-        <p className="mt-5 text-sm leading-relaxed text-cream/65">{sub}</p>
+        <p className="mt-3.5 text-[0.8125rem] leading-relaxed text-cream/65">{sub}</p>
       )}
     </div>
   );
