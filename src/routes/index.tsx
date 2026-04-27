@@ -260,23 +260,23 @@ function LandingPage() {
 
             {/* Coluna direita: ícone Terapily com órbita pontilhada e satélites */}
             <div className="md:col-span-3">
-              <div className="relative mx-auto aspect-square w-full max-w-[320px]">
+              <div className="group relative mx-auto aspect-square w-full max-w-[320px]">
                 {/* Órbita pontilhada */}
                 <div
                   aria-hidden="true"
-                  className="absolute inset-0 rounded-full border border-dashed border-terracotta/35"
+                  className="absolute inset-0 rounded-full border border-dashed border-terracotta/35 transition-all duration-500 group-hover:scale-[1.03] group-hover:border-terracotta/55"
                 />
                 {/* Halo sutil */}
                 <div
                   aria-hidden="true"
-                  className="absolute inset-[14%] rounded-full bg-cream/70 shadow-[0_20px_50px_-20px_oklch(0.28_0.027_251_/_0.35)]"
+                  className="absolute inset-[14%] rounded-full bg-cream/70 shadow-[0_20px_50px_-20px_oklch(0.28_0.027_251_/_0.35)] transition-all duration-500 group-hover:shadow-[0_32px_70px_-22px_oklch(0.28_0.027_251_/_0.5)]"
                 />
                 {/* Ícone central */}
-                <div className="absolute inset-[18%] flex items-center justify-center">
+                <div className="absolute inset-[18%] flex items-center justify-center transition-transform duration-500 group-hover:-translate-y-1 group-hover:scale-[1.04]">
                   <img
                     src={iconSrc}
                     alt="Terapily"
-                    className="h-full w-full object-contain drop-shadow-[0_12px_24px_oklch(0.28_0.027_251_/_0.35)]"
+                    className="h-full w-full object-contain drop-shadow-[0_12px_24px_oklch(0.28_0.027_251_/_0.35)] transition-all duration-500 group-hover:drop-shadow-[0_22px_36px_oklch(0.28_0.027_251_/_0.5)]"
                     draggable={false}
                   />
                 </div>
