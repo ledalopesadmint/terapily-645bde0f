@@ -1653,10 +1653,10 @@ function ScoreCard({
   return (
     <div
       className={
-        "rounded-2xl border p-4 text-center backdrop-blur-sm md:p-6 " +
+        "group rounded-2xl border p-4 text-center backdrop-blur-sm transition-all duration-300 ease-out hover:z-10 md:p-6 " +
         (isHero
-          ? "border-sage/40 bg-sage/15 shadow-[0_20px_50px_-30px_rgba(126,155,134,0.6)]"
-          : "border-terracotta/25 bg-terracotta/[0.08]")
+          ? "border-sage/40 bg-sage/15 shadow-[0_20px_50px_-30px_rgba(126,155,134,0.6)] hover:scale-[1.06] hover:border-sage/60 hover:bg-sage/25 hover:shadow-[0_30px_60px_-25px_rgba(126,155,134,0.8)]"
+          : "border-terracotta/25 bg-terracotta/[0.08] shadow-[0_10px_30px_-20px_rgba(192,108,84,0.4)] hover:scale-[1.04] hover:border-terracotta/45 hover:bg-terracotta/[0.14] hover:shadow-[0_20px_45px_-20px_rgba(192,108,84,0.6)]")
       }
     >
       <p
