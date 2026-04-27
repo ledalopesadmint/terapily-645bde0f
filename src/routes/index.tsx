@@ -614,37 +614,123 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 7 · WHERE IT FITS — não substitui EHR */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-5xl px-6 py-16">
-          <div className="grid grid-cols-1 items-center gap-12 md:grid-cols-2">
-            <div>
-              <Eyebrow tone="mauve">Where Terapily fits</Eyebrow>
-              <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-                We don&rsquo;t replace your EHR. We complete it.
-              </h2>
-              <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-                If you already use SimplePractice, TherapyNotes, or
-                another practice management system, keep it. Terapily
-                lives next to your EHR — handling the part it was never
-                built for: dynamic activities, validated scales, and
-                between-session work.
-              </p>
-              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-                Export any report as a PDF and attach it to the patient
-                file you already maintain. No double entry. No migration
-                weekend. No vendor lock-in.
-              </p>
-            </div>
+        <section className="relative overflow-hidden bg-gradient-to-br from-cream-tan/60 via-background to-cream-tan/40 border-t border-border/60">
+          {/* Decorative serif glyph */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-10 top-10 select-none font-display italic text-[18rem] leading-none text-navy/[0.04] md:-right-20 md:text-[26rem]"
+          >
+            +
+          </div>
 
-            <div className="rounded-2xl border border-border/50 bg-card/60 backdrop-blur-sm p-8">
-              <p className="text-xs uppercase tracking-wider text-muted-foreground">
-                Your stack with Terapily
-              </p>
-              <div className="mt-6 space-y-4">
-                <StackRow role="Practice management, scheduling, billing" tool="Your EHR" />
-                <StackRow role="Therapeutic activities &amp; validated scales" tool="Terapily" highlight />
-                <StackRow role="Telehealth video" tool="Your video tool" />
-                <StackRow role="Notes &amp; treatment plans" tool="Your EHR" />
-                <StackRow role="Compliance evidence (per workspace)" tool="Terapily report" highlight />
+          <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
+            <div className="grid grid-cols-1 items-start gap-14 md:grid-cols-12 md:gap-16">
+              {/* Left: copy */}
+              <div className="md:col-span-5">
+                <Eyebrow tone="mauve">Where Terapily fits</Eyebrow>
+                <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
+                  We don&rsquo;t replace your EHR.
+                  <br />
+                  <span className="italic text-terracotta">We complete it.</span>
+                </h2>
+                <p className="mt-8 text-base leading-relaxed text-muted-foreground">
+                  If you already use SimplePractice, TherapyNotes, or
+                  another practice management system, keep it. Terapily
+                  lives next to your EHR — handling the part it was
+                  never built for: dynamic activities, validated scales,
+                  and between-session work.
+                </p>
+
+                {/* Three honest promises */}
+                <ul className="mt-8 space-y-3">
+                  {[
+                    "No double entry",
+                    "No migration weekend",
+                    "No vendor lock-in",
+                  ].map((item) => (
+                    <li
+                      key={item}
+                      className="flex items-center gap-3 text-sm text-foreground"
+                    >
+                      <span
+                        aria-hidden
+                        className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-sage/40 bg-sage/10 font-display text-xs italic text-sage"
+                      >
+                        ✓
+                      </span>
+                      <span className="font-medium">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <p className="mt-8 text-sm leading-relaxed text-muted-foreground">
+                  Export any report as a PDF and attach it to the
+                  patient file you already maintain.
+                </p>
+              </div>
+
+              {/* Right: stack diagram */}
+              <div className="md:col-span-7">
+                <div className="relative rounded-3xl border border-navy/10 bg-card/80 p-6 shadow-[0_30px_80px_-40px_rgba(31,42,54,0.35)] backdrop-blur-sm md:p-10">
+                  {/* Header */}
+                  <div className="flex items-center justify-between border-b border-border/50 pb-5">
+                    <div>
+                      <p className="text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
+                        Your stack
+                      </p>
+                      <p className="mt-1 font-display text-lg italic text-foreground">
+                        with Terapily
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 text-[0.65rem] uppercase tracking-[0.18em]">
+                      <span className="flex items-center gap-1.5 text-muted-foreground">
+                        <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+                        Yours
+                      </span>
+                      <span className="flex items-center gap-1.5 text-terracotta">
+                        <span className="h-2 w-2 rounded-full bg-terracotta" />
+                        Terapily
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Stack rows */}
+                  <ol className="mt-2 divide-y divide-border/40">
+                    <StackRow
+                      index="01"
+                      role="Practice management, scheduling, billing"
+                      tool="Your EHR"
+                    />
+                    <StackRow
+                      index="02"
+                      role="Therapeutic activities &amp; validated scales"
+                      tool="Terapily"
+                      highlight
+                    />
+                    <StackRow
+                      index="03"
+                      role="Telehealth video"
+                      tool="Your video tool"
+                    />
+                    <StackRow
+                      index="04"
+                      role="Notes &amp; treatment plans"
+                      tool="Your EHR"
+                    />
+                    <StackRow
+                      index="05"
+                      role="Compliance evidence (per workspace)"
+                      tool="Terapily report"
+                      highlight
+                    />
+                  </ol>
+
+                  {/* Footer caption */}
+                  <p className="mt-6 border-t border-border/40 pt-5 text-xs leading-relaxed text-muted-foreground">
+                    Two highlighted rows. Everything else stays exactly
+                    where it already lives.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
