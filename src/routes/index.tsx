@@ -123,6 +123,137 @@ function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Validated assessments — pilar próprio de feature */}
+        <section className="border-t border-border/60">
+          <div className="mx-auto max-w-4xl px-6 py-24 text-center">
+            <Eyebrow tone="sage">Validated assessments · Built in</Eyebrow>
+            <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
+              The scales you already use. <br className="hidden md:block" />
+              Scored for you.
+            </h2>
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
+              35 evidence-based screening tools — PHQ-9, GAD-7, PCL-5 and many more —
+              delivered as interactive quizzes with auto-scoring, severity bands,
+              and a one-page report. No spreadsheets. No manual math. No licensing
+              fees passed to you.
+            </p>
+
+            <div className="mx-auto mt-10 grid max-w-3xl grid-cols-2 gap-6 text-left sm:grid-cols-4">
+              <div>
+                <p className="font-display text-3xl text-foreground">35</p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Validated scales</p>
+              </div>
+              <div>
+                <p className="font-display text-3xl text-foreground">$0</p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Per-assessment fees</p>
+              </div>
+              <div>
+                <p className="font-display text-3xl text-foreground">&lt;3s</p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Score to report</p>
+              </div>
+              <div>
+                <p className="font-display text-3xl text-foreground">100%</p>
+                <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">Original wording preserved</p>
+              </div>
+            </div>
+
+            <details className="group mx-auto mt-12 max-w-3xl rounded-lg border border-border/60 bg-card/40 text-left">
+              <summary className="flex cursor-pointer items-center justify-between gap-4 px-6 py-5 text-sm font-medium text-foreground transition-colors hover:bg-muted/40">
+                <span>See the full library of 35 auto-scored assessments</span>
+                <span className="text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true">▾</span>
+              </summary>
+              <div className="space-y-8 border-t border-border/40 px-6 py-8">
+                <ScaleCategory
+                  title="Depression & Mood"
+                  scales={[
+                    { code: "PHQ-9", name: "Patient Health Questionnaire", items: 9 },
+                    { code: "PHQ-2", name: "Ultra-brief depression screen", items: 2 },
+                    { code: "CES-D", name: "Center for Epidemiologic Studies Depression", items: 20 },
+                    { code: "EPDS", name: "Edinburgh Postnatal Depression", items: 10 },
+                    { code: "MDQ", name: "Mood Disorder Questionnaire (bipolar)", items: 13 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="Anxiety"
+                  scales={[
+                    { code: "GAD-7", name: "Generalized Anxiety Disorder", items: 7 },
+                    { code: "GAD-2", name: "Ultra-brief anxiety screen", items: 2 },
+                    { code: "PSWQ", name: "Penn State Worry Questionnaire", items: 16 },
+                    { code: "SPIN", name: "Social Phobia Inventory", items: 17 },
+                    { code: "PDSS", name: "Panic Disorder Severity Scale", items: 7 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="Trauma & PTSD"
+                  scales={[
+                    { code: "PCL-5", name: "PTSD Checklist for DSM-5 (VA standard)", items: 20 },
+                    { code: "PC-PTSD-5", name: "Primary Care PTSD Screen", items: 5 },
+                    { code: "IES-R", name: "Impact of Event Scale — Revised", items: 22 },
+                    { code: "ACE", name: "Adverse Childhood Experiences", items: 10 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="Substance Use"
+                  scales={[
+                    { code: "AUDIT", name: "Alcohol Use Disorders Identification (WHO)", items: 10 },
+                    { code: "AUDIT-C", name: "AUDIT short form", items: 3 },
+                    { code: "DAST-10", name: "Drug Abuse Screening Test", items: 10 },
+                    { code: "CAGE", name: "Classic alcohol screen", items: 4 },
+                    { code: "Fagerström", name: "Nicotine dependence", items: 6 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="OCD & Compulsions"
+                  scales={[
+                    { code: "OCI-R", name: "Obsessive-Compulsive Inventory — Revised", items: 18 },
+                    { code: "Y-BOCS", name: "Yale-Brown OCD Severity Scale", items: 10 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="Eating"
+                  scales={[
+                    { code: "EAT-26", name: "Eating Attitudes Test", items: 26 },
+                    { code: "SCOFF", name: "Brief eating disorder screen", items: 5 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="Sleep"
+                  scales={[
+                    { code: "PSQI", name: "Pittsburgh Sleep Quality Index", items: 19 },
+                    { code: "ISI", name: "Insomnia Severity Index", items: 7 },
+                    { code: "Epworth", name: "Daytime Sleepiness Scale", items: 8 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="Wellbeing & Functioning"
+                  scales={[
+                    { code: "WHO-5", name: "WHO Wellbeing Index", items: 5 },
+                    { code: "SWLS", name: "Satisfaction With Life Scale", items: 5 },
+                    { code: "WSAS", name: "Work & Social Adjustment Scale", items: 5 },
+                    { code: "K10", name: "Kessler Psychological Distress", items: 10 },
+                    { code: "DASS-21", name: "Depression Anxiety Stress Scale", items: 21 },
+                  ]}
+                />
+                <ScaleCategory
+                  title="CBT-Specific (track mechanism, not just symptoms)"
+                  scales={[
+                    { code: "ATQ-30", name: "Automatic Thoughts Questionnaire", items: 30 },
+                    { code: "AAQ-II", name: "Acceptance & Action Questionnaire (ACT)", items: 7 },
+                    { code: "CFQ", name: "Cognitive Fusion Questionnaire (ACT)", items: 7 },
+                    { code: "SCS-SF", name: "Self-Compassion Scale — Short", items: 12 },
+                  ]}
+                />
+                <p className="border-t border-border/40 pt-6 text-xs leading-relaxed text-muted-foreground">
+                  Every assessment is delivered with original validated wording,
+                  full attribution to its authors, and a clear disclaimer that
+                  results are screening indicators — never diagnostic conclusions.
+                  Clinical judgment always belongs to you.
+                </p>
+              </div>
+            </details>
+          </div>
+        </section>
       </main>
 
       {/* Footer */}
@@ -137,6 +268,36 @@ function LandingPage() {
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+interface Scale {
+  code: string;
+  name: string;
+  items: number;
+}
+
+function ScaleCategory({ title, scales }: { title: string; scales: Scale[] }) {
+  return (
+    <div>
+      <Eyebrow>{title}</Eyebrow>
+      <ul className="mt-4 divide-y divide-border/40">
+        {scales.map((scale) => (
+          <li
+            key={scale.code}
+            className="flex items-baseline justify-between gap-4 py-3 text-sm"
+          >
+            <div className="min-w-0">
+              <span className="font-medium text-foreground">{scale.code}</span>
+              <span className="ml-3 text-muted-foreground">{scale.name}</span>
+            </div>
+            <span className="shrink-0 text-xs text-muted-foreground">
+              {scale.items} items
+            </span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
