@@ -137,7 +137,7 @@ function LandingPage() {
               {!isAuthenticated && (
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center rounded-2xl border border-navy/30 bg-transparent px-7 py-3.5 text-sm font-medium text-navy transition-colors hover:bg-navy/[0.04]"
+                  className="inline-flex items-center justify-center rounded-2xl border border-navy/20 bg-cream px-7 py-3.5 text-sm font-medium text-navy shadow-[0_8px_24px_-12px_oklch(0.28_0.027_251_/_0.35)] transition-all hover:scale-[1.02] hover:bg-cream/90 hover:shadow-[0_12px_28px_-12px_oklch(0.28_0.027_251_/_0.5)]"
                 >
                   I already have an account
                 </Link>
