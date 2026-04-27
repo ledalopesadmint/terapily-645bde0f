@@ -1517,7 +1517,7 @@ function CompareRow({
       <div className="border-t border-border/40 bg-background px-6 py-5 text-center text-sm">
         <CompareCell value={alt1} lose={alt1Lose} />
       </div>
-      <div className="border-t border-sage/20 bg-sage/10 px-6 py-5 text-center text-sm">
+      <div className="relative z-20 px-6 py-5 text-center text-sm">
         <CompareCell value={terapily} win={terapilyWin} highlight />
       </div>
       <div className="border-t border-border/40 bg-background px-6 py-5 text-center text-sm">
