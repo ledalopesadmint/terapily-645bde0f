@@ -80,3 +80,17 @@ Quando o pacote `@lovable.dev/cloud-auth-js` publicar uma versão em que o tipo 
 
 **Condição de remoção.** Adicionar middleware de headers em `src/start.ts` (ou equivalente TanStack Start) na S5 (hardening pré-launch). Issue tracker: criar antes de S5.
 
+
+---
+
+## 5. `.gitignore` gerenciado pelo Lovable não inclui `.env`
+
+**Origem.** O arquivo `.gitignore` é read-only no ambiente Lovable. Ele cobre `.wrangler/`, `.dev.vars`, `*.local` (que pega `.env.local` e `.env.*.local`), mas **não tem `.env` literal**.
+
+**Impacto.** Hoje o `.env` contém apenas chaves *publishable* do Supabase (seguras por design — RLS protege). Mas se o Lovable regenerar o `.env` automaticamente, ou se um dev adicionar `SUPABASE_SERVICE_ROLE_KEY` para teste local, o secret pode acabar rastreado pelo git.
+
+**Mitigação atual.**
+- `.env` foi removido do tracking nesta sessão (`git ls-files` confirma só `.env.example`).
+- Aviso destacado no topo do `README.md` para o owner adicionar `.env` no `.gitignore` logo após o primeiro push para o GitHub.
+
+**Condição de remoção.** Quando a plataforma Lovable permitir editar o `.gitignore`, ou quando o template padrão passar a incluir `.env` por padrão. Após o owner aplicar o patch sugerido no README diretamente no repo GitHub, este item pode ser fechado.
