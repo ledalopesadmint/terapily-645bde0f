@@ -278,7 +278,7 @@ const SOLUTION_PHASES = [
   {
     n: "In session",
     title: "Co-build the board, live.",
-    body: "Drag situation → thought → emotion → body → behavior cards onto a shared canvas. Pull from a 200-card CBT vocabulary deck. Your client watches their own pattern emerge.",
+    body: "Drag situation → thought → emotion → body → behavior cards onto a shared canvas. Pull from a clinically authored CBT vocabulary deck. Your client watches their own pattern emerge.",
   },
   {
     n: "End of session",
