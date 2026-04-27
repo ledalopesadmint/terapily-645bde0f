@@ -1015,7 +1015,7 @@ function LandingPage() {
               <h2 className="mt-6 font-display text-4xl leading-[1.05] text-cream md:text-5xl">
                 Built to last. <span className="italic text-terracotta">Priced like it.</span>
               </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/70">
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/70 font-semibold">
                 Same security baseline on every plan. Practice adds the
                 governance layer solo clinicians grow into.
               </p>
