@@ -9,7 +9,7 @@ export const BRAND = {
   // Landing pública é EN-US (ver mem://preferences/language-strategy)
   tagline: "Therapeutic tools your clients actually finish.",
   description:
-    "Dynamic, evidence-based therapeutic activities for CBT clinicians. Use them live in session or send them home with a single link — every activity generates clinical signal you can defend.",
+    "CBT activities and validated scales (PHQ-9, GAD-7, PCL-5…) — auto-scored, sent by magic link, exportable to your EHR. HIPAA-aligned, BAA on request.",
   founder: "Leda Carolina Lopes",
   domain: "terapily.com",
 } as const;
