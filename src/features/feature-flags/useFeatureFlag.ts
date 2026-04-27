@@ -1,11 +1,11 @@
 /**
  * Hook de feature flags por workspace.
  *
- * Consome a função SQL `has_feature(workspace_id, flag_name)` SECURITY DEFINER.
- * Permite ativar features gradualmente (beta testers, rollout por workspace).
+ * Consome a função SQL `has_feature(workspace_id, flag_name)` SECURITY DEFINER
+ * (criada na Terça da S1, junto com a tabela `feature_flags`).
  *
- * S1: tabela `feature_flags` existe, função `has_feature` existe.
- *     Sempre retorna `false` (nenhuma flag ativa por default).
+ * S1: sempre retorna `false` por default — ainda não há flags ativas, mas
+ *     a interface está pronta pra uso imediato em qualquer feature futura.
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -16,7 +16,9 @@ export function useFeatureFlag(flagName: string, workspaceId: string | null | un
     enabled: !!workspaceId,
     queryFn: async () => {
       if (!workspaceId) return false;
-      const { data, error } = await supabase.rpc("has_feature", {
+      // Cast necessário enquanto types.ts não inclui a função (gerada na Terça)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc("has_feature", {
         _workspace_id: workspaceId,
         _flag: flagName,
       });
@@ -26,6 +28,6 @@ export function useFeatureFlag(flagName: string, workspaceId: string | null | un
       }
       return data === true;
     },
-    staleTime: 5 * 60 * 1000, // 5min
+    staleTime: 5 * 60 * 1000,
   });
 }
