@@ -1117,20 +1117,29 @@ function ModeCard({
 }
 
 function Step({
+  icon: Icon,
   number,
   title,
   body,
 }: {
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   number: string;
   title: string;
   body: string;
 }) {
   return (
-    <li>
-      <p className="font-display text-3xl text-primary">{number}</p>
-      <h3 className="mt-3 font-display text-lg text-foreground">{title}</h3>
+    <li className="group relative flex flex-col items-center text-center">
+      {/* Círculo com ícone — fica sobre a linha conectora */}
+      <div className="relative z-10 inline-flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-background ring-1 ring-terracotta/20 shadow-[0_12px_30px_-12px_oklch(0.28_0.027_251_/_0.35)] transition-all duration-300 group-hover:-translate-y-1 group-hover:ring-terracotta/40 group-hover:shadow-[0_18px_40px_-14px_oklch(0.28_0.027_251_/_0.5)]">
+        <Icon className="h-7 w-7 text-terracotta" strokeWidth={1.5} />
+      </div>
+
+      {/* Número em serif grande */}
+      <p className="mt-5 font-display text-2xl italic text-terracotta/70">{number}</p>
+
+      <h3 className="mt-2 font-display text-xl text-navy md:text-2xl">{title}</h3>
       <p
-        className="mt-2 text-sm leading-relaxed text-muted-foreground"
+        className="mt-3 max-w-[16rem] text-sm leading-relaxed text-muted-foreground"
         dangerouslySetInnerHTML={{ __html: body }}
       />
     </li>
