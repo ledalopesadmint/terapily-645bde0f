@@ -842,7 +842,7 @@ function LandingPage() {
                 An honest <span className="italic text-terracotta">side-by-side.</span>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-                Public landing pages reviewed April 27, 2026. We&rsquo;ll
+                Public landing pages reviewed April 2026. We&rsquo;ll
                 update this table as competitors update theirs.
               </p>
             </div>
