@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ComponentType } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Stethoscope, Send, Repeat } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { BRAND, TRIAL_DURATION_DAYS } from "@/lib/constants";
