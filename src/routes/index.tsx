@@ -294,11 +294,11 @@ function Hero({
 
 function HeroIllustration() {
   const cards = [
-    { label: "Situation", color: "oklch(0.65 0.04 152)", h: 38 },
-    { label: "Thought", color: "oklch(0.7 0.04 0)", h: 56 },
-    { label: "Emotion", color: "oklch(0.78 0.11 50)", h: 70 },
-    { label: "Body", color: "oklch(0.65 0.04 152 / 0.7)", h: 44 },
-    { label: "Behavior", color: "oklch(0.7 0.04 0 / 0.85)", h: 60 },
+    { label: "Situation", color: "oklch(0.71 0.13 220)", h: 38 },     // ciano
+    { label: "Thought",   color: "oklch(0.62 0.21 290)", h: 56 },     // lavanda
+    { label: "Emotion",   color: "oklch(0.86 0.17 90)",  h: 70 },     // amarelo solar
+    { label: "Body",      color: "oklch(0.7 0.12 180)",  h: 44 },     // verde água
+    { label: "Behavior",  color: "oklch(0.87 0.2 130)",  h: 60 },     // verde limão
   ];
 
   return (
