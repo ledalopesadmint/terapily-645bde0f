@@ -925,7 +925,7 @@ function LandingPage() {
                 <CompareRow capability="Configurable data retention with auto-purge" terapily="Yes, with export" terapilyWin alt1="No" alt1Lose alt2="Rarely published" />
                 <CompareRow capability="Exportable compliance report (audit + retention + BAAs)" terapily="Practice plan" terapilyWin alt1="No" alt1Lose alt2="No" alt2Lose />
                 <CompareRow capability="Public BAA + subprocessor list" terapily="Yes" terapilyWin alt1="N/A" alt1Lose alt2="On request only" />
-                <CompareRow capability="Replaces your EHR" terapily="No, complements it" alt1="N/A" alt2="Sometimes claims to" />
+                <CompareRow capability="Replaces your EHR" terapily="No, complements it" terapilyWin alt1="N/A" alt2="Sometimes claims to" />
               </div>
             </div>
 
