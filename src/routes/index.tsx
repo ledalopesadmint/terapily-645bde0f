@@ -1482,8 +1482,8 @@ function TrustCard({
   return (
     <div className="group relative bg-cream p-7 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-cream hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.45),0_8px_20px_-8px_rgba(126,155,134,0.3)] hover:ring-1 hover:ring-sage/40 md:p-8">
       <div className="flex items-start justify-between gap-4">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-sage/15 text-sage ring-1 ring-sage/30 transition-colors group-hover:bg-sage/25 group-hover:text-sage">
-          <Icon className="h-5 w-5" strokeWidth={1.75} />
+        <span className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-terracotta text-cream shadow-[0_8px_20px_-6px_rgba(192,108,84,0.55)] ring-1 ring-terracotta/40 transition-transform duration-300 group-hover:-rotate-3 group-hover:scale-110">
+          <Icon className="h-6 w-6" strokeWidth={2.25} />
         </span>
         {proof && (
           <span className="inline-flex items-center gap-1.5 rounded-full border border-navy/15 bg-navy/5 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-navy/70">
