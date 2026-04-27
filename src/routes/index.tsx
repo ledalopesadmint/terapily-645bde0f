@@ -144,7 +144,7 @@ function LandingPage() {
               )}
             </div>
 
-            <p className="mt-7 text-xs text-navy/55">
+            <p className="mt-7 text-xs text-navy/55 font-bold">
               No card required • Cancel anytime • Operates under HIPAA Security Rule
             </p>
           </div>
@@ -726,7 +726,7 @@ function LandingPage() {
                   </ol>
 
                   {/* Footer caption */}
-                  <p className="mt-6 border-t border-border/40 pt-5 text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-6 border-t border-border/40 pt-5 text-xs leading-relaxed text-muted-foreground font-bold">
                     Two highlighted rows. Everything else stays exactly
                     where it already lives.
                   </p>
@@ -764,7 +764,7 @@ function LandingPage() {
                 </h2>
               </div>
               <div className="md:col-span-5">
-                <p className="text-base leading-relaxed text-cream/70">
+                <p className="text-base leading-relaxed text-cream/70 text-center">
                   HIPAA has no certification body. Anyone claiming to be
                   &ldquo;HIPAA-certified&rdquo; is either confused or
                   selling you a story. Here is what we actually do —
@@ -813,7 +813,7 @@ function LandingPage() {
             </div>
 
             <div className="mt-14 rounded-2xl border border-cream/10 bg-cream/[0.03] p-6 md:p-8">
-              <p className="text-sm leading-relaxed text-cream/80 md:text-base">
+              <p className="text-sm leading-relaxed text-cream/80 md:text-base text-center">
                 Terapily operates under HIPAA Security Rule and signs
                 BAAs with every clinician who handles PHI. HIPAA
                 compliance is a shared responsibility — final
@@ -842,7 +842,7 @@ function LandingPage() {
                 An honest <span className="italic text-terracotta">side-by-side.</span>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-                Public landing pages reviewed April 27, 2026. We&rsquo;ll
+                Public landing pages reviewed April 2026. We&rsquo;ll
                 update this table as competitors update theirs.
               </p>
             </div>
@@ -1015,7 +1015,7 @@ function LandingPage() {
               <h2 className="mt-6 font-display text-4xl leading-[1.05] text-cream md:text-5xl">
                 Built to last. <span className="italic text-terracotta">Priced like it.</span>
               </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/70">
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/70 font-semibold">
                 Same security baseline on every plan. Practice adds the
                 governance layer solo clinicians grow into.
               </p>
@@ -1093,12 +1093,12 @@ function LandingPage() {
               </div>
             </div>
 
-            <p className="mx-auto mt-12 max-w-3xl text-center text-xs leading-relaxed text-cream/55">
+            <p className="mx-auto mt-12 max-w-3xl text-center text-xs leading-relaxed text-cream/55 font-bold">
               No card required to start · Cancel anytime · Prices in
               USD · Multi-clinician (Clinic) plan in development.
             </p>
 
-            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-relaxed text-cream/55">
+            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-relaxed text-cream/55 font-bold">
               The compliance report aggregates your existing data into
               a format you can share with your auditor or attorney.
               It is not a certification, not a substitute for legal
@@ -1385,7 +1385,7 @@ function ModeCard({
         className="mt-4 text-sm leading-relaxed text-muted-foreground"
         dangerouslySetInnerHTML={{ __html: body }}
       />
-      <p className="mt-6 border-t border-terracotta/15 pt-4 text-xs italic leading-relaxed text-navy/70">
+      <p className="mt-6 border-t border-terracotta/15 pt-4 text-xs italic leading-relaxed text-navy/70 font-bold">
         {useCase}
       </p>
     </div>
@@ -1426,7 +1426,7 @@ function KeyStat({ value, label }: { value: string; label: string }) {
   return (
     <div className="group relative flex flex-col items-center rounded-2xl border border-border/60 bg-background px-4 py-6 text-center shadow-[0_14px_36px_-22px_oklch(0.28_0.027_251_/_0.3)] ring-1 ring-terracotta/5 transition-all duration-300 hover:-translate-y-1 hover:border-terracotta/30 hover:ring-terracotta/20 hover:shadow-[0_22px_50px_-24px_oklch(0.28_0.027_251_/_0.45)]">
       <p className="font-display text-4xl italic text-terracotta md:text-5xl">{value}</p>
-      <p className="mt-2 text-[0.68rem] uppercase tracking-[0.18em] text-navy/70">
+      <p className="mt-2 text-[0.68rem] uppercase tracking-[0.18em] text-navy/70 font-bold">
         {label}
       </p>
     </div>
