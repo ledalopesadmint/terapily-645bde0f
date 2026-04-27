@@ -120,9 +120,15 @@ function LandingPage() {
             <p className="mt-6 text-xs text-cream/55">
               No card required · Cancel anytime · Operates under HIPAA Security Rule
             </p>
+          </div>
+        </section>
 
-            {/* Trust strip — cards squircle translúcidos, sobrepostos sutilmente */}
-            <div className="mt-16 grid grid-cols-2 gap-3 md:mt-20 md:grid-cols-5">
+        {/* ============================================================ */}
+        {/* 1.5 · TRUST STRIP — seção isolada (fácil de retematizar) */}
+        {/* ============================================================ */}
+        <section className="bg-navy">
+          <div className="mx-auto max-w-6xl px-6 pb-20 md:pb-24">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
               <TrustFactInverted label="Validated scales" value="35" />
               <TrustFactInverted label="Score to report" value="<3s" />
               <TrustFactInverted label="Encryption at rest" value="AES-256" />
