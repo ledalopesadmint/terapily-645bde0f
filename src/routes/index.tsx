@@ -318,32 +318,54 @@ function LandingPage() {
         </section>
 
         {/* ============================================================ */}
-        {/* 3 · PROBLEM — dores reais da persona */}
+        {/* 3 · PROBLEM — comparativo "antes / depois", didático e calmo */}
         {/* ============================================================ */}
         <section className="mx-auto max-w-5xl px-6 py-24">
           <div className="text-center">
             <Eyebrow>The reality between sessions</Eyebrow>
-            <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
+            <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
               Most homework never comes back. <br className="hidden md:block" />
               Most paperwork never gets scored.
             </h2>
+            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground">
+              Same three gaps, every week — until the system itself changes.
+            </p>
           </div>
 
-          <div className="mt-16 grid grid-cols-1 gap-10 md:grid-cols-3">
-            <ProblemCard
-              eyebrow="The compliance gap"
-              title="You can&rsquo;t prove what you can&rsquo;t produce."
-              body="When an auditor, supervisor, or insurer asks what you did and when, you need a record — not a folder of PDFs and a memory of last Tuesday."
+          {/* Tabela comparativa */}
+          <div className="mt-16 overflow-hidden rounded-3xl border border-border/60 bg-card/40 shadow-[0_10px_40px_-20px_oklch(0.28_0.027_251_/_0.18)]">
+            {/* Header da tabela */}
+            <div className="grid grid-cols-12 gap-0 border-b border-border/60 bg-cream-tan/40">
+              <div className="col-span-4 px-6 py-5 md:px-8">
+                <p className="eyebrow text-[0.7rem]">The gap</p>
+              </div>
+              <div className="col-span-4 border-l border-border/60 px-6 py-5 md:px-8">
+                <p className="eyebrow text-[0.7rem] text-muted-foreground">
+                  The system you were handed
+                </p>
+              </div>
+              <div className="col-span-4 border-l border-border/60 bg-background/60 px-6 py-5 md:px-8">
+                <p className="eyebrow text-[0.7rem] text-terracotta">
+                  With Terapily
+                </p>
+              </div>
+            </div>
+
+            <ProblemRow
+              gap="Compliance"
+              before="A folder of PDFs and a memory of last Tuesday — when an auditor or supervisor asks what you did and when."
+              after="Every read, edit, and export logged. Exportable on demand."
             />
-            <ProblemCard
-              eyebrow="The engagement gap"
-              title="Clients don&rsquo;t finish printable PDFs."
-              body="Static worksheets feel like school. They get folded, lost, or filled out in the waiting room two minutes before your session."
+            <ProblemRow
+              gap="Engagement"
+              before="Static worksheets feel like school. Folded, lost, or filled out in the waiting room two minutes before your session."
+              after="Activities clients open on any device — no account, no app, no friction."
             />
-            <ProblemCard
-              eyebrow="The signal gap"
-              title="Manual scoring eats your evenings."
-              body="PHQ-9, GAD-7, PCL-5 — same scoring, every patient, every week. The math should not be your problem."
+            <ProblemRow
+              gap="Signal"
+              before="PHQ-9, GAD-7, PCL-5 — same scoring math, every patient, every week. Your evenings, gone."
+              after="Auto-scored in under 3 seconds. The math is not your problem anymore."
+              isLast
             />
           </div>
         </section>
