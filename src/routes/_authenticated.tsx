@@ -1,7 +1,7 @@
-import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
-import { Logo } from "@/components/brand/Logo";
+import { AppShell } from "@/components/layout/AppShell";
 
 export const Route = createFileRoute("/_authenticated")({
   // Auth check é client-side (sessão Supabase vive no localStorage do browser).
@@ -29,29 +29,8 @@ function AuthenticatedLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border/50">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Link to="/_authenticated/welcome" aria-label="Início">
-            <Logo size="sm" />
-          </Link>
-          <div className="flex items-center gap-6">
-            {auth.workspace && (
-              <span className="hidden text-sm text-muted-foreground sm:inline">
-                {auth.workspace.name}
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={() => void auth.signOut()}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >
-              Sair
-            </button>
-          </div>
-        </div>
-      </header>
+    <AppShell>
       <Outlet />
-    </div>
+    </AppShell>
   );
 }
