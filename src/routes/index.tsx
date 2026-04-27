@@ -1485,8 +1485,10 @@ function StackRow({
   return (
     <li
       className={
-        "group relative flex items-center gap-4 py-4 transition-colors " +
-        (highlight ? "" : "")
+        "group relative flex items-center gap-4 rounded-xl px-3 py-4 transition-all duration-300 ease-out cursor-default hover:z-10 hover:scale-[1.02] " +
+        (highlight
+          ? "hover:bg-terracotta/[0.06] hover:shadow-[0_14px_30px_-18px_rgba(192,108,84,0.5)]"
+          : "hover:bg-muted/40 hover:shadow-[0_14px_30px_-18px_rgba(31,42,54,0.25)]")
       }
     >
       {/* Index */}
