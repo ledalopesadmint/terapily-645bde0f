@@ -163,15 +163,15 @@ function Hero({
 
       <h1 className="mt-6 font-display text-5xl text-foreground md:text-7xl">
         Therapy your client <br className="hidden md:block" />
-        helps build. Records <br className="hidden md:block" />
-        you can defend.
+        helps build. The audit <br className="hidden md:block" />
+        trail you need.
       </h1>
 
       <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
         <em className="font-display not-italic">Terapily</em> turns each CBT session into a visual
-        board you co-build with your client, then auto-generates a clean clinical report you can
-        attach to the chart, share with families, or hand to your supervisor. Encrypted at rest.
-        Audit-logged by default. BAA on request.
+        board you co-build with your client, then auto-generates a clean clinical report ready for
+        the chart, the family, or your supervisor. TLS 1.3 in transit. AES-GCM-256 at rest. BAA
+        signed at signup.
       </p>
 
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -192,7 +192,7 @@ function Hero({
       </div>
 
       <p className="mt-6 text-xs text-muted-foreground">
-        No credit card · Cancel anytime · BAA available on Practice
+        No credit card · Cancel anytime · BAA signed before your first patient
       </p>
     </section>
   );
