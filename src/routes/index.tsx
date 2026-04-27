@@ -977,7 +977,7 @@ function LandingPage() {
               ))}
             </div>
 
-            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-10 max-w-3xl text-center text-xs font-bold leading-relaxed text-muted-foreground">
               &ldquo;Static PDF libraries&rdquo; refers to subscription
               worksheet sites. &ldquo;Homework platforms&rdquo; refers to
               between-session engagement tools that require patient
