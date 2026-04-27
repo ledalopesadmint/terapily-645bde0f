@@ -4,6 +4,38 @@
 
 Terapily é o sistema silencioso por trás de uma terapia melhor — atividades, jogos terapêuticos e fluxo clínico para psicólogos TCC. Construído por uma clínica.
 
+---
+
+> ## ⚠️ AÇÃO OBRIGATÓRIA APÓS O PRIMEIRO PUSH PARA O GITHUB
+>
+> O `.gitignore` deste projeto é **gerenciado pela plataforma Lovable** e
+> **não inclui `.env` literalmente**. Hoje o `.env` contém apenas chaves
+> *publishable* (seguras por design), mas se o Lovable regenerar o arquivo
+> ou se um dev adicionar `SUPABASE_SERVICE_ROLE_KEY` localmente, o secret
+> pode acabar versionado.
+>
+> **Faça este commit no GitHub IMEDIATAMENTE após o primeiro push** (UI do
+> GitHub ou clone local) — antes de qualquer outro dev clonar o repo:
+>
+> ```diff
+>   # Logs
+>   ...
+>   *.local
+> +
+> + # Environment files (NEVER commit secrets)
+> + .env
+> + .env.local
+> + .env.*.local
+> + !.env.example
+>   ...
+> ```
+>
+> Detalhes em [`docs/technical-debt.md`](docs/technical-debt.md) item 5.
+
+---
+
+
+
 ## Stack
 
 - **React 19** + **TanStack Start** (file-based routing, SSR-ready)
