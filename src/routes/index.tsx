@@ -1478,21 +1478,130 @@ function TrustCard({
 function CompareRow({
   capability,
   terapily,
+  terapilyWin,
   alt1,
+  alt1Lose,
   alt2,
+  alt2Lose,
 }: {
   capability: string;
   terapily: string;
+  terapilyWin?: boolean;
   alt1: string;
+  alt1Lose?: boolean;
   alt2: string;
+  alt2Lose?: boolean;
 }) {
   return (
-    <tr>
-      <td className="px-6 py-4 align-top text-sm text-foreground">{capability}</td>
-      <td className="px-6 py-4 align-top text-sm font-medium text-primary">{terapily}</td>
-      <td className="px-6 py-4 align-top text-sm text-muted-foreground">{alt1}</td>
-      <td className="px-6 py-4 align-top text-sm text-muted-foreground">{alt2}</td>
-    </tr>
+    <>
+      <div className="border-t border-border/40 bg-background px-6 py-5 text-sm leading-snug text-foreground">
+        {capability}
+      </div>
+      <div className="border-t border-border/40 bg-background px-6 py-5 text-center text-sm">
+        <CompareCell value={alt1} lose={alt1Lose} />
+      </div>
+      <div className="border-t border-sage/20 bg-sage/10 px-6 py-5 text-center text-sm">
+        <CompareCell value={terapily} win={terapilyWin} highlight />
+      </div>
+      <div className="border-t border-border/40 bg-background px-6 py-5 text-center text-sm">
+        <CompareCell value={alt2} lose={alt2Lose} />
+      </div>
+    </>
+  );
+}
+
+function CompareCell({
+  value,
+  win,
+  lose,
+  highlight,
+}: {
+  value: string;
+  win?: boolean;
+  lose?: boolean;
+  highlight?: boolean;
+}) {
+  const icon = win ? "✓" : lose ? "—" : "·";
+  const iconColor = win
+    ? "bg-sage text-cream"
+    : lose
+      ? "bg-muted text-muted-foreground/70"
+      : "bg-muted/60 text-muted-foreground";
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <span
+        aria-hidden
+        className={
+          "flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold " +
+          iconColor
+        }
+      >
+        {icon}
+      </span>
+      <span
+        className={
+          highlight
+            ? "font-medium text-navy"
+            : "text-muted-foreground"
+        }
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function ScoreCard({
+  label,
+  score,
+  total,
+  tone,
+}: {
+  label: string;
+  score: string;
+  total: string;
+  tone: "hero" | "muted";
+}) {
+  const isHero = tone === "hero";
+  return (
+    <div
+      className={
+        "rounded-2xl border p-4 text-center md:p-6 " +
+        (isHero
+          ? "border-sage/40 bg-sage/15 shadow-[0_20px_50px_-30px_rgba(126,155,134,0.6)]"
+          : "border-border/60 bg-card/50")
+      }
+    >
+      <p
+        className={
+          "text-[0.6rem] uppercase tracking-[0.18em] md:text-xs " +
+          (isHero ? "text-sage" : "text-muted-foreground")
+        }
+      >
+        {label}
+      </p>
+      <p
+        className={
+          "mt-2 font-display leading-none " +
+          (isHero
+            ? "text-4xl text-navy md:text-6xl"
+            : "text-3xl text-muted-foreground/70 md:text-5xl")
+        }
+      >
+        {score}
+        <span
+          className={
+            "text-xl md:text-2xl " +
+            (isHero ? "italic text-terracotta" : "text-muted-foreground/50")
+          }
+        >
+          /{total}
+        </span>
+      </p>
+      <p className="mt-2 text-[0.65rem] uppercase tracking-wider text-muted-foreground">
+        capabilities
+      </p>
+    </div>
   );
 }
 
