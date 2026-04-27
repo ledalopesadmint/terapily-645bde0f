@@ -517,7 +517,7 @@ function LandingPage() {
             </summary>
 
             {/* Painel expandido — fundo cream-tan claro */}
-            <div className="bg-cream-tan/60 border-b border-border/60">
+            <div className="bg-card/80 backdrop-blur-sm border-b border-border/60">
               <div className="mx-auto max-w-5xl space-y-8 px-6 py-12 text-left md:px-12">
                 <ScaleCategory
                   title="Depression & Mood"
