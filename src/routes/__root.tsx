@@ -45,29 +45,53 @@ export const Route = createRootRouteWithContext<RouterContext>()({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Terapily · Onde começa uma terapia melhor." },
+      { title: "Terapily · Therapeutic tools your clients actually finish." },
       {
         name: "description",
         content:
-          "Terapily é o sistema silencioso por trás de uma terapia melhor — atividades, jogos e fluxo clínico para psicólogos TCC.",
+          "Evidence-based CBT activities and validated scales — auto-scored, securely shared, and ready to send to your existing EHR.",
       },
       { name: "author", content: "Terapily" },
       { name: "theme-color", content: "#1F2A36" },
+      // Open Graph
+      { property: "og:site_name", content: "Terapily" },
       {
         property: "og:title",
-        content: "Terapily · Onde começa uma terapia melhor.",
+        content: "Terapily · Therapeutic tools your clients actually finish.",
       },
       {
         property: "og:description",
         content:
-          "Atividades clínicas, jogos terapêuticos e fluxo de homework para psicólogos. Construído por uma clínica.",
+          "Evidence-based CBT activities and validated scales — auto-scored, securely shared, and ready to send to your existing EHR.",
       },
       { property: "og:type", content: "website" },
-      { property: "og:locale", content: "pt_BR" },
+      { property: "og:locale", content: "en_US" },
+      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "Terapily — therapeutic tools" },
+      // Twitter
       { name: "twitter:card", content: "summary_large_image" },
+      {
+        name: "twitter:title",
+        content: "Terapily · Therapeutic tools your clients actually finish.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Evidence-based CBT activities and validated scales — auto-scored and securely shared.",
+      },
+      { name: "twitter:image", content: "/og-image.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      // Favicons
+      { rel: "icon", href: "/favicon.ico", sizes: "any" },
+      { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" },
+      { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
+      { rel: "icon", type: "image/png", sizes: "96x96", href: "/favicon-96x96.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/apple-touch-icon.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
       // Preconnect Google Fonts pra carregar Cormorant + Inter rápido
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
