@@ -130,28 +130,155 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 2.5 · EMOTIONAL HOOK — bloco editorial, voz calma + dor real */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-3xl py-28 text-center md:py-36 px-[16px]">
-          <p className="font-display text-3xl leading-[1.15] text-foreground md:text-5xl">
-            You explain. <br />
-            They nod. <br />
-            They leave.
-          </p>
-          <p className="mx-auto mt-10 max-w-xl font-display text-2xl leading-[1.25] text-muted-foreground md:text-3xl">
-            Next session, nothing changed.
-          </p>
-          <p className="mx-auto mt-10 max-w-lg text-base leading-relaxed text-muted-foreground">
-            Not because they don&rsquo;t care. Because the system
-            you were handed — printable PDFs, manual scoring, no
-            visibility between sessions — was never built to help
-            them follow through.
-          </p>
-          <p className="mx-auto mt-10 max-w-xl font-display text-2xl text-foreground md:text-3xl">
-            Terapily is the system that was missing.
-          </p>
-          <div className="mx-auto mt-12 grid max-w-2xl grid-cols-1 gap-6 text-left sm:grid-cols-3">
-            <BenefitPill title="Less manual work" body="Auto-scoring, magic-link delivery, one-click reports." />
-            <BenefitPill title="More follow-through" body="Activities clients open on any device — no account, no app." />
-            <BenefitPill title="Records that hold up" body="Every read, edit, and export logged. Exportable on demand." />
+        <section className="relative overflow-hidden bg-gradient-to-br from-cream via-background to-cream-tan/60">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-6 py-24 md:grid-cols-12 md:gap-10 md:py-32">
+            {/* Coluna esquerda: display text com "They leave" destacado */}
+            <div className="md:col-span-5">
+              <Eyebrow tone="terracotta">The reality between sessions</Eyebrow>
+              <h2 className="mt-8 font-display text-5xl leading-[1.02] tracking-tight text-navy md:text-[5.5rem]">
+                You explain. <br />
+                They nod. <br />
+                <span className="relative inline-block text-terracotta">
+                  They leave.
+                  {/* Sublinhado riscado à mão */}
+                  <svg
+                    aria-hidden="true"
+                    className="pointer-events-none absolute left-0 right-0 -bottom-3 h-3 w-full"
+                    viewBox="0 0 300 12"
+                    preserveAspectRatio="none"
+                    fill="none"
+                  >
+                    <path
+                      d="M2 7 C 60 2, 120 11, 180 5 S 280 8, 298 4"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      className="text-terracotta/70"
+                    />
+                  </svg>
+                </span>
+              </h2>
+
+              {/* Pill "Next session, nothing changed." */}
+              <div className="mt-12 inline-flex items-center gap-3 rounded-2xl border border-navy/15 bg-background/70 px-5 py-3.5 shadow-[0_4px_16px_-8px_oklch(0.28_0.027_251_/_0.18)] backdrop-blur">
+                <svg
+                  aria-hidden="true"
+                  className="h-4 w-4 text-terracotta"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <rect x="3" y="4" width="18" height="18" rx="2" />
+                  <path d="M16 2v4M8 2v4M3 10h18" />
+                </svg>
+                <span className="text-sm text-navy/80">Next session, nothing changed.</span>
+              </div>
+            </div>
+
+            {/* Coluna central: bullet > + divider + parágrafo + frase de fechamento */}
+            <div className="relative md:col-span-4">
+              <div className="flex gap-5">
+                {/* Coluna do bullet + linha vertical */}
+                <div className="flex flex-col items-center pt-2">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-terracotta text-cream shadow-[0_4px_12px_-4px_oklch(0.665_0.082_65_/_0.45)]">
+                    <svg
+                      aria-hidden="true"
+                      className="h-4 w-4"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M9 18l6-6-6-6" />
+                    </svg>
+                  </div>
+                  <div
+                    aria-hidden="true"
+                    className="mt-3 w-px flex-1 border-l border-dashed border-terracotta/40"
+                  />
+                </div>
+
+                {/* Conteúdo */}
+                <div className="flex-1 pt-1">
+                  <p className="text-base leading-[1.7] text-navy/80">
+                    Not because they don&rsquo;t care.
+                    <br />
+                    Because the system you were handed —{" "}
+                    <strong className="font-semibold text-navy">printable PDFs, manual scoring,</strong>{" "}
+                    no visibility between sessions — was never built to help
+                    them follow through.
+                  </p>
+
+                  <p className="mt-10 font-display text-3xl leading-[1.15] text-navy md:text-[2.25rem]">
+                    <span className="text-terracotta">Terapily</span> is the system
+                    <br />
+                    that was missing.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Coluna direita: ícone Terapily com órbita pontilhada e satélites */}
+            <div className="md:col-span-3">
+              <div className="relative mx-auto aspect-square w-full max-w-[320px]">
+                {/* Órbita pontilhada */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 rounded-full border border-dashed border-terracotta/35"
+                />
+                {/* Halo sutil */}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-[14%] rounded-full bg-cream/70 shadow-[0_20px_50px_-20px_oklch(0.28_0.027_251_/_0.35)]"
+                />
+                {/* Ícone central */}
+                <div className="absolute inset-[18%] flex items-center justify-center">
+                  <img
+                    src={iconSrc}
+                    alt="Terapily"
+                    className="h-full w-full object-contain drop-shadow-[0_12px_24px_oklch(0.28_0.027_251_/_0.35)]"
+                    draggable={false}
+                  />
+                </div>
+
+                {/* Satélites */}
+                <SatelliteIcon
+                  className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2"
+                  label="Clipboard"
+                >
+                  <path d="M9 4h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2V5a1 1 0 0 1 1-1Z" />
+                  <path d="M9 11h6M9 15h6" />
+                </SatelliteIcon>
+                <SatelliteIcon
+                  className="absolute left-0 bottom-[12%] -translate-x-1/2"
+                  label="People"
+                >
+                  <circle cx="9" cy="9" r="3" />
+                  <circle cx="17" cy="11" r="2.5" />
+                  <path d="M3 19c0-3 3-5 6-5s6 2 6 5M14 19c0-2 2-3.5 4-3.5s4 1.5 4 3.5" />
+                </SatelliteIcon>
+                <SatelliteIcon
+                  className="absolute right-0 bottom-[12%] translate-x-1/2"
+                  label="Chart"
+                >
+                  <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+                </SatelliteIcon>
+              </div>
+            </div>
+          </div>
+
+          {/* Benefit pills mantidos abaixo */}
+          <div className="mx-auto max-w-6xl px-6 pb-24">
+            <div className="grid grid-cols-1 gap-6 text-left sm:grid-cols-3">
+              <BenefitPill title="Less manual work" body="Auto-scoring, magic-link delivery, one-click reports." />
+              <BenefitPill title="More follow-through" body="Activities clients open on any device — no account, no app." />
+              <BenefitPill title="Records that hold up" body="Every read, edit, and export logged. Exportable on demand." />
+            </div>
           </div>
         </section>
 
