@@ -813,11 +813,11 @@ function LandingPage() {
             </div>
 
             <div className="mt-14 rounded-2xl border border-cream/10 bg-cream/[0.03] p-6 md:p-8">
-              <p className="font-display text-lg italic leading-relaxed text-cream/85 md:text-xl">
-                &ldquo;Terapily operates under HIPAA Security Rule and
-                signs BAAs with every clinician who handles PHI.
-                HIPAA compliance is a shared responsibility — final
-                accountability rests with each Covered Entity.&rdquo;
+              <p className="text-sm leading-relaxed text-cream/80 md:text-base">
+                Terapily operates under HIPAA Security Rule and signs
+                BAAs with every clinician who handles PHI. HIPAA
+                compliance is a shared responsibility — final
+                accountability rests with each Covered Entity.
               </p>
             </div>
           </div>
