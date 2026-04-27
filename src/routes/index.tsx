@@ -726,7 +726,7 @@ function LandingPage() {
                   </ol>
 
                   {/* Footer caption */}
-                  <p className="mt-6 border-t border-border/40 pt-5 text-xs leading-relaxed text-muted-foreground">
+                  <p className="mt-6 border-t border-border/40 pt-5 text-xs leading-relaxed text-muted-foreground font-bold">
                     Two highlighted rows. Everything else stays exactly
                     where it already lives.
                   </p>
