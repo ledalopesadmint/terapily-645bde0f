@@ -240,7 +240,7 @@ function LandingPage() {
 
                 {/* Conteúdo */}
                 <div className="flex-1 pt-1">
-                  <p className="text-base leading-[1.7] text-navy/80">
+                  <p className="text-base leading-[1.7] text-navy/80 font-sans">
                     Not because they don&rsquo;t care.
                     <br />
                     Because the system you were handed —{" "}
@@ -250,7 +250,7 @@ function LandingPage() {
                   </p>
 
                   <p className="mt-10 font-display text-3xl leading-[1.15] text-navy md:text-[2.25rem]">
-                    <span className="text-terracotta">Terapily</span> is the system
+                    <span className="text-terracotta">terapily.</span> is the system
                     <br />
                     that was missing.
                   </p>
