@@ -489,7 +489,7 @@ function LandingPage() {
               <em className="italic font-display text-terracotta">Scored</em> for you.
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              <strong className="font-display italic text-terracotta">35</strong> evidence-based screening tools — PHQ-9, GAD-7, PCL-5
+              <strong className="font-display text-2xl italic font-semibold leading-none text-terracotta align-baseline md:text-3xl">35</strong> evidence-based screening tools — PHQ-9, GAD-7, PCL-5
               and many more — delivered as interactive activities with
               auto-scoring, severity bands, and a one-page report.{" "}
               <span className="text-navy">No spreadsheets. No manual math. No per-assessment licensing fees passed to you.</span>
