@@ -1704,11 +1704,23 @@ function ScaleCategory({ title, scales }: { title: string; scales: Scale[] }) {
   );
 }
 
-function PricingItem({ children }: { children: ReactNode }) {
+function PricingItem({
+  children,
+  tone = "default",
+}: {
+  children: ReactNode;
+  tone?: "default" | "dark" | "light";
+}) {
+  const dotClass =
+    tone === "dark"
+      ? "bg-sage"
+      : tone === "light"
+        ? "bg-terracotta"
+        : "bg-primary";
   return (
     <li className="flex items-start gap-3">
       <span
-        className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+        className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`}
         aria-hidden="true"
       />
       <span className="leading-relaxed">{children}</span>
