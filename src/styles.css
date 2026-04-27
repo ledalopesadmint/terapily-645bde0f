@@ -5,27 +5,35 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
- *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
- *
- * To add a new semantic color:
- * 1. Add the variable to :root (light value) and .dark (dark value)
- * 2. Register it in @theme inline as --color-<name>: var(--<name>)
+ * Terapily Design System (Brand Book v3 · 2026)
+ * --------------------------------------------------
+ * Paleta: Sage · Navy · Cream · Mauve · Charcoal
+ * Tipografia: Cormorant (display, serif) + Inter (UI, sans)
+ * Regras:
+ *   - Preto puro #000 PROIBIDO — usar Navy
+ *   - Mauve só decorativo (≤8% da página, nunca em corpo)
+ *   - Sage e Mauve nunca lado a lado
+ *   - Proporção 60/30/10 (Cream/Navy/Sage ou Mauve)
+ * Cores em oklch (Tailwind v4 padrão).
  */
 
 @theme inline {
+  /* Radius */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Fontes */
+  --font-display: "Cormorant", "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Tracking pra eyebrow (+120 do brand book = 0.12em) */
+  --tracking-eyebrow: 0.12em;
+
+  /* Tokens semânticos shadcn → mapeados pra paleta Terapily */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -59,77 +67,112 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Tokens de marca diretos (uso em componentes brand/) */
+  --color-sage: var(--sage);
+  --color-sage-foreground: var(--sage-foreground);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-cream: var(--cream);
+  --color-cream-foreground: var(--cream-foreground);
+  --color-mauve: var(--mauve);
+  --color-mauve-foreground: var(--mauve-foreground);
+  --color-charcoal: var(--charcoal);
 }
 
+/*
+ * Light mode (padrão) — fundo Cream, texto Charcoal, primária Navy
+ * Hex de origem (Brand Book v3):
+ *   Sage     #7E9B86
+ *   Navy     #1F2A36
+ *   Cream    #F4EFE6
+ *   Mauve    #B89BA3
+ *   Charcoal #3A3F47
+ */
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.984 0.003 247.858);
-  --sidebar-foreground: oklch(0.129 0.042 264.695);
-  --sidebar-primary: oklch(0.208 0.042 265.755);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.968 0.007 247.896);
-  --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
-  --sidebar-border: oklch(0.929 0.013 255.508);
-  --sidebar-ring: oklch(0.704 0.04 256.788);
+  --radius: 0.5rem;
+
+  /* Cores puras Terapily (oklch convertido dos hex oficiais) */
+  --sage: oklch(0.65 0.04 152);
+  --sage-foreground: oklch(0.22 0.02 232); /* Navy sobre Sage = AA Large */
+  --navy: oklch(0.22 0.02 232);
+  --navy-foreground: oklch(0.95 0.01 80); /* Cream sobre Navy */
+  --cream: oklch(0.95 0.01 80);
+  --cream-foreground: oklch(0.32 0.01 232); /* Charcoal sobre Cream */
+  --mauve: oklch(0.7 0.04 0);
+  --mauve-foreground: oklch(0.22 0.02 232);
+  --charcoal: oklch(0.32 0.01 232);
+
+  /* Mapping semântico shadcn → paleta Terapily */
+  --background: var(--cream);
+  --foreground: var(--charcoal);
+  --card: oklch(0.98 0.005 80); /* Cream-light */
+  --card-foreground: var(--charcoal);
+  --popover: var(--cream);
+  --popover-foreground: var(--charcoal);
+  --primary: var(--navy);
+  --primary-foreground: var(--cream);
+  --secondary: var(--sage);
+  --secondary-foreground: var(--navy);
+  --muted: oklch(0.92 0.008 80); /* Cream-deep */
+  --muted-foreground: oklch(0.5 0.01 232);
+  --accent: var(--sage);
+  --accent-foreground: var(--navy);
+  --destructive: oklch(0.5 0.18 28);
+  --destructive-foreground: var(--cream);
+  --border: oklch(0.88 0.01 80);
+  --input: oklch(0.88 0.01 80);
+  --ring: var(--sage);
+
+  --chart-1: var(--sage);
+  --chart-2: var(--navy);
+  --chart-3: var(--mauve);
+  --chart-4: var(--charcoal);
+  --chart-5: oklch(0.75 0.06 152); /* Sage-light */
+
+  --sidebar: oklch(0.97 0.008 80);
+  --sidebar-foreground: var(--charcoal);
+  --sidebar-primary: var(--navy);
+  --sidebar-primary-foreground: var(--cream);
+  --sidebar-accent: oklch(0.92 0.008 80);
+  --sidebar-accent-foreground: var(--navy);
+  --sidebar-border: oklch(0.88 0.01 80);
+  --sidebar-ring: var(--sage);
 }
 
+/*
+ * Dark mode — Cream→Navy de fundo, Charcoal→Cream-Deep de texto
+ * (Tokens preparados na S1, aplicação completa em S4)
+ */
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.208 0.042 265.755);
-  --sidebar-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-accent: oklch(0.279 0.041 260.031);
-  --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.551 0.027 264.364);
+  --background: var(--navy);
+  --foreground: oklch(0.92 0.008 80); /* Cream-deep */
+  --card: oklch(0.27 0.02 232);
+  --card-foreground: oklch(0.92 0.008 80);
+  --popover: oklch(0.27 0.02 232);
+  --popover-foreground: oklch(0.92 0.008 80);
+  --primary: var(--cream);
+  --primary-foreground: var(--navy);
+  --secondary: var(--sage);
+  --secondary-foreground: var(--navy);
+  --muted: oklch(0.3 0.02 232);
+  --muted-foreground: oklch(0.7 0.01 80);
+  --accent: var(--sage);
+  --accent-foreground: var(--navy);
+  --destructive: oklch(0.6 0.18 28);
+  --destructive-foreground: var(--cream);
+  --border: oklch(0.35 0.02 232);
+  --input: oklch(0.35 0.02 232);
+  --ring: var(--sage);
+
+  --sidebar: oklch(0.25 0.02 232);
+  --sidebar-foreground: oklch(0.92 0.008 80);
+  --sidebar-primary: var(--sage);
+  --sidebar-primary-foreground: var(--navy);
+  --sidebar-accent: oklch(0.3 0.02 232);
+  --sidebar-accent-foreground: oklch(0.92 0.008 80);
+  --sidebar-border: oklch(0.35 0.02 232);
+  --sidebar-ring: var(--sage);
 }
 
 @layer base {
@@ -137,8 +180,39 @@
     border-color: var(--color-border);
   }
 
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-feature-settings: "ss01", "cv11";
+    line-height: 1.5;
+  }
+
+  /* Display family pra manchetes editoriais */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  /* Eyebrow utility — ALL CAPS tracked +120 (brand book) */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-mauve);
+  }
+
+  /* Body padrão segue brand book: Inter 14pt, line-height 1.5× */
+  p {
+    line-height: 1.5;
   }
 }
