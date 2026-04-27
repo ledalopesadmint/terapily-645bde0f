@@ -53,6 +53,59 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
 });
 
+function ProblemCardMobile({
+  gap,
+  before,
+  after,
+}: {
+  gap: string;
+  before: string;
+  after: string;
+}) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border/60 bg-background shadow-[0_18px_40px_-24px_oklch(0.28_0.027_251_/_0.35)] ring-1 ring-terracotta/10">
+      <div className="flex items-center justify-between gap-3 bg-navy px-5 py-4">
+        <p className="font-display text-lg italic text-cream">{gap}</p>
+        <span className="eyebrow text-[0.6rem] text-cream/70">The gap</span>
+      </div>
+      <div className="border-b border-border/60 bg-cream-tan/40 px-5 py-5">
+        <p className="eyebrow mb-2 text-[0.6rem] text-muted-foreground">
+          The system you were handed
+        </p>
+        <p className="text-sm leading-relaxed text-muted-foreground line-through decoration-terracotta/40 decoration-1">
+          {before}
+        </p>
+      </div>
+      <div className="bg-terracotta/[0.08] px-5 py-5">
+        <p className="eyebrow mb-2 text-[0.6rem] text-terracotta">
+          With Terapily
+        </p>
+        <div className="flex gap-3">
+          <span
+            aria-hidden="true"
+            className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-terracotta text-cream"
+          >
+            <svg
+              className="h-3 w-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+          </span>
+          <p className="text-sm leading-relaxed font-medium text-navy">
+            {after}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function LandingPage() {
   const { isAuthenticated, isLoading } = useAuth();
   const primaryCtaTo = isAuthenticated ? "/dashboard" : "/signup";
