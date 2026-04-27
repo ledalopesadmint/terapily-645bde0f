@@ -147,6 +147,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           id: string
+          limits: Json
           metadata: Json
           provider: string
           provider_customer_id: string | null
@@ -162,6 +163,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          limits?: Json
           metadata?: Json
           provider?: string
           provider_customer_id?: string | null
@@ -177,6 +179,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          limits?: Json
           metadata?: Json
           provider?: string
           provider_customer_id?: string | null
@@ -375,7 +378,8 @@ export type Database = {
         | "canceled"
         | "incomplete"
         | "paused"
-      subscription_tier: "solo" | "practice" | "clinic"
+        | "expired"
+      subscription_tier: "solo" | "practice" | "clinic" | "basic" | "patient"
       workspace_role: "owner" | "therapist" | "supervisor"
     }
     CompositeTypes: {
@@ -513,8 +517,9 @@ export const Constants = {
         "canceled",
         "incomplete",
         "paused",
+        "expired",
       ],
-      subscription_tier: ["solo", "practice", "clinic"],
+      subscription_tier: ["solo", "practice", "clinic", "basic", "patient"],
       workspace_role: ["owner", "therapist", "supervisor"],
     },
   },
