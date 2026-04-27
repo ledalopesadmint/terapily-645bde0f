@@ -753,7 +753,7 @@ function LandingPage() {
             className="pointer-events-none absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full bg-sage/10 blur-3xl"
           />
 
-          <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
+          <div className="relative mx-auto max-w-6xl px-6 pt-20 pb-12 md:pt-28 md:pb-16">
             <div className="grid grid-cols-1 items-end gap-10 md:grid-cols-12">
               <div className="md:col-span-7">
                 <Eyebrow tone="sage">Compliance &amp; trust</Eyebrow>
