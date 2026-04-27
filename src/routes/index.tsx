@@ -643,15 +643,6 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
           </p>
         </div>
 
-        {/* Founding 100 banner */}
-        <div className="mx-auto mt-10 max-w-2xl rounded-lg border border-secondary/40 bg-secondary/10 px-6 py-4 text-center">
-          <p className="text-sm text-foreground">
-            <span className="font-display text-base">Founding 100 offer</span> — first 100 Practice
-            subscribers lock in <span className="font-medium">$49/month for life</span>.{" "}
-            <span className="font-medium text-secondary">23 spots left.</span>
-          </p>
-        </div>
-
         <div className="mt-12 grid gap-6 md:grid-cols-2 md:items-stretch">
           {/* BASIC */}
           <article className="flex flex-col rounded-lg border border-border/60 bg-background p-8">
