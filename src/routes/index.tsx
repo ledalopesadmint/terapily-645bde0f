@@ -156,7 +156,7 @@ function LandingPage() {
         <section className="bg-cream-tan">
           <div className="mx-auto max-w-6xl px-6 py-10 md:py-12">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-              <TrustFactInverted icon={Library} label="Validated scales" value="35" sub="Grounded in published evidence." />
+              <TrustFactInverted icon={Library} label="Validated scales" value="33" sub="All free to use. Original wording preserved." />
               <TrustFactInverted icon={Zap} label="Score to report" value="<3s" sub="Less admin. More care." />
               <TrustFactInverted icon={ShieldCheck} label="Encryption at rest" value="AES-256" sub="Enterprise-grade security." />
             </div>
@@ -489,14 +489,14 @@ function LandingPage() {
               <em className="italic font-display text-terracotta">Scored</em> for you.
             </h2>
             <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-              <strong className="font-display text-2xl italic font-semibold leading-none text-terracotta align-baseline md:text-3xl">35</strong> evidence-based screening tools — PHQ-9, GAD-7, PCL-5
+              <strong className="font-display text-2xl italic font-semibold leading-none text-terracotta align-baseline md:text-3xl">33</strong> evidence-based screening tools — PHQ-9, GAD-7, PCL-5
               and many more — delivered as interactive activities with
               auto-scoring, severity bands, and a one-page report.{" "}
-              <span className="text-navy">No spreadsheets. No manual math. No per-assessment licensing fees passed to you.</span>
+              <span className="text-navy">All free to use. No per-assessment licensing fees, ever.</span>
             </p>
 
             <div className="mx-auto mt-12 grid max-w-4xl grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-5">
-              <KeyStat value="35" label="Validated scales" />
+              <KeyStat value="33" label="Validated scales" />
               <KeyStat value="$0" label="Per-assessment fees" />
               <KeyStat value="<3s" label="Score to report" />
               <KeyStat value="100%" label="Original wording preserved" />
@@ -508,7 +508,7 @@ function LandingPage() {
           <details className="group block w-full">
             <summary className="flex w-full cursor-pointer list-none items-center justify-between gap-4 border-y border-navy bg-navy px-6 py-5 text-cream transition-colors hover:bg-navy/95 md:px-12">
               <span className="flex items-center gap-5">
-                <span className="font-display text-3xl italic leading-none text-terracotta md:text-4xl">35</span>
+                <span className="font-display text-3xl italic leading-none text-terracotta md:text-4xl">33</span>
                 <span className="text-xs font-medium uppercase tracking-[0.2em] md:text-sm">
                   See the full library of auto-scored assessments
                 </span>
@@ -576,7 +576,6 @@ function LandingPage() {
                   title="Sleep"
                   scales={[
                     { code: "PSQI", name: "Pittsburgh Sleep Quality Index", items: 19 },
-                    { code: "ISI", name: "Insomnia Severity Index", items: 7 },
                     { code: "Epworth", name: "Daytime Sleepiness Scale", items: 8 },
                   ]}
                 />
@@ -596,7 +595,6 @@ function LandingPage() {
                     { code: "ATQ-30", name: "Automatic Thoughts Questionnaire", items: 30 },
                     { code: "AAQ-II", name: "Acceptance & Action Questionnaire (ACT)", items: 7 },
                     { code: "CFQ", name: "Cognitive Fusion Questionnaire (ACT)", items: 7 },
-                    { code: "SCS-SF", name: "Self-Compassion Scale — Short", items: 12 },
                   ]}
                 />
                 <p className="border-t border-border/40 pt-6 text-xs leading-relaxed text-muted-foreground">
@@ -919,7 +917,9 @@ function LandingPage() {
                 </div>
 
                 {/* Rows */}
-                <CompareRow capability="Auto-scored validated scales (PHQ-9, GAD-7, PCL-5...)" terapily="35 built-in" terapilyWin alt1="No" alt1Lose alt2="Some, varies" />
+                <CompareRow capability="Auto-scored validated scales (PHQ-9, GAD-7, PCL-5...)" terapily="33, all free to use" terapilyWin alt1="No" alt1Lose alt2="Some, often paid" />
+                <CompareRow capability="Append-only audit log of every patient interaction" terapily="Yes, immutable" terapilyWin alt1="No" alt1Lose alt2="Rarely" alt2Lose />
+                <CompareRow capability="Who-saw-what-when trail on every assessment" terapily="Yes" terapilyWin alt1="No" alt1Lose alt2="No" alt2Lose />
                 <CompareRow capability="Use the same activity in session AND between sessions" terapily="Yes" terapilyWin alt1="Manual" alt1Lose alt2="Between only" />
                 <CompareRow capability="Patient access without creating an account" terapily="Magic link, 24h expiry" terapilyWin alt1="N/A" alt1Lose alt2="Account required" alt2Lose />
                 <CompareRow capability="Configurable data retention with auto-purge" terapily="Yes, with export" terapilyWin alt1="No" alt1Lose alt2="Rarely published" />
@@ -932,7 +932,9 @@ function LandingPage() {
             {/* ─── Mobile stack ─── */}
             <div className="mt-12 space-y-4 md:hidden">
               {[
-                { cap: "Auto-scored validated scales (PHQ-9, GAD-7, PCL-5...)", t: "35 built-in", a1: "No", a2: "Some, varies" },
+                { cap: "Auto-scored validated scales (PHQ-9, GAD-7, PCL-5...)", t: "33, all free to use", a1: "No", a2: "Some, often paid" },
+                { cap: "Append-only audit log of every patient interaction", t: "Yes, immutable", a1: "No", a2: "Rarely" },
+                { cap: "Who-saw-what-when trail on every assessment", t: "Yes", a1: "No", a2: "No" },
                 { cap: "Same activity in session AND between sessions", t: "Yes", a1: "Manual", a2: "Between only" },
                 { cap: "Patient access without an account", t: "Magic link, 24h", a1: "N/A", a2: "Account required" },
                 { cap: "Configurable retention with auto-purge", t: "Yes, with export", a1: "No", a2: "Rarely published" },
@@ -1035,7 +1037,7 @@ function LandingPage() {
                 <ul className="mt-8 space-y-3 text-sm text-navy/85">
                   <PricingItem tone="light">Up to 20 active patients</PricingItem>
                   <PricingItem tone="light">1 clinician</PricingItem>
-                  <PricingItem tone="light">35 auto-scored validated assessments</PricingItem>
+                  <PricingItem tone="light">33 auto-scored validated assessments — all free to use</PricingItem>
                   <PricingItem tone="light">Magic link delivery — no patient login</PricingItem>
                   <PricingItem tone="light">AES-256-GCM at rest · TLS 1.3 in transit</PricingItem>
                   <PricingItem tone="light">Append-only audit log</PricingItem>
