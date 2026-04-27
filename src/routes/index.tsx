@@ -84,8 +84,8 @@ function LandingPage() {
           <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
             Run validated scales and CBT activities live in session,
             send them home with a single secure link, or both. Every
-            activity generates a clinical signal you can keep, export,
-            and defend — without replacing your existing EHR.
+            activity becomes a record you can actually use — without
+            replacing your existing EHR.
           </p>
 
           <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -120,6 +120,34 @@ function LandingPage() {
             <TrustFact label="Encryption at rest" value="AES-256" />
             <TrustFact label="Patient logins required" value="0" />
             <TrustFact label="Audit log coverage" value="100%" />
+          </div>
+        </section>
+
+        {/* ============================================================ */}
+        {/* 2.5 · EMOTIONAL HOOK — bloco editorial, voz calma + dor real */}
+        {/* ============================================================ */}
+        <section className="mx-auto max-w-3xl px-6 py-28 text-center md:py-36">
+          <p className="font-display text-3xl leading-[1.15] text-foreground md:text-5xl">
+            You explain. <br />
+            They nod. <br />
+            They leave.
+          </p>
+          <p className="mx-auto mt-10 max-w-xl font-display text-2xl leading-[1.25] text-muted-foreground md:text-3xl">
+            Next session, nothing changed.
+          </p>
+          <p className="mx-auto mt-10 max-w-lg text-base leading-relaxed text-muted-foreground">
+            Not because they don&rsquo;t care. Because the system
+            you were handed — printable PDFs, manual scoring, no
+            visibility between sessions — was never built to help
+            them follow through.
+          </p>
+          <p className="mx-auto mt-10 max-w-xl font-display text-2xl text-foreground md:text-3xl">
+            Terapily is the system that was missing.
+          </p>
+          <div className="mx-auto mt-12 grid max-w-2xl grid-cols-1 gap-6 text-left sm:grid-cols-3">
+            <BenefitPill title="Less manual work" body="Auto-scoring, magic-link delivery, one-click reports." />
+            <BenefitPill title="More follow-through" body="Activities clients open on any device — no account, no app." />
+            <BenefitPill title="Records that hold up" body="Every read, edit, and export logged. Exportable on demand." />
           </div>
         </section>
 
