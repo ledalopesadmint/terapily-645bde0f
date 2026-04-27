@@ -739,7 +739,7 @@ function LandingPage() {
 
 function BenefitPill({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-card/40 p-5">
+    <div className="rounded-2xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm transition-colors hover:bg-card/80">
       <p className="font-display text-base text-foreground">{title}</p>
       <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{body}</p>
     </div>
@@ -751,6 +751,21 @@ function TrustFact({ value, label }: { value: string; label: string }) {
     <div>
       <p className="font-display text-3xl text-foreground md:text-4xl">{value}</p>
       <p className="mt-1 text-xs uppercase tracking-wider text-muted-foreground">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Variante do TrustFact pra fundo Navy do hero.
+ * Card squircle translúcido cream — leveza visual, refere ao app.
+ */
+function TrustFactInverted({ value, label }: { value: string; label: string }) {
+  return (
+    <div className="rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-5 backdrop-blur-sm transition-colors hover:bg-cream/[0.10]">
+      <p className="font-display text-2xl text-cream md:text-3xl">{value}</p>
+      <p className="mt-1 text-[0.65rem] uppercase tracking-wider text-cream/60">
         {label}
       </p>
     </div>
