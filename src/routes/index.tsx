@@ -835,7 +835,7 @@ function LandingPage() {
             ✓
           </div>
 
-          <div className="relative mx-auto max-w-6xl px-6 pt-12 pb-20 md:pt-16 md:pb-28">
+          <div className="relative mx-auto max-w-6xl px-6 pt-12 pb-12 md:pt-16 md:pb-16">
             <div className="text-center">
               <Eyebrow tone="mauve">Compared to alternatives</Eyebrow>
               <h2 className="mt-6 font-display text-4xl leading-[1.05] text-foreground md:text-5xl">
@@ -991,7 +991,7 @@ function LandingPage() {
         {/* 10 · PRICING */}
         {/* ============================================================ */}
         <section id="pricing" className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-5xl px-6 py-16">
+          <div className="mx-auto max-w-5xl px-6 pt-10 pb-16 md:pt-12">
             <div className="text-center">
               <Eyebrow tone="sage">Pricing · Two plans, no surprises</Eyebrow>
               <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
