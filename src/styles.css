@@ -138,6 +138,39 @@
   --sidebar-accent-foreground: var(--navy);
   --sidebar-border: oklch(0.88 0.01 80);
   --sidebar-ring: var(--sage);
+
+  /* ---- Surface tonals (landing only — alternating section backgrounds) ---- */
+  --surface-cream: var(--cream);
+  --surface-cream-deep: oklch(0.92 0.012 80);
+  --surface-sage-tint: oklch(0.93 0.025 152);   /* Sage 12% sobre cream */
+  --surface-sage-deep: oklch(0.86 0.04 152);
+  --surface-mauve-tint: oklch(0.93 0.018 0);     /* Mauve 10% sobre cream */
+  --surface-navy: var(--navy);
+  --surface-navy-soft: oklch(0.28 0.025 232);
+
+  /* Marca acento warm (apricot/peach) — usado SÓ em ilustrações/ícones, ≤8% */
+  --accent-warm: oklch(0.78 0.11 50);
+  --accent-warm-deep: oklch(0.65 0.14 45);
+
+  /* Gradientes orgânicos pra heros e closing */
+  --gradient-hero:
+    radial-gradient(ellipse 80% 60% at 20% 0%, oklch(0.93 0.025 152 / 0.55), transparent 60%),
+    radial-gradient(ellipse 70% 50% at 90% 30%, oklch(0.93 0.018 0 / 0.55), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, oklch(0.78 0.11 50 / 0.18), transparent 60%),
+    var(--cream);
+  --gradient-navy-glow:
+    radial-gradient(ellipse 70% 50% at 0% 0%, oklch(0.65 0.04 152 / 0.25), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 100% 100%, oklch(0.78 0.11 50 / 0.18), transparent 55%),
+    var(--navy);
+  --gradient-mauve-soft:
+    linear-gradient(180deg, oklch(0.95 0.012 0) 0%, oklch(0.93 0.018 0) 100%);
+  --gradient-sage-soft:
+    linear-gradient(180deg, oklch(0.95 0.018 152) 0%, oklch(0.91 0.03 152) 100%);
+
+  /* Sombras editoriais */
+  --shadow-card-soft: 0 1px 2px oklch(0.22 0.02 232 / 0.04), 0 8px 24px -12px oklch(0.22 0.02 232 / 0.12);
+  --shadow-card-lift: 0 2px 4px oklch(0.22 0.02 232 / 0.05), 0 20px 40px -16px oklch(0.22 0.02 232 / 0.18);
+  --shadow-glow-sage: 0 8px 32px -8px oklch(0.65 0.04 152 / 0.35);
 }
 
 /*
