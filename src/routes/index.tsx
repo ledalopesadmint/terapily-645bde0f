@@ -66,7 +66,6 @@ function LandingPage() {
         <RoiCalculator primaryCtaTo={primaryCtaTo} />
         <Features />
         <Pricing primaryCtaTo={primaryCtaTo} />
-        <SocialProof />
         <Faq />
         <ClosingCta primaryCtaTo={primaryCtaTo} primaryCtaLabel={primaryCtaLabel} />
       </main>
