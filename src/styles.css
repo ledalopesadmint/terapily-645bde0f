@@ -80,6 +80,7 @@
   --color-charcoal: var(--charcoal);
   --color-terracotta: var(--terracotta);
   --color-cream-tan: var(--cream-tan);
+  --color-rust: var(--rust);
 }
 
 /*
@@ -114,6 +115,7 @@
   /* Tons editoriais auxiliares (não substituem a paleta principal) */
   --terracotta: oklch(0.665 0.082 65);   /* eyebrow dourado-terra editorial */
   --cream-tan: oklch(0.918 0.022 82);    /* faixa cream tostada (stats strip) */
+  --rust: oklch(0.52 0.105 35);          /* vermelho queimado dessaturado — sinaliza ausência sem alarmar */
 
   /* Mapping semântico shadcn → paleta Terapily */
   --background: var(--cream);
