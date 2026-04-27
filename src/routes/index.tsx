@@ -166,7 +166,7 @@ function LandingPage() {
         {/* 2.5 · EMOTIONAL HOOK — bloco editorial, voz calma + dor real */}
         {/* ============================================================ */}
         <section className="relative overflow-hidden bg-gradient-to-br from-cream via-background to-cream-tan/60">
-          <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-6 py-24 md:grid-cols-12 md:gap-10 md:py-32">
+          <div className="mx-auto grid max-w-6xl grid-cols-1 items-center gap-12 px-6 pt-12 pb-16 md:grid-cols-12 md:gap-10 md:pt-16 md:pb-20">
             {/* Coluna esquerda: display text com "They leave" destacado */}
             <div className="md:col-span-5">
               <Eyebrow tone="terracotta">The reality between sessions</Eyebrow>
