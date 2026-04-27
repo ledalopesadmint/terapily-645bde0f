@@ -1044,7 +1044,7 @@ function LandingPage() {
                 <div className="mt-auto pt-10">
                   <Link
                     to={primaryCtaTo}
-                    className="inline-flex w-full items-center justify-center rounded-md border border-navy/30 bg-transparent px-6 py-3 text-sm font-medium text-navy transition-colors hover:bg-navy/5 hover:border-navy/50"
+                    className="inline-flex w-full items-center justify-center rounded-md bg-sage px-6 py-3 text-sm font-medium text-cream shadow-[0_8px_20px_-6px_rgba(126,155,134,0.5)] transition-all hover:bg-sage/90 hover:shadow-[0_12px_28px_-6px_rgba(126,155,134,0.65)]"
                   >
                     {ctaPrimaryLabel}
                   </Link>
