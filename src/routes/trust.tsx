@@ -196,7 +196,15 @@ function ControlsGrid() {
 /* Subprocessors                                                              */
 /* -------------------------------------------------------------------------- */
 
-const SUBPROCESSORS = [
+type Subprocessor = {
+  name: string;
+  purpose: string;
+  location: string;
+  baa: string;
+  note?: string;
+};
+
+const SUBPROCESSORS: Subprocessor[] = [
   {
     name: "Lovable Cloud (Supabase)",
     purpose: "Database, authentication, storage of encrypted PHI",
@@ -222,7 +230,7 @@ const SUBPROCESSORS = [
     location: "United States",
     baa: "Not required — receives no PHI, only abstract product events",
   },
-] as const;
+];
 
 function Subprocessors() {
   return (
