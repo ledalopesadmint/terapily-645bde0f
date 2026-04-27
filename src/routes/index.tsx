@@ -764,7 +764,7 @@ function LandingPage() {
                 </h2>
               </div>
               <div className="md:col-span-5">
-                <p className="text-base leading-relaxed text-cream/70">
+                <p className="text-base leading-relaxed text-cream/70 text-center">
                   HIPAA has no certification body. Anyone claiming to be
                   &ldquo;HIPAA-certified&rdquo; is either confused or
                   selling you a story. Here is what we actually do —
