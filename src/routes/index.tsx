@@ -1234,20 +1234,25 @@ function LandingPage() {
       {/* FOOTER */}
       {/* ============================================================ */}
       <footer className="border-t border-border/60 bg-cream-tan/40">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-5 text-xs text-muted-foreground md:flex-row">
-          <p className="flex items-center gap-2">
-            <span className="font-display text-base lowercase text-navy">{BRAND.name}</span>
-            <span className="text-muted-foreground/40">·</span>
-            <span className="italic">{BRAND.tagline}</span>
-            <span className="text-muted-foreground/40">·</span>
-            <span>© {new Date().getFullYear()}</span>
+        <div className="mx-auto max-w-6xl px-6 py-5 text-xs text-muted-foreground">
+          <div className="flex flex-col items-center justify-between gap-3 md:flex-row">
+            <p className="flex items-center gap-2">
+              <span className="font-display text-base lowercase text-navy">{BRAND.name}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="italic">{BRAND.tagline}</span>
+              <span className="text-muted-foreground/40">·</span>
+              <span>© {new Date().getFullYear()}</span>
+            </p>
+            <nav className="flex items-center gap-4 font-medium">
+              <a href="#pricing" className="transition-colors hover:text-navy">Pricing</a>
+              <a href="#faq" className="transition-colors hover:text-navy">FAQ</a>
+              <span className="text-muted-foreground/40">·</span>
+              <span className="text-muted-foreground/70">TLS 1.3 · AES-256-GCM · HIPAA-aligned</span>
+            </nav>
+          </div>
+          <p className="mt-3 truncate text-center text-[0.7rem] text-muted-foreground/70">
+            Terapily is a software platform for licensed mental health clinicians. It does not provide medical, legal, or regulatory advice. Clinical judgment always belongs to the clinician.
           </p>
-          <nav className="flex items-center gap-4 font-medium">
-            <a href="#pricing" className="transition-colors hover:text-navy">Pricing</a>
-            <a href="#faq" className="transition-colors hover:text-navy">FAQ</a>
-            <span className="text-muted-foreground/40">·</span>
-            <span className="text-muted-foreground/70">TLS 1.3 · AES-256-GCM · HIPAA-aligned</span>
-          </nav>
         </div>
       </footer>
     </div>
