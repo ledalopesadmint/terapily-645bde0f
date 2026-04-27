@@ -666,7 +666,7 @@ const PRICING_FEATURES = [
   { label: "Encrypted workspace + audit log", basic: true, practice: true },
   { label: "Audit trail export", basic: false, practice: true },
   { label: "Custom branding on reports", basic: false, practice: true },
-  { label: "BAA available", basic: false, practice: true },
+  { label: "Signed BAA at signup", basic: false, practice: true },
   { label: "Priority support", basic: false, practice: true },
 ] as const;
 
