@@ -130,7 +130,7 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 2.5 · EMOTIONAL HOOK — bloco editorial, voz calma + dor real */}
         {/* ============================================================ */}
-        <section className="mx-auto max-w-3xl px-6 py-28 text-center md:py-36">
+        <section className="mx-auto max-w-3xl py-28 text-center md:py-36 px-[16px]">
           <p className="font-display text-3xl leading-[1.15] text-foreground md:text-5xl">
             You explain. <br />
             They nod. <br />
