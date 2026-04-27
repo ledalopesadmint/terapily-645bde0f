@@ -1,17 +1,15 @@
 /**
- * Server functions de perfil — Quinta da S1.
+ * Server functions de perfil — Quinta da S1, refatorado na Sexta.
  *
  * Padrão future-proof:
- *   Zod (mesmo schema do client) → requireSupabaseAuth → RLS → audit log inline.
+ *   Zod (mesmo schema do client) → requireSupabaseAuth → RLS → withAudit().
  *
- * Helper `withAudit()` chega na Sexta da S1 e vai envolver isto sem mudar a API.
- * Por enquanto o audit é inserido inline com `supabaseAdmin` (única forma de
- * escrever em `audit_logs`, que tem INSERT REVOKED para authenticated/anon).
+ * `withAudit` (Sexta) substitui o audit inline da Quinta. API igual,
+ * agora reutilizável por todas as server functions.
  */
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHeader } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withAudit } from "@/features/audit/audit.server";
 import { profileUpdateSchema } from "@/lib/validation/schemas";
 
 export const updateProfile = createServerFn({ method: "POST" })
@@ -20,47 +18,38 @@ export const updateProfile = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    // 1. Mutação real — RLS garante que o usuário só edita o próprio perfil.
-    const { data: updated, error } = await supabase
-      .from("profiles")
-      .update({
-        full_name: data.full_name,
-        country: data.country ?? null,
-        license_number: data.license_number ?? null,
-        npi: data.npi ?? null,
-        locale: data.locale,
-        timezone: data.timezone,
-      })
-      .eq("id", userId)
-      .select("id, full_name, avatar_url, locale, timezone")
-      .single();
-
-    if (error) {
-      console.error("updateProfile failed:", error);
-      throw new Error("Não foi possível salvar seu perfil.");
-    }
-
-    // 2. Audit log — via service role (única forma permitida pela hardening da Terça).
-    //    Falha no audit NÃO derruba a mutação, mas é logada pra observabilidade.
-    try {
-      const userAgent = getRequestHeader("user-agent") ?? null;
-      const forwarded = getRequestHeader("x-forwarded-for") ?? null;
-      const ip = forwarded?.split(",")[0]?.trim() || null;
-
-      await supabaseAdmin.from("audit_logs").insert({
-        actor_id: userId,
+    return withAudit(
+      {
+        actorId: userId,
         action: "profile.updated",
-        resource_type: "profile",
-        resource_id: userId,
-        metadata: {
-          fields: Object.keys(data),
-        },
-        ip,
-        user_agent: userAgent,
-      });
-    } catch (auditError) {
-      console.error("Audit log failed (non-blocking):", auditError);
-    }
+        resourceType: "profile",
+        resourceId: userId,
+        // PII-safe: só enumera os nomes dos campos alterados, sem valores.
+        metadata: { fields: Object.keys(data) },
+      },
+      async () => {
+        // RLS garante que o usuário só edita o próprio perfil.
+        // Update por campo explícito — nunca espalhar `...data`.
+        const { data: updated, error } = await supabase
+          .from("profiles")
+          .update({
+            full_name: data.full_name,
+            country: data.country ?? null,
+            license_number: data.license_number ?? null,
+            npi: data.npi ?? null,
+            locale: data.locale,
+            timezone: data.timezone,
+          })
+          .eq("id", userId)
+          .select("id, full_name, avatar_url, locale, timezone")
+          .single();
 
-    return { profile: updated };
+        if (error) {
+          console.error("updateProfile failed:", error);
+          throw new Error("Não foi possível salvar seu perfil.");
+        }
+
+        return { profile: updated };
+      },
+    );
   });
