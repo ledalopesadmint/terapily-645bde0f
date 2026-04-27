@@ -896,9 +896,9 @@ function LandingPage() {
 
 function BenefitPill({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-border/50 bg-card/60 p-5 backdrop-blur-sm transition-colors hover:bg-card/80">
-      <p className="font-display text-base text-foreground">{title}</p>
-      <p className="mt-2 text-xs leading-relaxed text-muted-foreground">{body}</p>
+    <div className="group rounded-2xl border border-border/50 bg-card/70 p-6 shadow-[0_6px_20px_-10px_oklch(0.28_0.027_251_/_0.18)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-card/90 hover:shadow-[0_14px_30px_-12px_oklch(0.28_0.027_251_/_0.28)]">
+      <p className="font-display text-xl font-semibold text-foreground md:text-[1.4rem]">{title}</p>
+      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
     </div>
   );
 }
