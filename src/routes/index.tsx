@@ -1,5 +1,4 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
 import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { BRAND, TRIAL_DURATION_DAYS } from "@/lib/constants";
@@ -8,7 +7,10 @@ import { useAuth } from "@/features/auth/AuthProvider";
 /**
  * Landing pública (sales page) — EN-US.
  * Posicionamento: stateful clinical platform com PHI encryption + audit.
+ * Público: CBT clinicians treating adolescents and adults (adolescente lidera).
  * Pricing MVP: apenas Basic + Practice (Clinic vem pós-launch).
+ * Sem depoimentos (ver mem://features/mvp-pricing-two-plans).
+ * Argumento dominante: defensabilidade clínica + continuidade terapêutica.
  * App interno permanece em PT-BR até a S5 (ver mem://preferences/language-strategy).
  */
 
@@ -16,22 +18,23 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       {
-        title: "Terapily · CBT homework that kids actually finish — and the report that writes itself",
+        title:
+          "Terapily · Therapy your client helps build. Records you can defend.",
       },
       {
         name: "description",
         content:
-          "Terapily turns every CBT session into a visual board your young clients build with you, then auto-generates a clean clinical report. PHI encrypted at rest. BAA available. 14-day free trial.",
+          "Terapily turns each CBT session into a visual board you co-build with your client, then auto-generates a clinical report you can defend. PHI encrypted at rest. Audit-logged by default. BAA available. 14-day free trial.",
       },
       {
         property: "og:title",
         content:
-          "Terapily · CBT homework that kids actually finish — and the report that writes itself",
+          "Terapily · Therapy your client helps build. Records you can defend.",
       },
       {
         property: "og:description",
         content:
-          "Visual CBT boards your clients co-build in session. Auto-generated clinical reports. Encrypted patient workspace. Built for therapists working with kids and teens.",
+          "Visual CBT boards your client co-builds in session. Auto-generated clinical reports. Encrypted, audit-logged patient workspace. Built for clinicians treating adolescents and adults.",
       },
     ],
   }),
@@ -62,8 +65,9 @@ function LandingPage() {
         <TrustStrip />
         <Problem />
         <Solution />
+        <WhereItFits />
         <Comparison />
-        <RoiCalculator primaryCtaTo={primaryCtaTo} />
+        <SeeItWork />
         <Features />
         <Pricing primaryCtaTo={primaryCtaTo} />
         <Faq />
@@ -153,19 +157,21 @@ function Hero({
 }) {
   return (
     <section className="mx-auto max-w-5xl px-6 py-24 text-center md:py-32">
-      <Eyebrow tone="mauve">Built for CBT therapists working with kids &amp; teens</Eyebrow>
+      <Eyebrow tone="mauve">
+        Built for CBT clinicians treating adolescents &amp; adults
+      </Eyebrow>
 
       <h1 className="mt-6 font-display text-5xl text-foreground md:text-7xl">
-        The homework your clients <br className="hidden md:block" />
-        actually do — and the report <br className="hidden md:block" />
-        that writes itself.
+        Therapy your client <br className="hidden md:block" />
+        helps build. Records <br className="hidden md:block" />
+        you can defend.
       </h1>
 
       <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-        <em className="font-display not-italic">Terapily</em> turns every session into a visual
-        board your clients build <em className="font-display">with you</em>, then auto-generates a
-        clean clinical report you can export, share, or keep in your encrypted workspace. Less
-        paperwork. More presence.
+        <em className="font-display not-italic">Terapily</em> turns each CBT session into a visual
+        board you co-build with your client, then auto-generates a clean clinical report you can
+        attach to the chart, share with families, or hand to your supervisor. Encrypted at rest.
+        Audit-logged by default. BAA on request.
       </p>
 
       <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -177,10 +183,10 @@ function Hero({
         </Link>
         {!isAuthenticated && (
           <a
-            href="#solution"
+            href="#see-it-work"
             className="inline-flex items-center justify-center rounded-md border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
           >
-            See a sample report
+            See how it works
           </a>
         )}
       </div>
@@ -200,27 +206,27 @@ const PILLARS = [
   {
     n: "01",
     title: "Encrypted by design",
-    body: "PHI encrypted at rest with AES-GCM-256. Per-workspace isolation.",
+    body: "PHI encrypted at rest with AES-GCM-256. Per-workspace isolation enforced at the database level.",
   },
   {
     n: "02",
-    title: "Built for clinical use",
-    body: "Made by and for CBT clinicians. Not retrofitted billing software.",
+    title: "CBT, not generic forms",
+    body: "Built around Beck's cognitive model and the 5-component structure clinicians actually use in session.",
   },
   {
     n: "03",
     title: "Audit-ready",
-    body: "Every access, every change, logged. Export your audit trail anytime.",
+    body: "Every read, every edit, every export — logged with timestamp and user. Export the trail anytime.",
   },
   {
     n: "04",
-    title: "Always evolving",
-    body: "Weekly updates that never break your workflow.",
+    title: "Boring on purpose",
+    body: "Stable interface. Predictable updates. The workflow you learn this week works the same in year three.",
   },
   {
     n: "05",
-    title: "Professional-grade",
-    body: "Production-ready from day one. Not a side project.",
+    title: "Yours to own",
+    body: "Export your full patient archive anytime. No lock-in. Your data leaves with you.",
   },
 ] as const;
 
@@ -250,50 +256,52 @@ function TrustStrip() {
 function Problem() {
   return (
     <section className="mx-auto max-w-3xl px-6 py-24 text-center">
-      <Eyebrow>The hidden cost</Eyebrow>
+      <Eyebrow>The quiet problem</Eyebrow>
       <h2 className="mt-4 font-display text-4xl text-foreground md:text-5xl">
-        Unstructured CBT homework is quietly burning your hour.
+        Between sessions, the work disappears.
       </h2>
       <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-        You finish a 50-minute session, hand your client a worksheet, and hope. Two weeks later,
-        the worksheet shows up half-filled — or not at all. You spend the first 15 minutes of next
-        session reconstructing what should have happened between visits.
+        You finish a 50-minute session. Your client leaves with a worksheet, a homework idea, and
+        the best of intentions. Two weeks later they&rsquo;re back — and you spend the first 15
+        minutes reconstructing what should have happened in between.
       </p>
       <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-        That&rsquo;s <span className="text-foreground">$50 to $120 of your clinical hour</span>{" "}
-        burned on paperwork archaeology.
+        Meanwhile, your notes live in three places. The session board lives on a whiteboard you
+        photographed. The homework lives in a worksheet you may never see again. And if anyone — a
+        supervisor, an auditor, a board — ever asks for the thread, you have to assemble it from
+        memory.
       </p>
-      <p className="mx-auto mt-6 max-w-xl font-display text-2xl italic text-foreground">
-        Multiply by 18 sessions a week. The math is uncomfortable.
+      <p className="mx-auto mt-8 max-w-xl font-display text-2xl italic text-foreground">
+        That&rsquo;s not a documentation problem. That&rsquo;s a clinical continuity problem.
       </p>
     </section>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* 04 · Solution                                                              */
+/* 04 · Solution — 4 phases                                                   */
 /* -------------------------------------------------------------------------- */
 
 const SOLUTION_PHASES = [
   {
     n: "In session",
     title: "Co-build the board, live.",
-    body: "Drag situation → thought → emotion → body → behavior cards onto a shared canvas. Pull from a clinically authored CBT vocabulary deck. Your client watches their own pattern emerge.",
+    body: "Drag situation → thought → emotion → body → behavior cards onto a shared canvas. Pull from a clinically authored CBT vocabulary deck. Your client watches their own pattern emerge — and leaves the session with something they helped build.",
   },
   {
     n: "End of session",
     title: "One click. One report.",
-    body: "A clean, branded clinical report — pre-interpreted summary on top, full board below. Export as PDF or save to the patient's encrypted record.",
+    body: "A clean clinical report — pre-interpreted summary on top, full board below. Export as branded PDF or save to the patient's encrypted record. Ready before your client closes the door.",
   },
   {
     n: "Between sessions",
-    title: "Send a secure magic link.",
-    body: "Your client continues the homework at home. You see their progress before the next session. No app install. No password fatigue.",
+    title: "Continue the work, securely.",
+    body: "Send a magic link your client opens on any device. They continue the homework. You see their progress before the next session. No app install. No password reset emails at 11pm.",
   },
   {
     n: "Next session",
-    title: "Start at minute zero.",
-    body: "Open their encrypted record. The thread is already there. No reconstruction. No 'remind me where we left off.'",
+    title: "Open at the line where you left off.",
+    body: "The patient record opens with the full thread already there. Last board, last notes, last homework status. No reconstruction. No 'remind me where we were.'",
   },
 ] as const;
 
@@ -307,7 +315,7 @@ function Solution() {
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow tone="sage">The Terapily flow</Eyebrow>
           <h2 className="mt-4 font-display text-4xl text-foreground md:text-5xl">
-            One board. One report. One encrypted workspace.
+            One board. One report. One encrypted thread.
           </h2>
         </div>
 
@@ -331,24 +339,59 @@ function Solution() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 05 · Comparison                                                            */
+/* 05 · Where it fits — não compete com EHR                                   */
+/* -------------------------------------------------------------------------- */
+
+function WhereItFits() {
+  return (
+    <section className="mx-auto max-w-4xl px-6 py-24 text-center">
+      <Eyebrow>Where it fits</Eyebrow>
+      <h2 className="mt-4 font-display text-4xl text-foreground md:text-5xl">
+        Terapily doesn&rsquo;t replace your EHR. <br className="hidden md:block" />
+        It does what your EHR can&rsquo;t.
+      </h2>
+      <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+        Keep SimplePractice, TherapyNotes, or whatever you use for billing and scheduling. Use
+        Terapily for the clinical work itself — the session, the homework, the thread between
+        visits. Export reports as branded PDFs and attach them to your existing chart in seconds.
+      </p>
+      <p className="mx-auto mt-6 max-w-xl text-sm text-muted-foreground">
+        No data migration. No second login for your front desk. No replacing the systems your
+        practice already runs on.
+      </p>
+    </section>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/* 06 · Comparison                                                            */
 /* -------------------------------------------------------------------------- */
 
 const COMPARISON_ROWS = [
-  ["Built for", "Billing & admin", "Note generation", "Live clinical work"],
-  ["CBT-native", "No — generic forms", "No — passive listener", "Yes — purpose-built"],
+  ["Built for", "Billing & admin", "Note generation from audio", "Live clinical work"],
   [
-    "Client engagement",
+    "What the client experiences",
     "PDF emailed, often ignored",
     "Client never sees it",
     "Client co-builds in session",
   ],
-  ["Between-session work", "None", "None", "Secure magic-link homework"],
   [
-    "PHI security",
+    "What gets recorded",
+    "Generic intake forms",
+    "Transcript + AI summary",
+    "Co-built CBT board + clinical report",
+  ],
+  [
+    "Between-session work",
+    "None",
+    "None",
+    "Secure magic-link homework",
+  ],
+  [
+    "PHI security model",
     "Stored, varies by vendor",
-    "Stores transcripts",
-    "Encrypted at rest + audit log",
+    "Audio + transcript stored",
+    "Per-workspace, encrypted at rest, audit-logged",
   ],
   ["Setup time", "2–6 hours", "30 minutes", "Under 90 seconds"],
   [
@@ -365,16 +408,16 @@ function Comparison() {
       <div className="mx-auto max-w-2xl text-center">
         <Eyebrow>Why Terapily</Eyebrow>
         <h2 className="mt-4 font-display text-4xl text-foreground md:text-5xl">
-          Not the EHRs you&rsquo;ve already tried.
+          Not the tools you&rsquo;ve already tried.
         </h2>
         <p className="mt-6 text-base leading-relaxed text-muted-foreground">
-          A direct comparison with the two categories most CBT therapists are choosing between
+          A direct comparison with the three categories most CBT clinicians are choosing between
           today.
         </p>
       </div>
 
       <div className="mt-12 overflow-x-auto rounded-lg border border-border/60">
-        <table className="w-full min-w-[640px] border-collapse text-sm">
+        <table className="w-full min-w-[760px] border-collapse text-sm">
           <thead>
             <tr className="bg-card/60">
               <th className="p-4 text-left font-medium text-muted-foreground"></th>
@@ -382,7 +425,7 @@ function Comparison() {
                 Generic EHRs
               </th>
               <th className="p-4 text-left font-medium text-muted-foreground">
-                Transcription tools
+                AI transcription
               </th>
               <th className="border-l-4 border-secondary p-4 text-left font-display text-base text-foreground">
                 Terapily
@@ -404,188 +447,187 @@ function Comparison() {
           </tbody>
         </table>
       </div>
+
+      <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted-foreground">
+        AI transcription tools listen to your session. Terapily builds a clinical artifact{" "}
+        <em className="font-display not-italic text-foreground">with</em> your client — and the
+        report is a byproduct of the work, not the product itself.
+      </p>
     </section>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* 06 · ROI Calculator                                                        */
+/* 07 · See it work — substitui ROI calculator                                */
 /* -------------------------------------------------------------------------- */
 
-function RoiCalculator({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
-  const [sessions, setSessions] = useState(18);
-  const [rate, setRate] = useState(150);
-  const [minutes, setMinutes] = useState(12);
+const ARTIFACTS = [
+  {
+    label: "01 · The session board",
+    title: "Drag-and-drop canvas",
+    body: "5 categories, vocabulary deck, free-text. Built in session, with the client.",
+    visual: "board",
+  },
+  {
+    label: "02 · The clinical report",
+    title: "Branded PDF, in seconds",
+    body: "Pre-interpreted summary on top. Full board below. Branded with your practice.",
+    visual: "report",
+  },
+  {
+    label: "03 · The encrypted record",
+    title: "One thread per patient",
+    body: "Every board, every report, every homework — encrypted at rest, audit-logged.",
+    visual: "record",
+  },
+] as const;
 
-  const { weekly, monthly, yearly, roi } = useMemo(() => {
-    const weeklyVal = (sessions * minutes * rate) / 60;
-    const monthlyVal = weeklyVal * 4;
-    const yearlyVal = weeklyVal * 52;
-    const practicePrice = 79;
-    const roiVal = monthlyVal / practicePrice;
-    return {
-      weekly: weeklyVal,
-      monthly: monthlyVal,
-      yearly: yearlyVal,
-      roi: roiVal,
-    };
-  }, [sessions, rate, minutes]);
+const FACTS = [
+  { value: "< 90 sec", label: "to set up your first patient" },
+  { value: "< 3 sec", label: "to generate a clinical report" },
+  { value: "AES-GCM-256", label: "encryption standard at rest" },
+  { value: "30 days", label: "soft-delete recovery window" },
+  { value: "100%", label: "of access events written to audit log" },
+] as const;
 
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
-
+function SeeItWork() {
   return (
-    <section className="border-y border-border/60 bg-[oklch(0.22_0.02_232)] text-[oklch(0.95_0.01_80)]">
+    <section
+      id="see-it-work"
+      className="border-y border-border/60 bg-[oklch(0.22_0.02_232)] text-[oklch(0.95_0.01_80)]"
+    >
       <div className="mx-auto max-w-6xl px-6 py-24">
         <div className="mx-auto max-w-2xl text-center">
-          <Eyebrow tone="sage">Run the numbers</Eyebrow>
+          <Eyebrow tone="sage">What it actually looks like</Eyebrow>
           <h2 className="mt-4 font-display text-4xl md:text-5xl">
-            See the money before the price.
+            A board, a report, a record. <br className="hidden md:block" />
+            That&rsquo;s the product.
           </h2>
           <p className="mt-6 text-base leading-relaxed text-[oklch(0.78_0.01_80)]">
-            Your inputs. Your hourly rate. Your weekly volume. Conservative defaults from solo
-            practice benchmarks.
+            No demo call required. Three artifacts every session produces.
           </p>
         </div>
 
-        <div className="mt-14 grid gap-10 lg:grid-cols-2">
-          {/* Inputs */}
-          <div className="space-y-8 rounded-lg border border-white/10 bg-white/5 p-8">
-            <RoiInput
-              label="Sessions per week"
-              hint="Average for solo practice"
-              value={sessions}
-              min={5}
-              max={40}
-              onChange={setSessions}
-              format={(v) => `${v}`}
-            />
-            <RoiInput
-              label="Your hourly rate (USD)"
-              hint="What you bill, not what you net"
-              value={rate}
-              min={80}
-              max={400}
-              step={5}
-              onChange={setRate}
-              format={(v) => `$${v}`}
-            />
-            <RoiInput
-              label="Minutes saved per session"
-              hint="Conservative: skip the worksheet recap"
-              value={minutes}
-              min={5}
-              max={25}
-              onChange={setMinutes}
-              format={(v) => `${v} min`}
-            />
-          </div>
-
-          {/* Output */}
-          <div className="flex flex-col justify-between rounded-lg border border-secondary/40 bg-secondary/10 p-8">
-            <div>
-              <Eyebrow tone="sage">Your numbers</Eyebrow>
-              <p className="mt-4 font-display text-6xl leading-none text-[oklch(0.95_0.01_80)] md:text-7xl">
-                {fmt(weekly)}
-              </p>
-              <p className="mt-3 text-sm text-[oklch(0.78_0.01_80)]">recovered every week</p>
-
-              <div className="mt-8 grid grid-cols-2 gap-6 border-t border-white/10 pt-6">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.12em] text-[oklch(0.78_0.01_80)]">
-                    Per month
-                  </p>
-                  <p className="mt-1 font-display text-2xl">{fmt(monthly)}</p>
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.12em] text-[oklch(0.78_0.01_80)]">
-                    Per year
-                  </p>
-                  <p className="mt-1 font-display text-2xl">{fmt(yearly)}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-8 rounded-md bg-secondary/20 p-5">
-              <p className="text-xs uppercase tracking-[0.12em] text-secondary">
-                Practice plan · $79 / month
-              </p>
-              <p className="mt-2 font-display text-xl text-[oklch(0.95_0.01_80)]">
-                ROI: {roi.toFixed(1)}× in month one
-              </p>
-            </div>
-
-            <Link
-              to={primaryCtaTo}
-              className="mt-6 inline-flex items-center justify-center rounded-md bg-secondary px-6 py-3 text-sm font-medium text-secondary-foreground transition-colors hover:bg-secondary/90"
+        <div className="mt-14 grid gap-6 md:grid-cols-3">
+          {ARTIFACTS.map((a) => (
+            <article
+              key={a.label}
+              className="rounded-lg border border-white/10 bg-white/5 p-6"
             >
-              Recover this much next month →
-            </Link>
-          </div>
+              <ArtifactVisual kind={a.visual} />
+              <p className="mt-5 text-[0.65rem] font-bold uppercase tracking-[0.12em] text-secondary">
+                {a.label}
+              </p>
+              <h3 className="mt-2 font-display text-xl">{a.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[oklch(0.78_0.01_80)]">{a.body}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-16 rounded-lg border border-white/10 bg-white/5 p-8">
+          <Eyebrow tone="sage">By the numbers — facts, not promises</Eyebrow>
+          <dl className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-5">
+            {FACTS.map((f) => (
+              <div key={f.label}>
+                <dt className="font-display text-2xl text-secondary md:text-3xl">{f.value}</dt>
+                <dd className="mt-1 text-xs leading-relaxed text-[oklch(0.78_0.01_80)]">
+                  {f.label}
+                </dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </div>
     </section>
   );
 }
 
-function RoiInput({
-  label,
-  hint,
-  value,
-  min,
-  max,
-  step = 1,
-  onChange,
-  format,
-}: {
-  label: string;
-  hint: string;
-  value: number;
-  min: number;
-  max: number;
-  step?: number;
-  onChange: (v: number) => void;
-  format: (v: number) => string;
-}) {
-  return (
-    <div>
-      <div className="flex items-baseline justify-between">
-        <label className="text-sm font-medium text-[oklch(0.95_0.01_80)]">{label}</label>
-        <span className="font-display text-2xl text-secondary">{format(value)}</span>
+function ArtifactVisual({ kind }: { kind: string }) {
+  if (kind === "board") {
+    return (
+      <div className="relative h-40 overflow-hidden rounded-md bg-[oklch(0.95_0.01_80)] p-3">
+        <div className="grid h-full grid-cols-5 gap-1">
+          {["Situation", "Thought", "Emotion", "Body", "Behavior"].map((cat, i) => (
+            <div
+              key={cat}
+              className="flex flex-col gap-1 rounded-sm bg-[oklch(0.92_0.01_80)] p-1.5"
+            >
+              <span className="text-[0.55rem] font-bold uppercase tracking-wider text-[oklch(0.4_0.04_232)]">
+                {cat.slice(0, 4)}
+              </span>
+              <div
+                className="rounded-sm bg-[oklch(0.65_0.04_152)] opacity-80"
+                style={{ height: `${20 + i * 8}%` }}
+              />
+              <div className="rounded-sm bg-[oklch(0.7_0.05_30)] opacity-60" style={{ height: "30%" }} />
+            </div>
+          ))}
+        </div>
       </div>
-      <input
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="mt-3 w-full accent-[oklch(0.65_0.04_152)]"
-      />
-      <p className="mt-2 text-xs text-[oklch(0.78_0.01_80)]">{hint}</p>
+    );
+  }
+  if (kind === "report") {
+    return (
+      <div className="flex h-40 flex-col gap-2 rounded-md bg-[oklch(0.95_0.01_80)] p-3">
+        <div className="flex items-center justify-between">
+          <div className="h-2 w-16 rounded-sm bg-[oklch(0.4_0.04_232)]" />
+          <div className="h-2 w-8 rounded-sm bg-[oklch(0.65_0.04_152)]" />
+        </div>
+        <div className="rounded-sm bg-[oklch(0.92_0.01_80)] p-2">
+          <div className="h-1.5 w-3/4 rounded-sm bg-[oklch(0.55_0.03_232)]" />
+          <div className="mt-1 h-1.5 w-full rounded-sm bg-[oklch(0.7_0.02_232)]" />
+          <div className="mt-1 h-1.5 w-5/6 rounded-sm bg-[oklch(0.7_0.02_232)]" />
+        </div>
+        <div className="flex-1 grid grid-cols-5 gap-0.5">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="rounded-sm bg-[oklch(0.85_0.02_80)]" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  // record
+  return (
+    <div className="flex h-40 flex-col gap-1.5 rounded-md bg-[oklch(0.95_0.01_80)] p-3">
+      {[
+        { d: "Apr 22", t: "Session 04 · Anxiety Loop" },
+        { d: "Apr 15", t: "Session 03 · Homework review" },
+        { d: "Apr 08", t: "Session 02 · Anxiety Loop" },
+        { d: "Apr 01", t: "Session 01 · Intake" },
+      ].map((entry) => (
+        <div
+          key={entry.d}
+          className="flex items-center gap-2 rounded-sm bg-[oklch(0.92_0.01_80)] px-2 py-1.5"
+        >
+          <div className="h-1.5 w-1.5 rounded-full bg-[oklch(0.65_0.04_152)]" />
+          <span className="text-[0.6rem] font-bold text-[oklch(0.4_0.04_232)]">{entry.d}</span>
+          <span className="truncate text-[0.6rem] text-[oklch(0.5_0.02_232)]">{entry.t}</span>
+          <span className="ml-auto text-[0.5rem] text-[oklch(0.6_0.02_232)]">🔒</span>
+        </div>
+      ))}
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/* 07 · Features                                                              */
+/* 08 · Features                                                              */
 /* -------------------------------------------------------------------------- */
 
 const FEATURES = [
   {
     eyebrow: "Therapeutic boards",
     title: "Built around how CBT actually works.",
-    body: "Anxiety Loop today. New boards added based on what your practice asks for — every one co-designed with practicing clinicians, never with a generic content team.",
+    body: "Anxiety Loop today. New boards added based on what your practice asks for — every one designed by a practicing CBT clinician, never by a generic content team.",
   },
   {
     eyebrow: "Clinical reports",
-    title: "Branded PDFs in under three seconds.",
-    body: "Pre-interpreted summary on top so your supervisor reads it in 30 seconds. Full board below for the chart. Attach to your EHR or share with families. Your branding, your voice.",
+    title: "Defensible PDFs, in your voice.",
+    body: "Pre-interpreted summary your supervisor reads in 30 seconds. Full board below for the chart. Branded with your practice. Attach to your EHR or share with families.",
   },
   {
     eyebrow: "Encrypted workspace",
-    title: "Patient records you can actually defend.",
-    body: "Every record encrypted at rest with AES-GCM-256. Per-workspace isolation enforced at the database. Full audit trail of every access. Soft delete with 30-day recovery. BAA on Practice.",
+    title: "Records you can actually defend.",
+    body: "Every record encrypted at rest with AES-GCM-256. Per-workspace isolation enforced at the database. Full audit trail. Soft delete with 30-day recovery. BAA on Practice.",
   },
 ] as const;
 
@@ -613,7 +655,7 @@ function Features() {
 }
 
 /* -------------------------------------------------------------------------- */
-/* 08 · Pricing — Basic + Practice (Clinic hidden until post-launch)          */
+/* 09 · Pricing — Basic + Practice (Clinic hidden until post-launch)          */
 /* -------------------------------------------------------------------------- */
 
 const PRICING_FEATURES = [
@@ -635,7 +677,7 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
         <div className="mx-auto max-w-2xl text-center">
           <Eyebrow tone="sage">Pricing</Eyebrow>
           <h2 className="mt-4 font-display text-4xl text-foreground md:text-5xl">
-            Pays for itself in week one.
+            One session pays for the month.
           </h2>
           <p className="mt-6 text-base leading-relaxed text-muted-foreground">
             Both plans include the {TRIAL_DURATION_DAYS}-day free trial. No credit card. Cancel
@@ -652,7 +694,7 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
               <span className="text-base font-sans text-muted-foreground"> / month</span>
             </p>
             <p className="mt-2 text-sm text-muted-foreground">
-              For therapists building their first caseload.
+              For clinicians building their first caseload.
             </p>
 
             <ul className="mt-8 flex-1 space-y-3 text-sm">
@@ -715,7 +757,7 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
         </div>
 
         <p className="mt-10 text-center text-xs text-muted-foreground">
-          Group practice with multiple therapists?{" "}
+          Group practice with multiple clinicians?{" "}
           <a
             href="mailto:hello@terapily.com?subject=Group%20practice%20inquiry"
             className="underline-offset-4 hover:underline"
@@ -773,29 +815,44 @@ const FAQS = [
     pillar: "Audit-ready",
   },
   {
+    q: "Will I need to migrate my existing notes?",
+    a: "No. Terapily starts fresh with your next session. Your existing records stay where they are — in your EHR, in your filing cabinet, wherever. We're not asking you to move years of practice. We're asking you to try the next session differently.",
+    pillar: "Yours to own",
+  },
+  {
+    q: "Does this replace SimplePractice or TherapyNotes?",
+    a: "No. Keep your EHR for billing, scheduling, and intake. Use Terapily for the clinical work itself — the session, the homework, the thread between visits. Export reports as PDFs and attach them to your existing chart.",
+    pillar: "CBT, not generic forms",
+  },
+  {
+    q: "What if my supervisor or board asks for my records?",
+    a: "Export your full audit trail and patient archives anytime, in a format auditors recognize. Every access, every edit, every export is timestamped with the user who performed it. You're not depending on us to defend your practice — you have the evidence in your hands.",
+    pillar: "Audit-ready",
+  },
+  {
+    q: "Who built this?",
+    a: "Terapily was built by a practicing CBT clinician for the workflow she couldn't find in existing software. Every design decision — the 5-component cognitive structure, the magic-link homework, the per-workspace encryption — comes from real clinical practice, not from a generic SaaS playbook.",
+    pillar: "CBT, not generic forms",
+  },
+  {
     q: "What happens if Terapily goes down mid-session?",
     a: "Boards are drafted in your browser and synced to your encrypted workspace continuously. A connection blip doesn't lose your work — keep building, sync resumes when you're back online.",
-    pillar: "Always evolving",
+    pillar: "Boring on purpose",
   },
   {
     q: "Will updates break my workflow?",
-    a: "No. Terapily ships weekly behind a stable interface. The drag-and-drop you learn in week one works the same in year three.",
-    pillar: "Always evolving",
+    a: "No. Terapily ships behind a stable interface. The drag-and-drop you learn in week one works the same in year three. We're boring on purpose.",
+    pillar: "Boring on purpose",
   },
   {
-    q: "How is this different from SimplePractice or TheraNest?",
-    a: "Those are billing-and-admin systems with worksheets bolted on. Terapily is a clinical tool built for the session itself. We don't replace your EHR — we replace the whiteboard, the worksheet, and the photo-of-the-whiteboard.",
-    pillar: "Built for clinical use",
-  },
-  {
-    q: "Can I use this with adult clients?",
-    a: "Yes. The card vocabulary works across ages — we lead with kids and teens because that's where visual CBT has the strongest evidence base, but the boards themselves are age-agnostic.",
-    pillar: "Built for clinical use",
+    q: "Is the board really for adolescents and adults?",
+    a: "Yes. The 5-component cognitive structure (situation → thought → emotion → body → behavior) is age-agnostic and rooted in standard CBT. We lead with adolescents because visual co-building has the strongest engagement evidence there, but the same boards work for adult anxiety, depression, and trauma-adjacent presentations.",
+    pillar: "CBT, not generic forms",
   },
   {
     q: "What if I cancel?",
     a: `Cancel any time from your account. Export your patient records as encrypted archives. We delete your data within 30 days of cancellation, per HIPAA retention guidance.`,
-    pillar: "Professional-grade",
+    pillar: "Yours to own",
   },
 ] as const;
 
@@ -853,11 +910,12 @@ function ClosingCta({
       <Eyebrow tone="sage">End of the page, start of the work</Eyebrow>
       <h2 className="mt-6 font-display text-5xl text-foreground md:text-6xl">
         Try Terapily with your <br className="hidden md:block" />
-        next client.
+        next session.
       </h2>
       <p className="mx-auto mt-8 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-        {TRIAL_DURATION_DAYS}-day free trial. No credit card. Cancel anytime. Upgrade only if
-        Terapily earns its place in your practice.
+        {TRIAL_DURATION_DAYS}-day free trial. No credit card. Cancel anytime. If Terapily
+        doesn&rsquo;t earn its place in your practice, you walk away with your data and we delete
+        ours.
       </p>
       <div className="mt-10">
         <Link
