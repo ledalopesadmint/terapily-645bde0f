@@ -882,13 +882,23 @@ function LandingPage() {
               />
               {/* Recommended badge */}
               <span
-                className="absolute -top-7 z-20 whitespace-nowrap rounded-full bg-sage px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-lg"
+                className="absolute -top-7 z-20 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-navy px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-lg ring-1 ring-navy/20"
                 style={{
                   left: "calc(4px + (100% - 8px) * 0.6739)",
                   transform: "translateX(-50%)",
                 }}
               >
-                ★ Recommended
+                <span
+                  aria-hidden
+                  className="text-sm leading-none"
+                  style={{
+                    color: "#F5C518",
+                    textShadow: "0 0 8px rgba(245, 197, 24, 0.6)",
+                  }}
+                >
+                  ★
+                </span>
+                Recommended
               </span>
 
               <div className="relative grid grid-cols-[1.6fr_1fr_1fr_1fr] overflow-hidden rounded-3xl border border-border/60 shadow-[0_30px_80px_-50px_rgba(31,42,54,0.25)]">
