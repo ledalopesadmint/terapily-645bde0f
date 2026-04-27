@@ -82,6 +82,11 @@ export const Route = createRootRouteWithContext<RouterContext>()({
           "Evidence-based CBT activities and validated scales — auto-scored and securely shared.",
       },
       { name: "twitter:image", content: "/og-image.png" },
+      { property: "og:title", content: "Terapily · Therapeutic tools your clients actually finish." },
+      { name: "twitter:title", content: "Terapily · Therapeutic tools your clients actually finish." },
+      { name: "description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
+      { property: "og:description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
+      { name: "twitter:description", content: "Terapily MVP Builder is a platform for creating Minimum Viable Products." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
