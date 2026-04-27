@@ -991,7 +991,7 @@ function LandingPage() {
         {/* 10 · PRICING */}
         {/* ============================================================ */}
         <section id="pricing" className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-5xl px-6 py-16">
+          <div className="mx-auto max-w-5xl px-6 pt-10 pb-16 md:pt-12">
             <div className="text-center">
               <Eyebrow tone="sage">Pricing · Two plans, no surprises</Eyebrow>
               <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
