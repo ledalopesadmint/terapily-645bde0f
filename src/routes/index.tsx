@@ -1093,7 +1093,7 @@ function LandingPage() {
               </div>
             </div>
 
-            <p className="mx-auto mt-12 max-w-3xl text-center text-xs leading-relaxed text-cream/55">
+            <p className="mx-auto mt-12 max-w-3xl text-center text-xs leading-relaxed text-cream/55 font-bold">
               No card required to start · Cancel anytime · Prices in
               USD · Multi-clinician (Clinic) plan in development.
             </p>
