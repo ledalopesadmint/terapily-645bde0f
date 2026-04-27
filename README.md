@@ -73,22 +73,98 @@ docs/
 6. **PHI** sempre passa por `encryptPHI()` antes de armazenar.
 7. **Soft delete** (`deleted_at`) em todas as tabelas de domínio.
 
+## Planos previstos
+
+A arquitetura suporta 4 planos desde a fundação. Apenas **Basic** e **Practice** entram no MVP; **Clinic** e **Patient** ficam latentes (enums, RLS e tabelas já preparados, sem refator estrutural futuro).
+
+| Plano | Público | Limite | Status |
+|---|---|---|---|
+| **Basic** | Terapeuta solo | 1 terapeuta | MVP (S1+) |
+| **Practice** | Pequena prática | até 2 terapeutas | MVP (S2+) |
+| **Clinic** | Clínica | até 10 terapeutas | Futuro |
+| **Patient** | Paciente B2C | acesso próprio + compartilhamento por consentimento | Futuro |
+
+Detalhes em [`docs/architecture.md`](docs/architecture.md) → *Future plan architecture*.
+
 ## Roadmap (6 semanas)
 
-- **S1** — Fundação: auth, workspaces, RLS, audit, brand visual
+- **S1** ✅ — Fundação: auth, workspaces, RLS, audit, brand visual, 4-plan-ready
 - **S2** — Pacientes (CRUD) + billing real + encryption AES-GCM-256
 - **S3** — Tarefas (homework) + estrutura de jogos + Anatomia da Ansiedade
 - **S4** — Notas de sessão + modo escuro
 - **S5** — Agenda + MFA real + delete account
 - **S6** — Polimento + launch
 
-## Desenvolvimento
+Detalhes em [`docs/roadmap.md`](docs/roadmap.md).
+
+## Desenvolvimento local
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev          # dev server (porta 3000)
+bun run build        # build de produção
+bunx tsc --noEmit    # typecheck
 ```
+
+### Variáveis de ambiente
+
+Copie `.env.example` para `.env` e preencha. No Lovable Cloud as variáveis são injetadas automaticamente — `.env` só importa para clones locais via GitHub.
+
+| Variável | Escopo | Descrição |
+|---|---|---|
+| `VITE_SUPABASE_URL` | client | URL pública do projeto Supabase |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | client | Anon key (segura no bundle, RLS protege) |
+| `VITE_SUPABASE_PROJECT_ID` | client | Ref do projeto |
+| `SUPABASE_URL` | server | Mesma URL acima, para `*.server.ts` |
+| `SUPABASE_SERVICE_ROLE_KEY` | server | **Bypass RLS — nunca expor ao client.** Apenas em arquivos `.server.ts` ou edge functions. |
+
+### Migrations
+
+Todas as migrations vivem em `supabase/migrations/` e são aplicadas automaticamente pelo Lovable Cloud. Para aplicar manualmente em ambientes externos:
+
+```bash
+supabase db push    # requer Supabase CLI + projeto linkado
+```
+
+Ordem cronológica dos arquivos é preservada via prefixo timestamp (`YYYYMMDDHHMMSS_*.sql`). Nunca editar migration já aplicada — sempre criar nova.
+
+## Workspaces e isolamento
+
+Cada usuário cadastrado recebe automaticamente:
+
+1. Um **profile** (`public.profiles`).
+2. Uma **role global** padrão `therapist` (`public.user_roles`, separada do profile por segurança).
+3. Um **workspace pessoal** (`public.workspaces`) com slug derivado do user-id.
+4. Uma **membership** como `owner` desse workspace (`public.workspace_members`).
+5. Uma **subscription** `trialing` de 14 dias (`public.subscriptions`).
+
+Toda query passa por RLS scoped ao `workspace_id`. Não existe acesso cross-workspace, mesmo para admin global. Ver [`docs/security.md`](docs/security.md).
+
+## Status — Semana 1 ✅
+
+Concluído e validado:
+
+- ✅ Autenticação email/senha + Google OAuth (via Lovable Cloud managed)
+- ✅ Multi-tenancy real com workspaces + RLS em todas as tabelas
+- ✅ Sistema de roles (global `app_role` + por workspace `workspace_role`)
+- ✅ Audit log server-side (PII-safe, INSERT revogado do client)
+- ✅ Onboarding `/welcome` + Dashboard + Settings (Profile/Workspace funcionais; Security/Billing como stubs honestos)
+- ✅ Documentação técnica completa em `docs/`
+- ✅ Arquitetura preparada para 4 planos sem refator futuro
+
+Veja [`docs/smoke-test-s1.md`](docs/smoke-test-s1.md) para o roteiro de QA executado.
+
+## Documentação
+
+- [`docs/architecture.md`](docs/architecture.md) — visão geral + future plan architecture
+- [`docs/security.md`](docs/security.md) — RLS, roles, encryption strategy
+- [`docs/database-schema.md`](docs/database-schema.md) — tabelas, enums, triggers
+- [`docs/roadmap.md`](docs/roadmap.md) — cronograma 6 semanas
+- [`docs/brand.md`](docs/brand.md) — Brand Book v3
+- [`docs/smoke-test-s1.md`](docs/smoke-test-s1.md) — roteiro de QA da S1
+- [`docs/technical-debt.md`](docs/technical-debt.md) — dívidas técnicas conscientes
 
 ## Licença
 
 Uso interno · Confidencial · © Leda Carolina Lopes
+

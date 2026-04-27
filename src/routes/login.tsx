@@ -10,9 +10,28 @@ import { GoogleButton } from "@/components/brand/GoogleButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+// Allowlist de destinos internos seguros para o redirect pós-login.
+// Qualquer valor fora dessa lista cai no default `/welcome` — protege contra
+// open redirect (ex.: /login?redirect=https://evil.com).
+const SAFE_REDIRECTS = new Set<string>([
+  "/welcome",
+  "/dashboard",
+  "/settings",
+  "/settings/profile",
+  "/settings/workspace",
+  "/settings/security",
+  "/settings/billing",
+]);
+
+function sanitizeRedirect(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  if (!value.startsWith("/") || value.startsWith("//")) return undefined;
+  return SAFE_REDIRECTS.has(value) ? value : undefined;
+}
+
 export const Route = createFileRoute("/login")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : "/welcome",
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } => ({
+    redirect: sanitizeRedirect(search.redirect),
   }),
   head: () => ({
     meta: [{ title: "Entrar · Terapily" }],

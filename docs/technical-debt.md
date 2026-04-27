@@ -45,3 +45,38 @@ Quando o pacote `@lovable.dev/cloud-auth-js` publicar uma versão em que o tipo 
 - ✅ Login email/senha (`supabase.auth.signInWithPassword`) inalterado.
 - ✅ Callback `/auth/callback` inalterado.
 - ✅ Nenhuma migration ou policy RLS tocada.
+
+---
+
+## 2. PHI encryption ainda é passthrough (planejado para S2)
+
+**Origem.** `src/lib/crypto/encryption.ts` — `encryptPHI()` e `decryptPHI()` são stubs explícitos da S1 que retornam o input sem alteração. O comentário do arquivo já documenta isso.
+
+**Impacto.** Se dados clínicos reais (notas, observações) forem gravados antes da S2, ficam em plaintext no banco. Como na S1 **ainda não existe nenhuma rota que escreva PHI** (CRUD de pacientes só entra na S2), o risco real é **zero hoje** — mas a barreira precisa estar pronta antes de a primeira rota de paciente ser ativada.
+
+**Mitigação atual.** Documentação explícita + ausência de rotas que persistem PHI.
+
+**Condição de remoção.** Implementar AES-GCM-256 no início da S2 **antes** de qualquer rota que escreva em `notes` / `sessions` / `patients`. O scan de segurança vai virar `error` se PHI for gravado sem encryption real.
+
+---
+
+## 3. Auth guard de `_authenticated.tsx` é client-side
+
+**Origem.** `src/routes/_authenticated.tsx` faz a checagem em `useEffect` (client-side). Durante SSR/hydration o shell renderiza brevemente.
+
+**Impacto.** Usuário não autenticado nunca recebe dados reais (RLS bloqueia), mas pode ver brevemente o layout vazio do `<AppShell>` antes do redirect.
+
+**Mitigação atual.** RLS garante que queries não retornem nada sem sessão válida; `useEffect` redireciona para `/login` em ms.
+
+**Condição de remoção.** Adicionar `beforeLoad` server guard usando session do Supabase via cookie quando migrarmos auth para SSR-aware (planejado para S5/polimento ou se virar requisito de SEO).
+
+---
+
+## 4. Sem CSP / security headers globais
+
+**Origem.** Não existe middleware global aplicando `Content-Security-Policy`, `X-Frame-Options`, `Strict-Transport-Security`.
+
+**Impacto.** Em caso de XSS, raio de explosão maior. Mitigado parcialmente pelo Lovable Cloud / Cloudflare na borda.
+
+**Condição de remoção.** Adicionar middleware de headers em `src/start.ts` (ou equivalente TanStack Start) na S5 (hardening pré-launch). Issue tracker: criar antes de S5.
+
