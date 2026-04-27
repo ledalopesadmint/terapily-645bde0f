@@ -1098,7 +1098,7 @@ function LandingPage() {
               USD · Multi-clinician (Clinic) plan in development.
             </p>
 
-            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-relaxed text-cream/55">
+            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-relaxed text-cream/55 font-bold">
               The compliance report aggregates your existing data into
               a format you can share with your auditor or attorney.
               It is not a certification, not a substitute for legal
