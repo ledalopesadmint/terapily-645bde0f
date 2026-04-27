@@ -815,6 +815,11 @@ const FAQS = [
     pillar: "Audit-ready",
   },
   {
+    q: "How is my client's data handled when they use the magic-link homework?",
+    a: "When your client opens the magic link, they see a Notice of Privacy Practices and confirm a second factor (date of birth or one-time SMS code) before any PHI is exchanged. The session runs over TLS 1.3, anything they submit is encrypted at rest, and every patient access is logged separately for your audit trail. Magic links expire automatically and never appear in URLs you'd share by mistake.",
+    pillar: "Encrypted by design",
+  },
+  {
     q: "Will I need to migrate my existing notes?",
     a: "No. Terapily starts fresh with your next session. Your existing records stay where they are — in your EHR, in your filing cabinet, wherever. We're not asking you to move years of practice. We're asking you to try the next session differently.",
     pillar: "Yours to own",
