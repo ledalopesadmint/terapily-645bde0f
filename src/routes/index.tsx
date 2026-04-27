@@ -871,6 +871,13 @@ function LandingPage() {
 
             {/* ─── Comparison grid (desktop) ─── */}
             <div className="relative mt-16 hidden md:block">
+              {/* Recommended badge — positioned above the Terapily column */}
+              <span
+                className="absolute -top-3 z-10 whitespace-nowrap rounded-full bg-sage px-4 py-1.5 text-[0.65rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-lg"
+                style={{ left: "67.4%", transform: "translateX(-50%)" }}
+              >
+                ★ Recommended
+              </span>
               <div className="grid grid-cols-[1.6fr_1fr_1fr_1fr] overflow-hidden rounded-3xl border border-border/60 shadow-[0_30px_80px_-50px_rgba(31,42,54,0.25)]">
                 {/* Header */}
                 <div className="bg-card/60 px-6 py-5 text-[0.65rem] uppercase tracking-[0.2em] text-muted-foreground">
