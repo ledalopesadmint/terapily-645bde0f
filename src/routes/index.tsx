@@ -1228,42 +1228,6 @@ function LandingPage() {
           </div>
         </section>
 
-        {/* ============================================================ */}
-        {/* 12 · CLOSING CTA */}
-        {/* ============================================================ */}
-        <section className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-3xl px-6 py-16 text-center">
-            <Eyebrow tone="mauve">Start when you&rsquo;re ready</Eyebrow>
-            <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-              The same activity. <br className="hidden md:block" />
-              In session, at home, or both.
-            </h2>
-            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground">
-              Try Terapily for {TRIAL_DURATION_DAYS} days. No card.
-              No commitment. If it doesn&rsquo;t fit your practice,
-              walk away with your data.
-            </p>
-            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-              <Link
-                to={primaryCtaTo}
-                className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                {ctaPrimaryLabel}
-              </Link>
-              {!isAuthenticated && (
-                <Link
-                  to="/login"
-                  className="inline-flex items-center justify-center rounded-md border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  I already have an account
-                </Link>
-              )}
-            </div>
-            <p className="mt-6 text-xs text-muted-foreground">
-              No card required · Cancel anytime · Operates under HIPAA Security Rule
-            </p>
-          </div>
-        </section>
       </main>
 
       {/* ============================================================ */}
