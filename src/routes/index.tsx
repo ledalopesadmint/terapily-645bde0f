@@ -1,5 +1,6 @@
-import type { ReactNode } from "react";
+import type { ReactNode, ComponentType } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { Stethoscope, Send, Repeat } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { BRAND, TRIAL_DURATION_DAYS } from "@/lib/constants";
@@ -380,7 +381,8 @@ function LandingPage() {
             <div className="text-center">
               <Eyebrow tone="sage">Three ways to use any activity</Eyebrow>
               <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-                Your session. Your call.
+                Your <em className="italic font-display text-terracotta">session.</em>{" "}
+                Your <em className="italic font-display text-terracotta">call.</em>
               </h2>
               <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
                 Every activity in Terapily — a validated scale, a CBT
@@ -391,21 +393,24 @@ function LandingPage() {
 
             <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
               <ModeCard
+                icon={Stethoscope}
                 tag="Mode 01"
                 title="In session"
-                body="Run the activity live on your screen, on a tablet, or read the items aloud. Scoring and report appear before the client leaves the room."
+                body='Run the activity <strong class="font-display italic text-terracotta">live</strong> on your screen, on a tablet, or read the items aloud. Scoring and report appear <strong class="font-display italic text-terracotta">before</strong> the client leaves the room.'
                 useCase="Use when you want to anchor a clinical decision in the same hour."
               />
               <ModeCard
+                icon={Send}
                 tag="Mode 02"
                 title="Sent home"
-                body="Generate a secure single-use link. Your client opens it on any device — no account, no app to download, no password to forget. Default link expiry: 24 hours."
+                body='Generate a <strong class="font-display italic text-terracotta">secure single-use link.</strong> Your client opens it on any device — no account, no app to download, no password to forget. Default link expiry: <strong class="font-display italic text-terracotta">24 hours.</strong>'
                 useCase="Use for between-session homework, weekly tracking, intake forms."
               />
               <ModeCard
+                icon={Repeat}
                 tag="Mode 03"
                 title="Both"
-                body="Apply it together in session, then send the same activity home for repeat measurement. Results stack into a single timeline on the patient&rsquo;s record."
+                body='Apply it together in session, then send the same activity home for <strong class="font-display italic text-terracotta">repeat measurement.</strong> Results stack into a <strong class="font-display italic text-terracotta">single timeline</strong> on the patient&rsquo;s record.'
                 useCase="Use to measure change between two points without re-explaining the tool."
               />
             </div>
@@ -1051,25 +1056,34 @@ function ProblemRow({
 }
 
 function ModeCard({
+  icon: Icon,
   tag,
   title,
   body,
   useCase,
 }: {
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   tag: string;
   title: string;
   body: string;
   useCase: string;
 }) {
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-border/60 bg-card/60 p-7 backdrop-blur-sm">
-      <Eyebrow tone="sage">{tag}</Eyebrow>
-      <h3 className="mt-3 font-display text-2xl text-foreground">{title}</h3>
+    <div className="group relative flex h-full flex-col rounded-2xl border border-border/60 bg-background p-8 text-center shadow-[0_18px_50px_-24px_oklch(0.28_0.027_251_/_0.28)] ring-1 ring-terracotta/5 transition-all duration-300 hover:-translate-y-1 hover:border-terracotta/30 hover:shadow-[0_28px_70px_-28px_oklch(0.28_0.027_251_/_0.45)] hover:ring-terracotta/15">
+      {/* Ícone centralizado */}
+      <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-cream-tan/70 ring-1 ring-terracotta/15 transition-colors group-hover:bg-terracotta/10 group-hover:ring-terracotta/30">
+        <Icon className="h-6 w-6 text-terracotta" strokeWidth={1.6} />
+      </div>
+
+      <div className="flex justify-center">
+        <Eyebrow tone="sage">{tag}</Eyebrow>
+      </div>
+      <h3 className="mt-3 font-display text-2xl text-navy md:text-3xl">{title}</h3>
       <p
         className="mt-4 text-sm leading-relaxed text-muted-foreground"
         dangerouslySetInnerHTML={{ __html: body }}
       />
-      <p className="mt-6 border-t border-border/40 pt-4 text-xs italic leading-relaxed text-muted-foreground">
+      <p className="mt-6 border-t border-terracotta/15 pt-4 text-xs italic leading-relaxed text-navy/70">
         {useCase}
       </p>
     </div>
