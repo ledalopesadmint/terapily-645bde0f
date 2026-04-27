@@ -739,53 +739,87 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 8 · COMPLIANCE & TRUST — 5 fatos verificáveis */}
         {/* ============================================================ */}
-        <section className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-5xl px-6 py-16">
-            <div className="text-center">
-              <Eyebrow tone="sage">Compliance &amp; trust</Eyebrow>
-              <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-                Things we can show, not just say.
-              </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
-                HIPAA has no certification body. Anyone claiming to be
-                &ldquo;HIPAA-certified&rdquo; is either confused or selling you a
-                story. Here is what we actually do — verifiable, every line.
+        <section className="relative overflow-hidden border-t border-navy/20 bg-navy text-cream">
+          {/* Decorative serif glyph */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-10 top-8 select-none font-display italic text-[18rem] leading-none text-cream/[0.04] md:-left-16 md:text-[26rem]"
+          >
+            §
+          </div>
+          {/* Soft sage glow */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-32 bottom-0 h-[28rem] w-[28rem] rounded-full bg-sage/10 blur-3xl"
+          />
+
+          <div className="relative mx-auto max-w-6xl px-6 py-20 md:py-28">
+            <div className="grid grid-cols-1 items-end gap-10 md:grid-cols-12">
+              <div className="md:col-span-7">
+                <Eyebrow tone="sage">Compliance &amp; trust</Eyebrow>
+                <h2 className="mt-6 font-display text-4xl leading-[1.05] text-cream md:text-5xl">
+                  Things we can show,
+                  <br />
+                  <span className="italic text-terracotta">not just say.</span>
+                </h2>
+              </div>
+              <div className="md:col-span-5">
+                <p className="text-base leading-relaxed text-cream/70">
+                  HIPAA has no certification body. Anyone claiming to be
+                  &ldquo;HIPAA-certified&rdquo; is either confused or
+                  selling you a story. Here is what we actually do —
+                  verifiable, every line.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-16 grid grid-cols-1 gap-px overflow-hidden rounded-3xl border border-cream/10 bg-cream/10 md:grid-cols-2 lg:grid-cols-3">
+              <TrustCard
+                index="01"
+                title="Encryption you can name"
+                proof="AES-256-GCM · TLS 1.3 · RLS"
+                body="At rest and in transit. Per-workspace data isolation enforced at the database row level. No shared tenant tables."
+              />
+              <TrustCard
+                index="02"
+                title="A signed BAA, on request"
+                proof="Plain-language BAA"
+                body="Business Associate Agreement available before you sign up, with a list of every subprocessor that touches PHI."
+              />
+              <TrustCard
+                index="03"
+                title="Append-only audit trail"
+                proof="Actor · timestamp · target"
+                body="Every read, edit, send, and export of patient data is logged. Logs cannot be modified or deleted from the app."
+              />
+              <TrustCard
+                index="04"
+                title="Magic link, no patient account"
+                proof="SHA-256 hash · 24h expiry"
+                body="Patients access activities through a single-use link. No email/password store. No mobile app to lose."
+              />
+              <TrustCard
+                index="05"
+                title="Configurable retention"
+                proof="6-year HIPAA floor"
+                body="You set how long records live. Auto-purge with a downloadable JSON+PDF export sent 30 days before any deletion."
+              />
+              <TrustCard
+                index="06"
+                title="Your data, exportable"
+                proof="JSON + PDF · within 7 days"
+                body="Cancel any time and request a full archive — raw data and human-readable records. No exit fee, no negotiation."
+              />
+            </div>
+
+            <div className="mt-14 rounded-2xl border border-cream/10 bg-cream/[0.03] p-6 md:p-8">
+              <p className="font-display text-lg italic leading-relaxed text-cream/85 md:text-xl">
+                &ldquo;Terapily operates under HIPAA Security Rule and
+                signs BAAs with every clinician who handles PHI.
+                HIPAA compliance is a shared responsibility — final
+                accountability rests with each Covered Entity.&rdquo;
               </p>
             </div>
-
-            <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-              <TrustCard
-                title="Encryption you can name"
-                body="AES-256-GCM at rest. TLS 1.3 in transit. Per-workspace data isolation enforced at the database row level (RLS). No shared tenant tables."
-              />
-              <TrustCard
-                title="A signed BAA, on request"
-                body="Business Associate Agreement available before you sign up — readable in plain language, with a list of every subprocessor that touches PHI."
-              />
-              <TrustCard
-                title="Append-only audit trail"
-                body="Every read, edit, send, and export of patient data is logged with actor, timestamp, and target. Logs cannot be modified or deleted from the app — only by Postgres role escalation, which is restricted."
-              />
-              <TrustCard
-                title="Magic link, no patient account"
-                body="Patients access their activities through a single-use link with a SHA-256 token hash and a default 24-hour expiry. No email/password store. No mobile app to lose."
-              />
-              <TrustCard
-                title="Configurable retention"
-                body="You set how long records live, with a 6-year HIPAA floor. Auto-purge runs on schedule with a downloadable JSON+PDF export sent to you 30 days before any deletion."
-              />
-              <TrustCard
-                title="Your data, exportable"
-                body="Cancel any time and request a full archive — JSON for raw data, PDF for human-readable records — delivered within 7 days. No exit fee, no negotiation."
-              />
-            </div>
-
-            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
-              Terapily operates under HIPAA Security Rule and signs BAAs
-              with every clinician who handles PHI. HIPAA compliance is
-              a shared responsibility — final accountability rests with
-              each Covered Entity.
-            </p>
           </div>
         </section>
 
@@ -1315,11 +1349,36 @@ function StackRow({
   );
 }
 
-function TrustCard({ title, body }: { title: string; body: string }) {
+function TrustCard({
+  index,
+  title,
+  body,
+  proof,
+}: {
+  index?: string;
+  title: string;
+  body: string;
+  proof?: string;
+}) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/60 p-6 backdrop-blur-sm">
-      <h3 className="font-display text-xl text-foreground">{title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{body}</p>
+    <div className="group relative bg-navy p-7 transition-colors hover:bg-navy/60 md:p-8">
+      <div className="flex items-start justify-between gap-4">
+        {index && (
+          <span className="font-display text-sm italic text-terracotta">
+            {index}
+          </span>
+        )}
+        {proof && (
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-sage/30 bg-sage/10 px-2.5 py-1 text-[0.65rem] font-medium uppercase tracking-wider text-sage">
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-sage" />
+            {proof}
+          </span>
+        )}
+      </div>
+      <h3 className="mt-5 font-display text-xl leading-tight text-cream">
+        {title}
+      </h3>
+      <p className="mt-3 text-sm leading-relaxed text-cream/65">{body}</p>
     </div>
   );
 }
