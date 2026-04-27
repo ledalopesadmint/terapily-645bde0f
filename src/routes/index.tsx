@@ -990,88 +990,115 @@ function LandingPage() {
         {/* ============================================================ */}
         {/* 10 · PRICING */}
         {/* ============================================================ */}
-        <section id="pricing" className="border-t border-border/60 bg-card/40">
-          <div className="mx-auto max-w-5xl px-6 pt-10 pb-16 md:pt-12">
+        <section id="pricing" className="relative overflow-hidden border-t border-navy/20 bg-navy text-cream">
+          {/* Decorative serif glyph */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-10 top-12 select-none font-display italic text-[18rem] leading-none text-cream/[0.04] md:-right-20 md:text-[26rem]"
+          >
+            $
+          </div>
+          {/* Soft sage glow */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-32 bottom-0 h-[28rem] w-[28rem] rounded-full bg-sage/15 blur-3xl"
+          />
+          {/* Soft terracotta glow under Practice */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-1/4 top-1/3 h-[22rem] w-[22rem] rounded-full bg-terracotta/10 blur-3xl"
+          />
+
+          <div className="relative mx-auto max-w-5xl px-6 pt-16 pb-20 md:pt-20 md:pb-24">
             <div className="text-center">
               <Eyebrow tone="sage">Pricing · Two plans, no surprises</Eyebrow>
-              <h2 className="mt-6 font-display text-4xl text-foreground md:text-5xl">
-                Built to last. Priced like it.
+              <h2 className="mt-6 font-display text-4xl leading-[1.05] text-cream md:text-5xl">
+                Built to last. <span className="italic text-terracotta">Priced like it.</span>
               </h2>
-              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground">
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-cream/70">
                 Same security baseline on every plan. Practice adds the
                 governance layer solo clinicians grow into.
               </p>
             </div>
 
-            <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-2">
-              {/* Basic */}
-              <div className="flex flex-col rounded-2xl border border-border/60 bg-card/60 p-8 backdrop-blur-sm">
-                <Eyebrow>Basic</Eyebrow>
+            <div className="mt-16 grid grid-cols-1 items-stretch gap-8 md:grid-cols-2">
+              {/* ─── Basic ─── */}
+              <div className="group relative flex flex-col rounded-2xl border border-cream/15 bg-cream/[0.04] p-8 backdrop-blur-sm transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:border-cream/30 hover:bg-cream/[0.08] hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.55)]">
+                <Eyebrow tone="sage">Basic</Eyebrow>
                 <div className="mt-4 flex items-baseline gap-2">
-                  <span className="font-display text-5xl text-foreground">$69</span>
-                  <span className="text-sm text-muted-foreground">/ month</span>
+                  <span className="font-display text-6xl text-cream">$69</span>
+                  <span className="text-sm text-cream/60">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-sm text-cream/70">
                   Solo clinician getting started.
                 </p>
-                <ul className="mt-8 space-y-3 text-sm text-foreground">
-                  <PricingItem>Up to 20 active patients</PricingItem>
-                  <PricingItem>1 clinician</PricingItem>
-                  <PricingItem>35 auto-scored validated assessments</PricingItem>
-                  <PricingItem>Magic link delivery — no patient login</PricingItem>
-                  <PricingItem>AES-256-GCM at rest · TLS 1.3 in transit</PricingItem>
-                  <PricingItem>Append-only audit log</PricingItem>
-                  <PricingItem>Default retention policy (workspace-wide)</PricingItem>
+                <ul className="mt-8 space-y-3 text-sm text-cream/85">
+                  <PricingItem tone="dark">Up to 20 active patients</PricingItem>
+                  <PricingItem tone="dark">1 clinician</PricingItem>
+                  <PricingItem tone="dark">35 auto-scored validated assessments</PricingItem>
+                  <PricingItem tone="dark">Magic link delivery — no patient login</PricingItem>
+                  <PricingItem tone="dark">AES-256-GCM at rest · TLS 1.3 in transit</PricingItem>
+                  <PricingItem tone="dark">Append-only audit log</PricingItem>
+                  <PricingItem tone="dark">Default retention policy (workspace-wide)</PricingItem>
                 </ul>
-                <Link
-                  to={primaryCtaTo}
-                  className="mt-10 inline-flex items-center justify-center rounded-md border border-border bg-background px-6 py-3 text-sm font-medium text-foreground transition-colors hover:bg-muted"
-                >
-                  {ctaPrimaryLabel}
-                </Link>
+                <div className="mt-auto pt-10">
+                  <Link
+                    to={primaryCtaTo}
+                    className="inline-flex w-full items-center justify-center rounded-md border border-cream/30 bg-transparent px-6 py-3 text-sm font-medium text-cream transition-colors hover:bg-cream/10"
+                  >
+                    {ctaPrimaryLabel}
+                  </Link>
+                </div>
               </div>
 
-              {/* Practice — destacado */}
-              <div className="relative flex flex-col rounded-2xl border-2 border-primary bg-card/80 backdrop-blur-sm p-8 shadow-lg md:scale-[1.02]">
-                <span className="absolute -top-3 left-8 rounded-full bg-primary px-3 py-1 text-xs font-medium uppercase tracking-wider text-primary-foreground">
+              {/* ─── Practice — destacado ─── */}
+              <div className="group relative flex flex-col rounded-2xl bg-cream p-8 shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5),0_0_0_1px_rgba(245,239,229,0.1)] ring-2 ring-terracotta/40 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.6),0_0_0_1px_rgba(192,108,84,0.3)] hover:ring-terracotta/60">
+                {/* Badge "Most chosen" */}
+                <span
+                  className="absolute -top-4 left-1/2 inline-flex -translate-x-1/2 items-center gap-1.5 rounded-full bg-terracotta px-4 py-1.5 text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-cream shadow-[0_8px_20px_-6px_rgba(192,108,84,0.6)]"
+                >
+                  <span aria-hidden style={{ color: "#F5C518", textShadow: "0 0 8px rgba(245, 197, 24, 0.6)" }}>★</span>
                   Most chosen
                 </span>
-                <Eyebrow tone="sage">Practice</Eyebrow>
+
+                <Eyebrow tone="terracotta">Practice</Eyebrow>
                 <div className="mt-4 flex items-baseline gap-2">
-                  <span className="font-display text-5xl text-foreground">$159</span>
-                  <span className="text-sm text-muted-foreground">/ month</span>
+                  <span className="font-display text-6xl text-navy">$159</span>
+                  <span className="text-sm text-navy/60">/ month</span>
                 </div>
-                <p className="mt-3 text-sm text-muted-foreground">
+                <p className="mt-3 text-sm text-navy/70">
                   Established practice that needs governance.
                 </p>
-                <ul className="mt-8 space-y-3 text-sm text-foreground">
-                  <PricingItem>Up to 50 active patients</PricingItem>
-                  <PricingItem>1 clinician (read-only supervision coming)</PricingItem>
-                  <PricingItem>Everything in Basic</PricingItem>
-                  <PricingItem>Encrypted session notes</PricingItem>
-                  <PricingItem>Integrated scheduling</PricingItem>
-                  <PricingItem>Two-factor authentication (TOTP)</PricingItem>
-                  <PricingItem>Configurable retention with state &amp; minor overrides</PricingItem>
-                  <PricingItem>
+                <ul className="mt-8 space-y-3 text-sm text-navy/85">
+                  <PricingItem tone="light">Up to 50 active patients</PricingItem>
+                  <PricingItem tone="light">1 clinician (read-only supervision coming)</PricingItem>
+                  <PricingItem tone="light">Everything in Basic</PricingItem>
+                  <PricingItem tone="light">Encrypted session notes</PricingItem>
+                  <PricingItem tone="light">Integrated scheduling</PricingItem>
+                  <PricingItem tone="light">Two-factor authentication (TOTP)</PricingItem>
+                  <PricingItem tone="light">Configurable retention with state &amp; minor overrides</PricingItem>
+                  <PricingItem tone="light">
                     Exportable compliance report — retention policy,
                     audit trail, subprocessor BAAs, automated purge log
                   </PricingItem>
                 </ul>
-                <Link
-                  to={primaryCtaTo}
-                  className="mt-10 inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-                >
-                  {ctaPrimaryLabel}
-                </Link>
+                <div className="mt-auto pt-10">
+                  <Link
+                    to={primaryCtaTo}
+                    className="inline-flex w-full items-center justify-center rounded-md bg-navy px-6 py-3 text-sm font-medium text-cream shadow-[0_8px_20px_-8px_rgba(31,42,54,0.6)] transition-all hover:bg-navy/90 hover:shadow-[0_12px_28px_-8px_rgba(31,42,54,0.75)]"
+                  >
+                    {ctaPrimaryLabel}
+                  </Link>
+                </div>
               </div>
             </div>
 
-            <p className="mx-auto mt-10 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-12 max-w-3xl text-center text-xs leading-relaxed text-cream/55">
               No card required to start · Cancel anytime · Prices in
               USD · Multi-clinician (Clinic) plan in development.
             </p>
 
-            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-relaxed text-muted-foreground">
+            <p className="mx-auto mt-4 max-w-3xl text-center text-xs leading-relaxed text-cream/55">
               The compliance report aggregates your existing data into
               a format you can share with your auditor or attorney.
               It is not a certification, not a substitute for legal
@@ -1677,11 +1704,23 @@ function ScaleCategory({ title, scales }: { title: string; scales: Scale[] }) {
   );
 }
 
-function PricingItem({ children }: { children: ReactNode }) {
+function PricingItem({
+  children,
+  tone = "default",
+}: {
+  children: ReactNode;
+  tone?: "default" | "dark" | "light";
+}) {
+  const dotClass =
+    tone === "dark"
+      ? "bg-sage"
+      : tone === "light"
+        ? "bg-terracotta"
+        : "bg-primary";
   return (
     <li className="flex items-start gap-3">
       <span
-        className="mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-primary"
+        className={`mt-1 inline-block h-1.5 w-1.5 shrink-0 rounded-full ${dotClass}`}
         aria-hidden="true"
       />
       <span className="leading-relaxed">{children}</span>
