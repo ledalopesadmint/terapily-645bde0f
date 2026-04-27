@@ -679,15 +679,10 @@ function Pricing({ primaryCtaTo }: { primaryCtaTo: "/dashboard" | "/signup" }) {
             </span>
 
             <Eyebrow tone="sage">Practice</Eyebrow>
-            <div className="mt-4 flex items-baseline gap-3">
-              <p className="font-display text-5xl text-foreground">
-                $79
-                <span className="text-base font-sans text-muted-foreground"> / month</span>
-              </p>
-              <span className="rounded-full bg-mauve/20 px-2 py-1 text-[0.65rem] font-medium uppercase tracking-[0.08em] text-[oklch(0.4_0.04_0)]">
-                or $49/mo · founding 100
-              </span>
-            </div>
+            <p className="mt-4 font-display text-5xl text-foreground">
+              $79
+              <span className="text-base font-sans text-muted-foreground"> / month</span>
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">
               Everything in Basic, plus the features full-time clinicians ask for first.
             </p>
