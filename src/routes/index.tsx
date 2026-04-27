@@ -1480,7 +1480,7 @@ function TrustCard({
   proof?: string;
 }) {
   return (
-    <div className="group relative bg-navy p-7 transition-colors hover:bg-navy/60 md:p-8">
+    <div className="group relative bg-navy p-7 transition-all duration-300 ease-out hover:z-10 hover:scale-[1.06] hover:bg-navy/80 hover:shadow-[0_24px_48px_-16px_rgba(0,0,0,0.55),0_8px_20px_-8px_rgba(126,155,134,0.25)] hover:ring-1 hover:ring-sage/30 md:p-8">
       <div className="flex items-start justify-between gap-4">
         {index && (
           <span className="font-display text-sm italic text-terracotta">
