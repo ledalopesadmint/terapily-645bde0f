@@ -19,22 +19,22 @@ export const Route = createFileRoute("/")({
     meta: [
       {
         title:
-          "Terapily · Therapy your client helps build. Records you can defend.",
+          "Terapily · Therapy your client helps build. The audit trail you need.",
       },
       {
         name: "description",
         content:
-          "Terapily turns each CBT session into a visual board you co-build with your client, then auto-generates a clinical report you can defend. PHI encrypted at rest. Audit-logged by default. BAA available. 14-day free trial.",
+          "Terapily turns each CBT session into a visual board you co-build with your client, then auto-generates a clinical report ready for the chart. TLS 1.3 in transit. AES-GCM-256 at rest. Built to support HIPAA. BAA signed with every Practice account.",
       },
       {
         property: "og:title",
         content:
-          "Terapily · Therapy your client helps build. Records you can defend.",
+          "Terapily · Therapy your client helps build. The audit trail you need.",
       },
       {
         property: "og:description",
         content:
-          "Visual CBT boards your client co-builds in session. Auto-generated clinical reports. Encrypted, audit-logged patient workspace. Built for clinicians treating adolescents and adults.",
+          "Visual CBT boards your client co-builds in session. Auto-generated clinical reports. TLS 1.3 in transit, AES-GCM-256 at rest, BAA signed at signup. Built for CBT clinicians treating adolescents and adults.",
       },
     ],
   }),
