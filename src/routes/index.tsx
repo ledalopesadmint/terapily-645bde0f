@@ -1056,25 +1056,34 @@ function ProblemRow({
 }
 
 function ModeCard({
+  icon: Icon,
   tag,
   title,
   body,
   useCase,
 }: {
+  icon: ComponentType<{ className?: string; strokeWidth?: number }>;
   tag: string;
   title: string;
   body: string;
   useCase: string;
 }) {
   return (
-    <div className="flex h-full flex-col rounded-2xl border border-border/60 bg-card/60 p-7 backdrop-blur-sm">
-      <Eyebrow tone="sage">{tag}</Eyebrow>
-      <h3 className="mt-3 font-display text-2xl text-foreground">{title}</h3>
+    <div className="group relative flex h-full flex-col rounded-2xl border border-border/60 bg-background p-8 text-center shadow-[0_18px_50px_-24px_oklch(0.28_0.027_251_/_0.28)] ring-1 ring-terracotta/5 transition-all duration-300 hover:-translate-y-1 hover:border-terracotta/30 hover:shadow-[0_28px_70px_-28px_oklch(0.28_0.027_251_/_0.45)] hover:ring-terracotta/15">
+      {/* Ícone centralizado */}
+      <div className="mx-auto mb-5 inline-flex h-14 w-14 items-center justify-center rounded-full bg-cream-tan/70 ring-1 ring-terracotta/15 transition-colors group-hover:bg-terracotta/10 group-hover:ring-terracotta/30">
+        <Icon className="h-6 w-6 text-terracotta" strokeWidth={1.6} />
+      </div>
+
+      <div className="flex justify-center">
+        <Eyebrow tone="sage">{tag}</Eyebrow>
+      </div>
+      <h3 className="mt-3 font-display text-2xl text-navy md:text-3xl">{title}</h3>
       <p
         className="mt-4 text-sm leading-relaxed text-muted-foreground"
         dangerouslySetInnerHTML={{ __html: body }}
       />
-      <p className="mt-6 border-t border-border/40 pt-4 text-xs italic leading-relaxed text-muted-foreground">
+      <p className="mt-6 border-t border-terracotta/15 pt-4 text-xs italic leading-relaxed text-navy/70">
         {useCase}
       </p>
     </div>
