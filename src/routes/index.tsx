@@ -195,7 +195,7 @@ function LandingPage() {
               </h2>
 
               {/* Pill "Next session, nothing changed." */}
-              <div className="mt-12 inline-flex items-center gap-3 rounded-2xl border border-navy/15 bg-background/70 px-5 py-3.5 shadow-[0_4px_16px_-8px_oklch(0.28_0.027_251_/_0.18)] backdrop-blur">
+              <div className="group mt-12 inline-flex cursor-default items-center gap-3 rounded-2xl border border-navy/15 bg-background/70 px-5 py-3.5 shadow-[0_6px_20px_-10px_oklch(0.28_0.027_251_/_0.22)] backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:border-navy/25 hover:shadow-[0_14px_30px_-12px_oklch(0.28_0.027_251_/_0.32)]">
                 <svg
                   aria-hidden="true"
                   className="h-4 w-4 text-terracotta"
