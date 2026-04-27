@@ -186,16 +186,21 @@ function Hero({
       className="relative overflow-hidden"
       style={{ background: "var(--gradient-hero)" }}
     >
-      {/* Blobs decorativos */}
+      {/* Blobs decorativos — ciano + lavanda + lima */}
       <div
         aria-hidden
-        className="blob-drift pointer-events-none absolute -left-24 top-32 h-72 w-72 rounded-full opacity-40 blur-3xl"
-        style={{ background: "oklch(0.65 0.04 152 / 0.4)" }}
+        className="blob-drift pointer-events-none absolute -left-24 top-32 h-72 w-72 rounded-full opacity-50 blur-3xl"
+        style={{ background: "oklch(0.71 0.13 220 / 0.55)" }}
       />
       <div
         aria-hidden
-        className="blob-drift pointer-events-none absolute -right-20 top-10 h-64 w-64 rounded-full opacity-30 blur-3xl"
-        style={{ background: "oklch(0.78 0.11 50 / 0.35)", animationDelay: "-7s" }}
+        className="blob-drift pointer-events-none absolute -right-20 top-10 h-64 w-64 rounded-full opacity-40 blur-3xl"
+        style={{ background: "oklch(0.62 0.21 290 / 0.45)", animationDelay: "-7s" }}
+      />
+      <div
+        aria-hidden
+        className="blob-drift pointer-events-none absolute bottom-0 left-1/3 h-56 w-56 rounded-full opacity-35 blur-3xl"
+        style={{ background: "oklch(0.87 0.2 130 / 0.4)", animationDelay: "-4s" }}
       />
 
       <div className="relative mx-auto grid max-w-6xl grid-cols-1 gap-12 px-6 py-20 md:py-28 lg:grid-cols-12 lg:gap-8">
@@ -208,14 +213,14 @@ function Hero({
           </Reveal>
 
           <Reveal delay={80}>
-            <h1 className="mt-6 font-display text-5xl text-foreground md:text-6xl lg:text-[4.5rem]">
+            <h1 className="mt-6 font-display text-5xl text-[var(--cream)] md:text-6xl lg:text-[4.5rem]">
               Therapy your client{" "}
               <span className="relative inline-block">
                 <span className="relative z-10">helps build.</span>
                 <span
                   aria-hidden
                   className="absolute inset-x-0 bottom-1 h-3 rounded-sm"
-                  style={{ background: "oklch(0.78 0.11 50 / 0.35)" }}
+                  style={{ background: "oklch(0.86 0.17 90 / 0.6)" }}
                 />
               </span>{" "}
               Records you can{" "}
@@ -224,15 +229,15 @@ function Hero({
                 <span
                   aria-hidden
                   className="absolute inset-x-0 bottom-1 h-3 rounded-sm"
-                  style={{ background: "oklch(0.65 0.04 152 / 0.45)" }}
+                  style={{ background: "oklch(0.87 0.2 130 / 0.55)" }}
                 />
               </span>
             </h1>
           </Reveal>
 
           <Reveal delay={160}>
-            <p className="mt-8 max-w-xl text-base leading-relaxed text-muted-foreground md:text-lg">
-              <em className="font-display not-italic text-foreground">Terapily</em> turns each CBT
+            <p className="mt-8 max-w-xl text-base leading-relaxed text-[var(--cream)]/75 md:text-lg">
+              <em className="font-display not-italic text-[var(--cream)]">Terapily</em> turns each CBT
               session into a visual board you co-build with your client, then auto-generates a
               clean clinical report you can attach to the chart, share with families, or hand to
               your supervisor.
@@ -243,7 +248,7 @@ function Hero({
             <div className="mt-10 flex flex-col items-start gap-3 sm:flex-row">
               <Link
                 to={primaryCtaTo}
-                className="group inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-[var(--shadow-card-lift)] transition-all hover:bg-primary/90 hover:shadow-[var(--shadow-glow-sage)]"
+                className="group inline-flex items-center justify-center gap-2 rounded-md bg-[var(--solar)] px-6 py-3 text-sm font-semibold text-[var(--navy)] shadow-[var(--shadow-card-lift)] transition-all hover:shadow-[var(--shadow-glow-solar)]"
               >
                 {primaryCtaLabel}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -251,7 +256,7 @@ function Hero({
               {!isAuthenticated && (
                 <a
                   href="#see-it-work"
-                  className="inline-flex items-center justify-center rounded-md border border-border bg-background/60 px-6 py-3 text-sm font-medium text-foreground backdrop-blur transition-colors hover:bg-background"
+                  className="inline-flex items-center justify-center rounded-md border border-[var(--cream)]/25 bg-[var(--cream)]/5 px-6 py-3 text-sm font-medium text-[var(--cream)] backdrop-blur transition-colors hover:bg-[var(--cream)]/10"
                 >
                   See how it works
                 </a>
@@ -260,17 +265,17 @@ function Hero({
           </Reveal>
 
           <Reveal delay={320}>
-            <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            <p className="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[var(--cream)]/65">
               <span className="inline-flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-secondary" /> No credit card
+                <Check className="h-3.5 w-3.5 text-[var(--lime)]" /> No credit card
               </span>
-              <span className="text-border">·</span>
+              <span className="text-[var(--cream)]/30">·</span>
               <span className="inline-flex items-center gap-1.5">
-                <Check className="h-3.5 w-3.5 text-secondary" /> Cancel anytime
+                <Check className="h-3.5 w-3.5 text-[var(--lime)]" /> Cancel anytime
               </span>
-              <span className="text-border">·</span>
+              <span className="text-[var(--cream)]/30">·</span>
               <span className="inline-flex items-center gap-1.5">
-                <Lock className="h-3.5 w-3.5 text-secondary" /> BAA available on Practice
+                <Lock className="h-3.5 w-3.5 text-[var(--sage)]" /> BAA available on Practice
               </span>
             </p>
           </Reveal>
@@ -278,7 +283,6 @@ function Hero({
 
         {/* Coluna direita — ilustração: board mockup empilhado */}
         <div className="relative lg:col-span-5">
-          {/* IMG: Substituir por screenshot real do board quando disponível */}
           <Reveal variant="scale" delay={200}>
             <HeroIllustration />
           </Reveal>
