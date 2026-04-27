@@ -78,6 +78,8 @@
   --color-mauve: var(--mauve);
   --color-mauve-foreground: var(--mauve-foreground);
   --color-charcoal: var(--charcoal);
+  --color-terracotta: var(--terracotta);
+  --color-cream-tan: var(--cream-tan);
 }
 
 /*
@@ -108,6 +110,10 @@
   --mauve: oklch(0.718 0.036 359.6);
   --mauve-foreground: oklch(0.280 0.027 251.0);
   --charcoal: oklch(0.366 0.015 259.8);
+
+  /* Tons editoriais auxiliares (não substituem a paleta principal) */
+  --terracotta: oklch(0.665 0.082 65);   /* eyebrow dourado-terra editorial */
+  --cream-tan: oklch(0.918 0.022 82);    /* faixa cream tostada (stats strip) */
 
   /* Mapping semântico shadcn → paleta Terapily */
   --background: var(--cream);

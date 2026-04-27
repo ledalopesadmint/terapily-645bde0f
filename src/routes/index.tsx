@@ -71,69 +71,58 @@ function LandingPage() {
 
       <main>
         {/* ============================================================ */}
-        {/* 1 · HERO — invertido Navy + Trust strip translúcido */}
+        {/* 1 · HERO — Cream editorial, texto Navy, eyebrow terracotta   */}
         {/* ============================================================ */}
-        <section className="relative overflow-hidden bg-navy text-cream">
-          {/* glow Sage sutil canto sup. direito */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-sage/15 blur-3xl"
-          />
-          {/* glow Mauve baixo esquerda — decorativo, ≤8% */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -bottom-40 -left-40 h-[24rem] w-[24rem] rounded-full bg-mauve/10 blur-3xl"
-          />
+        <section className="relative overflow-hidden bg-background">
+          <div className="relative mx-auto max-w-5xl px-6 pt-24 pb-28 text-center md:pt-32 md:pb-32">
+            <Eyebrow tone="terracotta" className="text-[0.78rem]">
+              Every activity grounded in published evidence
+            </Eyebrow>
 
-          <div className="relative mx-auto max-w-4xl px-6 py-24 text-center md:py-32">
-            <Eyebrow tone="mauve">Every activity grounded in published evidence</Eyebrow>
-
-            <h1 className="mt-6 font-display text-5xl text-cream md:text-7xl">
+            <h1 className="mt-10 font-display text-[2.75rem] leading-[1.02] tracking-tight text-navy md:text-[5.25rem]">
               Therapeutic tools <br className="hidden md:block" />
-              your clients actually finish.
+              your clients <em className="italic font-display">actually</em> finish.
             </h1>
 
-            <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-cream/75 md:text-lg">
+            <p className="mx-auto mt-10 max-w-2xl text-base leading-[1.65] text-navy/75 md:text-lg">
               Run validated scales and CBT activities live in session,
               send them home with a single secure link, or both. Every
               activity becomes a record you can actually use — without
               replacing your existing EHR.
             </p>
 
-            <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <div className="mt-12 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
               <Link
                 to={primaryCtaTo}
-                className="inline-flex items-center justify-center rounded-2xl bg-cream px-6 py-3 text-sm font-medium text-navy shadow-lg shadow-navy/20 transition-all hover:scale-[1.02] hover:bg-cream/95"
+                className="inline-flex items-center justify-center rounded-2xl bg-navy px-7 py-3.5 text-sm font-medium text-cream shadow-[0_8px_24px_-12px_oklch(0.28_0.027_251_/_0.55)] transition-all hover:scale-[1.02] hover:bg-navy/95"
               >
                 {ctaPrimaryLabel}
               </Link>
               {!isAuthenticated && (
                 <Link
                   to="/login"
-                  className="inline-flex items-center justify-center rounded-2xl border border-cream/25 bg-cream/5 px-6 py-3 text-sm font-medium text-cream backdrop-blur-sm transition-colors hover:bg-cream/10"
+                  className="inline-flex items-center justify-center rounded-2xl border border-navy/30 bg-transparent px-7 py-3.5 text-sm font-medium text-navy transition-colors hover:bg-navy/[0.04]"
                 >
                   I already have an account
                 </Link>
               )}
             </div>
 
-            <p className="mt-6 text-xs text-cream/55">
-              No card required · Cancel anytime · Operates under HIPAA Security Rule
+            <p className="mt-7 text-xs text-navy/55">
+              No card required • Cancel anytime • Operates under HIPAA Security Rule
             </p>
           </div>
         </section>
 
         {/* ============================================================ */}
-        {/* 1.5 · TRUST STRIP — seção isolada (fácil de retematizar) */}
+        {/* 1.5 · TRUST STRIP — Cream-tan + cards Navy editoriais         */}
         {/* ============================================================ */}
-        <section className="bg-navy">
-          <div className="mx-auto max-w-6xl px-6 pb-20 md:pb-24">
-            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-              <TrustFactInverted label="Validated scales" value="35" />
-              <TrustFactInverted label="Score to report" value="<3s" />
-              <TrustFactInverted label="Encryption at rest" value="AES-256" />
-              <TrustFactInverted label="Patient logins required" value="0" />
-              <TrustFactInverted label="Audit log coverage" value="100%" />
+        <section className="bg-cream-tan">
+          <div className="mx-auto max-w-6xl px-6 py-16 md:py-20">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+              <TrustFactInverted label="Validated scales" value="35" sub="Grounded in published evidence." />
+              <TrustFactInverted label="Score to report" value="<3s" sub="Less admin. More care." />
+              <TrustFactInverted label="Encryption at rest" value="AES-256" sub="Enterprise-grade security." />
             </div>
           </div>
         </section>
@@ -764,16 +753,33 @@ function TrustFact({ value, label }: { value: string; label: string }) {
 }
 
 /**
- * Variante do TrustFact pra fundo Navy do hero.
- * Card squircle translúcido cream — leveza visual, refere ao app.
+ * Card editorial Navy da faixa de stats (estilo screenshot).
+ * Cormorant gigante em Cream + label ALL CAPS com régua + sub-line.
  */
-function TrustFactInverted({ value, label }: { value: string; label: string }) {
+function TrustFactInverted({
+  value,
+  label,
+  sub,
+}: {
+  value: string;
+  label: string;
+  sub?: string;
+}) {
   return (
-    <div className="rounded-2xl border border-cream/15 bg-cream/[0.06] px-4 py-5 backdrop-blur-sm transition-colors hover:bg-cream/[0.10]">
-      <p className="font-display text-2xl text-cream md:text-3xl">{value}</p>
-      <p className="mt-1 text-[0.65rem] uppercase tracking-wider text-cream/60">
+    <div className="rounded-[1.75rem] bg-navy px-9 py-10 shadow-[0_12px_32px_-18px_oklch(0.28_0.027_251_/_0.45)] transition-transform hover:-translate-y-0.5">
+      <p className="font-display text-5xl leading-none text-cream md:text-6xl">
+        {value}
+      </p>
+      <p
+        className="mt-6 text-[0.72rem] font-bold uppercase text-cream/85"
+        style={{ letterSpacing: "0.14em" }}
+      >
         {label}
       </p>
+      <div className="mt-3 h-px w-full bg-cream/15" />
+      {sub && (
+        <p className="mt-5 text-sm leading-relaxed text-cream/65">{sub}</p>
+      )}
     </div>
   );
 }
