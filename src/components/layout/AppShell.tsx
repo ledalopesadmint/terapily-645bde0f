@@ -18,7 +18,7 @@ import { TRIAL_DURATION_DAYS } from "@/lib/constants";
 
 interface NavItem {
   label: string;
-  to: "/dashboard" | "/welcome" | "/library" | "/admin/";
+  to: "/dashboard" | "/welcome" | "/library" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: string; // ex: "Visualização" pra rotas em protótipo
   adminOnly?: boolean;
