@@ -18,8 +18,9 @@ import { TRIAL_DURATION_DAYS } from "@/lib/constants";
 
 interface NavItem {
   label: string;
-  to: "/dashboard" | "/welcome";
+  to: "/dashboard" | "/welcome" | "/library";
   icon: typeof LayoutDashboard;
+  badge?: string; // ex: "Visualização" pra rotas em protótipo
   comingSoonWeek?: never;
 }
 
@@ -28,15 +29,16 @@ interface ComingSoonItem {
   icon: typeof LayoutDashboard;
   comingSoonWeek: string;
   to?: never;
+  badge?: never;
 }
 
 const liveItems: NavItem[] = [
   { label: "Painel", to: "/dashboard", icon: LayoutDashboard },
+  { label: "Acervo", to: "/library", icon: GamepadIcon, badge: "Visualização" },
 ];
 
 const upcomingItems: ComingSoonItem[] = [
   { label: "Pacientes", icon: Users, comingSoonWeek: "S2" },
-  { label: "Jogos", icon: GamepadIcon, comingSoonWeek: "S3" },
   { label: "Ajustes", icon: Settings, comingSoonWeek: "S1 · Sexta" },
 ];
 
@@ -99,14 +101,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 key={item.to}
                 to={item.to}
                 className={cn(
-                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                  "flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors",
                   active
                     ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                 )}
               >
-                <Icon className="h-4 w-4" />
-                {item.label}
+                <span className="flex items-center gap-3">
+                  <Icon className="h-4 w-4" />
+                  {item.label}
+                </span>
+                {item.badge && (
+                  <span className="text-[0.625rem] font-medium uppercase tracking-wider text-secondary-foreground/80">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}

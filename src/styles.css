@@ -229,4 +229,13 @@
   p {
     line-height: 1.5;
   }
+
+  /*
+   * Library scroller — esconde a scrollbar do webkit no carrossel horizontal.
+   * Tailwind v4 cobre Firefox/IE via [scrollbar-width:none], mas Chrome/Safari
+   * precisam de pseudo-elemento explícito.
+   */
+  .library-scroller::-webkit-scrollbar {
+    display: none;
+  }
 }
