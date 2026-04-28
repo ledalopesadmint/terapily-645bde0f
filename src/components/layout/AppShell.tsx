@@ -70,7 +70,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar — Navy escura full, ícones brancos, item ativo Sage sutil */}
-      <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col self-start bg-sidebar text-sidebar-foreground md:flex">
         {/* Logo */}
         <div className="px-6 pb-4 pt-6">
           <Link to="/dashboard" aria-label="Início" className="inline-block">
