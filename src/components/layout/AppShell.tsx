@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, Users, GamepadIcon, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, GamepadIcon, Settings, LogOut, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Logo } from "@/components/brand/Logo";
 import { cn } from "@/lib/utils";
