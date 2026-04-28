@@ -2,7 +2,6 @@ import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { toast } from "sonner";
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { resetPasswordRequestSchema } from "@/lib/validation/schemas";
@@ -14,7 +13,7 @@ type FormValues = z.infer<typeof resetPasswordRequestSchema>;
 
 export const Route = createFileRoute("/forgot-password")({
   head: () => ({
-    meta: [{ title: "Recuperar acesso · Terapily" }],
+    meta: [{ title: "Recover access · Terapily" }],
   }),
   component: ForgotPasswordPage,
 });
@@ -40,28 +39,28 @@ function ForgotPasswordPage() {
 
     await supabase.auth.resetPasswordForEmail(email, { redirectTo });
     setSubmitting(false);
-    // Sempre confirmamos (não vaza se o e-mail existe)
+    // Always confirm (do not leak whether the email exists)
     setSent(true);
   };
 
   if (sent) {
     return (
       <AuthShell
-        eyebrow="Enviado"
-        title="Confira seu e-mail."
-        subtitle="Se houver uma conta com esse e-mail, você vai receber um link para criar uma nova senha."
+        eyebrow="Sent"
+        title="Check your email."
+        subtitle="If an account with that email exists, you'll get a link to set a new password."
         footer={
           <Link
             to="/login"
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
-            Voltar pro login
+            Back to sign in
           </Link>
         }
       >
         <p className="text-sm text-muted-foreground">
-          O link expira em uma hora. Se não chegar, verifique sua pasta de
-          spam.
+          The link expires in one hour. If it doesn&apos;t arrive, check your
+          spam folder.
         </p>
       </AuthShell>
     );
@@ -69,21 +68,21 @@ function ForgotPasswordPage() {
 
   return (
     <AuthShell
-      eyebrow="Recuperar acesso"
-      title="Vamos te enviar um link."
-      subtitle="Informe seu e-mail e nós cuidamos do resto."
+      eyebrow="Recover access"
+      title="We'll send you a link."
+      subtitle="Enter your email and we'll handle the rest."
       footer={
         <Link
           to="/login"
           className="font-medium text-foreground underline-offset-4 hover:underline"
         >
-          Voltar pro login
+          Back to sign in
         </Link>
       }
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
@@ -100,7 +99,7 @@ function ForgotPasswordPage() {
           disabled={submitting}
           className="inline-flex w-full items-center justify-center rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
-          {submitting ? "Enviando…" : "Enviar link"}
+          {submitting ? "Sending…" : "Send link"}
         </button>
       </form>
     </AuthShell>
