@@ -144,13 +144,15 @@
   --chart-4: var(--charcoal);
   --chart-5: oklch(0.78 0.055 153.6); /* Sage-light */
 
-  --sidebar: oklch(0.97 0.012 84.6);
-  --sidebar-foreground: var(--charcoal);
-  --sidebar-primary: var(--navy);
-  --sidebar-primary-foreground: var(--cream);
-  --sidebar-accent: oklch(0.927 0.020 84.6);
-  --sidebar-accent-foreground: var(--navy);
-  --sidebar-border: oklch(0.887 0.020 84.6);
+  /* Sidebar Navy escura — referência editorial premium.
+   * Fundo navy profundo, texto cream, item ativo com tinta sage sutil. */
+  --sidebar: oklch(0.235 0.025 251.0);              /* Navy profundo (mais escuro que --navy) */
+  --sidebar-foreground: oklch(0.92 0.013 82.4);     /* Cream levemente atenuado */
+  --sidebar-primary: var(--sage);
+  --sidebar-primary-foreground: var(--navy);
+  --sidebar-accent: oklch(0.30 0.028 251.0);        /* Navy +1 stop pra hover */
+  --sidebar-accent-foreground: oklch(0.954 0.013 82.4);
+  --sidebar-border: oklch(0.32 0.025 251.0);        /* Hairline sutil */
   --sidebar-ring: var(--sage);
 }
 
