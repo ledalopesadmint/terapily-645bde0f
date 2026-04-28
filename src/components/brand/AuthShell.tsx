@@ -44,82 +44,92 @@ export function AuthShell({
           }}
         />
 
-        {/* Giant ghost "H" — brand mark behind the phrase */}
+        {/* Giant ghost "H" — brand watermark, off-axis (top-right, tilted) */}
         <span
           aria-hidden="true"
           className="pointer-events-none absolute select-none font-display font-light leading-none text-[var(--cream)]"
           style={{
-            fontSize: "clamp(28rem, 42vw, 44rem)",
-            opacity: 0.05,
-            top: "50%",
-            left: "50%",
-            transform: "translate(-58%, -52%)",
-            letterSpacing: "-0.05em",
+            fontSize: "clamp(32rem, 52vw, 56rem)",
+            opacity: 0.025,
+            top: "-8%",
+            right: "-12%",
+            transform: "rotate(-12deg)",
+            letterSpacing: "-0.06em",
           }}
         >
           H
         </span>
 
+        {/* Sage accent dot — bottom-left, balances the H weight */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute h-2 w-2 rounded-full bg-[var(--sage)]"
+          style={{ bottom: "22%", left: "3.5rem", opacity: 0.7 }}
+        />
+
         {/* Eyebrow tag */}
-        <div className="relative mb-10 flex items-center gap-4">
+        <div className="relative mb-12 flex items-center gap-4">
           <span
-            className="h-px w-8 bg-[var(--sage)]"
+            className="h-px w-10 bg-[var(--sage)]"
             aria-hidden="true"
           />
           <span
-            className="text-[10px] uppercase text-[var(--cream)]/55"
-            style={{ letterSpacing: "0.22em" }}
+            className="text-[10px] uppercase text-[var(--cream)]/60"
+            style={{ letterSpacing: "0.24em" }}
           >
             welcome back
           </span>
         </div>
 
-        {/* Anchor phrase — layered typography, generous space */}
+        {/* Anchor phrase — layered typography, asymmetric rhythm */}
         <h2
-          className="relative font-display font-light text-[var(--cream)]"
-          style={{ lineHeight: 0.98, letterSpacing: "-0.02em" }}
+          className="relative max-w-[18ch] font-display font-light text-[var(--cream)]"
+          style={{ lineHeight: 0.95, letterSpacing: "-0.025em" }}
         >
           <span
-            className="block text-[var(--cream)]"
-            style={{ fontSize: "clamp(3.5rem, 5.2vw, 5.5rem)" }}
+            className="block"
+            style={{ fontSize: "clamp(4rem, 6vw, 6.5rem)" }}
           >
             Homework
           </span>
           <span
-            className="mt-2 block text-[var(--cream)]/70"
-            style={{
-              fontSize: "clamp(2.25rem, 3.4vw, 3.5rem)",
-              fontStyle: "italic",
-            }}
+            className="mt-3 block pl-[3.5rem] italic text-[var(--cream)]/65"
+            style={{ fontSize: "clamp(2rem, 3vw, 3rem)" }}
           >
             your clients
           </span>
           <span
-            className="mt-2 block"
-            style={{ fontSize: "clamp(2.75rem, 4vw, 4.25rem)" }}
+            className="mt-3 block"
+            style={{ fontSize: "clamp(2.75rem, 4.2vw, 4.5rem)" }}
           >
-            <span className="text-[var(--cream)]/55">actually </span>
-            <span className="relative inline-block italic text-[var(--cream)]">
+            <span className="text-[var(--cream)]/45">actually </span>
+            <span className="relative inline-block italic" style={{ color: "var(--sage)" }}>
               do
               <svg
                 aria-hidden="true"
                 viewBox="0 0 80 14"
                 preserveAspectRatio="none"
-                className="absolute -bottom-2 left-0 h-[12px] w-full"
+                className="absolute -bottom-2 left-0 h-[14px] w-full"
               >
                 <path
-                  d="M2 8 C 16 2, 32 12, 48 5 S 70 10, 78 6"
+                  d="M2 9 C 16 2, 32 13, 48 5 S 70 11, 78 6"
                   fill="none"
                   stroke="var(--sage)"
-                  strokeWidth="1.6"
+                  strokeWidth="1.8"
                   strokeLinecap="round"
-                  opacity="0.9"
+                  opacity="0.85"
                 />
               </svg>
             </span>
-            <span className="text-[var(--cream)]/55">.</span>
+            <span className="text-[var(--cream)]/45">.</span>
           </span>
         </h2>
+
+        {/* Subtle attribution under the phrase */}
+        <p className="relative mt-10 max-w-[28ch] text-sm text-[var(--cream)]/45" style={{ lineHeight: 1.6 }}>
+          The work between sessions is where therapy{" "}
+          <span className="italic text-[var(--cream)]/70">actually</span> happens.
+        </p>
 
         {/* Footnote — bottom anchor */}
         <div className="absolute bottom-10 left-16 right-16 flex items-center justify-between text-[10px] uppercase text-[var(--cream)]/35" style={{ letterSpacing: "0.18em" }}>
