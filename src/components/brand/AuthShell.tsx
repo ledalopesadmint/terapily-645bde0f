@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { Eyebrow } from "./Eyebrow";
-import iconSrc from "@/assets/terapily-icon.png";
-import iconCreamSrc from "@/assets/terapily-icon-cream.png";
+import iconSrc from "@/assets/terapily-icon.webp";
+import iconCreamSrc from "@/assets/terapily-icon-cream.webp";
 
 interface AuthShellProps {
   eyebrow: string;

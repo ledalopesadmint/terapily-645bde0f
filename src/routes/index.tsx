@@ -5,7 +5,7 @@ import { Logo } from "@/components/brand/Logo";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { BRAND, TRIAL_DURATION_DAYS } from "@/lib/constants";
 import { useAuth } from "@/features/auth/AuthProvider";
-import iconSrc from "@/assets/terapily-icon.png";
+import iconSrc from "@/assets/terapily-icon.webp";
 
 /**
  * Pequeno satélite circular cream com ícone, em volta do ícone Terapily
