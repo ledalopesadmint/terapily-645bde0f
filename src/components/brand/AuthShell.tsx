@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { Eyebrow } from "./Eyebrow";
 import iconSrc from "@/assets/terapily-icon.png";
+import iconCreamSrc from "@/assets/terapily-icon-cream.png";
 
 interface AuthShellProps {
   eyebrow: string;
@@ -121,7 +122,15 @@ export function AuthShell({
         {/* Footnote — bottom anchor */}
         <div className="absolute bottom-10 left-16 right-16 flex items-center justify-between text-[10px] uppercase text-[var(--cream)]/35" style={{ letterSpacing: "0.18em" }}>
           <span>therapeutic tools</span>
-          <span>terapily<span className="text-[var(--sage)]">.</span></span>
+          <span className="flex items-center gap-2">
+            <img
+              src={iconCreamSrc}
+              alt=""
+              aria-hidden="true"
+              className="h-4 w-4 object-contain opacity-35"
+            />
+            <span>terapily<span className="text-[var(--sage)]">.</span></span>
+          </span>
         </div>
       </aside>
 
