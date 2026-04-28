@@ -18,9 +18,10 @@ import { TRIAL_DURATION_DAYS } from "@/lib/constants";
 
 interface NavItem {
   label: string;
-  to: "/dashboard" | "/welcome" | "/library";
+  to: "/dashboard" | "/welcome" | "/library" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: string; // ex: "Visualização" pra rotas em protótipo
+  adminOnly?: boolean;
   comingSoonWeek?: never;
 }
 
@@ -30,11 +31,13 @@ interface ComingSoonItem {
   comingSoonWeek: string;
   to?: never;
   badge?: never;
+  adminOnly?: never;
 }
 
 const liveItems: NavItem[] = [
   { label: "Painel", to: "/dashboard", icon: LayoutDashboard },
   { label: "Acervo", to: "/library", icon: GamepadIcon, badge: "Visualização" },
+  { label: "Admin", to: "/admin", icon: ShieldCheck, adminOnly: true },
 ];
 
 const upcomingItems: ComingSoonItem[] = [
@@ -43,7 +46,7 @@ const upcomingItems: ComingSoonItem[] = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { workspace, profile, signOut } = useAuth();
+  const { workspace, profile, signOut, hasRole } = useAuth();
   const location = useLocation();
 
   // Iniciais para avatar fallback
