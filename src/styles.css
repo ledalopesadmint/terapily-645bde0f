@@ -239,3 +239,50 @@
     display: none;
   }
 }
+
+/*
+ * ============================================================
+ * ACTIVITY THEMES (6 paletas brand-coerentes)
+ * ============================================================
+ * Cada atividade do acervo tem um tema (sage / mauve / navy / cream /
+ * terracotta / sage-dark). O tema controla 3 tokens locais, lidos pelo
+ * ActivityCard via `data-theme="..."`:
+ *   --activity-accent          → faixa hairline no topo + ring de hover
+ *   --activity-illustration-bg → fundo da área de ilustração (pastel da cor)
+ *   --activity-glow            → cor do shadow ao hover
+ *
+ * Regras: tudo derivado da paleta oficial (Sage, Mauve, Navy, Cream,
+ * Terracota). Sem cores fora da brand. Backgrounds são versões pastel/lavadas
+ * pra não competir com o conteúdo. Foreground continua Charcoal/Navy
+ * (vem dos tokens shadcn) — só os acentos mudam.
+ */
+[data-theme="sage"] {
+  --activity-accent: var(--sage);
+  --activity-illustration-bg: oklch(0.93 0.025 153.6); /* sage pastel */
+  --activity-glow: color-mix(in oklab, var(--sage) 45%, transparent);
+}
+[data-theme="mauve"] {
+  --activity-accent: var(--mauve);
+  --activity-illustration-bg: oklch(0.94 0.018 359.6); /* mauve pastel */
+  --activity-glow: color-mix(in oklab, var(--mauve) 50%, transparent);
+}
+[data-theme="navy"] {
+  --activity-accent: var(--navy);
+  --activity-illustration-bg: oklch(0.91 0.018 251.0); /* navy pastel (azul-acinzentado) */
+  --activity-glow: color-mix(in oklab, var(--navy) 35%, transparent);
+}
+[data-theme="cream"] {
+  --activity-accent: var(--terracotta);
+  --activity-illustration-bg: var(--cream-tan); /* faixa cream tostada já definida */
+  --activity-glow: color-mix(in oklab, var(--terracotta) 35%, transparent);
+}
+[data-theme="terracotta"] {
+  --activity-accent: var(--terracotta);
+  --activity-illustration-bg: oklch(0.93 0.035 65); /* terracota pastel */
+  --activity-glow: color-mix(in oklab, var(--terracotta) 40%, transparent);
+}
+[data-theme="sage-dark"] {
+  --activity-accent: oklch(0.45 0.04 153.6); /* sage profundo (sono/noite) */
+  --activity-illustration-bg: oklch(0.88 0.03 230); /* azul-acinzentado noturno */
+  --activity-glow: color-mix(in oklab, oklch(0.45 0.04 153.6) 45%, transparent);
+}
