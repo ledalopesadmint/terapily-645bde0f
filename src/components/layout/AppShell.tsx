@@ -157,9 +157,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </nav>
 
-        {/* Rodapé: trial badge + avatar */}
+        {/* Rodapé: badge de contexto + avatar */}
         <div className="border-t border-sidebar-border/60 px-3 py-3">
-          {trialDaysLeft !== null && (
+          {hasRole("admin") ? (
+            <div className="mb-3 rounded-md bg-mauve/15 px-3 py-2.5">
+              <p className="text-[0.5625rem] font-bold uppercase tracking-[0.14em] text-mauve">
+                Modo administrador
+              </p>
+              <p className="mt-1 text-sm text-sidebar-foreground">
+                Acesso completo · sem limite
+              </p>
+            </div>
+          ) : trialDaysLeft !== null ? (
             <div className="mb-3 rounded-md bg-sage/10 px-3 py-2.5">
               <p className="text-[0.5625rem] font-bold uppercase tracking-[0.14em] text-sage">
                 Avaliação · {TRIAL_DURATION_DAYS} dias
@@ -169,7 +178,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 {trialDaysLeft === 1 ? "dia restante" : "dias restantes"}
               </p>
             </div>
-          )}
+          ) : null}
+
 
           <div className="flex items-center gap-3 rounded-md px-2 py-2">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sage text-sm font-medium text-navy">
