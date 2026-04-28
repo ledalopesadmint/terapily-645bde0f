@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_catalog: {
+        Row: {
+          archetype: Database["public"]["Enums"]["activity_archetype"]
+          category: string
+          config: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          is_featured: boolean
+          short_description: string
+          slug: string
+          status: Database["public"]["Enums"]["activity_status"]
+          theme: Database["public"]["Enums"]["activity_theme"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          archetype: Database["public"]["Enums"]["activity_archetype"]
+          category: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_featured?: boolean
+          short_description: string
+          slug: string
+          status?: Database["public"]["Enums"]["activity_status"]
+          theme?: Database["public"]["Enums"]["activity_theme"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          archetype?: Database["public"]["Enums"]["activity_archetype"]
+          category?: string
+          config?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_featured?: boolean
+          short_description?: string
+          slug?: string
+          status?: Database["public"]["Enums"]["activity_status"]
+          theme?: Database["public"]["Enums"]["activity_theme"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -369,6 +417,20 @@ export type Database = {
       }
     }
     Enums: {
+      activity_archetype:
+        | "quiz_scale"
+        | "drag_drop"
+        | "structured_form"
+        | "guided_timer"
+        | "guided_script"
+      activity_status: "draft" | "published" | "archived"
+      activity_theme:
+        | "sage"
+        | "mauve"
+        | "navy"
+        | "cream"
+        | "terracotta"
+        | "sage_dark"
       app_role: "admin" | "therapist" | "patient"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
       subscription_status:
@@ -508,6 +570,22 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      activity_archetype: [
+        "quiz_scale",
+        "drag_drop",
+        "structured_form",
+        "guided_timer",
+        "guided_script",
+      ],
+      activity_status: ["draft", "published", "archived"],
+      activity_theme: [
+        "sage",
+        "mauve",
+        "navy",
+        "cream",
+        "terracotta",
+        "sage_dark",
+      ],
       app_role: ["admin", "therapist", "patient"],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
       subscription_status: [
