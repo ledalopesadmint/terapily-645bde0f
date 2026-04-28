@@ -83,7 +83,7 @@ function AdminHomePage() {
       {/* Header editorial */}
       <header className="flex flex-col gap-6 border-b border-border/50 pb-10 md:flex-row md:items-end md:justify-between">
         <div className="max-w-2xl space-y-3">
-          <Eyebrow icon={ShieldCheck}>Painel administrativo</Eyebrow>
+          <Eyebrow>Painel administrativo</Eyebrow>
           <h1 className="font-display text-4xl text-foreground md:text-5xl">
             Curadoria do acervo
           </h1>
