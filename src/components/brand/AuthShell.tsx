@@ -74,38 +74,26 @@ export function AuthShell({
           </span>
         </div>
 
-        {/* Anchor phrase — layered typography, generous space */}
-        <h2
-          className="relative font-display font-light text-[var(--cream)]"
-          style={{ lineHeight: 0.98, letterSpacing: "-0.02em" }}
-        >
-          <span
-            className="block text-[var(--cream)]"
-            style={{ fontSize: "clamp(3.5rem, 5.2vw, 5.5rem)" }}
-          >
-            Homework
-          </span>
-          <span
-            className="mt-2 block text-[var(--cream)]/70"
+        {/* Anchor phrase — single line, balanced */}
+        <div className="relative max-w-xl">
+          <h2
+            className="font-display font-light text-[var(--cream)]"
             style={{
-              fontSize: "clamp(2.25rem, 3.4vw, 3.5rem)",
-              fontStyle: "italic",
+              fontSize: "clamp(2.75rem, 4.4vw, 4.25rem)",
+              lineHeight: 1.05,
+              letterSpacing: "-0.015em",
             }}
           >
-            your clients
-          </span>
-          <span
-            className="mt-2 block"
-            style={{ fontSize: "clamp(2.75rem, 4vw, 4.25rem)" }}
-          >
-            <span className="text-[var(--cream)]/55">actually </span>
+            <span className="text-[var(--cream)]">Homework</span>{" "}
+            <span className="text-[var(--cream)]/70 italic">your clients</span>{" "}
+            <span className="text-[var(--cream)]/85">actually </span>
             <span className="relative inline-block italic text-[var(--cream)]">
               do
               <svg
                 aria-hidden="true"
                 viewBox="0 0 80 14"
                 preserveAspectRatio="none"
-                className="absolute -bottom-2 left-0 h-[12px] w-full"
+                className="absolute -bottom-1 left-0 h-[10px] w-full"
               >
                 <path
                   d="M2 8 C 16 2, 32 12, 48 5 S 70 10, 78 6"
@@ -117,9 +105,18 @@ export function AuthShell({
                 />
               </svg>
             </span>
-            <span className="text-[var(--cream)]/55">.</span>
-          </span>
-        </h2>
+            <span className="text-[var(--cream)]/85">.</span>
+          </h2>
+
+          <p
+            className="mt-8 max-w-md text-[var(--cream)]/55"
+            style={{ fontSize: "0.95rem", lineHeight: 1.6 }}
+          >
+            The work between sessions is where therapy{" "}
+            <em className="text-[var(--cream)]/80 not-italic font-medium">actually</em>{" "}
+            happens.
+          </p>
+        </div>
 
         {/* Footnote — bottom anchor */}
         <div className="absolute bottom-10 left-16 right-16 flex items-center justify-between text-[10px] uppercase text-[var(--cream)]/35" style={{ letterSpacing: "0.18em" }}>
