@@ -172,7 +172,7 @@ function AdminHomePage() {
                   className="rounded-md border border-border/50 bg-card px-4 py-3"
                 >
                   <p className="text-[0.6875rem] font-medium uppercase tracking-wider text-muted-foreground">
-                    {arch.shortLabel ?? arch.label}
+                    {arch.shortLabel}
                   </p>
                   <p className="mt-1 font-display text-2xl text-foreground">
                     {count}
