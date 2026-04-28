@@ -24,6 +24,7 @@ import { Route as AuthenticatedSettingsWorkspaceRouteImport } from './routes/_au
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
+import { Route as AuthenticatedDevRoadmapRouteImport } from './routes/_authenticated/dev.roadmap'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -104,6 +105,11 @@ const AuthenticatedSettingsBillingRoute =
     path: '/billing',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedDevRoadmapRoute = AuthenticatedDevRoadmapRouteImport.update({
+  id: '/dev/roadmap',
+  path: '/dev/roadmap',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/welcome'
     | '/auth/callback'
+    | '/dev/roadmap'
     | '/settings/billing'
     | '/settings/profile'
     | '/settings/security'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/welcome'
     | '/auth/callback'
+    | '/dev/roadmap'
     | '/settings/billing'
     | '/settings/profile'
     | '/settings/security'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/welcome'
     | '/auth/callback'
+    | '/_authenticated/dev/roadmap'
     | '/_authenticated/settings/billing'
     | '/_authenticated/settings/profile'
     | '/_authenticated/settings/security'
@@ -322,6 +334,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsBillingRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/dev/roadmap': {
+      id: '/_authenticated/dev/roadmap'
+      path: '/dev/roadmap'
+      fullPath: '/dev/roadmap'
+      preLoaderRoute: typeof AuthenticatedDevRoadmapRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
@@ -350,12 +369,14 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
+  AuthenticatedDevRoadmapRoute: typeof AuthenticatedDevRoadmapRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
+  AuthenticatedDevRoadmapRoute: AuthenticatedDevRoadmapRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
