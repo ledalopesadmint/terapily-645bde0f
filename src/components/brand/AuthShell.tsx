@@ -114,7 +114,7 @@ export function AuthShell({
             style={{ fontSize: "0.95rem", lineHeight: 1.6 }}
           >
             The work between sessions is where therapy{" "}
-            <em className="text-[var(--cream)]/80 not-italic font-medium">actually</em>{" "}
+            <em className="text-[var(--cream)]/80 not-italic font-medium">really</em>{" "}
             happens.
           </p>
         </div>
