@@ -85,18 +85,13 @@ export function ActivityCard({ activity, onStart }: ActivityCardProps) {
           {activity.name}
         </h3>
 
-        {/* Descrição — só aparece no hover (slot de altura fixa pra não pular layout) */}
-        <p className="line-clamp-2 text-[0.8125rem] leading-snug text-muted-foreground/90 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100">
+        {/* Descrição — sempre visível */}
+        <p className="line-clamp-2 text-[0.8125rem] leading-snug text-muted-foreground/90">
           {activity.shortDescription}
         </p>
 
-        {/* CTAs — revelados no hover, mas tabbable sempre */}
-        <div className="
-          mt-auto flex gap-2 pt-3
-          opacity-0 translate-y-1 transition-all duration-300
-          group-hover:opacity-100 group-hover:translate-y-0
-          group-focus-within:opacity-100 group-focus-within:translate-y-0
-        ">
+        {/* CTAs — sempre visíveis, lift sutil no hover */}
+        <div className="mt-auto flex gap-2 pt-3 transition-transform duration-300 group-hover:-translate-y-0.5">
           <button
             type="button"
             onClick={() => onStart?.(activity, "in_session")}
