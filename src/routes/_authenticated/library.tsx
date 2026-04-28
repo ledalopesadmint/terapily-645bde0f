@@ -1,27 +1,32 @@
 /**
  * Acervo (Library) — protótipo visual do acervo terapêutico do Terapily.
  *
- * Estado atual (S1): protótipo visual apenas.
+ * Estrutura editorial (referência premium):
+ *   1. Cabeçalho editorial curto
+ *   2. Featured tool (hero Navy gradient)
+ *   3. Featured carousel (carrossel horizontal de cards verticais)
+ *   4. Browse by category (grid de cards quadrados, "Em breve" honesto)
+ *   5. Recommended for you (estado vazio honesto até S3)
+ *
+ * Estado atual (S1): protótipo visual.
  * - Lê de `src/features/library/catalog.ts` (seed mockado de 8 atividades)
- * - Botões "Em sessão" / "Enviar" mostram toast informando que o player
- *   chega em S3 — sem fluxo fake, voz Terapily ("autoridade calma")
- * - Sem chamadas ao banco, sem player real, sem magic link
+ * - Botões mostram toast informando que o player chega em S3
  *
- * Em S3 (Activity catalog + delivery_mode):
- * - Substitui import de `catalog.ts` por server function `getActivityCatalog()`
- * - Botões abrem rota `/library/$activityId/play` (full-screen overlay)
- * - Tabela `activity_catalog` no banco com RLS por workspace
- *
- * NENHUM componente desta página precisa mudar quando isso acontecer —
- * o shape `Activity` foi desenhado pra ser idêntico ao da tabela.
+ * Em S3:
+ * - Substitui `catalog.ts` por server function `getActivityCatalog()`
+ * - Botões abrem `/library/$activityId/play`
+ * - Browse mostra contagem real por categoria
+ * - Recommended lê de `activity_reports` + perfil de pacientes
  */
 
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { Eyebrow } from "@/components/brand/Eyebrow";
 import { CategoryRow } from "@/features/library/CategoryRow";
-import { ARCHETYPE_LIST } from "@/features/library/archetypes";
+import { LibraryHero } from "@/features/library/LibraryHero";
+import { CategoryBrowser } from "@/features/library/CategoryBrowser";
+import { RecommendedEmpty } from "@/features/library/RecommendedEmpty";
 import {
+  ACTIVITIES,
   CATEGORIES,
   getActivitiesByCategory,
   type Activity,
@@ -43,7 +48,6 @@ export const Route = createFileRoute("/_authenticated/library")({
 
 function LibraryPage() {
   const handleStart = (activity: Activity, mode: "in_session" | "shared_link") => {
-    // Em S3 substituirá isto por navigate({ to: "/library/$id/play", ... })
     toast(activity.name, {
       description:
         mode === "in_session"
@@ -52,40 +56,33 @@ function LibraryPage() {
     });
   };
 
+  // Featured = primeira escala validada do seed (PHQ-9 — Navy theme)
+  const featured = ACTIVITIES.find((a) => a.code === "PHQ-9") ?? ACTIVITIES[0];
+  const liveCategoryIds = CATEGORIES.map((c) => c.id);
+
   return (
     <div className="pb-20">
-      {/* Hero editorial — mesma linguagem do dashboard */}
-      <header className="mx-auto max-w-6xl px-4 pb-10 pt-10 sm:px-8 sm:pt-14">
-        <Eyebrow>Acervo</Eyebrow>
-        <h1 className="mt-3 font-display text-4xl leading-tight text-foreground sm:text-5xl">
+      {/* Cabeçalho editorial — discreto, deixa o hero brilhar */}
+      <header className="mx-auto max-w-6xl px-4 pb-8 pt-10 sm:px-8 sm:pt-12">
+        <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-mauve">
+          Acervo
+        </p>
+        <h1 className="mt-2 font-display text-3xl leading-tight text-foreground sm:text-[2.5rem]">
           Ferramentas para a próxima sessão.
         </h1>
-        <p className="mt-3 max-w-2xl text-base text-muted-foreground">
+        <p className="mt-2 max-w-2xl text-sm text-muted-foreground sm:text-base">
           Escalas validadas, registros guiados e exercícios entre sessões.
           Aplique ao vivo ou envie ao paciente — sem que ele precise criar conta.
         </p>
-
-        {/* Faixa de meta-info do acervo — discreta, editorial */}
-        <dl className="mt-8 grid grid-cols-2 gap-x-6 gap-y-3 border-t border-border/60 pt-6 sm:grid-cols-4">
-          <MetaCell label="Categorias" value={CATEGORIES.length.toString()} />
-          <MetaCell
-            label="Ferramentas"
-            value={CATEGORIES.reduce(
-              (sum, c) => sum + getActivitiesByCategory(c.id).length,
-              0,
-            ).toString()}
-          />
-          <MetaCell
-            label="Arquétipos"
-            value={ARCHETYPE_LIST.length.toString()}
-            hint="motores reutilizáveis"
-          />
-          <MetaCell label="Modos" value="3" hint="sessão · link · ambos" />
-        </dl>
       </header>
 
+      {/* Hero Navy gradient */}
+      <div className="mx-auto max-w-6xl px-4 sm:px-8">
+        <LibraryHero activity={featured} onStart={handleStart} />
+      </div>
+
       {/* Carrosséis por categoria */}
-      <div className="space-y-12">
+      <div className="mt-14 space-y-12">
         {CATEGORIES.map((category) => {
           const items = getActivitiesByCategory(category.id);
           if (items.length === 0) return null;
@@ -100,10 +97,20 @@ function LibraryPage() {
         })}
       </div>
 
-      {/* Nota de protótipo — voz Terapily, honestidade explícita */}
+      {/* Browse by category */}
+      <div className="mt-16">
+        <CategoryBrowser liveCategoryIds={liveCategoryIds} />
+      </div>
+
+      {/* Recommended (estado vazio honesto) */}
+      <div className="mt-16">
+        <RecommendedEmpty />
+      </div>
+
+      {/* Nota de protótipo — voz Terapily */}
       <footer className="mx-auto mt-16 max-w-6xl px-4 sm:px-8">
         <div className="rounded-lg border border-dashed border-border/70 bg-card/40 p-5 text-sm text-muted-foreground">
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-secondary-foreground/80">
+          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-secondary-foreground/80">
             Visualização · Semana 1
           </p>
           <p className="mt-2">
@@ -114,28 +121,6 @@ function LibraryPage() {
           </p>
         </div>
       </footer>
-    </div>
-  );
-}
-
-function MetaCell({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-}) {
-  return (
-    <div>
-      <dt className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-        {label}
-      </dt>
-      <dd className="mt-1 flex items-baseline gap-2">
-        <span className="font-display text-2xl text-foreground">{value}</span>
-        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
-      </dd>
     </div>
   );
 }
