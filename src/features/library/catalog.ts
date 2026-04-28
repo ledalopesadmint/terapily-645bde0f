@@ -61,6 +61,8 @@ export interface Activity {
   approach: string;                      // ex: "CBT", "DBT", "ACT", "Mindfulness"
   category: CategoryId;
   archetype: ArchetypeId;
+  /** Tema visual (6 paletas brand). Default 'sage' se omitido. */
+  theme: ActivityTheme;
   durationMin: number;
   shortDescription: string;              // 1 frase pra hover/card expandido
   /**
