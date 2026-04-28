@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import iconSrc from "@/assets/terapily-icon.png";
+import iconSrc from "@/assets/terapily-icon.webp";
 
 interface LogoProps {
   className?: string;
