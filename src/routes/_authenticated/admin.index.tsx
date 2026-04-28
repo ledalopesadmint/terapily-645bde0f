@@ -28,7 +28,7 @@ import {
 } from "@/server/admin.functions";
 import { ARCHETYPE_LIST } from "@/features/library/archetypes";
 
-export const Route = createFileRoute("/_authenticated/admin")({
+export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminHomePage,
 });
 
