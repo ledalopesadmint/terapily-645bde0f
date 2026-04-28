@@ -19,6 +19,24 @@ import type { ArchetypeId } from "./archetypes";
 
 export type DeliveryMode = "in_session" | "shared_link" | "both";
 
+/**
+ * Tema visual da atividade. 6 paletas brand-coerentes definidas em styles.css.
+ * Mesmos valores do enum `activity_theme` no banco (S3+).
+ *   - sage      → calmo, respiração, mindfulness
+ *   - mauve     → autocompaixão, vínculo
+ *   - navy      → avaliações clínicas (escalas validadas)
+ *   - cream     → psicoeducação, leitura
+ *   - terracotta → somático, corpo
+ *   - sage-dark → sono, noite, regulação
+ */
+export type ActivityTheme =
+  | "sage"
+  | "mauve"
+  | "navy"
+  | "cream"
+  | "terracotta"
+  | "sage-dark";
+
 export type CategoryId =
   | "anxiety"
   | "depression"
