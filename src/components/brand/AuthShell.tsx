@@ -157,13 +157,48 @@ export function AuthShell({
           )}
 
           <div className="mt-10">{children}</div>
+
+          {/* Patient disambiguation — pacientes não fazem login */}
+          <p className="mt-10 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+            <svg
+              aria-hidden="true"
+              viewBox="0 0 16 16"
+              className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[var(--sage)]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+            >
+              <circle cx="8" cy="8" r="6.5" />
+              <path d="M8 5.5v3M8 11h.01" strokeLinecap="round" />
+            </svg>
+            <span>
+              This sign-in is for clinicians only. Your clients open
+              activities through a secure link — no account required.
+            </span>
+          </p>
         </main>
 
         {footer && (
-          <footer className="mx-auto mt-12 w-full max-w-md text-center text-sm text-muted-foreground lg:mx-0 lg:text-left">
+          <div className="mx-auto mt-10 w-full max-w-md text-center text-sm text-muted-foreground lg:mx-0 lg:text-left">
             {footer}
-          </footer>
+          </div>
         )}
+
+        {/* Trust footer — same security claims as the landing */}
+        <footer className="mx-auto mt-10 w-full max-w-md lg:mx-0">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] uppercase text-muted-foreground/70" style={{ letterSpacing: "0.14em" }}>
+            <span className="flex items-center gap-1.5">
+              <svg aria-hidden="true" viewBox="0 0 16 16" className="h-3 w-3" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M8 1.5l5.5 2v4.2c0 3.4-2.3 6.4-5.5 7.3-3.2-.9-5.5-3.9-5.5-7.3V3.5L8 1.5z" strokeLinejoin="round" />
+              </svg>
+              TLS 1.3
+            </span>
+            <span className="text-muted-foreground/40">·</span>
+            <span>AES-256</span>
+            <span className="text-muted-foreground/40">·</span>
+            <span>Operates under HIPAA Security Rule</span>
+          </div>
+        </footer>
       </div>
     </div>
   );

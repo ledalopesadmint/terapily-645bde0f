@@ -7,12 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { loginSchema, type LoginInput } from "@/lib/validation/schemas";
 import { AuthShell } from "@/components/brand/AuthShell";
 import { GoogleButton } from "@/components/brand/GoogleButton";
+import { CapsLockHint } from "@/components/brand/CapsLockHint";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Allowlist de destinos internos seguros para o redirect pós-login.
-// Qualquer valor fora dessa lista cai no default `/welcome` — protege contra
-// open redirect (ex.: /login?redirect=https://evil.com).
+// Allowlist of safe internal redirect targets after login.
+// Anything outside this list falls back to `/welcome` — protects against
+// open-redirect (e.g. /login?redirect=https://evil.com).
 const SAFE_REDIRECTS = new Set<string>([
   "/welcome",
   "/dashboard",
@@ -34,7 +35,7 @@ export const Route = createFileRoute("/login")({
     redirect: sanitizeRedirect(search.redirect),
   }),
   head: () => ({
-    meta: [{ title: "Entrar · Terapily" }],
+    meta: [{ title: "Sign in · Terapily" }],
   }),
   component: LoginPage,
 });
@@ -58,43 +59,46 @@ function LoginPage() {
     setSubmitting(false);
 
     if (error) {
-      // Mensagem genérica (não vaza se conta existe ou não)
-      toast.error("E-mail ou senha não conferem.");
+      // Generic message (does not leak whether the account exists)
+      toast.error("Email or password don't match.");
       return;
     }
 
-    toast.success("Bem-vinda de volta.");
+    toast.success("Welcome back.");
     void navigate({ to: search.redirect || "/welcome" });
   };
 
   return (
     <AuthShell
-      eyebrow="Entrar"
-      title="Bem-vinda de volta."
-      subtitle="Entre na sua conta para continuar."
+      eyebrow="Sign in"
+      title="Welcome back."
+      subtitle="Sign in to your account to continue."
       footer={
         <span>
-          Ainda não tem conta?{" "}
+          Don&apos;t have an account yet?{" "}
           <Link
             to="/signup"
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
-            Criar conta
-          </Link>
+            Create account
+          </Link>{" "}
+          <span className="text-muted-foreground/70">
+            · 14 days free, no card.
+          </span>
         </span>
       }
     >
-      <GoogleButton />
+      <GoogleButton label="Continue with Google" />
 
       <div className="my-8 flex items-center gap-4">
         <div className="h-px flex-1 bg-border" />
-        <span className="eyebrow text-muted-foreground">ou com e-mail</span>
+        <span className="eyebrow text-muted-foreground">or with email</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail</Label>
+          <Label htmlFor="email">Email</Label>
           <Input
             id="email"
             type="email"
@@ -109,12 +113,12 @@ function LoginPage() {
 
         <div className="space-y-2">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Senha</Label>
+            <Label htmlFor="password">Password</Label>
             <Link
               to="/forgot-password"
               className="text-xs text-muted-foreground underline-offset-4 hover:underline"
             >
-              Esqueci a senha
+              Forgot password
             </Link>
           </div>
           <Input
@@ -129,6 +133,7 @@ function LoginPage() {
               {errors.password.message}
             </p>
           )}
+          <CapsLockHint />
         </div>
 
         <button
@@ -136,7 +141,7 @@ function LoginPage() {
           disabled={submitting}
           className="inline-flex w-full items-center justify-center rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
-          {submitting ? "Entrando…" : "Entrar"}
+          {submitting ? "Signing in…" : "Sign in"}
         </button>
       </form>
     </AuthShell>

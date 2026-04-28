@@ -7,12 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { signupSchema, type SignupInput } from "@/lib/validation/schemas";
 import { AuthShell } from "@/components/brand/AuthShell";
 import { GoogleButton } from "@/components/brand/GoogleButton";
+import { CapsLockHint } from "@/components/brand/CapsLockHint";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export const Route = createFileRoute("/signup")({
   head: () => ({
-    meta: [{ title: "Criar conta · Terapily" }],
+    meta: [{ title: "Create account · Terapily" }],
   }),
   component: SignupPage,
 });
@@ -49,11 +50,19 @@ function SignupPage() {
     setSubmitting(false);
 
     if (error) {
-      // Genérico — não vaza se e-mail já existe (boa prática)
-      if (error.message.toLowerCase().includes("registered")) {
-        toast.error("Não foi possível criar a conta com esses dados.");
+      const msg = error.message.toLowerCase();
+      // HIBP rejection — Supabase returns "pwned" / "compromised" wording
+      if (msg.includes("pwned") || msg.includes("compromised") || msg.includes("breach")) {
+        toast.error(
+          "This password has appeared in a known data breach. Please choose a different one."
+        );
+        return;
+      }
+      // Generic — does not leak whether the email is already registered
+      if (msg.includes("registered")) {
+        toast.error("We couldn't create an account with those details.");
       } else {
-        toast.error("Algo não funcionou. Tente novamente.");
+        toast.error("Something didn't work. Please try again.");
       }
       return;
     }
@@ -64,24 +73,24 @@ function SignupPage() {
   if (emailSent) {
     return (
       <AuthShell
-        eyebrow="Quase lá"
-        title="Confirme seu e-mail."
-        subtitle={`Enviamos um link para ${emailSent}. Abra-o para ativar sua conta.`}
+        eyebrow="Almost there"
+        title="Confirm your email."
+        subtitle={`We sent a link to ${emailSent}. Open it to activate your account.`}
         footer={
           <span>
-            Errou o e-mail?{" "}
+            Wrong email?{" "}
             <Link
               to="/signup"
               className="font-medium text-foreground underline-offset-4 hover:underline"
             >
-              Cadastrar de novo
+              Sign up again
             </Link>
           </span>
         }
       >
         <div className="rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">
-          Sem pressa. O link fica válido por 24 horas. Se não encontrar, dê
-          uma olhada na pasta de spam.
+          No rush. The link is valid for 24 hours. If you don&apos;t see it,
+          check your spam folder.
         </div>
       </AuthShell>
     );
@@ -89,32 +98,32 @@ function SignupPage() {
 
   return (
     <AuthShell
-      eyebrow="Criar conta"
-      title="Comece sua avaliação."
-      subtitle="14 dias para experimentar tudo. Sem cartão."
+      eyebrow="Create account"
+      title="Start your trial."
+      subtitle="14 days to try everything. No card required."
       footer={
         <span>
-          Já tem uma conta?{" "}
+          Already have an account?{" "}
           <Link
             to="/login"
             className="font-medium text-foreground underline-offset-4 hover:underline"
           >
-            Entrar
+            Sign in
           </Link>
         </span>
       }
     >
-      <GoogleButton label="Criar conta com Google" />
+      <GoogleButton label="Sign up with Google" />
 
       <div className="my-8 flex items-center gap-4">
         <div className="h-px flex-1 bg-border" />
-        <span className="eyebrow text-muted-foreground">ou com e-mail</span>
+        <span className="eyebrow text-muted-foreground">or with email</span>
         <div className="h-px flex-1 bg-border" />
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <div className="space-y-2">
-          <Label htmlFor="full_name">Nome completo</Label>
+          <Label htmlFor="full_name">Full name</Label>
           <Input
             id="full_name"
             type="text"
@@ -130,7 +139,7 @@ function SignupPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="email">E-mail profissional</Label>
+          <Label htmlFor="email">Work email</Label>
           <Input
             id="email"
             type="email"
@@ -144,7 +153,7 @@ function SignupPage() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password">Senha</Label>
+          <Label htmlFor="password">Password</Label>
           <Input
             id="password"
             type="password"
@@ -158,9 +167,10 @@ function SignupPage() {
             </p>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Mínimo 8 caracteres. Verificamos contra vazamentos conhecidos.
+              Minimum 8 characters. We check against known breaches.
             </p>
           )}
+          <CapsLockHint />
         </div>
 
         <button
@@ -168,11 +178,11 @@ function SignupPage() {
           disabled={submitting}
           className="inline-flex w-full items-center justify-center rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
         >
-          {submitting ? "Criando…" : "Criar conta"}
+          {submitting ? "Creating…" : "Create account"}
         </button>
 
         <p className="text-center text-xs text-muted-foreground">
-          Ao continuar, você concorda com nossos termos.
+          By continuing you agree to our terms.
         </p>
       </form>
     </AuthShell>

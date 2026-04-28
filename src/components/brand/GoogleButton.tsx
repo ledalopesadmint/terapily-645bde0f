@@ -12,7 +12,7 @@ interface GoogleButtonProps {
  * Não usa supabase.auth.signInWithOAuth direto (regra do Cloud).
  */
 export function GoogleButton({
-  label = "Continuar com Google",
+  label = "Continue with Google",
   redirectTo,
 }: GoogleButtonProps) {
   const [loading, setLoading] = useState(false);
@@ -30,13 +30,13 @@ export function GoogleButton({
       });
 
       if (result.error) {
-        toast.error("Não conseguimos abrir o Google. Tente novamente.");
+        toast.error("We couldn't open Google. Please try again.");
         setLoading(false);
         return;
       }
       if (result.redirected) return; // browser redirecting
     } catch {
-      toast.error("Algo não funcionou. Tente novamente.");
+      toast.error("Something didn't work. Please try again.");
       setLoading(false);
     }
   };
@@ -49,7 +49,7 @@ export function GoogleButton({
       className="inline-flex w-full items-center justify-center gap-3 rounded-md border border-input bg-background px-4 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:opacity-50"
     >
       <GoogleIcon />
-      {loading ? "Abrindo Google…" : label}
+      {loading ? "Opening Google…" : label}
     </button>
   );
 }

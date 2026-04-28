@@ -7,6 +7,7 @@ import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { resetPasswordSchema } from "@/lib/validation/schemas";
 import { AuthShell } from "@/components/brand/AuthShell";
+import { CapsLockHint } from "@/components/brand/CapsLockHint";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -14,7 +15,7 @@ type FormValues = z.infer<typeof resetPasswordSchema>;
 
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
-    meta: [{ title: "Nova senha · Terapily" }],
+    meta: [{ title: "New password · Terapily" }],
   }),
   component: ResetPasswordPage,
 });
@@ -24,15 +25,15 @@ function ResetPasswordPage() {
   const [ready, setReady] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // Supabase coloca tokens no hash (#access_token=...&type=recovery)
-  // O client SDK consome automaticamente via onAuthStateChange.
+  // Supabase puts tokens in the hash (#access_token=...&type=recovery).
+  // The client SDK consumes them automatically via onAuthStateChange.
   useEffect(() => {
     const { data } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") {
         setReady(true);
       }
     });
-    // Caso o evento já tenha acontecido antes do listener
+    // In case the event fired before the listener was set up
     void supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) setReady(true);
     });
@@ -54,22 +55,29 @@ function ResetPasswordPage() {
     const { error } = await supabase.auth.updateUser({ password });
     setSubmitting(false);
     if (error) {
-      toast.error("Não conseguimos atualizar sua senha. Tente o link de novo.");
+      const msg = error.message.toLowerCase();
+      if (msg.includes("pwned") || msg.includes("compromised") || msg.includes("breach")) {
+        toast.error(
+          "This password has appeared in a known data breach. Please choose a different one."
+        );
+        return;
+      }
+      toast.error("We couldn't update your password. Try the link again.");
       return;
     }
-    toast.success("Senha atualizada.");
+    toast.success("Password updated.");
     void navigate({ to: "/welcome" });
   };
 
   return (
     <AuthShell
-      eyebrow="Nova senha"
-      title="Crie uma senha nova."
-      subtitle="Mínimo 8 caracteres. Verificamos contra vazamentos conhecidos."
+      eyebrow="New password"
+      title="Set a new password."
+      subtitle="Minimum 8 characters. We check against known breaches."
     >
       {!ready ? (
         <p className="text-sm text-muted-foreground">
-          Validando seu link de recuperação…
+          Validating your recovery link…
         </p>
       ) : (
         <form
@@ -78,7 +86,7 @@ function ResetPasswordPage() {
           noValidate
         >
           <div className="space-y-2">
-            <Label htmlFor="password">Nova senha</Label>
+            <Label htmlFor="password">New password</Label>
             <Input
               id="password"
               type="password"
@@ -91,13 +99,14 @@ function ResetPasswordPage() {
                 {errors.password.message}
               </p>
             )}
+            <CapsLockHint />
           </div>
           <button
             type="submit"
             disabled={submitting}
             className="inline-flex w-full items-center justify-center rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
           >
-            {submitting ? "Salvando…" : "Salvar nova senha"}
+            {submitting ? "Saving…" : "Save new password"}
           </button>
         </form>
       )}
