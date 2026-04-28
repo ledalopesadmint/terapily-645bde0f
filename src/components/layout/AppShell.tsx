@@ -1,5 +1,5 @@
 import { Link, useLocation } from "@tanstack/react-router";
-import { LayoutDashboard, Users, GamepadIcon, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, GamepadIcon, Settings, LogOut, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Logo } from "@/components/brand/Logo";
 import { cn } from "@/lib/utils";
@@ -18,9 +18,10 @@ import { TRIAL_DURATION_DAYS } from "@/lib/constants";
 
 interface NavItem {
   label: string;
-  to: "/dashboard" | "/welcome" | "/library";
+  to: "/dashboard" | "/welcome" | "/library" | "/admin";
   icon: typeof LayoutDashboard;
   badge?: string; // ex: "Visualização" pra rotas em protótipo
+  adminOnly?: boolean;
   comingSoonWeek?: never;
 }
 
@@ -30,11 +31,13 @@ interface ComingSoonItem {
   comingSoonWeek: string;
   to?: never;
   badge?: never;
+  adminOnly?: never;
 }
 
 const liveItems: NavItem[] = [
   { label: "Painel", to: "/dashboard", icon: LayoutDashboard },
   { label: "Acervo", to: "/library", icon: GamepadIcon, badge: "Visualização" },
+  { label: "Admin", to: "/admin", icon: ShieldCheck, adminOnly: true },
 ];
 
 const upcomingItems: ComingSoonItem[] = [
@@ -43,7 +46,7 @@ const upcomingItems: ComingSoonItem[] = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { workspace, profile, signOut } = useAuth();
+  const { workspace, profile, signOut, hasRole } = useAuth();
   const location = useLocation();
 
   // Iniciais para avatar fallback
@@ -93,32 +96,34 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
         {/* Nav */}
         <nav className="flex-1 space-y-0.5 px-3 py-4">
-          {liveItems.map((item) => {
-            const Icon = item.icon;
-            const active = location.pathname === item.to;
-            return (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={cn(
-                  "flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors",
-                  active
-                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
-                )}
-              >
-                <span className="flex items-center gap-3">
-                  <Icon className="h-4 w-4" />
-                  {item.label}
-                </span>
-                {item.badge && (
-                  <span className="text-[0.625rem] font-medium uppercase tracking-wider text-secondary-foreground/80">
-                    {item.badge}
+          {liveItems
+            .filter((item) => !item.adminOnly || hasRole("admin"))
+            .map((item) => {
+              const Icon = item.icon;
+              const active = location.pathname === item.to;
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  className={cn(
+                    "flex items-center justify-between gap-3 rounded-md px-3 py-2 text-sm transition-colors",
+                    active
+                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
+                  )}
+                >
+                  <span className="flex items-center gap-3">
+                    <Icon className="h-4 w-4" />
+                    {item.label}
                   </span>
-                )}
-              </Link>
-            );
-          })}
+                  {item.badge && (
+                    <span className="text-[0.625rem] font-medium uppercase tracking-wider text-secondary-foreground/80">
+                      {item.badge}
+                    </span>
+                  )}
+                </Link>
+              );
+            })}
 
           <div className="pt-4">
             <p className="px-3 pb-2 text-[0.625rem] font-bold uppercase tracking-[0.12em] text-muted-foreground/80">

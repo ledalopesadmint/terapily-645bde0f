@@ -19,6 +19,24 @@ import type { ArchetypeId } from "./archetypes";
 
 export type DeliveryMode = "in_session" | "shared_link" | "both";
 
+/**
+ * Tema visual da atividade. 6 paletas brand-coerentes definidas em styles.css.
+ * Mesmos valores do enum `activity_theme` no banco (S3+).
+ *   - sage      → calmo, respiração, mindfulness
+ *   - mauve     → autocompaixão, vínculo
+ *   - navy      → avaliações clínicas (escalas validadas)
+ *   - cream     → psicoeducação, leitura
+ *   - terracotta → somático, corpo
+ *   - sage-dark → sono, noite, regulação
+ */
+export type ActivityTheme =
+  | "sage"
+  | "mauve"
+  | "navy"
+  | "cream"
+  | "terracotta"
+  | "sage-dark";
+
 export type CategoryId =
   | "anxiety"
   | "depression"
@@ -43,6 +61,8 @@ export interface Activity {
   approach: string;                      // ex: "CBT", "DBT", "ACT", "Mindfulness"
   category: CategoryId;
   archetype: ArchetypeId;
+  /** Tema visual (6 paletas brand). Default 'sage' se omitido. */
+  theme: ActivityTheme;
   durationMin: number;
   shortDescription: string;              // 1 frase pra hover/card expandido
   /**
@@ -95,6 +115,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "Escala validada",
     category: "anxiety",
     archetype: "quiz_scale",
+    theme: "navy",
     durationMin: 4,
     shortDescription: "Triagem de sintomas depressivos nas últimas duas semanas. Auto-pontuada.",
     illustration: "petals",
@@ -107,6 +128,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "Escala validada",
     category: "anxiety",
     archetype: "quiz_scale",
+    theme: "navy",
     durationMin: 3,
     shortDescription: "Ansiedade generalizada em sete itens. Padrão-ouro de triagem.",
     illustration: "tide",
@@ -119,6 +141,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "Mindfulness",
     category: "anxiety",
     archetype: "guided_timer",
+    theme: "sage",
     durationMin: 5,
     shortDescription: "Quatro ciclos guiados pra acalmar o sistema nervoso simpático.",
     illustration: "spiral",
@@ -133,6 +156,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "TCC",
     category: "cbt",
     archetype: "structured_form",
+    theme: "mauve",
     durationMin: 8,
     shortDescription: "Situação · pensamento automático · emoção. O passo zero da reestruturação.",
     illustration: "lattice",
@@ -145,6 +169,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "TCC",
     category: "cbt",
     archetype: "drag_drop",
+    theme: "cream",
     durationMin: 7,
     shortDescription: "Identifique padrões de pensamento por categoria — catastrofização, leitura mental e mais.",
     illustration: "scattered",
@@ -157,6 +182,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "TCC",
     category: "cbt",
     archetype: "structured_form",
+    theme: "mauve",
     durationMin: 10,
     shortDescription: "Pesar evidências de um pensamento difícil. Termina com um pensamento alternativo.",
     illustration: "compass",
@@ -171,6 +197,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "Grounding",
     category: "mindfulness",
     archetype: "guided_script",
+    theme: "terracotta",
     durationMin: 4,
     shortDescription: "Cinco coisas que vê, quatro que sente, três que ouve. Volta ao presente em minutos.",
     illustration: "anchor",
@@ -183,6 +210,7 @@ export const ACTIVITIES: Activity[] = [
     approach: "Mindfulness",
     category: "mindfulness",
     archetype: "guided_timer",
+    theme: "sage-dark",
     durationMin: 4,
     shortDescription: "Quatro tempos iguais — inspira, segura, expira, segura. Ritmo militar adaptado pra clínica.",
     illustration: "horizon",

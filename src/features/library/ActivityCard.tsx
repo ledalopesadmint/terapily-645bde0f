@@ -35,23 +35,28 @@ export function ActivityCard({ activity, onStart }: ActivityCardProps) {
   return (
     <article
       aria-labelledby={titleId}
+      data-theme={activity.theme}
       className="
         group relative isolate flex h-full w-[280px] shrink-0 flex-col overflow-hidden rounded-xl
         border border-border/60 bg-card
         transition-all duration-300 ease-out
-        hover:-translate-y-1 hover:scale-[1.04] hover:border-secondary/40
-        hover:shadow-[0_18px_40px_-18px_color-mix(in_oklab,var(--sage)_45%,transparent)]
-        focus-within:-translate-y-1 focus-within:scale-[1.04] focus-within:border-secondary/40
+        hover:-translate-y-1 hover:scale-[1.04]
+        hover:[border-color:color-mix(in_oklab,var(--activity-accent)_55%,transparent)]
+        hover:[box-shadow:0_18px_40px_-18px_var(--activity-glow)]
+        focus-within:-translate-y-1 focus-within:scale-[1.04]
+        focus-within:[border-color:color-mix(in_oklab,var(--activity-accent)_55%,transparent)]
       "
     >
-      {/* Faixa sage no topo (hairline, brand book signature) */}
+      {/* Faixa hairline no topo — cor do tema */}
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 h-[3px] bg-secondary/70"
+        className="absolute inset-x-0 top-0 h-[3px] [background-color:var(--activity-accent)] opacity-80"
       />
 
-      {/* Ilustração — área visual dominante */}
-      <div className="relative aspect-[10/7] w-full overflow-hidden">
+      {/* Ilustração — área visual dominante. Fundo pastel do tema. */}
+      <div
+        className="relative aspect-[10/7] w-full overflow-hidden [background-color:var(--activity-illustration-bg)]"
+      >
         <ActivityIllustration
           id={activity.illustration}
           className="h-full w-full transition-transform duration-500 ease-out group-hover:scale-[1.06]"
