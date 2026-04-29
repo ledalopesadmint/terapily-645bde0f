@@ -129,10 +129,40 @@ Eventos obrigatórios (todos com `metadata` JSONB **sem PHI** — só UUIDs/enum
 - [x] `activity.submitted`
 - [x] `activity.status_changed`
 - [x] `activity.response_recorded`
+- [x] `activity.response_viewed` — cada abertura da gaveta lateral pelo terapeuta
+- [x] `activity.revoked` — soft revoke pelo terapeuta
 - [x] `activity.draft_saved` / `activity.draft_loaded` / `activity.draft_discarded`
 - [ ] `activity.email_sent` / `activity.email_skipped_no_baa`
 - [ ] `compliance_report.generated`
 - [ ] `patient.contact_revealed`
+
+---
+
+## 9.1 Autosave (draft) — implementado
+
+Detalhamento completo em `docs/autosave-security.md`. Confirmação dos invariantes pra fechar Etapa 4:
+
+- [x] Draft cifrado AES-256-GCM com `PHI_ENCRYPTION_KEY` (mesmo padrão de `activity_responses.raw_responses_encrypted`)
+- [x] Draft NUNCA salvo em localStorage / sessionStorage / IndexedDB / cache do browser
+- [x] Draft em texto puro nunca persiste — só circula em memória durante render do form
+- [x] `activity_drafts.expires_at` = `patient_activities.token_expires_at` (draft expira junto com o token)
+- [x] Submit final: `submitActivityResponse` apaga o draft antes de retornar (DELETE em `activity_drafts` na mesma transação lógica)
+- [x] Draft NÃO gera score, NÃO aparece em `activity_responses`, NÃO entra em Compliance Report
+- [x] PHI nunca em URL, audit metadata ou logs (auditoria registra só `patient_activity_id` + `completion_percent`)
+- [x] Rate limit aplicado em `saveActivityDraft` e `getActivityDraft` (IP+token)
+- [x] Banner "Você pode começar agora e terminar depois" na rota pública `/p/$token`
+- [x] Fail-safe: falha de cifragem / token / rate limit → não salva, retorna erro neutro
+
+---
+
+## 9.2 Regra central confirmada
+
+> **Expira o acesso, não o dado.**
+
+- Token (`token_hash`) expira e vira single-use após submit (`used_at`).
+- `patient_activities`, `activity_responses` e o futuro Compliance Report permanecem permanentes no workspace do terapeuta.
+- Drafts (`activity_drafts`) expiram com o token e são apagados após submit — são rascunho de PHI parcial, não registro clínico.
+
 
 ---
 
