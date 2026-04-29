@@ -200,6 +200,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="font-display text-lg">{planLabel}</span>
               </p>
             </Link>
+          ) : trialDaysLeft === 0 ? (
+            <Link
+              to="/settings/billing"
+              className="mb-3 block rounded-md bg-mauve/15 px-3 py-2.5 transition hover:bg-mauve/25"
+            >
+              <p className="text-[0.5625rem] font-bold uppercase tracking-[0.14em] text-mauve">
+                Avaliação
+              </p>
+              <p className="mt-1 text-sm text-sidebar-foreground">
+                <span className="font-display text-base">Trial encerrado</span>
+              </p>
+              <p className="mt-1 text-[0.6875rem] text-sidebar-foreground/60">
+                Fazer upgrade →
+              </p>
+            </Link>
           ) : trialDaysLeft !== null ? (
             <Link
               to="/settings/billing"
