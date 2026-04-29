@@ -17,7 +17,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
-import { withAudit } from "@/features/audit/audit.server";
+import { withAudit, recordAudit } from "@/features/audit/audit.server";
 import {
   encryptPHIServer,
   decryptPHIServer,
@@ -322,6 +322,56 @@ export const updatePatient = createServerFn({ method: "POST" })
         return { patient: await rowToDTO(updated as PatientRow) };
       },
     );
+  });
+
+// =============================================================================
+// REVEAL CONTACT (copiar email/telefone via clipboard)
+// =============================================================================
+// Descriptografa UM campo de contato sob demanda. Auditamos cada chamada
+// (sem o valor, só UUID + tipo de campo). UI faz auto-clear do clipboard.
+const revealContactSchema = z.object({
+  id: z.string().uuid(),
+  field: z.enum(["email", "phone"]),
+});
+
+export const revealPatientContact = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => revealContactSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const col = data.field === "email" ? "email_encrypted" : "phone_encrypted";
+    const { data: row, error } = await supabase
+      .from("patients")
+      .select(`id, workspace_id, ${col}`)
+      .eq("id", data.id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error || !row) {
+      throw new Error("Paciente não encontrado.");
+    }
+
+    const encrypted = (row as Record<string, string | null>)[col];
+    const value = await safeDecrypt(encrypted ?? null);
+    if (!value) {
+      throw new Error(
+        data.field === "email"
+          ? "Sem email cadastrado."
+          : "Sem telefone cadastrado.",
+      );
+    }
+
+    await recordAudit({
+      actorId: userId,
+      workspaceId: (row as { workspace_id: string }).workspace_id,
+      action: "patient.phi_copied",
+      resourceType: "patient",
+      resourceId: data.id,
+      metadata: { field: data.field },
+    });
+
+    return { value };
   });
 
 // =============================================================================

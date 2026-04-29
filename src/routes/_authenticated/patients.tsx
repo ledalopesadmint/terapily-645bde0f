@@ -1,15 +1,23 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Search, Archive, ArchiveRestore, Trash2, Pencil } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Archive,
+  ArchiveRestore,
+  Trash2,
+  Pencil,
+  Mail,
+  Phone,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -21,19 +29,13 @@ import {
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Tooltip,
   TooltipContent,
@@ -51,6 +53,7 @@ import {
   createPatient,
   updatePatient,
   setPatientLifecycle,
+  revealPatientContact,
   type PatientDTO,
 } from "@/features/patients/patients.functions";
 
@@ -69,25 +72,48 @@ export const Route = createFileRoute("/_authenticated/patients")({
 
 type StatusFilter = "active" | "archived";
 
+const CLIPBOARD_CLEAR_MS = 30_000;
+
 function deriveInitials(displayName: string): string {
-  // Apelido é pseudônimo curto — pegamos só os 2 primeiros caracteres
-  // alfabéticos. Não tentamos extrair "iniciais de nome" porque o campo
-  // não deve conter nome real.
   const cleaned = displayName.trim().replace(/[^\p{L}\p{N}]/gu, "");
   return cleaned.slice(0, 2).toUpperCase() || "??";
 }
 
-// Heurística leve: nome composto longo (3+ palavras com 2+ letras) tem cara
-// de "Primeiro Meio Sobrenome" — avisamos sem bloquear.
 function looksLikeRealName(value: string): boolean {
   const words = value.trim().split(/\s+/).filter((w) => w.length >= 2);
   return words.length >= 3;
+}
+
+async function copyAndAutoClear(value: string, label: string) {
+  try {
+    await navigator.clipboard.writeText(value);
+    toast.success(`${label} copiado.`, {
+      description: "A área de transferência será limpa em 30s.",
+    });
+    window.setTimeout(async () => {
+      try {
+        const current = await navigator.clipboard.readText();
+        if (current === value) await navigator.clipboard.writeText("");
+      } catch {
+        // Permissão de leitura negada (Firefox, Safari): tudo bem,
+        // sobrescrevemos sem checar.
+        try {
+          await navigator.clipboard.writeText("");
+        } catch {
+          /* ignore */
+        }
+      }
+    }, CLIPBOARD_CLEAR_MS);
+  } catch {
+    toast.error("Não foi possível copiar.");
+  }
 }
 
 function PatientsPage() {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
+  const [details, setDetails] = useState<PatientDTO | null>(null);
   const [editing, setEditing] = useState<PatientDTO | null>(null);
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<PatientDTO | null>(null);
@@ -111,9 +137,28 @@ function PatientsPage() {
       } as const;
       toast.success(labels[vars.action]);
       setConfirmDelete(null);
+      setDetails(null);
     },
     onError: (err: Error) => toast.error(err.message),
   });
+
+  const revealMutation = useMutation({
+    mutationFn: (input: { id: string; field: "email" | "phone" }) =>
+      revealPatientContact({ data: input }),
+  });
+
+  const handleCopy = async (
+    p: PatientDTO,
+    field: "email" | "phone",
+    label: string,
+  ) => {
+    try {
+      const { value } = await revealMutation.mutateAsync({ id: p.id, field });
+      await copyAndAutoClear(value, label);
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
+  };
 
   const patients = patientsQuery.data?.patients ?? [];
 
@@ -181,100 +226,95 @@ function PatientsPage() {
           </div>
         ) : (
           <ul className="divide-y divide-border rounded-xl border border-border bg-card">
-            {patients.map((p) => (
-              <li
-                key={p.id}
-                className="flex items-center gap-4 px-5 py-4 transition hover:bg-muted/30"
-              >
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage/20 font-medium text-foreground">
-                  {p.initials}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setEditing(p)}
-                  className="min-w-0 flex-1 text-left"
+            {patients.map((p) => {
+              const hasEmail = p.email != null && p.email.length > 0;
+              const hasPhone = p.phone != null && p.phone.length > 0;
+              return (
+                <li
+                  key={p.id}
+                  className="flex items-center gap-4 px-5 py-4 transition hover:bg-muted/30"
                 >
-                  <p className="truncate font-medium text-foreground">
-                    {p.display_name}
-                  </p>
-                  <p className="truncate text-xs text-muted-foreground">
-                    {p.tags.length > 0 ? p.tags.join(" · ") : "Sem etiquetas"}
-                  </p>
-                </button>
-
-                <TooltipProvider delayDuration={150}>
-                  <div className="flex items-center gap-1">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setEditing(p)}
-                          aria-label="Editar"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Editar</TooltipContent>
-                    </Tooltip>
-
-                    {p.status === "active" ? (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              lifecycleMutation.mutate({ id: p.id, action: "archive" })
-                            }
-                            aria-label="Arquivar"
-                          >
-                            <Archive className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Arquivar</TooltipContent>
-                      </Tooltip>
-                    ) : (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              lifecycleMutation.mutate({
-                                id: p.id,
-                                action: "restore_active",
-                              })
-                            }
-                            aria-label="Reativar"
-                          >
-                            <ArchiveRestore className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>Reativar</TooltipContent>
-                      </Tooltip>
-                    )}
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => setConfirmDelete(p)}
-                          aria-label="Remover"
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>Remover</TooltipContent>
-                    </Tooltip>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage/20 font-medium text-foreground">
+                    {p.initials}
                   </div>
-                </TooltipProvider>
-              </li>
-            ))}
+                  <button
+                    type="button"
+                    onClick={() => setDetails(p)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <p className="truncate font-medium text-foreground">
+                      {p.display_name}
+                    </p>
+                    <p className="truncate text-xs text-muted-foreground">
+                      {p.tags.length > 0 ? p.tags.join(" · ") : "Sem etiquetas"}
+                    </p>
+                  </button>
+
+                  <TooltipProvider delayDuration={150}>
+                    <div className="flex items-center gap-1">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={!hasEmail || revealMutation.isPending}
+                              onClick={() => handleCopy(p, "email", "Email")}
+                              aria-label="Copiar email"
+                            >
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {hasEmail ? "Copiar email" : "Sem email cadastrado"}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              disabled={!hasPhone || revealMutation.isPending}
+                              onClick={() => handleCopy(p, "phone", "Telefone")}
+                              aria-label="Copiar telefone"
+                            >
+                              <Phone className="h-4 w-4" />
+                            </Button>
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {hasPhone ? "Copiar telefone" : "Sem telefone cadastrado"}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
+                  </TooltipProvider>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>
+
+      <PatientDetailsDialog
+        patient={details}
+        onOpenChange={(o) => !o && setDetails(null)}
+        onCopy={handleCopy}
+        copying={revealMutation.isPending}
+        onEdit={(p) => {
+          setDetails(null);
+          setEditing(p);
+        }}
+        onArchive={(p) =>
+          lifecycleMutation.mutate({
+            id: p.id,
+            action: p.status === "active" ? "archive" : "restore_active",
+          })
+        }
+        onAskDelete={(p) => setConfirmDelete(p)}
+      />
 
       <PatientDialog
         open={creating}
@@ -296,40 +336,249 @@ function PatientsPage() {
         }}
       />
 
-      <AlertDialog
-        open={confirmDelete !== null}
+      <DeleteConfirmDialog
+        patient={confirmDelete}
         onOpenChange={(o) => !o && setConfirmDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Remover este paciente?</AlertDialogTitle>
-            <AlertDialogDescription>
-              O paciente sai da sua lista. O registro fica preservado pra
-              auditoria, conforme retenção do plano. Você pode reativar mais
-              tarde se foi engano.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (confirmDelete) {
-                  lifecycleMutation.mutate({
-                    id: confirmDelete.id,
-                    action: "soft_delete",
-                  });
-                }
-              }}
-            >
-              Remover
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+        onConfirm={(p) =>
+          lifecycleMutation.mutate({ id: p.id, action: "soft_delete" })
+        }
+        pending={lifecycleMutation.isPending}
+      />
     </div>
   );
 }
 
+// =============================================================================
+// Detalhes do paciente (popup com ações destrutivas)
+// =============================================================================
+interface DetailsProps {
+  patient: PatientDTO | null;
+  onOpenChange: (open: boolean) => void;
+  onCopy: (p: PatientDTO, field: "email" | "phone", label: string) => void;
+  copying: boolean;
+  onEdit: (p: PatientDTO) => void;
+  onArchive: (p: PatientDTO) => void;
+  onAskDelete: (p: PatientDTO) => void;
+}
+
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!domain) return "•••";
+  const head = local.slice(0, 1);
+  return `${head}${"•".repeat(Math.max(local.length - 1, 2))}@${domain}`;
+}
+
+function maskPhone(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  if (digits.length < 4) return "•••";
+  return `••• ••• ${digits.slice(-4)}`;
+}
+
+function PatientDetailsDialog({
+  patient,
+  onOpenChange,
+  onCopy,
+  copying,
+  onEdit,
+  onArchive,
+  onAskDelete,
+}: DetailsProps) {
+  if (!patient) {
+    return (
+      <Dialog open={false} onOpenChange={onOpenChange}>
+        <DialogContent />
+      </Dialog>
+    );
+  }
+  const p = patient;
+  const hasEmail = p.email != null && p.email.length > 0;
+  const hasPhone = p.phone != null && p.phone.length > 0;
+
+  return (
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="font-display text-2xl">
+            {p.display_name}
+          </DialogTitle>
+          <DialogDescription>
+            {p.tags.length > 0 ? p.tags.join(" · ") : "Sem etiquetas"} ·{" "}
+            {p.status === "active" ? "Ativo" : "Arquivado"}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {p.full_name && (
+            <div className="rounded-md border border-border bg-muted/20 p-3">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                Nome completo (cifrado)
+              </p>
+              <p className="mt-1 text-sm text-foreground">{p.full_name}</p>
+            </div>
+          )}
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-md border border-border bg-muted/20 p-3">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                Email
+              </p>
+              <p className="mt-1 truncate text-sm text-foreground">
+                {hasEmail ? maskEmail(p.email!) : "—"}
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 w-full"
+                disabled={!hasEmail || copying}
+                onClick={() => onCopy(p, "email", "Email")}
+              >
+                <Mail className="mr-2 h-3.5 w-3.5" /> Copiar
+              </Button>
+            </div>
+            <div className="rounded-md border border-border bg-muted/20 p-3">
+              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                Telefone
+              </p>
+              <p className="mt-1 truncate text-sm text-foreground">
+                {hasPhone ? maskPhone(p.phone!) : "—"}
+              </p>
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-2 w-full"
+                disabled={!hasPhone || copying}
+                onClick={() => onCopy(p, "phone", "Telefone")}
+              >
+                <Phone className="mr-2 h-3.5 w-3.5" /> Copiar
+              </Button>
+            </div>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            🔒 Email e telefone ficam cifrados (AES-256) no banco. Cada cópia é
+            registrada em auditoria. A área de transferência se limpa em 30s.
+          </p>
+        </div>
+
+        <DialogFooter className="mt-2 flex-col gap-2 sm:flex-row sm:justify-between">
+          <Button variant="outline" onClick={() => onEdit(p)}>
+            <Pencil className="mr-2 h-4 w-4" /> Editar
+          </Button>
+          <div className="flex gap-2">
+            <Button variant="ghost" onClick={() => onArchive(p)}>
+              {p.status === "active" ? (
+                <>
+                  <Archive className="mr-2 h-4 w-4" /> Arquivar
+                </>
+              ) : (
+                <>
+                  <ArchiveRestore className="mr-2 h-4 w-4" /> Reativar
+                </>
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-destructive hover:text-destructive"
+              onClick={() => onAskDelete(p)}
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Excluir
+            </Button>
+          </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// =============================================================================
+// Confirmação de exclusão (digite EXCLUIR {apelido})
+// =============================================================================
+interface DeleteConfirmProps {
+  patient: PatientDTO | null;
+  onOpenChange: (open: boolean) => void;
+  onConfirm: (p: PatientDTO) => void;
+  pending: boolean;
+}
+
+function DeleteConfirmDialog({
+  patient,
+  onOpenChange,
+  onConfirm,
+  pending,
+}: DeleteConfirmProps) {
+  const [typed, setTyped] = useState("");
+  useEffect(() => {
+    if (!patient) setTyped("");
+  }, [patient]);
+
+  if (!patient) {
+    return (
+      <AlertDialog open={false} onOpenChange={onOpenChange}>
+        <AlertDialogContent />
+      </AlertDialog>
+    );
+  }
+
+  const expected = `EXCLUIR ${patient.display_name}`;
+  const matches = typed.trim() === expected;
+
+  return (
+    <AlertDialog open onOpenChange={onOpenChange}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir este paciente?</AlertDialogTitle>
+          <AlertDialogDescription asChild>
+            <div className="space-y-2 text-sm text-muted-foreground">
+              <p>
+                O paciente sai da sua lista imediatamente. O registro continua
+                preservado no banco (cifrado) pra auditoria, conforme a retenção
+                exigida pela HIPAA — não conseguimos recuperar pela interface
+                depois de excluir.
+              </p>
+              <p>
+                Pra confirmar, digite{" "}
+                <code className="rounded bg-muted px-1 py-0.5 font-mono text-foreground">
+                  {expected}
+                </code>{" "}
+                abaixo.
+              </p>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <Input
+          autoFocus
+          value={typed}
+          onChange={(e) => setTyped(e.target.value)}
+          placeholder={expected}
+          autoComplete="off"
+          aria-label="Confirmação de exclusão"
+        />
+
+        <AlertDialogFooter>
+          <Button
+            variant="ghost"
+            onClick={() => onOpenChange(false)}
+            disabled={pending}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="destructive"
+            disabled={!matches || pending}
+            onClick={() => onConfirm(patient)}
+          >
+            {pending ? "Excluindo…" : "Excluir paciente"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+// =============================================================================
+// Diálogo de criação / edição
+// =============================================================================
 interface PatientDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
