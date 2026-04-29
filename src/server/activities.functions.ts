@@ -223,3 +223,22 @@ export const listPatientActivities = createServerFn({ method: "GET" })
 
     return { activities: rows ?? [] };
   });
+
+// --- listAvailableActivities ----------------------------------------------
+
+export const listAvailableActivities = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+    const { data, error } = await supabase
+      .from("activity_catalog")
+      .select("id, slug, title, archetype, short_description, category")
+      .eq("status", "published")
+      .order("title", { ascending: true });
+
+    if (error) {
+      console.error("[listAvailableActivities] failed", { code: error.code });
+      throw new Error("Não foi possível carregar o catálogo.");
+    }
+    return { activities: data ?? [] };
+  });

@@ -14,15 +14,25 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { encryptPHIServer } from "@/lib/crypto/encryption.server";
 import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
+import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
 import {
   getPatientActivityByTokenHash,
   getActivityFromCatalog,
 } from "./activities.server";
+
+function getClientIp(): string {
+  try {
+    return getRequestIP({ xForwardedFor: true }) ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 
 const NEUTRAL_ERROR =
   "Este link não está disponível. Peça um novo link ao seu terapeuta.";
@@ -49,6 +59,11 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ResolveSchema.parse(input))
   .handler(async ({ data }) => {
     const tokenHash = await hashMagicLinkToken(data.token);
+    await checkPublicLinkRateLimit({
+      ip: getClientIp(),
+      tokenHash,
+      bucket: "resolve",
+    });
     const pa = await getPatientActivityByTokenHash(tokenHash);
 
     if (!pa) {
@@ -121,6 +136,11 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => SubmitSchema.parse(input))
   .handler(async ({ data }) => {
     const tokenHash = await hashMagicLinkToken(data.token);
+    await checkPublicLinkRateLimit({
+      ip: getClientIp(),
+      tokenHash,
+      bucket: "submit",
+    });
     const pa = await getPatientActivityByTokenHash(tokenHash);
 
     // Mesma porta neutra do resolve.
@@ -164,19 +184,24 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     const encrypted = await encryptPHIServer(JSON.stringify(data.responses));
 
     // 3. Cria activity_responses
+    const submittedVia: "in_session" | "shared_link" =
+      pa.delivery_mode === "in_session" ? "in_session" : "shared_link";
+
+    const responseInsert = {
+      patient_activity_id: pa.id,
+      workspace_id: pa.workspace_id,
+      patient_id: pa.patient_id,
+      activity_id: pa.activity_id,
+      raw_responses_encrypted: encrypted,
+      score: result.score,
+      severity: result.severity,
+      scoring_metadata: result.metadata as never,
+      submitted_via: submittedVia,
+    };
+
     const { data: response, error: respErr } = await supabaseAdmin
       .from("activity_responses")
-      .insert({
-        patient_activity_id: pa.id,
-        workspace_id: pa.workspace_id,
-        patient_id: pa.patient_id,
-        activity_id: pa.activity_id,
-        raw_responses_encrypted: encrypted,
-        score: result.score,
-        severity: result.severity,
-        scoring_metadata: result.metadata,
-        submitted_via: pa.delivery_mode === "in_session" ? "in_session" : "shared_link",
-      })
+      .insert(responseInsert)
       .select("id, score, severity, submitted_at")
       .single();
 
@@ -205,6 +230,21 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
         code: updErr.code,
       });
       throw new PublicLinkError();
+    }
+
+    // 5. Purga draft (se existir) — regra "EXPIRA O ACESSO → NÃO EXPIRA O DADO".
+    //    Resposta final ficou em activity_responses (permanente).
+    //    Draft era pré-resposta e não tem mais função.
+    const { error: draftErr } = await supabaseAdmin
+      .from("activity_drafts")
+      .delete()
+      .eq("patient_activity_id", pa.id);
+
+    if (draftErr) {
+      // Não falha o submit por causa disso — só registra. Próxima purge job pega.
+      console.warn("[submitActivityResponse] draft purge failed", {
+        code: draftErr.code,
+      });
     }
 
     // Resposta neutra pro paciente (sem score técnico — quem interpreta é o terapeuta)

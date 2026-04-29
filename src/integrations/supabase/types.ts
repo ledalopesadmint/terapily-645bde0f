@@ -62,6 +62,42 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_drafts: {
+        Row: {
+          completion_percent: number
+          created_at: string
+          draft_encrypted: string
+          expires_at: string
+          id: string
+          patient_activity_id: string
+          patient_id: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          completion_percent?: number
+          created_at?: string
+          draft_encrypted: string
+          expires_at: string
+          id?: string
+          patient_activity_id: string
+          patient_id: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          completion_percent?: number
+          created_at?: string
+          draft_encrypted?: string
+          expires_at?: string
+          id?: string
+          patient_activity_id?: string
+          patient_id?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       activity_responses: {
         Row: {
           activity_id: string
