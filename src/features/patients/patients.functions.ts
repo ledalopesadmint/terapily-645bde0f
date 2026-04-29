@@ -67,8 +67,6 @@ type PatientRow = {
   full_name_encrypted: string | null;
   email_encrypted: string | null;
   phone_encrypted: string | null;
-  date_of_birth_encrypted: string | null;
-  intake_notes_encrypted: string | null;
 };
 
 async function safeDecrypt(value: string | null): Promise<string | null> {
@@ -83,14 +81,11 @@ async function safeDecrypt(value: string | null): Promise<string | null> {
 }
 
 async function rowToDTO(row: PatientRow): Promise<PatientDTO> {
-  const [full_name, email, phone, date_of_birth, intake_notes] =
-    await Promise.all([
-      safeDecrypt(row.full_name_encrypted),
-      safeDecrypt(row.email_encrypted),
-      safeDecrypt(row.phone_encrypted),
-      safeDecrypt(row.date_of_birth_encrypted),
-      safeDecrypt(row.intake_notes_encrypted),
-    ]);
+  const [full_name, email, phone] = await Promise.all([
+    safeDecrypt(row.full_name_encrypted),
+    safeDecrypt(row.email_encrypted),
+    safeDecrypt(row.phone_encrypted),
+  ]);
 
   return {
     id: row.id,
@@ -106,8 +101,6 @@ async function rowToDTO(row: PatientRow): Promise<PatientDTO> {
     full_name,
     email,
     phone,
-    date_of_birth,
-    intake_notes,
   };
 }
 
@@ -117,13 +110,11 @@ async function encryptOrNull(v: string | null | undefined) {
 }
 
 async function encryptPatientPayload(data: PatientCreate | PatientUpdate) {
-  const [full_name_encrypted, email_encrypted, phone_encrypted, date_of_birth_encrypted, intake_notes_encrypted] =
+  const [full_name_encrypted, email_encrypted, phone_encrypted] =
     await Promise.all([
       encryptOrNull(data.full_name ?? null),
       encryptOrNull(data.email ?? null),
       encryptOrNull(data.phone ?? null),
-      encryptOrNull(data.date_of_birth ?? null),
-      encryptOrNull(data.intake_notes ?? null),
     ]);
 
   return {
@@ -133,8 +124,6 @@ async function encryptPatientPayload(data: PatientCreate | PatientUpdate) {
     full_name_encrypted,
     email_encrypted,
     phone_encrypted,
-    date_of_birth_encrypted,
-    intake_notes_encrypted,
   };
 }
 
