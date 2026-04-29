@@ -20,7 +20,7 @@ import { getCurrentSubscription } from "@/features/billing/billing.functions";
 
 interface NavItem {
   label: string;
-  to: "/dashboard" | "/welcome" | "/library" | "/admin";
+  to: "/dashboard" | "/welcome" | "/library" | "/admin" | "/patients";
   icon: typeof LayoutDashboard;
   badge?: string;
   adminOnly?: boolean;
@@ -38,12 +38,12 @@ interface ComingSoonItem {
 
 const liveItems: NavItem[] = [
   { label: "Painel", to: "/dashboard", icon: LayoutDashboard },
+  { label: "Pacientes", to: "/patients", icon: Users },
   { label: "Acervo", to: "/library", icon: GamepadIcon, badge: "Visualização" },
   { label: "Admin", to: "/admin", icon: ShieldCheck, adminOnly: true },
 ];
 
 const upcomingItems: ComingSoonItem[] = [
-  { label: "Pacientes", icon: Users, comingSoonWeek: "S2" },
   { label: "Ajustes", icon: Settings, comingSoonWeek: "S1" },
 ];
 
