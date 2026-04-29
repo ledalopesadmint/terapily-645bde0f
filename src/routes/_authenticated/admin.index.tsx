@@ -18,7 +18,7 @@
 
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Sparkles, FileText, Archive, ShieldCheck } from "lucide-react";
+import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
@@ -26,6 +26,7 @@ import {
   getAdminCatalog,
   type AdminCatalogPayload,
 } from "@/server/admin.functions";
+import { syncStripeCatalog } from "@/features/billing/admin.functions";
 import { ARCHETYPE_LIST } from "@/features/library/archetypes";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
