@@ -357,9 +357,14 @@ function PatientsPage() {
         open={creating}
         onOpenChange={(o) => !o && setCreating(false)}
         patient={null}
+        onLimitReached={() => {
+          setCreating(false);
+          setLimitModalOpen(true);
+        }}
         onSaved={() => {
           setCreating(false);
           queryClient.invalidateQueries({ queryKey: ["patients"] });
+          queryClient.invalidateQueries({ queryKey: ["patients", "usage"] });
         }}
       />
 
@@ -381,6 +386,16 @@ function PatientsPage() {
         }
         pending={lifecycleMutation.isPending}
       />
+
+      {usage && usage.max != null ? (
+        <PatientLimitModal
+          open={limitModalOpen}
+          onOpenChange={setLimitModalOpen}
+          tier={usage.tier}
+          max={usage.max}
+          ownerEmail={auth.user?.email ?? null}
+        />
+      ) : null}
     </div>
   );
 }
