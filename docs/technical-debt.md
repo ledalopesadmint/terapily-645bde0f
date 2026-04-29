@@ -94,3 +94,27 @@ Quando o pacote `@lovable.dev/cloud-auth-js` publicar uma versão em que o tipo 
 - Aviso destacado no topo do `README.md` para o owner adicionar `.env` no `.gitignore` logo após o primeiro push para o GitHub.
 
 **Condição de remoção.** Quando a plataforma Lovable permitir editar o `.gitignore`, ou quando o template padrão passar a incluir `.env` por padrão. Após o owner aplicar o patch sugerido no README diretamente no repo GitHub, este item pode ser fechado.
+
+
+---
+
+## 6. Decisão de produto: o que fazer quando o terapeuta atinge o limite de pacientes
+
+**Origem.** Em S2 implementamos o gating duro em `createPatient`: ao tentar criar o 21º paciente no Basic (ou 51º no Practice), o servidor lança erro com mensagem traduzida ("Você atingiu o limite de X pacientes ativos do seu plano. Arquive um ou faça upgrade."). Funciona, é seguro, mas **a experiência do terapeuta nesse momento ainda não foi desenhada como produto**.
+
+**Impacto.** Hoje o terapeuta vê uma mensagem de erro genérica de form. Sem caminho claro de saída → fricção alta, risco de churn ou de pedido de suporte manual. Com Practice (50) sendo o teto do MVP, qualquer terapeuta com prática consolidada bate o limite rápido — e ainda não temos plano Clinic pra oferecer upgrade.
+
+**Decisões pendentes (discutir junto, depois do smoke test do Stripe).**
+1. **Bloqueio puro com mensagem rica.** Modal explicando o limite, oferecendo arquivar pacientes inativos, e CTA "Falar com a Leda" (já que Clinic ainda não existe). Mais simples, mais honesto. Risco: parece fim de linha.
+2. **Cota por paciente extra.** Oferecer slots adicionais a $X cada um, cobrados via Stripe (metered billing ou add-on). Mais flexível, mas exige: novo price no Stripe, lógica de billing por unidade, decisão de preço justo, e abre porta pra "por que não tem Clinic ainda?".
+3. **Upgrade automático pra Clinic provisório.** Não viável agora — Clinic não existe como produto. Vira S+ depois do MVP.
+4. **Híbrido.** Bloqueia, mas oferece "1 paciente extra grátis" emergencial enquanto a Leda valida caso a caso. Solução temporária pra não perder terapeuta no momento crítico.
+
+**Mitigação atual.** Mensagem de erro funcional + sugestão de arquivar. Suficiente pra MVP fechar S2, **insuficiente como experiência final**.
+
+**Condição de remoção.** Decidir o caminho (1, 2, 3 ou 4) com a Leda **depois de confirmar smoke test do Stripe**. Implementar como parte da S3 (junto com activity catalog) ou S6 (junto com polish de landing/QA), dependendo da escolha:
+- Caminho 1 → S3 (1 dia de UI).
+- Caminho 2 → S5 (precisa de billing maturo + decisão de pricing).
+- Caminho 4 → S3 (UI + flag no workspace).
+
+**Não esquecer:** revisitar este item assim que o smoke test do Stripe estiver verde.
