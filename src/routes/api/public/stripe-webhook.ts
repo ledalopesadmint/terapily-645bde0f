@@ -8,7 +8,9 @@
  * Eventos tratados:
  *   - checkout.session.completed
  *   - customer.subscription.created / updated / deleted
+ *   - customer.subscription.trial_will_end (audit-only, prepara aviso futuro)
  *   - invoice.payment_succeeded / payment_failed
+ *   - charge.dispute.created (audit-only, prepara painel admin)
  */
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
@@ -87,6 +89,34 @@ async function workspaceFromSubscription(
   return null;
 }
 
+/**
+ * Resolve workspace_id a partir de um Stripe.Dispute.
+ * Tenta: charge.payment_intent.invoice.customer → charge.invoice.customer → charge.customer.
+ * Retorna null se não conseguir resolver (caller decide retry).
+ */
+async function workspaceFromDispute(
+  dispute: Stripe.Dispute,
+): Promise<string | null> {
+  try {
+    const chargeId =
+      typeof dispute.charge === "string" ? dispute.charge : dispute.charge?.id;
+    if (!chargeId) return null;
+
+    const charge = await stripe().charges.retrieve(chargeId);
+    const customerId =
+      typeof charge.customer === "string"
+        ? charge.customer
+        : charge.customer?.id ?? null;
+    if (customerId) {
+      const ws = await workspaceFromCustomer(customerId);
+      if (ws) return ws;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 async function tierFromPriceId(priceId: string | null | undefined) {
   if (!priceId) return null;
   const { data } = await supabaseAdmin
@@ -157,6 +187,9 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
         }
 
         let workspaceId: string | null = null;
+        let extraAudit:
+          | { action: string; metadata: Record<string, unknown> }
+          | null = null;
 
         // Eventos críticos que MUITO precisam de workspace_id resolvido.
         // Se não resolver, devolvemos 500 SEM marcar como processado pra
@@ -205,6 +238,57 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
               }
               break;
             }
+            case "customer.subscription.trial_will_end": {
+              const sub = event.data.object as Stripe.Subscription;
+              workspaceId = await workspaceFromSubscription(sub);
+              // Audit-only. Não altera status. Aviso ao usuário virá em outra iteração.
+              extraAudit = {
+                action: "billing.trial_will_end",
+                metadata: {
+                  stripe_subscription_id: sub.id,
+                  trial_end: sub.trial_end ?? null,
+                },
+              };
+              break;
+            }
+            case "charge.dispute.created": {
+              const dispute = event.data.object as Stripe.Dispute;
+              workspaceId = await workspaceFromDispute(dispute);
+              if (!workspaceId) {
+                // Não conseguimos atribuir a um workspace. Devolve 500 SEM
+                // marcar como processado pra Stripe reentregar — não perdemos
+                // o sinal de chargeback.
+                console.error(
+                  JSON.stringify({
+                    level: "error",
+                    op: "stripe_webhook.dispute_unresolved",
+                    code: "workspace_unresolved",
+                    msg: "dispute without workspace_id, requesting retry",
+                    event_id: event.id,
+                  }),
+                );
+                return new Response(
+                  "workspace_id unresolved for dispute, retry later",
+                  { status: 500 },
+                );
+              }
+              const chargeId =
+                typeof dispute.charge === "string"
+                  ? dispute.charge
+                  : dispute.charge?.id ?? null;
+              extraAudit = {
+                action: "billing.dispute_created",
+                metadata: {
+                  stripe_dispute_id: dispute.id,
+                  stripe_charge_id: chargeId,
+                  amount: dispute.amount,
+                  currency: dispute.currency,
+                  reason: dispute.reason,
+                  status: dispute.status,
+                },
+              };
+              break;
+            }
             default:
               // Outros eventos: só marcamos como processados.
               break;
@@ -227,10 +311,10 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
           await recordAudit({
             actorId: null,
             workspaceId,
-            action: `billing.webhook.${event.type}`,
+            action: extraAudit?.action ?? `billing.webhook.${event.type}`,
             resourceType: "stripe_event",
             resourceId: event.id,
-            metadata: { type: event.type },
+            metadata: extraAudit?.metadata ?? { type: event.type },
           });
 
           return new Response("ok", { status: 200 });
