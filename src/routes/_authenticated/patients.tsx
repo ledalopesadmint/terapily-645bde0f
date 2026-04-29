@@ -234,21 +234,23 @@ function PatientsPage() {
                   key={p.id}
                   className="flex items-center gap-4 px-5 py-4 transition hover:bg-muted/30"
                 >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage/20 font-medium text-foreground">
-                    {p.initials}
-                  </div>
                   <button
                     type="button"
                     onClick={() => setDetails(p)}
-                    className="group min-w-0 flex-1 cursor-pointer text-left"
+                    className="group flex min-w-0 flex-1 cursor-pointer items-center gap-4 text-left"
                     aria-label={`Abrir detalhes de ${p.display_name}`}
                   >
-                    <p className="truncate font-medium text-foreground transition-colors group-hover:text-sage">
-                      <span className="story-link">{p.display_name}</span>
-                    </p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {p.tags.length > 0 ? p.tags.join(" · ") : "Sem etiquetas"}
-                    </p>
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sage/20 font-medium text-foreground transition-all group-hover:scale-105 group-hover:bg-sage/30 group-hover:text-sage">
+                      {p.initials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-foreground transition-colors group-hover:text-sage">
+                        <span className="story-link">{p.display_name}</span>
+                      </p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {p.tags.length > 0 ? p.tags.join(" · ") : "Sem etiquetas"}
+                      </p>
+                    </div>
                   </button>
 
                   <TooltipProvider delayDuration={150}>
