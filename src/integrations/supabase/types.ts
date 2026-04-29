@@ -109,6 +109,39 @@ export type Database = {
           },
         ]
       }
+      clinic_waitlist: {
+        Row: {
+          created_at: string
+          created_by: string
+          email: string
+          id: string
+          notes: string | null
+          notified_at: string | null
+          projected_patient_count: number | null
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          email: string
+          id?: string
+          notes?: string | null
+          notified_at?: string | null
+          projected_patient_count?: number | null
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          email?: string
+          id?: string
+          notes?: string | null
+          notified_at?: string | null
+          projected_patient_count?: number | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string
@@ -160,6 +193,7 @@ export type Database = {
           id: string
           initials: string
           phone_encrypted: string | null
+          purged_at: string | null
           status: Database["public"]["Enums"]["patient_status"]
           tags: string[]
           updated_at: string
@@ -177,6 +211,7 @@ export type Database = {
           id?: string
           initials: string
           phone_encrypted?: string | null
+          purged_at?: string | null
           status?: Database["public"]["Enums"]["patient_status"]
           tags?: string[]
           updated_at?: string
@@ -194,6 +229,7 @@ export type Database = {
           id?: string
           initials?: string
           phone_encrypted?: string | null
+          purged_at?: string | null
           status?: Database["public"]["Enums"]["patient_status"]
           tags?: string[]
           updated_at?: string
@@ -568,6 +604,33 @@ export type Database = {
       is_workspace_member: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
+      }
+      restore_patient: {
+        Args: { _patient_id: string }
+        Returns: {
+          archived_at: string | null
+          assigned_therapist_id: string
+          created_at: string
+          created_by: string
+          deleted_at: string | null
+          display_name: string
+          email_encrypted: string | null
+          full_name_encrypted: string | null
+          id: string
+          initials: string
+          phone_encrypted: string | null
+          purged_at: string | null
+          status: Database["public"]["Enums"]["patient_status"]
+          tags: string[]
+          updated_at: string
+          workspace_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "patients"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       workspace_active_patient_count: {
         Args: { _workspace_id: string }
