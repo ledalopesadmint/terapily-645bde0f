@@ -479,19 +479,52 @@ export const getPatientUsage = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    if (!membership) return { used: 0, max: null, tier: "trial" as string };
+    if (membership == null) {
+      return {
+        used: 0,
+        active: 0,
+        archived: 0,
+        deleted: 0,
+        max: null,
+        tier: "trial" as string,
+      };
+    }
 
-    const [plan, { count }] = await Promise.all([
+    // Breakdown completo: ativos + arquivados ocupam vaga; excluídos não
+    // (somem em 30d via purge_expired_patients). Assim a UI pode mostrar
+    // "X ativos + Y arquivados = Z/max" e explicar por que o limite bateu
+    // mesmo com vagas "aparentemente" livres.
+    const [plan, activeRes, archivedRes, deletedRes] = await Promise.all([
       getWorkspacePlan(supabase, membership.workspace_id),
       supabase
         .from("patients")
         .select("id", { count: "exact", head: true })
         .eq("workspace_id", membership.workspace_id)
-        .is("deleted_at", null),
+        .is("deleted_at", null)
+        .eq("status", "active"),
+      supabase
+        .from("patients")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", membership.workspace_id)
+        .is("deleted_at", null)
+        .eq("status", "archived"),
+      supabase
+        .from("patients")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", membership.workspace_id)
+        .not("deleted_at", "is", null)
+        .is("purged_at", null),
     ]);
 
+    const active = activeRes.count ?? 0;
+    const archived = archivedRes.count ?? 0;
+    const deleted = deletedRes.count ?? 0;
+
     return {
-      used: count ?? 0,
+      used: active + archived,
+      active,
+      archived,
+      deleted,
       max: plan.max_patients,
       tier: plan.tier as string,
     };
