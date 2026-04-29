@@ -1,9 +1,11 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { LayoutDashboard, Users, GamepadIcon, Settings, LogOut, ShieldCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { SidebarLogo } from "@/components/brand/SidebarLogo";
 import { cn } from "@/lib/utils";
 import { TRIAL_DURATION_DAYS } from "@/lib/constants";
+import { getCurrentSubscription } from "@/features/billing/billing.functions";
 
 /**
  * AppShell — shell autenticado do Terapily.
