@@ -1,0 +1,209 @@
+# S3 — Definition of Done
+
+**Status:** Aprovado pela Leda. Implementação em curso.
+
+S3 só pode ser marcada como concluída quando TODOS os itens abaixo estiverem ✅. Nenhum item é "nice to have" — todos são bloqueantes.
+
+Espelha `mem://features/s3-definition-of-done`.
+
+---
+
+## 1. Schema do banco (migrations aplicadas)
+
+- [x] Tabela `patient_activities` criada com colunas: `id`, `workspace_id`, `patient_id`, `activity_id`, `assigned_by`, `delivery_mode` enum, `token_hash` (UNIQUE), `token_expires_at`, `token_first_opened_at`, `token_open_count`, `used_at` (single-use após submit), `applied_at`, `response_id`, `status` enum, `created_at`, `updated_at`
+- [x] Tabela `activity_responses` criada com: `id`, `patient_activity_id`, `workspace_id`, `patient_id`, `activity_id`, `raw_responses_encrypted`, `score`, `severity`, `scoring_metadata`, `submitted_via` enum, `submitted_at`
+- [x] Tabela `activity_drafts` criada (ver `docs/autosave-security.md`)
+- [x] Enum `delivery_mode`: `in_session`, `shared_link`, `both`
+- [x] Enum `submitted_via`: `in_session`, `shared_link`
+- [x] Index único em `patient_activities.token_hash`
+- [x] `patients` table NÃO foi alterada (zero refator confirmado)
+
+---
+
+## 2. RLS (Row Level Security)
+
+- [x] `patient_activities` tem RLS ativo
+- [x] SELECT permitido só pra `is_workspace_member` E (`assigned_by = auth.uid()` OU owner)
+- [x] INSERT permitido só pra terapeuta atribuído ou owner
+- [x] DELETE bloqueado (sempre soft via `status = 'revoked'`)
+- [x] `activity_responses` tem RLS ativo, mesmo padrão de leitura
+- [x] INSERT em `activity_responses` REVOKED do client — só via server function com service_role + validação de hash do token
+- [x] `activity_drafts`: leitura debug pra owner/assigned therapist; INSERT/UPDATE/DELETE REVOKED do client
+
+---
+
+## 3. Server functions (createServerFn)
+
+- [x] `assignActivity({ patient_id, activity_id, delivery_mode, expires_in_hours })` — cria assignment, gera token cru (retorna 1x), salva só hash, audit
+- [x] `listPatientActivities(patient_id)` — timeline join com responses + catalog, ordenada DESC
+- [x] `revokeActivity(patient_activity_id)` — soft revoke (status + zera token_hash), audit
+- [x] `resolvePublicToken(token)` — público; valida hash + expiração + status, marca first_opened_at + bump open_count, retorna activity sem PHI
+- [x] `submitActivityResponse(token, responses)` — cifra resposta, calcula score, grava response, marca used_at + status completed + zera token_hash, **purga draft**, audit
+- [x] `saveActivityDraft / getActivityDraft / discardActivityDraft` — público, com rate limit por IP+token
+- [ ] `generateComplianceReport(patient_id, period)` — PDF agregando atividades submetidas
+
+---
+
+## 4. Auto-scoring engine
+
+- [x] Engine implementada com archetype `quiz_scale` (PHQ-9, GAD-7)
+- [ ] PCL-5: cluster scores + total
+- [ ] Demais escalas conforme `mem://features/clinical-scales-catalog`
+- [x] Score salvo em `score` + `severity` na resposta
+- [ ] Testes unitários pra cada calculadora (input → output esperado)
+
+---
+
+## 5. UI — `/patients/:id` com tabs
+
+- [ ] Rota com tabs: **Visão geral** | **Atividades** | **Audit** (owner only)
+- [ ] Tab Atividades: timeline DESC com cards por status
+- [ ] Botão "Enviar atividade" no topo da aba
+- [ ] Modal de envio: seleção de atividade + delivery_mode + expiração
+- [ ] Após criar: link único mostrado 1x com botão "Copiar"
+- [ ] Card de atividade respondida: score + banda + data + botão "Ver respostas" (decifra on-demand)
+- [ ] Empty state da aba Atividades
+
+---
+
+## 6. Rota pública `/p/$token` (paciente preenche)
+
+- [x] Rota pública (sem auth, sem layout autenticado)
+- [x] Resolve token → busca por `sha256(token) = token_hash`
+- [x] Validações em ordem: token existe? não-expirado? não-revogado? não-submetido?
+- [x] Falhas → mesma mensagem neutra
+- [x] Marca `token_first_opened_at` na primeira abertura válida
+- [x] Renderiza atividade SEM PHI do paciente
+- [x] Submit: cifra responses + calcula score + marca `used_at` + audit + apaga draft
+- [x] Tela final: "Recebido. Obrigado por completar."
+- [x] Sem PostHog nessa rota
+- [x] Rate limit: 10 req/min por IP, 5 req/min por token
+- [x] Autosave silencioso com debounce 2s
+- [x] Modal "Continuar / Recomeçar" ao reabrir
+- [x] Banner "Você pode começar agora e terminar depois"
+
+---
+
+## 7. Email transacional (Resend)
+
+- [ ] Subject fixo: "Sua terapeuta enviou uma atividade" (sem PHI)
+- [ ] From: `noreply@terapily.com`
+- [ ] Body neutro com botão "Abrir atividade"
+- [ ] Link: `https://app.terapily.com/p/{token}`
+- [ ] **BLOQUEIO**: envio só ativa se `RESEND_BAA_SIGNED=true`. Sem BAA → loga `activity.email_skipped_no_baa` e retorna link pro terapeuta copiar
+- [ ] Botão "Reenviar email" no card pendente
+
+---
+
+## 8. Compliance Report (PDF)
+
+- [ ] Server function `generateComplianceReport(patient_id, { from, to })` retorna PDF
+- [ ] Cabeçalho: nome do paciente (decifrado server-side) + terapeuta + workspace + período
+- [ ] Lista cronológica DESC com nome da atividade + score + banda + indicador de modo
+- [ ] Apenas Practice gera (gating via `has_feature('compliance_report')`)
+- [ ] Audit log do download (sem PHI)
+- [ ] Wording PROIBIDO: "HIPAA-certified", "court-defensible", "legally binding"
+- [ ] Wording usado: "Audit-ready summary for your records"
+
+---
+
+## 9. Audit logs
+
+Eventos obrigatórios (todos com `metadata` JSONB **sem PHI** — só UUIDs/enums):
+- [x] `activity.assigned`
+- [x] `activity.link_opened`
+- [x] `activity.submitted`
+- [x] `activity.status_changed`
+- [x] `activity.response_recorded`
+- [x] `activity.draft_saved` / `activity.draft_loaded` / `activity.draft_discarded`
+- [ ] `activity.email_sent` / `activity.email_skipped_no_baa`
+- [ ] `compliance_report.generated`
+- [ ] `patient.contact_revealed`
+
+---
+
+## 10. Cenários de segurança (testes manuais obrigatórios)
+
+### 10.1 Token e magic link
+- [ ] Token cru não aparece em log nenhum
+- [ ] Token cru não é retornado em nenhum endpoint depois do INSERT inicial
+- [ ] Banco dump não revela tokens (só hashes)
+- [ ] Token expirado/revogado/usado/inexistente → mesma mensagem neutra
+- [ ] Rate limit em `/p/$token` bloqueia após 10 req/min do mesmo IP
+- [ ] Rate limit em `/p/$token` bloqueia após 5 tentativas/min do mesmo token
+- [ ] Expiração NÃO remove `patient_activities` nem `activity_responses`
+- [ ] Compliance Report gera mesmo com todos tokens expirados
+
+### 10.2 Vínculo paciente
+- [ ] Impossível criar `patient_activities` sem `patient_id`
+- [ ] Impossível criar com `patient_id` de outro workspace (RLS)
+- [ ] Server resolve `patient_id` pelo token, não aceita do client
+- [ ] Resposta sempre aparece no perfil correto (E2E)
+
+### 10.3 PHI e privacidade
+- [ ] URL `/p/$token` não contém PHI
+- [ ] Email subject/body sem PHI
+- [ ] Resposta cifrada AES-256-GCM com `PHI_ENCRYPTION_KEY`
+- [ ] Score numérico não cifrado (indexável)
+- [ ] Audit metadata sem PHI
+- [ ] Logs de erro sem PHI mesmo em stack trace
+- [ ] PostHog não carrega em `/p/$token`
+
+### 10.4 RLS e cross-tenant
+- [ ] Terapeuta A não vê `patient_activities` de workspace B
+- [ ] Terapeuta A não cria atividade pra paciente de workspace B
+- [ ] Owner vê tudo, terapeuta só dos pacientes atribuídos
+
+### 10.5 Compliance Report
+- [ ] Basic não consegue gerar (botão bloqueado + endpoint 403)
+- [ ] Practice consegue
+- [ ] PDF sem wording proibido
+- [ ] Audit log da geração
+
+### 10.6 Paciente nunca cria conta
+- [x] Rota `/p/$token` sem links de signup/login
+- [x] Sem endpoint de signup com email de paciente
+- [x] Magic link não cria sessão Supabase
+
+---
+
+## 11. Performance (sanidade)
+
+- [ ] `listPatientActivities` < 300ms p95 com 100 atividades
+- [ ] `resolvePublicToken` < 200ms p95
+- [ ] `generateComplianceReport` < 5s pra paciente com 50 respostas
+
+---
+
+## 12. Documentação versionada
+
+- [x] `docs/magic-link-rules-locked.md` no repo
+- [x] `docs/s3-definition-of-done.md` no repo
+- [x] `docs/security.md` no repo
+- [x] `docs/autosave-security.md` no repo
+- [ ] Atualizar `mem://features/landing-promises-debt` marcando magic link / scoring / PDF como ✅ ao final de S3
+
+---
+
+## 13. Fora de S3 (escopo travado)
+
+- Lembretes automáticos por SMS/email
+- Recorrência automática
+- Atividade composta
+- Versionamento de atividade
+- Compartilhar entre terapeutas
+- Editar resposta após submit
+- Hash chain dos audit logs (S5/S6)
+- MFA (S5)
+
+Pedido novo durante S3 → "Leda, isso atrasa S3 por X. Mantemos pra Semana Y?"
+
+---
+
+## 14. Critério de "S3 concluída"
+
+1. Todos os checkboxes ✅
+2. Leda fez fluxo end-to-end manualmente: criar paciente → enviar atividade (3 modos) → preencher pelo paciente fictício → ver resultado na aba → gerar PDF
+3. Todos os 6 grupos de cenários (10.1–10.6) testados e documentados
+4. Nenhum log mostra PHI (grep manual em audit_logs + console + sentry)
+5. Memórias e docs atualizados
