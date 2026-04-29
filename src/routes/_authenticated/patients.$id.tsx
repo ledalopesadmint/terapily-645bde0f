@@ -60,7 +60,7 @@ import {
   listPatientActivities,
   revokeActivity,
   listAvailableActivities,
-} from "@/server/activities.functions";
+} from "@/features/activities/activities.functions";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
   head: () => ({
