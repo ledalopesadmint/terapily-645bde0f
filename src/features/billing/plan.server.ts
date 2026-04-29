@@ -16,6 +16,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { logServerError } from "@/lib/logger.server";
 
 export type PlanTier = "trial" | "solo" | "basic" | "practice" | "clinic";
 export type PlanStatus =
@@ -127,7 +128,6 @@ export async function getWorkspacePlan(
   if (error) {
     // Logger seguro: nunca passar o objeto inteiro de erro do Supabase
     // (campos details/hint/query podem vazar workspace_id ou filtros).
-    const { logServerError } = await import("@/lib/logger.server");
     logServerError("getWorkspacePlan", error);
     return { ...DEFAULT_PLAN };
   }
