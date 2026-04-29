@@ -18,12 +18,13 @@
 
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw } from "lucide-react";
+import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import {
   getAdminCatalog,
+  setFeaturedActivity,
   type AdminCatalogPayload,
 } from "@/server/admin.functions";
 import { syncStripeCatalog } from "@/features/billing/admin.functions";
@@ -39,6 +40,7 @@ function AdminHomePage() {
   const [data, setData] = useState<AdminCatalogPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [featuringId, setFeaturingId] = useState<string | null>(null);
 
   // Gate de role no client (defesa em camada — RLS do banco já bloqueia).
   // Usamos useEffect+navigate em vez de beforeLoad porque a sessão Supabase
@@ -48,6 +50,19 @@ function AdminHomePage() {
       void navigate({ to: "/dashboard", replace: true });
     }
   }, [isLoading, hasRole, navigate]);
+
+  const reload = () => {
+    setLoading(true);
+    return getAdminCatalog()
+      .then((res) => {
+        setData(res);
+        setLoadError(null);
+      })
+      .catch((err: Error) => {
+        setLoadError(err.message);
+      })
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     if (!hasRole("admin")) return;
@@ -70,6 +85,30 @@ function AdminHomePage() {
       cancelled = true;
     };
   }, [hasRole]);
+
+  const handleToggleFeatured = async (id: string, currentlyFeatured: boolean) => {
+    setFeaturingId(id);
+    try {
+      // Clicar na atividade já em destaque desliga; clicar em outra troca.
+      const targetId = currentlyFeatured ? null : id;
+      const res = await setFeaturedActivity({ data: { id: targetId } });
+      if (res.id) {
+        toast.success("Destaque atualizado", {
+          description: `${res.title} agora aparece no topo do acervo.`,
+        });
+      } else {
+        toast.success("Destaque removido", {
+          description: "O acervo vai exibir o fallback editorial.",
+        });
+      }
+      await reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao atualizar destaque.");
+    } finally {
+      setFeaturingId(null);
+    }
+  };
+
 
   if (isLoading || !hasRole("admin")) {
     return (
@@ -219,50 +258,81 @@ function AdminHomePage() {
         )}
 
         {data && data.items.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border/50">
-            <table className="w-full text-left">
-              <thead className="bg-muted/40">
-                <tr>
-                  <Th>Slug</Th>
-                  <Th>Título</Th>
-                  <Th>Arquétipo</Th>
-                  <Th>Tema</Th>
-                  <Th>Status</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-border/50 hover:bg-muted/30"
-                  >
-                    <Td>
-                      <code className="font-mono text-xs text-muted-foreground">
-                        {item.slug}
-                      </code>
-                    </Td>
-                    <Td className="font-medium text-foreground">{item.title}</Td>
-                    <Td className="text-muted-foreground">{item.archetype}</Td>
-                    <Td>
-                      <span
-                        data-theme={item.theme.replace("_", "-")}
-                        className="inline-flex items-center gap-1.5 text-xs"
-                      >
-                        <span
-                          aria-hidden
-                          className="h-2.5 w-2.5 rounded-full [background-color:var(--activity-accent)]"
-                        />
-                        {item.theme}
-                      </span>
-                    </Td>
-                    <Td>
-                      <StatusPill status={item.status} />
-                    </Td>
+          <>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Toque na estrela pra trocar a atividade que aparece em destaque no
+              topo do <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.6875rem]">/library</code>.
+              Apenas uma fica ativa por vez.
+            </p>
+            <div className="overflow-hidden rounded-xl border border-border/50">
+              <table className="w-full text-left">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <Th>Destaque</Th>
+                    <Th>Slug</Th>
+                    <Th>Título</Th>
+                    <Th>Arquétipo</Th>
+                    <Th>Tema</Th>
+                    <Th>Status</Th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {data.items.map((item) => {
+                    const busy = featuringId === item.id;
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-t border-border/50 hover:bg-muted/30"
+                        data-featured={item.is_featured ? "true" : undefined}
+                      >
+                        <Td>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFeatured(item.id, item.is_featured)}
+                            disabled={busy}
+                            aria-pressed={item.is_featured}
+                            aria-label={
+                              item.is_featured
+                                ? `Remover ${item.title} do destaque`
+                                : `Definir ${item.title} como destaque`
+                            }
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <Star
+                              className={`h-4 w-4 ${item.is_featured ? "fill-secondary text-secondary" : "text-muted-foreground"}`}
+                              aria-hidden
+                            />
+                          </button>
+                        </Td>
+                        <Td>
+                          <code className="font-mono text-xs text-muted-foreground">
+                            {item.slug}
+                          </code>
+                        </Td>
+                        <Td className="font-medium text-foreground">{item.title}</Td>
+                        <Td className="text-muted-foreground">{item.archetype}</Td>
+                        <Td>
+                          <span
+                            data-theme={item.theme.replace("_", "-")}
+                            className="inline-flex items-center gap-1.5 text-xs"
+                          >
+                            <span
+                              aria-hidden
+                              className="h-2.5 w-2.5 rounded-full [background-color:var(--activity-accent)]"
+                            />
+                            {item.theme}
+                          </span>
+                        </Td>
+                        <Td>
+                          <StatusPill status={item.status} />
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
     </div>

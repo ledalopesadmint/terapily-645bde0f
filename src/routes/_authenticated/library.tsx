@@ -54,7 +54,9 @@ import {
   type Activity,
 } from "@/features/library/catalog";
 import { listAvailableActivities } from "@/features/activities/activities.functions";
+import { getFeaturedActivity } from "@/server/admin.functions";
 import { getPatientNickname } from "@/features/patients/patients.functions";
+import { useAuth } from "@/features/auth/AuthProvider";
 
 const librarySearchSchema = z.object({
   selectFor: z.string().uuid().optional(),
@@ -96,6 +98,7 @@ function LibraryPage() {
 // =============================================================================
 
 function LibraryStandardMode() {
+  const auth = useAuth();
   const handleStart = (activity: Activity, mode: "in_session" | "shared_link") => {
     toast(activity.name, {
       description:
@@ -105,7 +108,43 @@ function LibraryStandardMode() {
     });
   };
 
-  const featured = ACTIVITIES.find((a) => a.code === "PHQ-9") ?? ACTIVITIES[0];
+  // Curadoria semanal: admin define no /admin via toggle "Destaque".
+  // Cai pro PHQ-9 do seed se nada estiver marcado ou se não houver acesso.
+  const fallback = ACTIVITIES.find((a) => a.code === "PHQ-9") ?? ACTIVITIES[0];
+  const featuredQuery = useQuery({
+    queryKey: ["library", "featured", auth.workspace?.id ?? null],
+    queryFn: () =>
+      getFeaturedActivity({
+        data: auth.workspace?.id ? { workspaceId: auth.workspace.id } : {},
+      }),
+    enabled: !auth.isLoading,
+    staleTime: 60_000,
+  });
+
+  // Mapeia row do banco → shape Activity. Reusa illustration/duration do seed
+  // quando o slug bate; senão deriva campos visuais defensivos.
+  const featured: Activity = useMemo(() => {
+    const row = featuredQuery.data;
+    if (!row) return fallback;
+    const seedMatch = ACTIVITIES.find(
+      (a) => a.id === row.slug || a.code.toLowerCase() === row.slug,
+    );
+    const cfg = (row.config ?? {}) as { estimated_minutes?: number; supported_modes?: Activity["supportedModes"] };
+    return {
+      id: row.id,
+      code: (cfg as { code?: string }).code ?? seedMatch?.code ?? row.slug.toUpperCase(),
+      name: row.title,
+      approach: seedMatch?.approach ?? "Atividade",
+      category: seedMatch?.category ?? "anxiety",
+      archetype: row.archetype as Activity["archetype"],
+      theme: (row.theme === "sage_dark" ? "sage-dark" : row.theme) as Activity["theme"],
+      durationMin: cfg.estimated_minutes ?? seedMatch?.durationMin ?? 5,
+      shortDescription: row.short_description,
+      illustration: seedMatch?.illustration ?? "petals",
+      supportedModes: cfg.supported_modes ?? seedMatch?.supportedModes ?? ["in_session"],
+    };
+  }, [featuredQuery.data, fallback]);
+
   const liveCategoryIds = CATEGORIES.map((c) => c.id);
 
   return (
