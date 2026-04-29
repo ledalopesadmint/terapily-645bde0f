@@ -93,7 +93,7 @@ export interface FeaturedActivity {
   theme: string;
   category: string;
   status: string;
-  config: Record<string, unknown>;
+  config: { [x: string]: {} };
 }
 
 /**
