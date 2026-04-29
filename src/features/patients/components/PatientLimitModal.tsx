@@ -67,7 +67,7 @@ export function PatientLimitModal({
           <DialogTitle className="font-display text-2xl">
             {isPractice
               ? `Você atingiu ${max} de ${max} pacientes do Practice.`
-              : `Você atingiu ${max} de ${max} pacientes do Basic.`}
+              : "Você atingiu o limite do plano Basic."}
           </DialogTitle>
           <DialogDescription>
             {isPractice ? (
@@ -78,9 +78,11 @@ export function PatientLimitModal({
               </>
             ) : (
               <>
-                Faça upgrade pro <strong>Practice</strong> (50 pacientes) ou libere
-                uma vaga excluindo um paciente. Pacientes arquivados continuam contando
-                como vaga porque seguimos custodiando os dados deles.
+                Você cadastrou <strong>{max} de {max} pacientes</strong> do Basic.
+                Com o <strong>Practice</strong>, você atende até{" "}
+                <strong>50 pacientes ativos</strong> — mais do dobro da sua capacidade
+                atual. Você também pode liberar uma vaga excluindo um paciente
+                (arquivados continuam contando porque seguimos custodiando os dados).
               </>
             )}
           </DialogDescription>
