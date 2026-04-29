@@ -260,8 +260,13 @@ function BillingSettingsPage() {
         );
       })()}
 
-      {/* Trial ativo — só quando NÃO há assinatura paga */}
-      {!isActive && daysLeft !== null && (
+      {/* Trial expirado — banner persistente, reforço de CTA */}
+      {!isActive && trialStatus === "expired" && (
+        <TrialExpiredBanner variant="full" />
+      )}
+
+      {/* Trial ativo — só quando NÃO há assinatura paga e ainda não expirou */}
+      {!isActive && trialStatus === "active" && daysLeft !== null && (
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
