@@ -427,3 +427,173 @@ export const setPatientLifecycle = createServerFn({ method: "POST" })
       },
     );
   });
+
+// =============================================================================
+// PATIENT COUNT (pra banner 80% e modal de limite)
+// =============================================================================
+export const getPatientUsage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId } = context;
+
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) return { used: 0, max: null, tier: "solo" as string };
+
+    const [{ data: sub }, { count }] = await Promise.all([
+      supabase
+        .from("subscriptions")
+        .select("limits, tier")
+        .eq("workspace_id", membership.workspace_id)
+        .maybeSingle(),
+      supabase
+        .from("patients")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", membership.workspace_id)
+        .is("deleted_at", null),
+    ]);
+
+    const limitsObj = (sub?.limits ?? {}) as Record<string, unknown>;
+    const max =
+      typeof limitsObj.max_patients === "number" ? limitsObj.max_patients : null;
+
+    return {
+      used: count ?? 0,
+      max,
+      tier: (sub?.tier ?? "solo") as string,
+    };
+  });
+
+// =============================================================================
+// LIST DELETED (janela de 30 dias, restauráveis)
+// =============================================================================
+export const listDeletedPatients = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase } = context;
+
+    // RLS já filtra: só excluídos sem purge dentro da janela visíveis ao
+    // owner ou ao therapist assigned (policy "patients: deleted read window").
+    const { data, error } = await supabase
+      .from("patients")
+      .select(
+        "id, workspace_id, assigned_therapist_id, display_name, initials, tags, status, deleted_at, created_at",
+      )
+      .not("deleted_at", "is", null)
+      .is("purged_at", null)
+      .order("deleted_at", { ascending: false })
+      .limit(100);
+
+    if (error) {
+      console.error("listDeletedPatients failed", error);
+      throw new Error("Não foi possível carregar os excluídos.");
+    }
+
+    const now = Date.now();
+    const items = (data ?? []).map((row) => {
+      const deletedAt = new Date(row.deleted_at as string).getTime();
+      const expiresAt = deletedAt + 30 * 24 * 60 * 60 * 1000;
+      const daysLeft = Math.max(0, Math.ceil((expiresAt - now) / (24 * 60 * 60 * 1000)));
+      return {
+        id: row.id,
+        display_name: row.display_name,
+        initials: row.initials,
+        tags: row.tags ?? [],
+        deleted_at: row.deleted_at as string,
+        days_left: daysLeft,
+      };
+    });
+
+    return { items };
+  });
+
+// =============================================================================
+// RESTORE (chama função SECURITY DEFINER do banco)
+// =============================================================================
+export const restorePatient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => z.object({ id: z.string().uuid() }).parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: result, error } = await supabase.rpc("restore_patient", {
+      _patient_id: data.id,
+    });
+
+    if (error) {
+      console.error("restorePatient failed", error);
+      throw new Error(error.message || "Não foi possível restaurar.");
+    }
+
+    await recordAudit({
+      actorId: userId,
+      action: "patient.restored_by_user",
+      resourceType: "patient",
+      resourceId: data.id,
+      metadata: {},
+    });
+
+    return { ok: true, patient: result };
+  });
+
+// =============================================================================
+// CLINIC WAITLIST (Practice cheio → entra na lista de espera)
+// =============================================================================
+const waitlistSchema = z.object({
+  email: z.string().email(),
+  projected_patient_count: z.number().int().min(1).max(10000).optional(),
+  notes: z.string().max(500).optional(),
+});
+
+export const joinClinicWaitlist = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => waitlistSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: membership } = await supabase
+      .from("workspace_members")
+      .select("workspace_id, role")
+      .eq("user_id", userId)
+      .eq("role", "owner")
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!membership) {
+      throw new Error("Apenas o dono do workspace pode entrar na lista.");
+    }
+
+    const { error } = await supabase.from("clinic_waitlist").insert({
+      workspace_id: membership.workspace_id,
+      created_by: userId,
+      email: data.email,
+      projected_patient_count: data.projected_patient_count ?? null,
+      notes: data.notes ?? null,
+    });
+
+    if (error) {
+      // Unique violation = já está na lista — tratamos como sucesso.
+      if (error.code === "23505") {
+        return { ok: true, alreadyOnList: true };
+      }
+      console.error("joinClinicWaitlist failed", error);
+      throw new Error("Não foi possível entrar na lista de espera.");
+    }
+
+    await recordAudit({
+      actorId: userId,
+      workspaceId: membership.workspace_id,
+      action: "clinic_waitlist.joined",
+      resourceType: "clinic_waitlist",
+      metadata: { has_projection: data.projected_patient_count != null },
+    });
+
+    return { ok: true, alreadyOnList: false };
+  });
