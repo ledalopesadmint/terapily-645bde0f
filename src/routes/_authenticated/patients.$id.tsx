@@ -57,12 +57,12 @@ import {
 import { getPatient } from "@/features/patients/patients.functions";
 import {
   assignActivity,
+  getMyWorkspaceRole,
   listPatientActivities,
   listPatientAuditLogs,
   revokeActivity,
   listAvailableActivities,
 } from "@/features/activities/activities.functions";
-import { useAuth } from "@/features/auth/AuthProvider";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
