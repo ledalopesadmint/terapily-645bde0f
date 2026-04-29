@@ -126,9 +126,9 @@ function PatientsPage() {
             Suas pessoas em acompanhamento.
           </h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Use um <strong>apelido curto</strong> (ex: "Ana M.", "Paciente 12")
-            pra identificar visualmente. Nome completo, contato e observações
-            são criptografados antes de gravar.
+            Cadastro mínimo pra identificar e contatar quem você atende. Nome,
+            email e telefone são <strong>criptografados (AES-256)</strong> antes
+            de salvar — nem a equipe Terapily lê. Prontuário continua no seu EHR.
           </p>
         </div>
         <Button onClick={() => setCreating(true)} size="lg">
