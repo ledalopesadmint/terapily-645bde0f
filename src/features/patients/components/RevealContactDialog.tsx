@@ -7,11 +7,13 @@
 import {
   Archive,
   ArchiveRestore,
+  ArrowUpRight,
   Mail,
   Pencil,
   Phone,
   Trash2,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
