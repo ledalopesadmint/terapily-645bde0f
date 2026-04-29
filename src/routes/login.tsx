@@ -45,6 +45,17 @@ function LoginPage() {
   const search = Route.useSearch();
   const [submitting, setSubmitting] = useState(false);
 
+  // Defesa: se o browser submeteu o form via GET (handler React não disparou),
+  // a URL fica com ?email=...&password=... — limpa imediatamente do histórico
+  // pra não vazar credencial em logs/replay.
+  if (typeof window !== "undefined") {
+    const url = new URL(window.location.href);
+    if (url.searchParams.has("password") || url.searchParams.has("email")) {
+      url.search = "";
+      window.history.replaceState({}, "", url.toString());
+    }
+  }
+
   const {
     register,
     handleSubmit,
@@ -59,7 +70,6 @@ function LoginPage() {
     setSubmitting(false);
 
     if (error) {
-      // Generic message (does not leak whether the account exists)
       toast.error("Email or password don't match.");
       return;
     }
