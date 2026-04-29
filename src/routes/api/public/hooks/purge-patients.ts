@@ -1,5 +1,5 @@
 /**
- * /api/public/hooks/purge-patients
+ * /api/public/hooks/purge-patients (rev 2 — secret check ativado)
  *
  * Endpoint de fallback do purge automático de PHI.
  * O agendador real é o pg_cron (`purge-expired-patients-daily`, 03:15 UTC).
