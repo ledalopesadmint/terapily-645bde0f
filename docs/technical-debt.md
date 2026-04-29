@@ -98,9 +98,9 @@ Quando o pacote `@lovable.dev/cloud-auth-js` publicar uma versão em que o tipo 
 
 ---
 
-## 6. UX do limite de pacientes — DECIDIDA, implementação pendente
+## 6. UX do limite de pacientes — IMPLEMENTADO (S3, dia 1)
 
-**Status.** ✅ Decisão de produto tomada em 2026-04-29 (após smoke test Stripe verde). Implementação agendada pra **início da S3** (~1 dia de trabalho — UI + ajuste leve no gating do servidor).
+**Status.** ✅ Implementado em 2026-04-29. Banner 80%, modal de limite contextual (Basic→upgrade / Practice→waitlist Clinic), contagem agora considera arquivados, aba `/patients/deleted` com restauração na janela de 30 dias, política de exclusão soft-delete + purge irreversível documentada em `mem://features/patient-deletion-policy`.
 
 **Origem.** Em S2 implementamos gating duro em `createPatient` que filtra por `status='active'`. Funciona como barreira de segurança, mas a experiência do terapeuta nesse momento não foi desenhada como produto, e a regra de contagem precisa ser revista (ver decisão 4 abaixo).
 
