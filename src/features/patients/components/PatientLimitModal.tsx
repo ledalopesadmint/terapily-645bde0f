@@ -123,7 +123,7 @@ export function PatientLimitModal({
             variant="ghost"
             onClick={() => onOpenChange(false)}
           >
-            Fechar
+            {isPractice ? "Fechar" : "Agora não"}
           </Button>
           {isPractice ? (
             <Button
@@ -137,7 +137,7 @@ export function PatientLimitModal({
             <Button asChild>
               <Link to="/settings/billing">
                 <ArrowUpRight className="mr-2 h-4 w-4" />
-                Fazer upgrade pro Practice
+                Ver plano Practice
               </Link>
             </Button>
           )}
