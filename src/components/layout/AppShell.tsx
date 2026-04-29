@@ -1,9 +1,11 @@
 import { Link, useLocation } from "@tanstack/react-router";
 import { LayoutDashboard, Users, GamepadIcon, Settings, LogOut, ShieldCheck } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { SidebarLogo } from "@/components/brand/SidebarLogo";
 import { cn } from "@/lib/utils";
 import { TRIAL_DURATION_DAYS } from "@/lib/constants";
+import { getCurrentSubscription } from "@/features/billing/billing.functions";
 
 /**
  * AppShell — shell autenticado do Terapily.
@@ -46,8 +48,24 @@ const upcomingItems: ComingSoonItem[] = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { workspace, profile, signOut, hasRole } = useAuth();
+  const { workspace, profile, signOut, hasRole, session } = useAuth();
   const location = useLocation();
+
+  const subscriptionQuery = useQuery({
+    queryKey: ["billing", "subscription"],
+    queryFn: () => getCurrentSubscription(),
+    enabled: !!session,
+    staleTime: 30_000,
+  });
+  const subscription = subscriptionQuery.data?.subscription ?? null;
+  const hasActivePlan =
+    subscription?.status === "active" || subscription?.status === "trialing";
+  const planLabel =
+    subscription?.tier === "practice"
+      ? "Practice"
+      : subscription?.tier === "basic"
+        ? "Basic"
+        : "Plano";
 
   const initials = (profile?.full_name ?? "")
     .split(" ")
@@ -168,8 +186,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 Acesso completo · sem limite
               </p>
             </div>
+          ) : hasActivePlan ? (
+            <Link
+              to="/settings/billing"
+              className="mb-3 block rounded-md bg-secondary/15 px-3 py-2.5 transition hover:bg-secondary/25"
+            >
+              <p className="text-[0.5625rem] font-bold uppercase tracking-[0.14em] text-secondary">
+                Plano ativo
+              </p>
+              <p className="mt-1 text-sm text-sidebar-foreground">
+                Terapily{" "}
+                <span className="font-display text-lg">{planLabel}</span>
+              </p>
+            </Link>
           ) : trialDaysLeft !== null ? (
-            <div className="mb-3 rounded-md bg-sage/10 px-3 py-2.5">
+            <Link
+              to="/settings/billing"
+              className="mb-3 block rounded-md bg-sage/10 px-3 py-2.5 transition hover:bg-sage/20"
+            >
               <p className="text-[0.5625rem] font-bold uppercase tracking-[0.14em] text-sage">
                 Avaliação · {TRIAL_DURATION_DAYS} dias
               </p>
@@ -177,7 +211,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="font-display text-lg">{trialDaysLeft}</span>{" "}
                 {trialDaysLeft === 1 ? "dia restante" : "dias restantes"}
               </p>
-            </div>
+            </Link>
           ) : null}
 
 
