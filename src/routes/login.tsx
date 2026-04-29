@@ -45,6 +45,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [submitting, setSubmitting] = useState(false);
+  useRedirectIfAuthenticated(search.redirect || "/welcome");
 
   // Defesa: se o browser submeteu o form via GET (handler React não disparou),
   // a URL fica com ?email=...&password=... — limpa imediatamente do histórico
