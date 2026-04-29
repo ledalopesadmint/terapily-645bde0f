@@ -187,6 +187,9 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
         }
 
         let workspaceId: string | null = null;
+        let extraAudit:
+          | { action: string; metadata: Record<string, unknown> }
+          | null = null;
 
         // Eventos críticos que MUITO precisam de workspace_id resolvido.
         // Se não resolver, devolvemos 500 SEM marcar como processado pra
