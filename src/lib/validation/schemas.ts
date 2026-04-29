@@ -86,17 +86,8 @@ const phiString = (max: number) =>
     .nullable()
     .optional();
 
-// Date como string ISO (YYYY-MM-DD). Mantido como texto até o decrypt — o
-// banco nunca vê como date pra não criar índice acidental sobre PHI.
-const phiDate = z
-  .string()
-  .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
-  .refine((v) => !Number.isNaN(Date.parse(v)), "Invalid date")
-  .transform((v) => v)
-  .nullable()
-  .optional()
-  .or(z.literal("").transform(() => null));
+// (Removidos phiDate e intake_notes — não usamos data de nascimento nem
+// observações iniciais. Prontuário fica no EHR do terapeuta.)
 
 // Apelido / pseudônimo. NÃO é PHI: vai em texto plano, índice, busca e logs.
 // Por isso bloqueamos formatos que normalmente carregam identidade real:
@@ -132,12 +123,10 @@ export const patientCreateSchema = z.object({
     .regex(/^[\p{L}\p{N} .'-]+$/u, "Only letters and spaces"),
   tags: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
   assigned_therapist_id: z.string().uuid().optional(), // default = caller
-  // PHI
+  // PHI (cifrado AES-GCM-256 antes de gravar)
   full_name: phiString(200),
   email: phiString(255),
   phone: phiString(40),
-  date_of_birth: phiDate,
-  intake_notes: phiString(4000),
 });
 export type PatientCreate = z.infer<typeof patientCreateSchema>;
 export type PatientCreateInput = z.input<typeof patientCreateSchema>;

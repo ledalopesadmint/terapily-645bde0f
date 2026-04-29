@@ -153,14 +153,12 @@ export type Database = {
           assigned_therapist_id: string
           created_at: string
           created_by: string
-          date_of_birth_encrypted: string | null
           deleted_at: string | null
           display_name: string
           email_encrypted: string | null
           full_name_encrypted: string | null
           id: string
           initials: string
-          intake_notes_encrypted: string | null
           phone_encrypted: string | null
           status: Database["public"]["Enums"]["patient_status"]
           tags: string[]
@@ -172,14 +170,12 @@ export type Database = {
           assigned_therapist_id: string
           created_at?: string
           created_by: string
-          date_of_birth_encrypted?: string | null
           deleted_at?: string | null
           display_name: string
           email_encrypted?: string | null
           full_name_encrypted?: string | null
           id?: string
           initials: string
-          intake_notes_encrypted?: string | null
           phone_encrypted?: string | null
           status?: Database["public"]["Enums"]["patient_status"]
           tags?: string[]
@@ -191,14 +187,12 @@ export type Database = {
           assigned_therapist_id?: string
           created_at?: string
           created_by?: string
-          date_of_birth_encrypted?: string | null
           deleted_at?: string | null
           display_name?: string
           email_encrypted?: string | null
           full_name_encrypted?: string | null
           id?: string
           initials?: string
-          intake_notes_encrypted?: string | null
           phone_encrypted?: string | null
           status?: Database["public"]["Enums"]["patient_status"]
           tags?: string[]

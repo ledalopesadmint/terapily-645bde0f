@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Label } from "@/components/ui/label";
 import {
   Dialog,
@@ -126,9 +126,9 @@ function PatientsPage() {
             Suas pessoas em acompanhamento.
           </h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Use um <strong>apelido curto</strong> (ex: "Ana M.", "Paciente 12")
-            pra identificar visualmente. Nome completo, contato e observações
-            são criptografados antes de gravar.
+            Cadastro mínimo pra identificar e contatar quem você atende. Nome,
+            email e telefone são <strong>criptografados (AES-256)</strong> antes
+            de salvar — nem a equipe Terapily lê. Prontuário continua no seu EHR.
           </p>
         </div>
         <Button onClick={() => setCreating(true)} size="lg">
@@ -350,8 +350,6 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
       full_name: patient?.full_name ?? "",
       email: patient?.email ?? "",
       phone: patient?.phone ?? "",
-      date_of_birth: patient?.date_of_birth ?? "",
-      intake_notes: patient?.intake_notes ?? "",
     },
   });
 
@@ -396,9 +394,8 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar paciente" : "Novo paciente"}</DialogTitle>
           <DialogDescription>
-            <strong>Apelido</strong> é só um identificador curto não-sensível —
-            evite digitar o nome real aqui. Os campos abaixo (nome completo,
-            contato, observações) são criptografados antes de gravar.
+            Cadastro mínimo: só o que você usa pra identificar e entrar em
+            contato. Prontuário fica no seu EHR.
           </DialogDescription>
         </DialogHeader>
 
@@ -468,14 +465,27 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
           </div>
 
           <div className="rounded-md border border-border bg-muted/20 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Dados sensíveis · criptografados
-            </p>
+            <div className="flex items-baseline justify-between gap-4">
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Dados de contato
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                🔒 Criptografados (AES-256) antes de salvar.
+              </p>
+            </div>
 
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <Label htmlFor="full_name">Nome completo</Label>
-                <Input id="full_name" {...form.register("full_name")} autoComplete="off" />
+                <Input
+                  id="full_name"
+                  {...form.register("full_name")}
+                  autoComplete="off"
+                  aria-describedby="full_name_help"
+                />
+                <p id="full_name_help" className="mt-1 text-xs text-muted-foreground">
+                  Aparece em relatórios e PDFs que você exporta pro EHR.
+                </p>
               </div>
               <div>
                 <Label htmlFor="email">Email</Label>
@@ -484,34 +494,23 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
                   type="email"
                   {...form.register("email")}
                   autoComplete="off"
+                  aria-describedby="email_help"
                 />
+                <p id="email_help" className="mt-1 text-xs text-muted-foreground">
+                  Usado pra enviar atividades por magic link (sem login).
+                </p>
               </div>
               <div>
                 <Label htmlFor="phone">Telefone</Label>
-                <Input id="phone" {...form.register("phone")} autoComplete="off" />
-              </div>
-              <div>
-                <Label htmlFor="date_of_birth">Nascimento</Label>
                 <Input
-                  id="date_of_birth"
-                  type="date"
-                  {...form.register("date_of_birth")}
+                  id="phone"
+                  {...form.register("phone")}
                   autoComplete="off"
+                  aria-describedby="phone_help"
                 />
-                {form.formState.errors.date_of_birth && (
-                  <p className="mt-1 text-xs text-destructive">
-                    {form.formState.errors.date_of_birth.message as string}
-                  </p>
-                )}
-              </div>
-              <div className="sm:col-span-2">
-                <Label htmlFor="intake_notes">Observações iniciais</Label>
-                <Textarea
-                  id="intake_notes"
-                  rows={4}
-                  {...form.register("intake_notes")}
-                  placeholder="Histórico clínico, queixa principal, contexto."
-                />
+                <p id="phone_help" className="mt-1 text-xs text-muted-foreground">
+                  Contato rápido fora da sessão. Não é enviado nada automaticamente.
+                </p>
               </div>
             </div>
           </div>
