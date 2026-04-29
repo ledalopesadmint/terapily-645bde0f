@@ -144,6 +144,18 @@ export const setFeaturedActivity = createServerFn({ method: "POST" })
         console.error("[setFeaturedActivity] set failed", { code: setErr?.code });
         throw new Error("Atividade não encontrada.");
       }
+
+      // 3. Registra no histórico (best-effort: falha não bloqueia o destaque).
+      //    Permite responder "nunca foi destaque" no painel de insights.
+      const { error: histErr } = await supabaseAdmin
+        .from("featured_activity_history")
+        .insert({ activity_id: updated.id, set_by: userId });
+      if (histErr) {
+        console.error("[setFeaturedActivity] history insert failed", {
+          code: histErr.code,
+        });
+      }
+
       return { id: updated.id, slug: updated.slug, title: updated.title };
     }
 
