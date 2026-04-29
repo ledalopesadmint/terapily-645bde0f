@@ -48,10 +48,19 @@ export const assignActivity = createServerFn({ method: "POST" })
       throw new Error("Paciente não encontrado neste workspace.");
     }
 
-    // 2. Valida atividade publicada
+    // 2. Valida atividade publicada (drafts liberados se preview ligado)
     const activity = await getActivityFromCatalog(data.activityId);
-    if (!activity || activity.status !== "published") {
+    if (!activity) {
       throw new Error("Atividade indisponível.");
+    }
+    if (activity.status !== "published") {
+      const { data: previewFlag } = await supabaseAdmin.rpc("has_feature", {
+        _workspace_id: data.workspaceId,
+        _flag: "library_selection_preview",
+      });
+      if (!previewFlag) {
+        throw new Error("Atividade indisponível.");
+      }
     }
 
     // 3. Membership + permissão de prescrição (terapeuta atribuído OU owner)
