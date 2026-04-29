@@ -194,9 +194,16 @@ export const getPatient = createServerFn({ method: "POST" })
 // =============================================================================
 export const createPatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => patientCreateSchema.parse(input))
-  .handler(async ({ data, context }) => {
+  // Passthrough: validação real acontece no handler com audit de validation.failed.
+  .inputValidator((input: unknown) => input as PatientCreate)
+  .handler(async ({ data: rawInput, context }) => {
     const { supabase, userId } = context;
+    // Valida com auditoria de validation.failed (PII-safe: só nomes de campos).
+    const data = await parseOrAuditValidation(
+      patientCreateSchema,
+      rawInput,
+      { feature: "patients", actorId: userId },
+    );
 
     // 1. Resolve workspace ativo do usuário (membro vivo).
     const { data: membership, error: memberErr } = await supabase
