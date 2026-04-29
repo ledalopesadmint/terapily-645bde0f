@@ -295,6 +295,13 @@ export const createPatient = createServerFn({ method: "POST" })
           .single();
 
         if (error) {
+          // Trigger BEFORE INSERT (enforce_patient_limit) lança a mensagem
+          // estruturada __LIMIT_REACHED__:tier:max. Preserva pra UI conseguir
+          // abrir o modal de upgrade mesmo se a checagem app-level acima
+          // estiver com cache stale.
+          if (error.message?.startsWith(LIMIT_REACHED_PREFIX)) {
+            throw new Error(error.message);
+          }
           logServerError("createPatient", error);
           throw new Error("Não foi possível criar o paciente.");
         }
