@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CreditCard, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, CreditCard, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
@@ -205,6 +205,48 @@ function BillingSettingsPage() {
           </div>
         </div>
       )}
+
+      {/* Upgrade Basic → Practice */}
+      {isActive && subscription?.tier === "basic" && (() => {
+        const practice = products.find((p) => p.tier === "practice");
+        if (!practice) return null;
+        const isUpgrading = pendingPriceId === practice.stripe_price_id;
+        return (
+          <div className="rounded-xl border border-mauve/40 bg-gradient-to-br from-mauve/5 to-transparent p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <Eyebrow tone="mauve">Pronta pra mais?</Eyebrow>
+                <p className="mt-3 font-display text-2xl text-foreground">
+                  Suba pro Practice por {formatPrice(practice.unit_amount, practice.currency)}
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">
+                    /{practice.interval === "month" ? "mês" : practice.interval}
+                  </span>
+                </p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {practice.nickname}. A diferença é cobrada proporcional ao
+                  período restante — sem taxa de troca.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => checkoutMutation.mutate(practice.stripe_price_id)}
+                disabled={checkoutMutation.isPending}
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-md bg-foreground px-5 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-60"
+              >
+                {isUpgrading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+                ) : (
+                  <>
+                    <Sparkles className="h-4 w-4" aria-hidden />
+                    Fazer upgrade
+                    <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Trial ativo — só quando NÃO há assinatura paga */}
       {!isActive && daysLeft !== null && (
