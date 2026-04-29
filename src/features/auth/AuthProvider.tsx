@@ -103,6 +103,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [workspace, setWorkspace] = useState<AuthWorkspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Audit anti-duplicate: SIGNED_IN dispara em refresh de token, hidratação
+  // inicial, troca de aba etc. Registramos só uma vez por user_id por
+  // sessão de browser. Logout limpa o ref pra próximo login auditar.
+  const lastSigninUserId = useRef<string | null>(null);
+
   const hydrate = useCallback(async (s: Session | null) => {
     if (!s?.user) {
       setProfile(null);
@@ -119,17 +124,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // CRITICAL: subscribe ANTES de getSession (knowledge: adding-login-logout)
     const { data: subscription } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => {
+      (event, newSession) => {
         setSession(newSession);
         // Defer chamadas ao Supabase pra fora do callback (evita deadlock)
         if (newSession?.user) {
+          const userId = newSession.user.id;
           setTimeout(() => {
             void hydrate(newSession);
+            // Audit auth.signin: só no evento SIGNED_IN real e uma vez por
+            // sessão. TOKEN_REFRESHED, INITIAL_SESSION e USER_UPDATED não
+            // geram log (não é um login novo). Falha no audit não bloqueia
+            // hidratação — recordAuthEvent já é tolerante a erro server-side.
+            if (
+              event === "SIGNED_IN" &&
+              lastSigninUserId.current !== userId
+            ) {
+              lastSigninUserId.current = userId;
+              void recordAuthEvent({ data: { action: "auth.signin" } }).catch(
+                () => {
+                  // Silencioso: não quebrar UX por falha de audit.
+                },
+              );
+            }
           }, 0);
         } else {
           setProfile(null);
           setRoles([]);
           setWorkspace(null);
+          lastSigninUserId.current = null;
         }
       },
     );
@@ -137,6 +159,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
       if (data.session) {
+        // INITIAL_SESSION não dispara SIGNED_IN — marca o ref pra evitar
+        // log duplicado se mais tarde rolar refresh+SIGNED_IN com mesmo user.
+        lastSigninUserId.current = data.session.user.id;
         await hydrate(data.session);
       }
       setIsLoading(false);
@@ -148,6 +173,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [hydrate]);
 
   const signOut = useCallback(async () => {
+    // Registra ANTES de signOut — depois o token JWT é invalidado e
+    // requireSupabaseAuth no server function rejeitaria.
+    await recordAuthEvent({ data: { action: "auth.signout" } }).catch(() => {
+      // Silencioso: nunca bloquear logout por falha de audit.
+    });
+    lastSigninUserId.current = null;
     await supabase.auth.signOut();
   }, []);
 
