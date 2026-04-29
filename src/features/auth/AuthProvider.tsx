@@ -4,12 +4,14 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { recordAuthEvent } from "@/features/auth/auth-events.functions";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 type WorkspaceRole = Database["public"]["Enums"]["workspace_role"];
