@@ -98,23 +98,49 @@ Quando o pacote `@lovable.dev/cloud-auth-js` publicar uma versão em que o tipo 
 
 ---
 
-## 6. Decisão de produto: o que fazer quando o terapeuta atinge o limite de pacientes
+## 6. UX do limite de pacientes — DECIDIDA, implementação pendente
 
-**Origem.** Em S2 implementamos o gating duro em `createPatient`: ao tentar criar o 21º paciente no Basic (ou 51º no Practice), o servidor lança erro com mensagem traduzida ("Você atingiu o limite de X pacientes ativos do seu plano. Arquive um ou faça upgrade."). Funciona, é seguro, mas **a experiência do terapeuta nesse momento ainda não foi desenhada como produto**.
+**Status.** ✅ Decisão de produto tomada em 2026-04-29 (após smoke test Stripe verde). Implementação agendada pra **início da S3** (~1 dia de trabalho — UI + ajuste leve no gating do servidor).
 
-**Impacto.** Hoje o terapeuta vê uma mensagem de erro genérica de form. Sem caminho claro de saída → fricção alta, risco de churn ou de pedido de suporte manual. Com Practice (50) sendo o teto do MVP, qualquer terapeuta com prática consolidada bate o limite rápido — e ainda não temos plano Clinic pra oferecer upgrade.
+**Origem.** Em S2 implementamos gating duro em `createPatient` que filtra por `status='active'`. Funciona como barreira de segurança, mas a experiência do terapeuta nesse momento não foi desenhada como produto, e a regra de contagem precisa ser revista (ver decisão 4 abaixo).
 
-**Decisões pendentes (discutir junto, depois do smoke test do Stripe).**
-1. **Bloqueio puro com mensagem rica.** Modal explicando o limite, oferecendo arquivar pacientes inativos, e CTA "Falar com a Leda" (já que Clinic ainda não existe). Mais simples, mais honesto. Risco: parece fim de linha.
-2. **Cota por paciente extra.** Oferecer slots adicionais a $X cada um, cobrados via Stripe (metered billing ou add-on). Mais flexível, mas exige: novo price no Stripe, lógica de billing por unidade, decisão de preço justo, e abre porta pra "por que não tem Clinic ainda?".
-3. **Upgrade automático pra Clinic provisório.** Não viável agora — Clinic não existe como produto. Vira S+ depois do MVP.
-4. **Híbrido.** Bloqueia, mas oferece "1 paciente extra grátis" emergencial enquanto a Leda valida caso a caso. Solução temporária pra não perder terapeuta no momento crítico.
+**Decisões tomadas (Leda, 2026-04-29).**
 
-**Mitigação atual.** Mensagem de erro funcional + sugestão de arquivar. Suficiente pra MVP fechar S2, **insuficiente como experiência final**.
+1. **Comportamento ao bater no limite:** **Bloqueio + sugestão contextual de upgrade.**
+   Quando o terapeuta tenta cadastrar acima do limite, ao invés de erro de form genérico, mostra um card/modal com:
+   - Mensagem do limite atingido.
+   - Comparativo curto plano atual × próximo plano (Basic→Practice; Practice→`coming-soon` Clinic).
+   - CTA primário "Fazer upgrade agora" → leva direto pro checkout do próximo tier.
+   - CTA secundário "Falar com a Leda" só pra quem já está no Practice (sem Clinic ainda).
 
-**Condição de remoção.** Decidir o caminho (1, 2, 3 ou 4) com a Leda **depois de confirmar smoke test do Stripe**. Implementar como parte da S3 (junto com activity catalog) ou S6 (junto com polish de landing/QA), dependendo da escolha:
-- Caminho 1 → S3 (1 dia de UI).
-- Caminho 2 → S5 (precisa de billing maturo + decisão de pricing).
-- Caminho 4 → S3 (UI + flag no workspace).
+2. **Aviso antecipado:** **Sim, aos 80% do limite.**
+   - Basic: banner discreto na lista de pacientes a partir de 16/20.
+   - Practice: a partir de 40/50.
+   - Texto: "Você usou X de Y vagas. Considere fazer upgrade." + link "Ver Practice / Falar com a Leda".
+   - Banner é dispensável (botão X) e reaparece toda nova sessão até virar bloqueio real.
 
-**Não esquecer:** revisitar este item assim que o smoke test do Stripe estiver verde.
+3. **Tom da mensagem (bloqueio):** **Direta e prática.**
+   Exemplo Basic→Practice:
+   > "Você atingiu o limite de 20 pacientes do plano Basic. Faça upgrade pro Practice (50 pacientes) por $159/mês."
+   > [Ver planos]
+   Sem floreio, alinhado com voz de marca ("Salvo." "Pronto.").
+
+4. **Pacientes arquivados contam pro limite:** **SIM — vaga ocupada é vaga ocupada.**
+   - **Razão clínica/ética:** enquanto o terapeuta mantém o paciente no app (mesmo arquivado), Terapily continua custodiando dados clínicos cifrados, mantendo audit trail, e prestando o serviço de retenção segura. Isso É a entrega.
+   - **Razão de produto:** alinha com posicionamento "therapeutic tools platform stateful" — não somos ferramenta descartável, somos custódia.
+   - **Razão de pricing:** evita que terapeuta com 50 pacientes históricos pague $69 enquanto consome a infraestrutura de Practice.
+   - **Mudança técnica necessária:** ajustar `workspace_active_patient_count()` no banco — hoje filtra `status='active'`, deve passar a contar todos com `deleted_at is null` (incluindo `archived`). Soft-delete real (`deleted_at`) NÃO conta — esse é descarte definitivo.
+   - **Para liberar vaga:** terapeuta precisa fazer soft-delete (operação irreversível após X dias, definir em S5 com retenção). Arquivar continua sendo só "tirar da lista principal".
+
+**Implementação (agendada — primeiro dia da S3).**
+- [ ] Migration: ajustar `workspace_active_patient_count()` pra contar `deleted_at is null` (não filtrar por `status`). Renomear pra `workspace_patient_count()` pra refletir nova semântica.
+- [ ] Atualizar `createPatient` server function pra usar a função renomeada e ajustar mensagem de erro.
+- [ ] Componente `<PatientLimitBanner>` na lista de pacientes (aparece a 80%).
+- [ ] Componente `<PatientLimitModal>` (substitui erro de form quando bate no teto).
+- [ ] CTAs do modal: link direto pro `/settings/billing` com price do próximo tier pré-selecionado.
+- [ ] Texto explicativo na UI de arquivamento: "Arquivar mantém o paciente no seu workspace e continua contando como vaga. Pra liberar vaga, é preciso excluir definitivamente."
+- [ ] Audit log: registrar `patient.create_blocked_by_limit` quando o gating dispara (já útil pra entender pressão de upgrade).
+
+**Mitigação atual (até implementar).** Mensagem de erro funcional no `createPatient`, sem upsell visual. Suficiente porque ainda não temos terapeutas reais.
+
+**Não esquecer:** este item é o primeiro card da S3, antes de mexer em activity catalog.
