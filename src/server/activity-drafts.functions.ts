@@ -153,7 +153,7 @@ export const getActivityDraft = createServerFn({ method: "POST" })
       return { hasDraft: false as const };
     }
 
-    let decoded: Record<string, unknown> = {};
+    let decoded: Record<string, unknown>;
     try {
       const plain = await decryptPHIServer(draft.draft_encrypted);
       decoded = JSON.parse(plain) as Record<string, unknown>;
@@ -179,7 +179,8 @@ export const getActivityDraft = createServerFn({ method: "POST" })
 
     return {
       hasDraft: true as const,
-      draft: decoded,
+      // Serializado como JSON pelo TanStack RPC; o cliente faz JSON.parse de novo.
+      draftJson: JSON.stringify(decoded),
       completionPercent: draft.completion_percent,
       updatedAt: draft.updated_at,
     };
