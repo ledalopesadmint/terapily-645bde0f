@@ -94,12 +94,12 @@ export async function recordAudit(entry: AuditEntry): Promise<void> {
       user_agent: userAgent,
     });
     if (error) {
-      console.error("[audit] insert failed:", error.message, {
-        action: entry.action,
-      });
+      // Logger seguro: só action (enum) + código sanitizado.
+      // Nunca incluir error.message/details/hint (pode vazar metadata).
+      logServerError(`audit.insert.${entry.action}`, error);
     }
   } catch (err) {
-    console.error("[audit] unexpected error:", err);
+    logServerError("audit.unexpected", err);
   }
 }
 

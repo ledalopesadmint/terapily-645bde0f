@@ -13,6 +13,7 @@
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { logServerError } from "@/lib/logger.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { withAudit } from "@/features/audit/audit.server";
 import { workspaceUpdateSchema } from "@/lib/validation/schemas";
@@ -49,7 +50,7 @@ export const renameWorkspace = createServerFn({ method: "POST" })
           .single();
 
         if (error) {
-          console.error("renameWorkspace failed:", error);
+          logServerError("renameWorkspace", error);
           throw new Error(
             "Não foi possível renomear o espaço de trabalho. Você precisa ser proprietária.",
           );
