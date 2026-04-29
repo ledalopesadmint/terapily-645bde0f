@@ -27,6 +27,37 @@ function originFromRequest(): string {
 }
 
 /**
+ * Retorna a subscription atual do workspace do usuário (se existir).
+ * Usado pela UI pra saber se o trial virou plano pago.
+ */
+export const getCurrentSubscription = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { userId } = context;
+
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("workspace_id")
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) return { subscription: null };
+
+    const { data: sub } = await supabaseAdmin
+      .from("subscriptions")
+      .select(
+        "tier, status, current_period_end, cancel_at_period_end, stripe_payment_method_brand, stripe_payment_method_last4, stripe_price_id",
+      )
+      .eq("workspace_id", membership.workspace_id)
+      .maybeSingle();
+
+    return { subscription: sub ?? null };
+  });
+
+/**
  * Lista produtos ativos (Basic / Practice). Usado pela tela de planos.
  */
 export const getActiveProducts = createServerFn({ method: "GET" })
