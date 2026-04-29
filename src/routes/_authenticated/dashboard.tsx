@@ -1,10 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Users, GamepadIcon, ListChecks, BookOpen, ArrowRight } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { TRIAL_DURATION_DAYS } from "@/lib/constants";
+import { getCurrentSubscription } from "@/features/billing/billing.functions";
+import { deriveTrialStatus } from "@/features/billing/trial-status";
+import { TrialExpiredBanner } from "@/features/billing/TrialExpiredBanner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
