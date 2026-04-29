@@ -62,6 +62,75 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_responses: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          patient_activity_id: string
+          patient_id: string
+          raw_responses_encrypted: string | null
+          score: number | null
+          scoring_metadata: Json
+          severity: Database["public"]["Enums"]["activity_severity"] | null
+          submitted_at: string
+          submitted_ip: unknown
+          submitted_user_agent: string | null
+          submitted_via: Database["public"]["Enums"]["delivery_mode"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          patient_activity_id: string
+          patient_id: string
+          raw_responses_encrypted?: string | null
+          score?: number | null
+          scoring_metadata?: Json
+          severity?: Database["public"]["Enums"]["activity_severity"] | null
+          submitted_at?: string
+          submitted_ip?: unknown
+          submitted_user_agent?: string | null
+          submitted_via: Database["public"]["Enums"]["delivery_mode"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          patient_activity_id?: string
+          patient_id?: string
+          raw_responses_encrypted?: string | null
+          score?: number | null
+          scoring_metadata?: Json
+          severity?: Database["public"]["Enums"]["activity_severity"] | null
+          submitted_at?: string
+          submitted_ip?: unknown
+          submitted_user_agent?: string | null
+          submitted_via?: Database["public"]["Enums"]["delivery_mode"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_responses_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activity_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "activity_responses_patient_activity_id_fkey"
+            columns: ["patient_activity_id"]
+            isOneToOne: false
+            referencedRelation: "patient_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -176,6 +245,81 @@ export type Database = {
             columns: ["workspace_id"]
             isOneToOne: false
             referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patient_activities: {
+        Row: {
+          activity_id: string
+          applied_at: string | null
+          assigned_by: string
+          created_at: string
+          delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          id: string
+          patient_id: string
+          response_id: string | null
+          status: Database["public"]["Enums"]["patient_activity_status"]
+          token_expires_at: string | null
+          token_first_opened_at: string | null
+          token_hash: string | null
+          token_open_count: number
+          token_sent_at: string | null
+          updated_at: string
+          used_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          activity_id: string
+          applied_at?: string | null
+          assigned_by: string
+          created_at?: string
+          delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          id?: string
+          patient_id: string
+          response_id?: string | null
+          status?: Database["public"]["Enums"]["patient_activity_status"]
+          token_expires_at?: string | null
+          token_first_opened_at?: string | null
+          token_hash?: string | null
+          token_open_count?: number
+          token_sent_at?: string | null
+          updated_at?: string
+          used_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          activity_id?: string
+          applied_at?: string | null
+          assigned_by?: string
+          created_at?: string
+          delivery_mode?: Database["public"]["Enums"]["delivery_mode"]
+          id?: string
+          patient_id?: string
+          response_id?: string | null
+          status?: Database["public"]["Enums"]["patient_activity_status"]
+          token_expires_at?: string | null
+          token_first_opened_at?: string | null
+          token_hash?: string | null
+          token_open_count?: number
+          token_sent_at?: string | null
+          updated_at?: string
+          used_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_activities_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activity_catalog"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_activities_response_fk"
+            columns: ["response_id"]
+            isOneToOne: false
+            referencedRelation: "activity_responses"
             referencedColumns: ["id"]
           },
         ]
@@ -655,6 +799,13 @@ export type Database = {
         | "structured_form"
         | "guided_timer"
         | "guided_script"
+      activity_severity:
+        | "minimal"
+        | "mild"
+        | "moderate"
+        | "moderately_severe"
+        | "severe"
+        | "not_applicable"
       activity_status: "draft" | "published" | "archived"
       activity_theme:
         | "sage"
@@ -664,7 +815,14 @@ export type Database = {
         | "terracotta"
         | "sage_dark"
       app_role: "admin" | "therapist" | "patient"
+      delivery_mode: "in_session" | "shared_link" | "both"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
+      patient_activity_status:
+        | "pending"
+        | "in_progress"
+        | "completed"
+        | "expired"
+        | "revoked"
       patient_status: "active" | "archived"
       subscription_status:
         | "trialing"
@@ -816,6 +974,14 @@ export const Constants = {
         "guided_timer",
         "guided_script",
       ],
+      activity_severity: [
+        "minimal",
+        "mild",
+        "moderate",
+        "moderately_severe",
+        "severe",
+        "not_applicable",
+      ],
       activity_status: ["draft", "published", "archived"],
       activity_theme: [
         "sage",
@@ -826,7 +992,15 @@ export const Constants = {
         "sage_dark",
       ],
       app_role: ["admin", "therapist", "patient"],
+      delivery_mode: ["in_session", "shared_link", "both"],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
+      patient_activity_status: [
+        "pending",
+        "in_progress",
+        "completed",
+        "expired",
+        "revoked",
+      ],
       patient_status: ["active", "archived"],
       subscription_status: [
         "trialing",
