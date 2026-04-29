@@ -124,6 +124,28 @@ export function PatientForm({
   });
 
   const tagsValue = (form.watch("tags") ?? []).join(", ");
+  const currentTags = form.watch("tags") ?? [];
+
+  // Erros de tag podem vir aninhados por índice (errors.tags[0].message).
+  // Coletamos todos pra mostrar à terapeuta exatamente QUAL tag e POR QUE
+  // foi rejeitada — sem mensagem genérica.
+  const tagsError = form.formState.errors.tags as
+    | { message?: string; [k: number]: { message?: string } | undefined }
+    | undefined;
+  const perTagErrors: Array<{ index: number; value: string; reason: string }> = [];
+  if (tagsError) {
+    for (let i = 0; i < currentTags.length; i++) {
+      const entry = tagsError[i];
+      if (entry?.message) {
+        perTagErrors.push({
+          index: i,
+          value: currentTags[i],
+          reason: entry.message,
+        });
+      }
+    }
+  }
+  const tagsTopMessage = tagsError?.message; // ex: "Máximo de 10 tags…"
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -206,16 +228,33 @@ export function PatientForm({
               placeholder="ansiedade, adolescente"
               aria-describedby="tags_help"
             />
-            <p id="tags_help" className="mt-1 text-xs text-muted-foreground">
-              Máx. 10 tags, até 30 caracteres cada. Use tags genéricas — não
-              inclua nome, email, telefone, data ou informação clínica
-              identificável.
-            </p>
-            {form.formState.errors.tags && (
-              <p className="mt-1 text-xs text-destructive">
-                {form.formState.errors.tags.message ??
-                  "Alguma tag não está em formato válido."}
+            <div
+              id="tags_help"
+              className="mt-1 space-y-1 text-xs text-muted-foreground"
+            >
+              <p>Máx. 10 tags, até 30 caracteres cada, no máximo 2 palavras por tag.</p>
+              <p>
+                <span className="font-medium text-foreground">Bons exemplos:</span>{" "}
+                ansiedade, depressão, adolescente, casal, luto, tcc, primeira sessão.
               </p>
+              <p>
+                <span className="font-medium text-foreground">Não use:</span>{" "}
+                nome do paciente, email, telefone, CPF, datas (nascimento ou
+                sessão) — tags ficam visíveis em listas, buscas e logs e por
+                isso não podem identificar a pessoa.
+              </p>
+            </div>
+            {tagsTopMessage && (
+              <p className="mt-2 text-xs text-destructive">{tagsTopMessage}</p>
+            )}
+            {perTagErrors.length > 0 && (
+              <ul className="mt-2 space-y-1 text-xs text-destructive">
+                {perTagErrors.map((e) => (
+                  <li key={e.index}>
+                    Tag <span className="font-mono">"{e.value}"</span>: {e.reason}
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
 
