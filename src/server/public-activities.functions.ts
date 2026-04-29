@@ -136,6 +136,11 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => SubmitSchema.parse(input))
   .handler(async ({ data }) => {
     const tokenHash = await hashMagicLinkToken(data.token);
+    await checkPublicLinkRateLimit({
+      ip: getClientIp(),
+      tokenHash,
+      bucket: "submit",
+    });
     const pa = await getPatientActivityByTokenHash(tokenHash);
 
     // Mesma porta neutra do resolve.
