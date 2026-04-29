@@ -346,7 +346,8 @@ export interface AuditLogRow {
   action: string;
   resource_type: string | null;
   resource_id: string | null;
-  metadata: { [x: string]: unknown };
+  // Casamos com o tipo inferido pelo Supabase Generated (jsonb).
+  metadata: { [x: string]: {} };
   created_at: string;
   actor_id: string | null;
 }
