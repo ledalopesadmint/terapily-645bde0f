@@ -52,6 +52,13 @@ export const Route = createFileRoute("/_authenticated/patients")({
 });
 
 function PatientsPage() {
+  // Se houver rota filha ativa (ex: /patients/deleted), renderiza só o
+  // Outlet — senão a filha "casa" mas nunca aparece, fica só piscando a URL.
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) {
+    return <Outlet />;
+  }
+
   const queryClient = useQueryClient();
   const auth = useAuth();
   const [status, setStatus] = useState<PatientStatusFilter>("active");
