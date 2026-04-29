@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { signupSchema, type SignupInput } from "@/lib/validation/schemas";
+import { useRedirectIfAuthenticated } from "@/features/auth/useRedirectIfAuthenticated";
 import { AuthShell } from "@/components/brand/AuthShell";
 import { GoogleButton } from "@/components/brand/GoogleButton";
 import { CapsLockHint } from "@/components/brand/CapsLockHint";
