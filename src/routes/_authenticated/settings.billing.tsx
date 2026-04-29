@@ -132,6 +132,11 @@ function BillingSettingsPage() {
         year: "numeric",
       }).format(trialEndsAt)
     : null;
+  const trialStatus = deriveTrialStatus({
+    trialEndsAt: workspace?.trial_ends_at,
+    subscriptionStatus: subscription?.status,
+    stripeSubscriptionId: subscription?.stripe_subscription_id,
+  });
 
   const products = productsQuery.data?.products ?? [];
 
