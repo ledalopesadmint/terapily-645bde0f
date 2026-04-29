@@ -396,8 +396,9 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar paciente" : "Novo paciente"}</DialogTitle>
           <DialogDescription>
-            Nome completo, contato e observações iniciais são criptografados
-            antes de gravar. Apelido e iniciais ficam visíveis pra navegação.
+            <strong>Apelido</strong> é só um identificador curto não-sensível —
+            evite digitar o nome real aqui. Os campos abaixo (nome completo,
+            contato, observações) são criptografados antes de gravar.
           </DialogDescription>
         </DialogHeader>
 
@@ -408,14 +409,27 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
               <Input
                 id="display_name"
                 {...form.register("display_name")}
-                placeholder="Ex: Ana M."
+                placeholder='Ex: "Ana M.", "Paciente 12"'
                 autoComplete="off"
+                aria-describedby="display_name_help"
               />
+              <p id="display_name_help" className="mt-1 text-xs text-muted-foreground">
+                Aparece em listas, buscas e logs. Não use nome completo, email
+                ou telefone.
+              </p>
               {form.formState.errors.display_name && (
                 <p className="mt-1 text-xs text-destructive">
                   {form.formState.errors.display_name.message}
                 </p>
               )}
+              {!form.formState.errors.display_name &&
+                looksLikeRealName(form.watch("display_name") ?? "") && (
+                  <p className="mt-1 text-xs text-mauve">
+                    Parece um nome completo. Considere usar só primeiro nome +
+                    inicial (ex: "Ana M.") — o nome real vai no campo
+                    criptografado abaixo.
+                  </p>
+                )}
             </div>
             <div>
               <Label htmlFor="initials">Iniciais</Label>
