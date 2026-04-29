@@ -309,9 +309,15 @@ export const createPatient = createServerFn({ method: "POST" })
 // =============================================================================
 export const updatePatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => patientUpdateSchema.parse(input))
-  .handler(async ({ data, context }) => {
+  // Passthrough: validação real acontece no handler com audit de validation.failed.
+  .inputValidator((input: unknown) => input as PatientUpdate)
+  .handler(async ({ data: rawInput, context }) => {
     const { supabase, userId } = context;
+    const data = await parseOrAuditValidation(
+      patientUpdateSchema,
+      rawInput,
+      { feature: "patients", actorId: userId },
+    );
     const { id, assigned_therapist_id, ...rest } = data;
 
     const encrypted = await encryptPatientPayload({ ...rest, assigned_therapist_id });
