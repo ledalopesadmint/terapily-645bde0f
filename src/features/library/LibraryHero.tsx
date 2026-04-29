@@ -82,18 +82,6 @@ export function LibraryHero({ activity, onStart }: LibraryHeroProps) {
               Aplicar em sessão
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
             </button>
-            <button
-              type="button"
-              onClick={() => onStart?.(activity, "shared_link")}
-              className="
-                inline-flex items-center gap-2 rounded-md
-                border border-cream/25 bg-transparent px-5 py-2.5 text-sm font-medium text-cream
-                transition-colors hover:bg-cream/10
-                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cream/50 focus-visible:ring-offset-2 focus-visible:ring-offset-navy
-              "
-            >
-              Enviar pra paciente
-            </button>
           </div>
         </div>
 
