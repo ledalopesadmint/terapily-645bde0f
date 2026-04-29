@@ -261,15 +261,14 @@ function LibrarySelectionMode() {
 
   const confirmSelection = () => {
     if (!previewActivity) return;
-    const returnTo = search.returnTo ?? `/patients/${patientId}`;
+    // Volta pro paciente. O pré-fill via search params no /patients/$id
+    // entra na próxima etapa (validateSearch + useEffect que abre o modal).
+    // Por ora, mostra toast confirmando a escolha pra não quebrar o fluxo.
+    toast.success("Atividade selecionada", {
+      description: `${previewActivity.title} — abra "Enviar atividade" no perfil do paciente.`,
+    });
     navigate({
-      to: returnTo,
-      search: {
-        openAssign: 1,
-        activityId: previewActivity.id,
-        ...(search.mode ? { mode: search.mode } : {}),
-        ...(search.days ? { days: search.days } : {}),
-      },
+      to: search.returnTo ?? `/patients/${patientId}`,
     });
   };
 
