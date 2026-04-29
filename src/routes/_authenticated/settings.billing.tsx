@@ -13,6 +13,8 @@ import {
   getActiveProducts,
   getCurrentSubscription,
 } from "@/features/billing/billing.functions";
+import { deriveTrialStatus } from "@/features/billing/trial-status";
+import { TrialExpiredBanner } from "@/features/billing/TrialExpiredBanner";
 import { toast } from "sonner";
 
 const searchSchema = z.object({
