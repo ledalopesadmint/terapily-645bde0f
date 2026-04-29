@@ -110,18 +110,40 @@ const looksLikeDate =
 export const TAGS_INVALID_MESSAGE =
   "Use tags genéricas. Não inclua nome, email, telefone, data ou informação clínica identificável.";
 
+// Mensagens específicas por motivo — ajudam a terapeuta a entender QUAL regra
+// foi violada (e não só "tag inválida"). Todas referenciam o mesmo princípio:
+// tag é categoria clínica reutilizável ("ansiedade", "adolescente"),
+// não identificador do paciente.
+export const TAG_REASON = {
+  email:
+    "Tags não podem conter email. Use uma categoria genérica (ex.: ansiedade, adolescente, casal).",
+  phone:
+    "Tags não podem conter telefone. Use uma categoria genérica (ex.: ansiedade, adolescente, casal).",
+  docId:
+    "Tags não podem conter CPF, SSN ou número de documento. Use uma categoria genérica (ex.: ansiedade, adolescente, casal).",
+  date:
+    "Tags não podem conter data (de nascimento, sessão, etc). Use uma categoria genérica (ex.: ansiedade, adolescente, casal).",
+  tooManyWords:
+    'Tags devem ter no máximo 2 palavras (ex.: "ansiedade social"). Para nome completo do paciente, use o campo "Nome completo" abaixo.',
+  tooLong:
+    "Tags devem ter no máximo 30 caracteres. Encurte ou divida em duas tags.",
+} as const;
+
 const tagSchema = z
   .string()
   .trim()
   .toLowerCase()
   .min(1)
-  .max(30, TAGS_INVALID_MESSAGE)
-  .refine((v) => !looksLikeEmail.test(v), TAGS_INVALID_MESSAGE)
-  .refine((v) => !looksLikePhone.test(v), TAGS_INVALID_MESSAGE)
-  .refine((v) => !looksLikeDocId.test(v), TAGS_INVALID_MESSAGE)
-  .refine((v) => !looksLikeDate.test(v), TAGS_INVALID_MESSAGE)
+  .max(30, TAG_REASON.tooLong)
+  .refine((v) => !looksLikeEmail.test(v), TAG_REASON.email)
+  .refine((v) => !looksLikePhone.test(v), TAG_REASON.phone)
+  .refine((v) => !looksLikeDocId.test(v), TAG_REASON.docId)
+  .refine((v) => !looksLikeDate.test(v), TAG_REASON.date)
   // Máximo 2 palavras (ex: "ansiedade social" OK, "Maria de Lourdes" não).
-  .refine((v) => v.split(/\s+/).filter(Boolean).length <= 2, TAGS_INVALID_MESSAGE);
+  .refine(
+    (v) => v.split(/\s+/).filter(Boolean).length <= 2,
+    TAG_REASON.tooManyWords,
+  );
 
 export const patientTagsSchema = z
   .array(tagSchema)
