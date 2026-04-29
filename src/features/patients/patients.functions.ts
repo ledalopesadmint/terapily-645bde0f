@@ -554,8 +554,14 @@ export const restorePatient = createServerFn({ method: "POST" })
     });
 
     if (error) {
+      // restore_patient (RPC) chama assert_patient_capacity, que lança
+      // __LIMIT_REACHED__:tier:max quando o plano está cheio. Preserva
+      // pra UI abrir o modal de upgrade no fluxo de restore.
+      if (error.message?.startsWith(LIMIT_REACHED_PREFIX)) {
+        throw new Error(error.message);
+      }
       logServerError("restorePatient", error);
-      throw new Error("Não foi possível restaurar.");
+      throw new Error(error.message || "Não foi possível restaurar.");
     }
 
     await recordAudit({
