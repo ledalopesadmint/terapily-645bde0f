@@ -132,12 +132,10 @@ export const patientCreateSchema = z.object({
     .regex(/^[\p{L}\p{N} .'-]+$/u, "Only letters and spaces"),
   tags: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
   assigned_therapist_id: z.string().uuid().optional(), // default = caller
-  // PHI
+  // PHI (cifrado AES-GCM-256 antes de gravar)
   full_name: phiString(200),
   email: phiString(255),
   phone: phiString(40),
-  date_of_birth: phiDate,
-  intake_notes: phiString(4000),
 });
 export type PatientCreate = z.infer<typeof patientCreateSchema>;
 export type PatientCreateInput = z.input<typeof patientCreateSchema>;
