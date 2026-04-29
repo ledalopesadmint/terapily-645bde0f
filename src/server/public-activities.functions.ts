@@ -212,6 +212,21 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       throw new PublicLinkError();
     }
 
+    // 5. Purga draft (se existir) — regra "EXPIRA O ACESSO → NÃO EXPIRA O DADO".
+    //    Resposta final ficou em activity_responses (permanente).
+    //    Draft era pré-resposta e não tem mais função.
+    const { error: draftErr } = await supabaseAdmin
+      .from("activity_drafts")
+      .delete()
+      .eq("patient_activity_id", pa.id);
+
+    if (draftErr) {
+      // Não falha o submit por causa disso — só registra. Próxima purge job pega.
+      console.warn("[submitActivityResponse] draft purge failed", {
+        code: draftErr.code,
+      });
+    }
+
     // Resposta neutra pro paciente (sem score técnico — quem interpreta é o terapeuta)
     return { ok: true };
   });
