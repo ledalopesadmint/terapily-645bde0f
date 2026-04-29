@@ -51,7 +51,7 @@ export interface PatientDTO {
 
 // Colunas selecionadas — sempre as mesmas pra evitar leak acidental.
 const SELECT_COLS =
-  "id, workspace_id, assigned_therapist_id, display_name, initials, tags, status, archived_at, created_at, updated_at, full_name_encrypted, email_encrypted, phone_encrypted, date_of_birth_encrypted, intake_notes_encrypted";
+  "id, workspace_id, assigned_therapist_id, display_name, initials, tags, status, archived_at, created_at, updated_at, full_name_encrypted, email_encrypted, phone_encrypted";
 
 type PatientRow = {
   id: string;
