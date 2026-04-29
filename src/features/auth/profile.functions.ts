@@ -10,6 +10,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { withAudit } from "@/features/audit/audit.server";
+import { logServerError } from "@/lib/logger.server";
 import { profileUpdateSchema } from "@/lib/validation/schemas";
 
 export const updateProfile = createServerFn({ method: "POST" })
@@ -45,7 +46,7 @@ export const updateProfile = createServerFn({ method: "POST" })
           .single();
 
         if (error) {
-          console.error("updateProfile failed:", error);
+          logServerError("updateProfile", error);
           throw new Error("Não foi possível salvar seu perfil.");
         }
 

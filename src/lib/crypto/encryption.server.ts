@@ -86,10 +86,20 @@ export async function decryptPHIServer(payload: string): Promise<string> {
   if (payload === "" || payload == null) return payload;
 
   const parts = payload.split(":");
+  const hasV1Prefix = payload.startsWith(`${VERSION}:`);
+
+  if (!hasV1Prefix) {
+    // HARDENING: em produção, plaintext sem prefixo é tratado como erro.
+    // Em dev mantemos o passthrough pra não quebrar fixtures e dados
+    // legados de bootstrap. Roteiro de migração documentado em
+    // docs/key-rotation.md.
+    if (process.env.NODE_ENV === "production") {
+      throw new Error("Invalid encrypted payload");
+    }
+    return payload;
+  }
+
   if (parts.length !== 3 || parts[0] !== VERSION) {
-    // Compatibilidade: registros antigos (passthrough S1) não têm prefixo.
-    // Retorna como veio pra não quebrar leitura de dados pré-encryption.
-    if (!payload.startsWith(`${VERSION}:`)) return payload;
     throw new Error("Formato de ciphertext PHI inválido.");
   }
 

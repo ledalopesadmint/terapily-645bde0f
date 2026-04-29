@@ -58,12 +58,15 @@ export function logServerError(
 
   // JSON line — fácil de varrer no painel de logs e impossível de
   // injetar payload arbitrário (só campos enumerados aqui).
+  // `message` e `hint` são SEMPRE strings constantes — nunca vêm do erro
+  // do Postgres/Supabase, que pode ter PHI em `details`/`hint`/`query`.
   console.error(
     JSON.stringify({
       level: "error",
       op: operation,
       code,
-      msg: "operation failed",
+      message: "operation failed",
+      hint: "see audit_logs and operation code for context",
       ...(correlation ? { correlation_id: correlation } : {}),
     }),
   );
