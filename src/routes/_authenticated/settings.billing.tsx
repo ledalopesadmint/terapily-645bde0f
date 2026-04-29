@@ -164,8 +164,8 @@ function BillingSettingsPage() {
               key={p.stripe_price_id}
               className="rounded-xl border border-border bg-card p-6 transition hover:border-secondary/60"
             >
-              <Eyebrow tone={p.tier === "team" ? "mauve" : "sage"}>
-                {p.tier === "team" ? "Practice" : "Basic"}
+              <Eyebrow tone={p.tier === "practice" ? "mauve" : "sage"}>
+                {p.tier === "practice" ? "Practice" : "Basic"}
               </Eyebrow>
               <p className="mt-3 font-display text-3xl text-foreground">
                 {formatPrice(p.unit_amount, p.currency)}
