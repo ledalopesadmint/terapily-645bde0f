@@ -285,6 +285,27 @@ export type Database = {
           },
         ]
       }
+      featured_activity_history: {
+        Row: {
+          activity_id: string
+          id: string
+          set_at: string
+          set_by: string | null
+        }
+        Insert: {
+          activity_id: string
+          id?: string
+          set_at?: string
+          set_by?: string | null
+        }
+        Update: {
+          activity_id?: string
+          id?: string
+          set_at?: string
+          set_by?: string | null
+        }
+        Relationships: []
+      }
       patient_activities: {
         Row: {
           activity_id: string
