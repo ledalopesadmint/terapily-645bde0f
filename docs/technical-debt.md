@@ -109,9 +109,10 @@ Quando o pacote `@lovable.dev/cloud-auth-js` publicar uma versão em que o tipo 
 1. **Comportamento ao bater no limite:** **Bloqueio + sugestão contextual de upgrade.**
    Quando o terapeuta tenta cadastrar acima do limite, ao invés de erro de form genérico, mostra um card/modal com:
    - Mensagem do limite atingido.
-   - Comparativo curto plano atual × próximo plano (Basic→Practice; Practice→`coming-soon` Clinic).
-   - CTA primário "Fazer upgrade agora" → leva direto pro checkout do próximo tier.
-   - CTA secundário "Falar com a Leda" só pra quem já está no Practice (sem Clinic ainda).
+   - **Caso Basic (20/20):** comparativo curto Basic × Practice + CTA primário "Fazer upgrade agora" → leva direto pro checkout do Practice. CTA secundário "Excluir paciente definitivo pra liberar vaga".
+   - **Caso Practice (50/50):** como Clinic ainda não existe, mostra mensagem honesta: "Você atingiu o limite do Practice. Estamos finalizando o plano Clinic (100+ pacientes, recursos pra clínica em equipe). Entre na lista de espera e te avisamos primeiro." CTA primário: "Entrar na lista de espera do Clinic" (coleta email + opcional: quantos pacientes você projeta?). CTA secundário: "Excluir paciente definitivo pra liberar vaga".
+   - **Por que NÃO usar "Falar com a Leda" / contato genérico:** (a) viola regra core "sem reivindicações de time" e expõe construção solo no momento mais sensível; (b) vira gargalo operacional 1:1; (c) lista de espera gera sinal de demanda mensurável (quantos querem Clinic? em que momento?) e é padrão de mercado aceito (Linear, Notion, Superhuman fizeram assim).
+   - **Tabela técnica nova necessária:** `clinic_waitlist` (id, workspace_id, email, projected_patient_count nullable, created_at, notified_at nullable). RLS: insert pra owner do workspace; select só admin.
 
 2. **Aviso antecipado:** **Sim, aos 80% do limite.**
    - Basic: banner discreto na lista de pacientes a partir de 16/20.
