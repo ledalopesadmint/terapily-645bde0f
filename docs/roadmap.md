@@ -56,6 +56,9 @@
 ## S4–S6
 Ver `mem://features/roadmap-6-weeks` para o detalhamento de cada semana.
 
+### Dívidas técnicas obrigatórias antes do launch público (S5/S6)
+- **Rate limit durável**: migrar in-memory (`Map` por instância) pra store compartilhada (Postgres-based como default, reavaliar Cloudflare Rate Limiting). Detalhes em `docs/technical-debt.md` §4. Bloqueante de launch pós-S6.
+
 ## Future plan architecture
 
 A arquitetura suporta **4 planos**. Apenas Basic e Practice serão ativados no MVP.
