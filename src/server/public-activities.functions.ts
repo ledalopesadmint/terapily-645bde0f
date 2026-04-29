@@ -59,6 +59,11 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => ResolveSchema.parse(input))
   .handler(async ({ data }) => {
     const tokenHash = await hashMagicLinkToken(data.token);
+    await checkPublicLinkRateLimit({
+      ip: getClientIp(),
+      tokenHash,
+      bucket: "resolve",
+    });
     const pa = await getPatientActivityByTokenHash(tokenHash);
 
     if (!pa) {
