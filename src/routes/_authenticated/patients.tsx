@@ -3,7 +3,12 @@
  * Toda apresentação vive em `src/features/patients/components/*`.
  */
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useChildMatches,
+} from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Trash } from "lucide-react";
 import { toast } from "sonner";
