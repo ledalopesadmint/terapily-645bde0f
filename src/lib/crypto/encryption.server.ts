@@ -30,7 +30,8 @@ function base64Encode(bytes: Uint8Array): string {
 
 function base64Decode(b64: string): Uint8Array {
   const binary = atob(b64);
-  const bytes = new Uint8Array(binary.length);
+  const buffer = new ArrayBuffer(binary.length);
+  const bytes = new Uint8Array(buffer);
   for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
