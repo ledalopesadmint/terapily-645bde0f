@@ -3,7 +3,12 @@
  * Toda apresentação vive em `src/features/patients/components/*`.
  */
 import { useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  useChildMatches,
+} from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Trash } from "lucide-react";
 import { toast } from "sonner";
@@ -47,6 +52,16 @@ export const Route = createFileRoute("/_authenticated/patients")({
 });
 
 function PatientsPage() {
+  // Se houver rota filha ativa (ex: /patients/deleted), renderiza só o
+  // Outlet — senão a filha "casa" mas nunca aparece, fica só piscando a URL.
+  const childMatches = useChildMatches();
+  if (childMatches.length > 0) {
+    return <Outlet />;
+  }
+  return <PatientsContent />;
+}
+
+function PatientsContent() {
   const queryClient = useQueryClient();
   const auth = useAuth();
   const [status, setStatus] = useState<PatientStatusFilter>("active");

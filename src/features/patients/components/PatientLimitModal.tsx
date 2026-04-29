@@ -69,24 +69,47 @@ export function PatientLimitModal({
               ? `Você atingiu ${max} de ${max} pacientes do Practice.`
               : "Você atingiu o limite do plano Basic."}
           </DialogTitle>
-          <DialogDescription>
-            {isPractice ? (
-              <>
-                Estamos finalizando o plano <strong>Clinic</strong> (100+ pacientes,
-                multi-terapeuta). Entre na lista de espera pra ser avisado primeiro,
-                ou libere uma vaga excluindo um paciente.
-              </>
-            ) : (
-              <>
-                Você cadastrou <strong>{max} de {max} pacientes</strong> do Basic.
-                Com o <strong>Practice</strong>, você atende até{" "}
-                <strong>50 pacientes ativos</strong> — mais do dobro da sua capacidade
-                atual. Você também pode liberar uma vaga excluindo um paciente
-                (arquivados continuam contando porque seguimos custodiando os dados).
-              </>
-            )}
+          <DialogDescription className="sr-only">
+            {isPractice
+              ? "Você atingiu o limite do plano Practice. Entre na lista de espera do Clinic ou libere uma vaga."
+              : `Você cadastrou ${max} de ${max} pacientes. Faça upgrade pro Practice ou libere uma vaga.`}
           </DialogDescription>
         </DialogHeader>
+
+        {isPractice ? (
+          <p className="text-sm text-muted-foreground">
+            Estamos finalizando o plano <strong>Clinic</strong> (100+ pacientes,
+            multi-terapeuta). Entre na lista de espera pra ser avisado primeiro,
+            ou libere uma vaga excluindo um paciente.
+          </p>
+        ) : (
+          <div className="space-y-4 text-sm">
+            <p className="text-foreground">
+              Você cadastrou <strong>{max} de {max} pacientes</strong>. Pra receber
+              alguém novo, você tem duas opções:
+            </p>
+
+            <div className="rounded-lg border border-sage/40 bg-sage/5 p-4">
+              <p className="font-medium text-foreground">
+                Fazer upgrade pro Practice — <span className="font-semibold">$159/mês</span>
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Atende até <strong>50 pacientes ativos</strong> (2,5× sua capacidade
+                atual), mantém todos os dados que já estão aqui e desbloqueia o
+                Compliance Report exportável.
+              </p>
+            </div>
+
+            <div className="rounded-lg border border-border bg-muted/30 p-4">
+              <p className="font-medium text-foreground">Ou liberar uma vaga</p>
+              <p className="mt-1 text-muted-foreground">
+                Excluir um paciente devolve uma vaga e mantém os dados restauráveis
+                por 30 dias. Pacientes arquivados continuam contando porque seguimos
+                custodiando os dados deles.
+              </p>
+            </div>
+          </div>
+        )}
 
         {isPractice ? (
           <div className="space-y-3">
