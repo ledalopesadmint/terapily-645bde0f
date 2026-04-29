@@ -17,7 +17,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
-import { withAudit } from "@/features/audit/audit.server";
+import { withAudit, recordAudit } from "@/features/audit/audit.server";
 import {
   encryptPHIServer,
   decryptPHIServer,
