@@ -59,6 +59,7 @@ import {
   updatePatient,
   setPatientLifecycle,
   revealPatientContact,
+  getPatientUsage,
   type PatientDTO,
 } from "@/features/patients/patients.functions";
 
