@@ -21,6 +21,7 @@ import {
   getPatientUsage,
 } from "@/features/patients/patients.functions";
 import type {
+  LimitReachedInfo,
   PatientDTO,
   PatientStatusFilter,
 } from "@/features/patients/patients.types";
@@ -55,6 +56,9 @@ function PatientsPage() {
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<PatientDTO | null>(null);
   const [limitModalOpen, setLimitModalOpen] = useState(false);
+  // Info autoritativa vinda do servidor quando o limite é batido.
+  // Tem prioridade sobre `usage` (que é só preview e pode estar stale/falho).
+  const [limitInfo, setLimitInfo] = useState<LimitReachedInfo | null>(null);
 
   const patientsQuery = useQuery({
     queryKey: ["patients", status, search],
@@ -167,7 +171,11 @@ function PatientsPage() {
             used={usage.used}
             max={usage.max}
             tier={usage.tier}
-            onJoinWaitlist={() => setLimitModalOpen(true)}
+            onJoinWaitlist={() => {
+              // Banner é só preview — usa os dados da query.
+              setLimitInfo({ tier: usage.tier, max: usage.max as number });
+              setLimitModalOpen(true);
+            }}
           />
         </div>
       ) : null}
@@ -206,9 +214,15 @@ function PatientsPage() {
         open={creating}
         onOpenChange={(o) => !o && setCreating(false)}
         patient={null}
-        onLimitReached={() => {
+        onLimitReached={(info) => {
+          // Servidor é a fonte da verdade. Mesmo que `usage` esteja
+          // desatualizado, em loading ou tenha falhado, o modal abre com
+          // os dados corretos (tier + max) vindos do erro do servidor.
           setCreating(false);
+          setLimitInfo(info);
           setLimitModalOpen(true);
+          // Revalida o usage pra próximo banner refletir o estado real.
+          queryClient.invalidateQueries({ queryKey: ["patients", "usage"] });
         }}
         onSaved={() => {
           setCreating(false);
@@ -236,12 +250,21 @@ function PatientsPage() {
         pending={lifecycleMutation.isPending}
       />
 
-      {usage && usage.max != null ? (
+      {/*
+        Modal de limite — sempre renderizado quando aberto.
+        Prioriza `limitInfo` (servidor, autoritativo) sobre `usage` (preview).
+        Sem fallback "esconde tudo": se nenhum dos dois existir, usamos
+        defaults defensivos pra mensagem ainda fazer sentido.
+      */}
+      {limitModalOpen ? (
         <PatientLimitModal
           open={limitModalOpen}
-          onOpenChange={setLimitModalOpen}
-          tier={usage.tier}
-          max={usage.max}
+          onOpenChange={(o) => {
+            setLimitModalOpen(o);
+            if (!o) setLimitInfo(null);
+          }}
+          tier={limitInfo?.tier ?? usage?.tier ?? "basic"}
+          max={limitInfo?.max ?? usage?.max ?? 0}
           ownerEmail={auth.user?.email ?? null}
         />
       ) : null}

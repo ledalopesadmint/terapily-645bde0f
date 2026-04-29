@@ -29,7 +29,12 @@ import {
   createPatient,
   updatePatient,
 } from "@/features/patients/patients.functions";
-import { isLimitReachedError, type PatientDTO } from "../patients.types";
+import {
+  isLimitReachedError,
+  parseLimitReachedError,
+  type LimitReachedInfo,
+  type PatientDTO,
+} from "../patients.types";
 import { deriveInitials, looksLikeRealName } from "./utils";
 
 interface Props {
@@ -37,7 +42,13 @@ interface Props {
   onOpenChange: (open: boolean) => void;
   patient: PatientDTO | null;
   onSaved: () => void;
-  onLimitReached?: () => void;
+  /**
+   * Disparado quando o servidor recusa por limite (`__LIMIT_REACHED__`).
+   * Recebe `tier` e `max` autoritativos vindos do servidor — a UI deve usar
+   * esses valores no modal, não os de `getPatientUsage` (que pode estar
+   * desatualizado, em loading, ou ter falhado).
+   */
+  onLimitReached?: (info: LimitReachedInfo) => void;
 }
 
 export function PatientForm({
@@ -71,9 +82,18 @@ export function PatientForm({
     },
     onError: (err: Error) => {
       // Marker estruturado vindo do servidor: abre o modal de limite
-      // contextual ao invés de toast genérico.
-      if (isLimitReachedError(err) && onLimitReached) {
-        onLimitReached();
+      // contextual ao invés de toast genérico. NUNCA mostra a string crua
+      // `__LIMIT_REACHED__:...` ao usuário.
+      if (isLimitReachedError(err)) {
+        const info = parseLimitReachedError(err);
+        if (info && onLimitReached) {
+          onLimitReached(info);
+          return;
+        }
+        // Fallback defensivo: se por algum motivo não conseguimos parsear
+        // ou o pai não passou o callback, mostra mensagem amigável genérica
+        // — nunca o marker técnico.
+        toast.error("Você atingiu o limite de pacientes do seu plano.");
         return;
       }
       toast.error(err.message);
