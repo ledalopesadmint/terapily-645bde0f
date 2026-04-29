@@ -20,7 +20,7 @@
  * - Sensitive activities mostram badge discreto pra avisar terapeuta
  */
 
-import { Play, Send } from "lucide-react";
+import { Play } from "lucide-react";
 import { ActivityIllustration } from "./illustrations";
 import type { Activity } from "./catalog";
 
