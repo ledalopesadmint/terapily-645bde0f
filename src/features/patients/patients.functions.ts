@@ -10,7 +10,8 @@
  *    (registro lido mas com PHI ilegível) — preferível a quebrar a tela toda.
  *  - `withAudit.metadata` NUNCA contém PHI: só ids, enums, contagens.
  *  - Soft delete via update `deleted_at = now()`. DELETE bloqueado pela RLS.
- *  - Gating de plano: checa `subscriptions.limits.max_patients` no servidor.
+ *  - Gating de plano: SEMPRE via `getWorkspacePlan()`. NUNCA leia
+ *    `subscriptions.limits` direto neste arquivo.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -18,6 +19,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { withAudit, recordAudit } from "@/features/audit/audit.server";
+import { getWorkspacePlan } from "@/features/billing/plan.server";
 import {
   encryptPHIServer,
   decryptPHIServer,
@@ -30,24 +32,13 @@ import {
   type PatientCreate,
   type PatientUpdate,
 } from "@/lib/validation/schemas";
+import {
+  LIMIT_REACHED_PREFIX,
+  type PatientDTO,
+} from "./patients.types";
 
-// ----- shape devolvido pro client (PHI já decifrado) -----------------------
-export interface PatientDTO {
-  id: string;
-  workspace_id: string;
-  assigned_therapist_id: string;
-  display_name: string;
-  initials: string;
-  tags: string[];
-  status: "active" | "archived";
-  archived_at: string | null;
-  created_at: string;
-  updated_at: string;
-  // PHI decifrado (null se vazio ou falha de decrypt)
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-}
+// Re-export pra não quebrar imports antigos (`from "patients.functions"`).
+export type { PatientDTO } from "./patients.types";
 
 // Colunas selecionadas — sempre as mesmas pra evitar leak acidental.
 const SELECT_COLS =
