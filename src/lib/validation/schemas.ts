@@ -98,12 +98,32 @@ const phiDate = z
   .optional()
   .or(z.literal("").transform(() => null));
 
+// Apelido / pseudônimo. NÃO é PHI: vai em texto plano, índice, busca e logs.
+// Por isso bloqueamos formatos que normalmente carregam identidade real:
+// email, telefone, CPF/SSN. Nome composto longo é só um aviso visual no form
+// (não bloqueia, porque "Ana M." é legítimo e "Maria de Lourdes" também pode
+// ser pseudônimo escolhido pela terapeuta).
+const looksLikeEmail = /\S+@\S+\.\S+/;
+const looksLikePhone = /(?:\+?\d[\d\s().-]{7,})/;
+const looksLikeDocId = /\b\d{3}[.\-\s]?\d{3}[.\-\s]?\d{3}[-\s]?\d{2}\b|\b\d{3}-\d{2}-\d{4}\b/;
+
+export const displayNameSchema = z
+  .string()
+  .trim()
+  .min(1, "Obrigatório")
+  .max(80, "Máx. 80 caracteres")
+  .refine((v) => !looksLikeEmail.test(v), {
+    message: "Apelido não pode ser um email. Use só um identificador curto.",
+  })
+  .refine((v) => !looksLikePhone.test(v), {
+    message: "Apelido não pode ser um telefone.",
+  })
+  .refine((v) => !looksLikeDocId.test(v), {
+    message: "Apelido não pode conter CPF, SSN ou documento.",
+  });
+
 export const patientCreateSchema = z.object({
-  display_name: z
-    .string()
-    .trim()
-    .min(1, "Required")
-    .max(80, "Max 80 chars"),
+  display_name: displayNameSchema,
   initials: z
     .string()
     .trim()
