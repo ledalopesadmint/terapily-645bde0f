@@ -36,6 +36,7 @@
  */
 import { getRequestHeader } from "@tanstack/react-start/server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { logServerError } from "@/lib/logger.server";
 
 export interface AuditEntry {
   /** ID do usuário que disparou a ação (auth.uid). NULL apenas para sistema. */
