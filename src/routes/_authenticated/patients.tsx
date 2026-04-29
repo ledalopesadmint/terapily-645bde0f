@@ -240,10 +240,11 @@ function PatientsPage() {
                   <button
                     type="button"
                     onClick={() => setDetails(p)}
-                    className="min-w-0 flex-1 text-left"
+                    className="group min-w-0 flex-1 cursor-pointer text-left"
+                    aria-label={`Abrir detalhes de ${p.display_name}`}
                   >
-                    <p className="truncate font-medium text-foreground">
-                      {p.display_name}
+                    <p className="truncate font-medium text-foreground transition-colors group-hover:text-sage">
+                      <span className="story-link">{p.display_name}</span>
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
                       {p.tags.length > 0 ? p.tags.join(" · ") : "Sem etiquetas"}
