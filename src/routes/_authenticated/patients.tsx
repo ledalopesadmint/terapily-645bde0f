@@ -44,6 +44,7 @@ import {
 import {
   patientCreateSchema,
   type PatientCreate,
+  type PatientCreateInput,
 } from "@/lib/validation/schemas";
 import {
   listPatients,
@@ -335,8 +336,8 @@ interface PatientDialogProps {
 function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogProps) {
   const isEdit = patient !== null;
 
-  const form = useForm<PatientCreate>({
-    resolver: zodResolver(patientCreateSchema),
+  const form = useForm<PatientCreateInput>({
+    resolver: zodResolver(patientCreateSchema) as never,
     values: {
       display_name: patient?.display_name ?? "",
       initials: patient?.initials ?? "",
@@ -375,10 +376,12 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
   const submitting = createMut.isPending || updateMut.isPending;
 
   const onSubmit = form.handleSubmit((values) => {
-    const initials = values.initials?.trim() || deriveInitials(values.display_name);
-    const payload: PatientCreate = { ...values, initials };
-    if (isEdit) updateMut.mutate(payload);
-    else createMut.mutate(payload);
+    const parsed = patientCreateSchema.parse({
+      ...values,
+      initials: values.initials?.trim() || deriveInitials(values.display_name),
+    });
+    if (isEdit) updateMut.mutate(parsed);
+    else createMut.mutate(parsed);
   });
 
   const tagsValue = (form.watch("tags") ?? []).join(", ");

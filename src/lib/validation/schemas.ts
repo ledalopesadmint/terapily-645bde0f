@@ -120,6 +120,7 @@ export const patientCreateSchema = z.object({
   intake_notes: phiString(4000),
 });
 export type PatientCreate = z.infer<typeof patientCreateSchema>;
+export type PatientCreateInput = z.input<typeof patientCreateSchema>;
 
 export const patientUpdateSchema = patientCreateSchema.extend({
   id: z.string().uuid(),
