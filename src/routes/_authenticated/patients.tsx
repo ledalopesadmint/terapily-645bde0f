@@ -243,6 +243,7 @@ function PatientsPage() {
         onSaved={() => {
           setEditing(null);
           queryClient.invalidateQueries({ queryKey: ["patients"] });
+          queryClient.invalidateQueries({ queryKey: ["patients", "usage"] });
         }}
       />
 
