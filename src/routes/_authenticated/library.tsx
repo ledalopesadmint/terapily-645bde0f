@@ -442,11 +442,11 @@ function LibrarySelectionMode() {
                   </div>
                 )}
 
-                {previewActivity.config?.disclaimer && (
+                {typeof previewActivity.config?.disclaimer === "string" && (
                   <div className="rounded-md border border-border bg-secondary/40 p-3 text-xs text-secondary-foreground">
                     <p className="font-medium">Aviso clínico</p>
                     <p className="mt-1">
-                      {previewActivity.config?.disclaimer as string}
+                      {previewActivity.config.disclaimer as string}
                     </p>
                   </div>
                 )}
