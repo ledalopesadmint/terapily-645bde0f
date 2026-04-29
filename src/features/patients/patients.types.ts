@@ -30,7 +30,12 @@ export interface PatientDTO {
 export type PatientStatusFilter = "active" | "archived";
 
 export interface PatientUsage {
+  /** active + archived. Excluídos NÃO contam (somem em 30d). */
   used: number;
+  /** Breakdown pra UI explicar a contagem. */
+  active: number;
+  archived: number;
+  deleted: number;
   /** null = ilimitado (Clinic). */
   max: number | null;
   tier: string;

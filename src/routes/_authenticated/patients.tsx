@@ -191,6 +191,8 @@ function PatientsContent() {
             used={usage.used}
             max={usage.max}
             tier={usage.tier}
+            active={usage.active}
+            archived={usage.archived}
             onJoinWaitlist={() => {
               // Banner é só preview — usa os dados da query.
               setLimitInfo({ tier: usage.tier, max: usage.max as number });
