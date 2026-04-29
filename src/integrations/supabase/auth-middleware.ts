@@ -6,26 +6,24 @@ import { supabase as browserSupabase } from './client'
 import type { Database } from './types'
 
 /**
- * Client-side step: pega o access_token da sessão Supabase no browser
- * e injeta como header `Authorization: Bearer <token>` antes do request
- * sair pro server. Roda só no client (no SSR não há sessão).
+ * Middleware único:
+ *  - .client(): pega o access_token da sessão Supabase no browser e injeta
+ *    como header `Authorization: Bearer <token>` antes do request sair.
+ *  - .server(): valida o token, cria um Supabase client server-side autenticado
+ *    como o user, e injeta { supabase, userId, claims } no contexto.
  */
-const attachSupabaseToken = createMiddleware({ type: 'function' }).client(
-  async ({ next }) => {
+export const requireSupabaseAuth = createMiddleware({ type: 'function' })
+  .client(async ({ next }) => {
     let token: string | undefined;
     if (typeof window !== 'undefined') {
       const { data } = await browserSupabase.auth.getSession();
       token = data.session?.access_token;
     }
     return next({
-      sendContext: {},
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
-  },
-);
-
-const validateSupabaseToken = createMiddleware({ type: 'function' }).server(
-  async ({ next }) => {
+  })
+  .server(async ({ next }) => {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 
@@ -58,8 +56,8 @@ const validateSupabaseToken = createMiddleware({ type: 'function' }).server(
     }
 
     const supabase = createClient<Database>(
-      SUPABASE_URL!,
-      SUPABASE_PUBLISHABLE_KEY!,
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY,
       {
         global: {
           headers: {
@@ -89,16 +87,5 @@ const validateSupabaseToken = createMiddleware({ type: 'function' }).server(
         userId: data.claims.sub,
         claims: data.claims,
       },
-    })
-  }
-)
-
-export const requireSupabaseAuth = createMiddleware({ type: 'function' })
-  .middleware([attachSupabaseToken])
-  .server(async ({ next }) => {
-    return validateSupabaseToken._types ? next() : next();
+    });
   });
-
-// Compose: o `requireSupabaseAuth` real precisa rodar attach (client) +
-// validate (server) em sequência. Reexport via composição de middleware.
-export const requireSupabaseAuthChain = [attachSupabaseToken, validateSupabaseToken];
