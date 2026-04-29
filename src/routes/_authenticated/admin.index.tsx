@@ -258,50 +258,81 @@ function AdminHomePage() {
         )}
 
         {data && data.items.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-border/50">
-            <table className="w-full text-left">
-              <thead className="bg-muted/40">
-                <tr>
-                  <Th>Slug</Th>
-                  <Th>Título</Th>
-                  <Th>Arquétipo</Th>
-                  <Th>Tema</Th>
-                  <Th>Status</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {data.items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="border-t border-border/50 hover:bg-muted/30"
-                  >
-                    <Td>
-                      <code className="font-mono text-xs text-muted-foreground">
-                        {item.slug}
-                      </code>
-                    </Td>
-                    <Td className="font-medium text-foreground">{item.title}</Td>
-                    <Td className="text-muted-foreground">{item.archetype}</Td>
-                    <Td>
-                      <span
-                        data-theme={item.theme.replace("_", "-")}
-                        className="inline-flex items-center gap-1.5 text-xs"
-                      >
-                        <span
-                          aria-hidden
-                          className="h-2.5 w-2.5 rounded-full [background-color:var(--activity-accent)]"
-                        />
-                        {item.theme}
-                      </span>
-                    </Td>
-                    <Td>
-                      <StatusPill status={item.status} />
-                    </Td>
+          <>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Toque na estrela pra trocar a atividade que aparece em destaque no
+              topo do <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.6875rem]">/library</code>.
+              Apenas uma fica ativa por vez.
+            </p>
+            <div className="overflow-hidden rounded-xl border border-border/50">
+              <table className="w-full text-left">
+                <thead className="bg-muted/40">
+                  <tr>
+                    <Th>Destaque</Th>
+                    <Th>Slug</Th>
+                    <Th>Título</Th>
+                    <Th>Arquétipo</Th>
+                    <Th>Tema</Th>
+                    <Th>Status</Th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {data.items.map((item) => {
+                    const busy = featuringId === item.id;
+                    return (
+                      <tr
+                        key={item.id}
+                        className="border-t border-border/50 hover:bg-muted/30"
+                        data-featured={item.is_featured ? "true" : undefined}
+                      >
+                        <Td>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleFeatured(item.id, item.is_featured)}
+                            disabled={busy}
+                            aria-pressed={item.is_featured}
+                            aria-label={
+                              item.is_featured
+                                ? `Remover ${item.title} do destaque`
+                                : `Definir ${item.title} como destaque`
+                            }
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md transition-colors hover:bg-muted disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                          >
+                            <Star
+                              className={`h-4 w-4 ${item.is_featured ? "fill-secondary text-secondary" : "text-muted-foreground"}`}
+                              aria-hidden
+                            />
+                          </button>
+                        </Td>
+                        <Td>
+                          <code className="font-mono text-xs text-muted-foreground">
+                            {item.slug}
+                          </code>
+                        </Td>
+                        <Td className="font-medium text-foreground">{item.title}</Td>
+                        <Td className="text-muted-foreground">{item.archetype}</Td>
+                        <Td>
+                          <span
+                            data-theme={item.theme.replace("_", "-")}
+                            className="inline-flex items-center gap-1.5 text-xs"
+                          >
+                            <span
+                              aria-hidden
+                              className="h-2.5 w-2.5 rounded-full [background-color:var(--activity-accent)]"
+                            />
+                            {item.theme}
+                          </span>
+                        </Td>
+                        <Td>
+                          <StatusPill status={item.status} />
+                        </Td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </section>
     </div>
