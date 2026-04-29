@@ -20,7 +20,7 @@
  * - Sensitive activities mostram badge discreto pra avisar terapeuta
  */
 
-import { Play, Send } from "lucide-react";
+import { Play } from "lucide-react";
 import { ActivityIllustration } from "./illustrations";
 import type { Activity } from "./catalog";
 
@@ -109,19 +109,6 @@ export function ActivityCard({ activity, onStart }: ActivityCardProps) {
           >
             <Play className="h-3 w-3" aria-hidden />
             Em sessão
-          </button>
-          <button
-            type="button"
-            onClick={() => onStart?.(activity, "shared_link")}
-            className="
-              inline-flex flex-1 items-center justify-center gap-1.5 rounded-md
-              border border-border bg-transparent px-3 py-1.5 text-xs font-medium text-foreground
-              transition-colors hover:bg-muted
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-            "
-          >
-            <Send className="h-3 w-3" aria-hidden />
-            Enviar
           </button>
         </div>
       </div>
