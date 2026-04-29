@@ -295,6 +295,13 @@ export const createPatient = createServerFn({ method: "POST" })
           .single();
 
         if (error) {
+          // Trigger BEFORE INSERT (enforce_patient_limit) lança a mensagem
+          // estruturada __LIMIT_REACHED__:tier:max. Preserva pra UI conseguir
+          // abrir o modal de upgrade mesmo se a checagem app-level acima
+          // estiver com cache stale.
+          if (error.message?.startsWith(LIMIT_REACHED_PREFIX)) {
+            throw new Error(error.message);
+          }
           logServerError("createPatient", error);
           throw new Error("Não foi possível criar o paciente.");
         }
@@ -547,8 +554,14 @@ export const restorePatient = createServerFn({ method: "POST" })
     });
 
     if (error) {
+      // restore_patient (RPC) chama assert_patient_capacity, que lança
+      // __LIMIT_REACHED__:tier:max quando o plano está cheio. Preserva
+      // pra UI abrir o modal de upgrade no fluxo de restore.
+      if (error.message?.startsWith(LIMIT_REACHED_PREFIX)) {
+        throw new Error(error.message);
+      }
       logServerError("restorePatient", error);
-      throw new Error("Não foi possível restaurar.");
+      throw new Error(error.message || "Não foi possível restaurar.");
     }
 
     await recordAudit({

@@ -1,14 +1,22 @@
+import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, ArchiveRestore } from "lucide-react";
 import { toast } from "sonner";
 
+import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { Button } from "@/components/ui/button";
 import {
   listDeletedPatients,
   restorePatient,
 } from "@/features/patients/patients.functions";
+import {
+  isLimitReachedError,
+  parseLimitReachedError,
+  type LimitReachedInfo,
+} from "@/features/patients/patients.types";
+import { PatientLimitModal } from "@/features/patients/components/PatientLimitModal";
 
 export const Route = createFileRoute("/_authenticated/patients/deleted")({
   head: () => ({
@@ -26,6 +34,8 @@ export const Route = createFileRoute("/_authenticated/patients/deleted")({
 
 function DeletedPatientsPage() {
   const qc = useQueryClient();
+  const auth = useAuth();
+  const [limitInfo, setLimitInfo] = useState<LimitReachedInfo | null>(null);
 
   const query = useQuery({
     queryKey: ["patients", "deleted"],
@@ -39,7 +49,20 @@ function DeletedPatientsPage() {
       toast.success("Paciente restaurado.");
       qc.invalidateQueries({ queryKey: ["patients"] });
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      // Limite cheio: o servidor (assert_patient_capacity) lança o marker
+      // estruturado. Aqui abrimos o modal de upgrade em vez de toast cru,
+      // porque a ação correta do terapeuta é abrir vaga (excluir um ativo)
+      // ou fazer upgrade — não tentar de novo.
+      if (isLimitReachedError(err)) {
+        const info = parseLimitReachedError(err);
+        if (info) {
+          setLimitInfo(info);
+          return;
+        }
+      }
+      toast.error(err.message);
+    },
   });
 
   const items = query.data?.items ?? [];
@@ -61,6 +84,10 @@ function DeletedPatientsPage() {
         30 dias. Você pode restaurar a qualquer momento dentro desse período. Após o prazo,
         o nome, email e telefone são removidos do banco e não podem ser recuperados (o
         registro mínimo de auditoria permanece, sem dados pessoais).
+      </p>
+      <p className="mt-2 max-w-2xl text-xs text-muted-foreground">
+        Restaurar ocupa uma vaga do seu plano. Se o plano estiver cheio, exclua
+        um paciente ativo ou arquivado primeiro — ou faça upgrade.
       </p>
 
       <section className="mt-10">
@@ -127,6 +154,16 @@ function DeletedPatientsPage() {
           </ul>
         )}
       </section>
+
+      {limitInfo ? (
+        <PatientLimitModal
+          open={limitInfo !== null}
+          onOpenChange={(o) => !o && setLimitInfo(null)}
+          tier={limitInfo.tier}
+          max={limitInfo.max}
+          ownerEmail={auth.user?.email ?? null}
+        />
+      ) : null}
     </div>
   );
 }
