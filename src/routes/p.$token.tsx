@@ -235,6 +235,11 @@ function ActivityRunner({
           )}
         </header>
 
+        {/* Banner de autosave (tranquiliza o paciente) */}
+        <div className="rounded-md border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          Você pode começar agora e terminar depois. Seu progresso será salvo com segurança.
+        </div>
+
         {/* Banner de expiração */}
         {expires && (
           <div
