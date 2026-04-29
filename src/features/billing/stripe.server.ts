@@ -23,7 +23,6 @@ export function stripe(): Stripe {
     );
   }
   _client = new Stripe(key, {
-    apiVersion: "2024-12-18.acacia" as Stripe.LatestApiVersion,
     typescript: true,
     appInfo: {
       name: "Terapily",
