@@ -155,32 +155,58 @@ function PatientDetailPage() {
           </div>
         </header>
 
-        <Tabs defaultValue="activities" className="w-full">
-          <TabsList>
-            <TabsTrigger value="activities">Atividades</TabsTrigger>
-            <TabsTrigger value="info">Informações</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="activities" className="mt-6">
-            <ActivitiesTab
-              patientId={patient.id}
-              workspaceId={patient.workspace_id}
-            />
-          </TabsContent>
-
-          <TabsContent value="info" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Cadastro</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                Apelido, iniciais e etiquetas. Dados de contato ficam cifrados.
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <PatientTabs
+          patientId={patient.id}
+          workspaceId={patient.workspace_id}
+        />
       </div>
     </AppShell>
+  );
+}
+
+function PatientTabs({
+  patientId,
+  workspaceId,
+}: {
+  patientId: string;
+  workspaceId: string;
+}) {
+  const roleQuery = useQuery({
+    queryKey: ["my-workspace-role", workspaceId],
+    queryFn: () => getMyWorkspaceRole({ data: { workspaceId } }),
+    staleTime: 60_000,
+  });
+  const isOwner = roleQuery.data?.role === "owner";
+
+  return (
+    <Tabs defaultValue="activities" className="w-full">
+      <TabsList>
+        <TabsTrigger value="activities">Atividades</TabsTrigger>
+        <TabsTrigger value="info">Informações</TabsTrigger>
+        {isOwner && <TabsTrigger value="audit">Auditoria</TabsTrigger>}
+      </TabsList>
+
+      <TabsContent value="activities" className="mt-6">
+        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} />
+      </TabsContent>
+
+      <TabsContent value="info" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Cadastro</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Apelido, iniciais e etiquetas. Dados de contato ficam cifrados.
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {isOwner && (
+        <TabsContent value="audit" className="mt-6">
+          <AuditTab patientId={patientId} workspaceId={workspaceId} />
+        </TabsContent>
+      )}
+    </Tabs>
   );
 }
 
