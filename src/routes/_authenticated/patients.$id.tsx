@@ -544,3 +544,68 @@ function RevealLinkDialog({
     </Dialog>
   );
 }
+
+// =============================================================================
+// Aba Auditoria (owner only)
+// =============================================================================
+
+const AUDIT_LABEL: Record<string, string> = {
+  "activity.assigned": "Atividade enviada",
+  "activity.link_opened": "Link aberto pelo paciente",
+  "activity.draft_saved": "Progresso salvo",
+  "activity.draft_loaded": "Progresso retomado",
+  "activity.draft_discarded": "Rascunho descartado",
+  "activity.submitted": "Atividade respondida",
+  "activity.status_changed": "Status alterado",
+  "activity.response_recorded": "Resposta registrada",
+};
+
+function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: string }) {
+  const auditQuery = useQuery({
+    queryKey: ["patient-audit", patientId, workspaceId],
+    queryFn: () => listPatientAuditLogs({ data: { patientId, workspaceId, limit: 100 } }),
+  });
+
+  if (auditQuery.isLoading) {
+    return <p className="text-sm text-muted-foreground">Carregando auditoria…</p>;
+  }
+
+  const logs = auditQuery.data?.logs ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-3 rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          Registros sem dados clínicos. Apenas IDs, ações e horários — visível só pra owner do workspace.
+        </p>
+      </div>
+
+      {logs.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            Nenhum evento registrado pra este paciente ainda.
+          </CardContent>
+        </Card>
+      ) : (
+        <ul className="divide-y divide-border rounded-md border border-border">
+          {logs.map((log) => (
+            <li key={log.id} className="flex items-start justify-between gap-3 px-4 py-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium text-foreground">
+                  {AUDIT_LABEL[log.action] ?? log.action}
+                </p>
+                <p className="text-xs text-muted-foreground font-mono">
+                  {log.action}
+                </p>
+              </div>
+              <time className="text-xs text-muted-foreground whitespace-nowrap">
+                {new Date(log.created_at).toLocaleString("pt-BR")}
+              </time>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
