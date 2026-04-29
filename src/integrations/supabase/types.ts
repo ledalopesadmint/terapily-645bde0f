@@ -147,6 +147,74 @@ export type Database = {
           },
         ]
       }
+      patients: {
+        Row: {
+          archived_at: string | null
+          assigned_therapist_id: string
+          created_at: string
+          created_by: string
+          date_of_birth_encrypted: string | null
+          deleted_at: string | null
+          display_name: string
+          email_encrypted: string | null
+          full_name_encrypted: string | null
+          id: string
+          initials: string
+          intake_notes_encrypted: string | null
+          phone_encrypted: string | null
+          status: Database["public"]["Enums"]["patient_status"]
+          tags: string[]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          archived_at?: string | null
+          assigned_therapist_id: string
+          created_at?: string
+          created_by: string
+          date_of_birth_encrypted?: string | null
+          deleted_at?: string | null
+          display_name: string
+          email_encrypted?: string | null
+          full_name_encrypted?: string | null
+          id?: string
+          initials: string
+          intake_notes_encrypted?: string | null
+          phone_encrypted?: string | null
+          status?: Database["public"]["Enums"]["patient_status"]
+          tags?: string[]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          archived_at?: string | null
+          assigned_therapist_id?: string
+          created_at?: string
+          created_by?: string
+          date_of_birth_encrypted?: string | null
+          deleted_at?: string | null
+          display_name?: string
+          email_encrypted?: string | null
+          full_name_encrypted?: string | null
+          id?: string
+          initials?: string
+          intake_notes_encrypted?: string | null
+          phone_encrypted?: string | null
+          status?: Database["public"]["Enums"]["patient_status"]
+          tags?: string[]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patients_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -507,6 +575,10 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      workspace_active_patient_count: {
+        Args: { _workspace_id: string }
+        Returns: number
+      }
     }
     Enums: {
       activity_archetype:
@@ -525,6 +597,7 @@ export type Database = {
         | "sage_dark"
       app_role: "admin" | "therapist" | "patient"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
+      patient_status: "active" | "archived"
       subscription_status:
         | "trialing"
         | "active"
@@ -680,6 +753,7 @@ export const Constants = {
       ],
       app_role: ["admin", "therapist", "patient"],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
+      patient_status: ["active", "archived"],
       subscription_status: [
         "trialing",
         "active",
