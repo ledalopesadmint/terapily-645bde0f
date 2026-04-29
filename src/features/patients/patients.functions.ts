@@ -209,6 +209,8 @@ export const createPatient = createServerFn({ method: "POST" })
     const workspace_id = membership.workspace_id;
 
     // 2. Gating por plano — limite real consultado no servidor.
+    //    REGRA (decidida 2026-04-29): pacientes ARQUIVADOS contam como vaga
+    //    ocupada. Só excluídos (deleted_at) liberam vaga.
     const { data: sub } = await supabase
       .from("subscriptions")
       .select("limits, status, tier")
@@ -217,23 +219,26 @@ export const createPatient = createServerFn({ method: "POST" })
 
     const limitsObj = (sub?.limits ?? {}) as Record<string, unknown>;
     const maxPatients = typeof limitsObj.max_patients === "number" ? limitsObj.max_patients : null;
+    const tier = (sub?.tier ?? "solo") as string;
 
     if (maxPatients != null) {
-      const { count: activeCount, error: countErr } = await supabase
+      const { count: usedCount, error: countErr } = await supabase
         .from("patients")
         .select("id", { count: "exact", head: true })
         .eq("workspace_id", workspace_id)
-        .is("deleted_at", null)
-        .eq("status", "active");
+        .is("deleted_at", null);
 
       if (countErr) {
         console.error("count patients failed", countErr);
         throw new Error("Não foi possível verificar o limite do plano.");
       }
-      if ((activeCount ?? 0) >= maxPatients) {
-        throw new Error(
-          `Você atingiu o limite de ${maxPatients} pacientes ativos do seu plano. Arquive um ou faça upgrade.`,
+      if ((usedCount ?? 0) >= maxPatients) {
+        // Marker estruturado pra UI distinguir "limite atingido" de outros
+        // erros e abrir o modal contextual de upgrade/waitlist.
+        const err = new Error(
+          `__LIMIT_REACHED__:${tier}:${maxPatients}`,
         );
+        throw err;
       }
     }
 
