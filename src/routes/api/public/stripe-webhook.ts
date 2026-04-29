@@ -55,12 +55,14 @@ async function markProcessed(
   event: Stripe.Event,
   workspaceId: string | null,
 ): Promise<void> {
-  await supabaseAdmin.from("stripe_events").insert({
-    id: event.id,
-    type: event.type,
-    payload: event as unknown as Record<string, unknown>,
-    workspace_id: workspaceId,
-  });
+  await supabaseAdmin.from("stripe_events").insert([
+    {
+      id: event.id,
+      type: event.type,
+      payload: event as never,
+      workspace_id: workspaceId,
+    },
+  ]);
 }
 
 async function workspaceFromCustomer(
@@ -121,7 +123,7 @@ async function syncSubscription(
 
   await supabaseAdmin
     .from("subscriptions")
-    .update(update)
+    .update(update as never)
     .eq("workspace_id", workspaceId);
 }
 
