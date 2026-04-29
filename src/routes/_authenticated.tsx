@@ -1,26 +1,24 @@
 import { createFileRoute, Outlet, useNavigate } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { AppShell } from "@/components/layout/AppShell";
 
 export const Route = createFileRoute("/_authenticated")({
   // Auth check é client-side: a sessão Supabase vive no localStorage do browser.
   // beforeLoad não roda no SSR de forma confiável aqui — fazemos o gate no
-  // componente combinando: (1) checagem síncrona no primeiro paint pra evitar
-  // flash de UI protegida e (2) useEffect pra reagir a expiração de sessão.
+  // componente. Importante: NÃO usamos localStorage no primeiro render pra
+  // evitar hydration mismatch — a checagem síncrona acontece em useState
+  // initializer só no cliente (após hidratação).
   component: AuthenticatedLayout,
 });
 
 /**
- * Checagem síncrona da sessão no localStorage (chave do Supabase JS v2).
- * Retorna true se HÁ token persistido — mesmo que ainda não validado.
- * Isso elimina o flash de "loading" pra usuários autenticados e evita
- * mostrar UI protegida pra quem não tem sessão.
+ * Checagem síncrona (apenas no cliente) de sessão persistida no localStorage.
+ * Chamada DENTRO de useState/useEffect — nunca no caminho de render do SSR.
  */
-function hasPersistedSession(): boolean {
+function readPersistedSession(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    // Supabase JS v2 usa a chave sb-<project-ref>-auth-token
     for (let i = 0; i < window.localStorage.length; i++) {
       const key = window.localStorage.key(i);
       if (key && key.startsWith("sb-") && key.endsWith("-auth-token")) {
@@ -31,7 +29,7 @@ function hasPersistedSession(): boolean {
       }
     }
   } catch {
-    // localStorage pode falhar em modo privado — cai pro fluxo padrão
+    /* localStorage indisponível em modo privado */
   }
   return false;
 }
@@ -40,12 +38,22 @@ function AuthenticatedLayout() {
   const auth = useAuth();
   const navigate = useNavigate();
 
-  // Gate imediato: se não há sessão persistida E não estamos carregando,
-  // ou se já validamos e não está autenticado → /login
-  const persisted = hasPersistedSession();
+  // Hydration-safe: começa "desconhecido" e só checa após mount no cliente.
+  // Isso garante que SSR e primeiro render do cliente produzem o mesmo HTML.
+  const [persistedChecked, setPersistedChecked] = useState(false);
+  const [hasPersisted, setHasPersisted] = useState(false);
+
+  useEffect(() => {
+    setHasPersisted(readPersistedSession());
+    setPersistedChecked(true);
+  }, []);
+
+  // Critério de redirect:
+  // - Auth já validou e está deslogado → /login
+  // - Auth ainda carregando MAS já checamos localStorage e não há token → /login
   const shouldRedirect =
     (!auth.isLoading && !auth.isAuthenticated) ||
-    (auth.isLoading && !persisted);
+    (auth.isLoading && persistedChecked && !hasPersisted);
 
   useEffect(() => {
     if (shouldRedirect) {
