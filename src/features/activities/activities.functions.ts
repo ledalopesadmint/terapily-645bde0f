@@ -287,7 +287,7 @@ export const listAvailableActivities = createServerFn({ method: "GET" })
       includeDrafts = Boolean(flagOn);
     }
 
-    const statuses = includeDrafts ? ["published", "draft"] : ["published"];
+    const statuses: ("draft" | "published")[] = includeDrafts ? ["published", "draft"] : ["published"];
     const { data: rows, error } = await supabase
       .from("activity_catalog")
       .select("id, slug, title, archetype, short_description, category, status, theme, config")
