@@ -49,7 +49,7 @@ export const getCurrentSubscription = createServerFn({ method: "GET" })
     const { data: sub } = await supabaseAdmin
       .from("subscriptions")
       .select(
-        "tier, status, current_period_end, cancel_at_period_end, stripe_payment_method_brand, stripe_payment_method_last4, stripe_price_id",
+        "tier, status, current_period_end, cancel_at_period_end, stripe_payment_method_brand, stripe_payment_method_last4, stripe_price_id, stripe_subscription_id",
       )
       .eq("workspace_id", membership.workspace_id)
       .maybeSingle();
