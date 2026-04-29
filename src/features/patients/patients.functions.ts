@@ -233,6 +233,18 @@ export const createPatient = createServerFn({ method: "POST" })
         throw new Error("Não foi possível verificar o limite do plano.");
       }
       if ((usedCount ?? 0) >= maxPatients) {
+        // Audit blind-spot fix: registra a tentativa bloqueada antes de lançar.
+        await recordAudit({
+          actorId: userId,
+          workspaceId: workspace_id,
+          action: "patient.limit_reached",
+          resourceType: "patient",
+          metadata: {
+            tier,
+            max_patients: maxPatients,
+            used: usedCount ?? 0,
+          },
+        });
         // Marker estruturado pra UI distinguir "limite atingido" de outros
         // erros e abrir o modal contextual de upgrade/waitlist.
         const err = new Error(
