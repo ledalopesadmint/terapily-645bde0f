@@ -185,6 +185,9 @@ function AdminHomePage() {
         </section>
       )}
 
+      {/* Billing — sync catálogo Stripe */}
+      <BillingSyncSection />
+
       {/* Lista de atividades */}
       <section aria-label="Atividades cadastradas" className="mt-12">
         <div className="mb-4 flex items-baseline justify-between">
