@@ -339,12 +339,12 @@ export const getCatalogInsights = createServerFn({ method: "GET" })
       .slice(0, TOP_LIMIT);
 
     // ─── 2. Maior taxa de conclusão (lifetime) ───────────────────────────────
-    // Conclusão = used_at preenchido (resposta enviada) OU status final.
-    // Usamos used_at como sinal primário porque é mais robusto que confiar
-    // só no enum patient_activity_status.
+    // Conclusão = used_at preenchido (paciente enviou a resposta).
+    // É o sinal mais robusto — vem do submit real, não depende de transição
+    // de status no enum patient_activity_status.
     const { data: allAssignments, error: allErr } = await supabaseAdmin
       .from("patient_activities")
-      .select("activity_id, status, used_at");
+      .select("activity_id, used_at");
     if (allErr) {
       console.error("[getCatalogInsights] completion fetch failed", { code: allErr.code });
       throw new Error("Falha ao calcular conclusão.");
@@ -355,7 +355,7 @@ export const getCatalogInsights = createServerFn({ method: "GET" })
       const id = row.activity_id as string;
       const entry = completionMap.get(id) ?? { assigned: 0, completed: 0 };
       entry.assigned += 1;
-      if (row.used_at || row.status === "completed" || row.status === "submitted") {
+      if (row.used_at) {
         entry.completed += 1;
       }
       completionMap.set(id, entry);
