@@ -189,6 +189,83 @@ export type Database = {
         }
         Relationships: []
       }
+      stripe_events: {
+        Row: {
+          id: string
+          payload: Json
+          processed_at: string
+          type: string
+          workspace_id: string | null
+        }
+        Insert: {
+          id: string
+          payload: Json
+          processed_at?: string
+          type: string
+          workspace_id?: string | null
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          processed_at?: string
+          type?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stripe_events_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stripe_products: {
+        Row: {
+          active: boolean
+          created_at: string
+          currency: string
+          id: string
+          interval: string
+          limits: Json
+          nickname: string
+          stripe_price_id: string
+          stripe_product_id: string
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          unit_amount: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          id?: string
+          interval?: string
+          limits?: Json
+          nickname: string
+          stripe_price_id: string
+          stripe_product_id: string
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          unit_amount: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          currency?: string
+          id?: string
+          interval?: string
+          limits?: Json
+          nickname?: string
+          stripe_price_id?: string
+          stripe_product_id?: string
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          unit_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           cancel_at_period_end: boolean
@@ -201,6 +278,11 @@ export type Database = {
           provider_customer_id: string | null
           provider_subscription_id: string | null
           status: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id: string | null
+          stripe_payment_method_brand: string | null
+          stripe_payment_method_last4: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
           tier: Database["public"]["Enums"]["subscription_tier"]
           trial_ends_at: string
           updated_at: string
@@ -217,6 +299,11 @@ export type Database = {
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_method_brand?: string | null
+          stripe_payment_method_last4?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           trial_ends_at?: string
           updated_at?: string
@@ -233,6 +320,11 @@ export type Database = {
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
           status?: Database["public"]["Enums"]["subscription_status"]
+          stripe_customer_id?: string | null
+          stripe_payment_method_brand?: string | null
+          stripe_payment_method_last4?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
           tier?: Database["public"]["Enums"]["subscription_tier"]
           trial_ends_at?: string
           updated_at?: string
