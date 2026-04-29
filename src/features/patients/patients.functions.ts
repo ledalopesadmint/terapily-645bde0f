@@ -47,8 +47,6 @@ export interface PatientDTO {
   full_name: string | null;
   email: string | null;
   phone: string | null;
-  date_of_birth: string | null;
-  intake_notes: string | null;
 }
 
 // Colunas selecionadas — sempre as mesmas pra evitar leak acidental.
