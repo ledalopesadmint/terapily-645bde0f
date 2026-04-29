@@ -28,6 +28,7 @@ import { Route as AuthenticatedSettingsWorkspaceRouteImport } from './routes/_au
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
+import { Route as AuthenticatedPatientsDeletedRouteImport } from './routes/_authenticated/patients.deleted'
 import { Route as AuthenticatedDevRoadmapRouteImport } from './routes/_authenticated/dev.roadmap'
 
 const SignupRoute = SignupRouteImport.update({
@@ -129,6 +130,12 @@ const AuthenticatedSettingsBillingRoute =
     path: '/billing',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
+const AuthenticatedPatientsDeletedRoute =
+  AuthenticatedPatientsDeletedRouteImport.update({
+    id: '/deleted',
+    path: '/deleted',
+    getParentRoute: () => AuthenticatedPatientsRoute,
+  } as any)
 const AuthenticatedDevRoadmapRoute = AuthenticatedDevRoadmapRouteImport.update({
   id: '/dev/roadmap',
   path: '/dev/roadmap',
@@ -143,11 +150,12 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
-  '/patients': typeof AuthenticatedPatientsRoute
+  '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -164,10 +172,11 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
-  '/patients': typeof AuthenticatedPatientsRoute
+  '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -186,11 +195,12 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
-  '/_authenticated/patients': typeof AuthenticatedPatientsRoute
+  '/_authenticated/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/_authenticated/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
@@ -214,6 +224,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/auth/callback'
     | '/dev/roadmap'
+    | '/patients/deleted'
     | '/settings/billing'
     | '/settings/profile'
     | '/settings/security'
@@ -234,6 +245,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/auth/callback'
     | '/dev/roadmap'
+    | '/patients/deleted'
     | '/settings/billing'
     | '/settings/profile'
     | '/settings/security'
@@ -256,6 +268,7 @@ export interface FileRouteTypes {
     | '/_authenticated/welcome'
     | '/auth/callback'
     | '/_authenticated/dev/roadmap'
+    | '/_authenticated/patients/deleted'
     | '/_authenticated/settings/billing'
     | '/_authenticated/settings/profile'
     | '/_authenticated/settings/security'
@@ -411,6 +424,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsBillingRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/patients/deleted': {
+      id: '/_authenticated/patients/deleted'
+      path: '/deleted'
+      fullPath: '/patients/deleted'
+      preLoaderRoute: typeof AuthenticatedPatientsDeletedRouteImport
+      parentRoute: typeof AuthenticatedPatientsRoute
+    }
     '/_authenticated/dev/roadmap': {
       id: '/_authenticated/dev/roadmap'
       path: '/dev/roadmap'
@@ -420,6 +440,19 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedPatientsRouteChildren {
+  AuthenticatedPatientsDeletedRoute: typeof AuthenticatedPatientsDeletedRoute
+}
+
+const AuthenticatedPatientsRouteChildren: AuthenticatedPatientsRouteChildren = {
+  AuthenticatedPatientsDeletedRoute: AuthenticatedPatientsDeletedRoute,
+}
+
+const AuthenticatedPatientsRouteWithChildren =
+  AuthenticatedPatientsRoute._addFileChildren(
+    AuthenticatedPatientsRouteChildren,
+  )
 
 interface AuthenticatedSettingsRouteChildren {
   AuthenticatedSettingsBillingRoute: typeof AuthenticatedSettingsBillingRoute
@@ -445,7 +478,7 @@ const AuthenticatedSettingsRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
-  AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRoute
+  AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedDevRoadmapRoute: typeof AuthenticatedDevRoadmapRoute
@@ -455,7 +488,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
-  AuthenticatedPatientsRoute: AuthenticatedPatientsRoute,
+  AuthenticatedPatientsRoute: AuthenticatedPatientsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedDevRoadmapRoute: AuthenticatedDevRoadmapRoute,

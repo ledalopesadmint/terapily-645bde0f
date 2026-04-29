@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,8 +12,13 @@ import {
   Pencil,
   Mail,
   Phone,
+  Trash,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { useAuth } from "@/features/auth/AuthProvider";
+import { PatientLimitBanner } from "@/features/patients/PatientLimitBanner";
+import { PatientLimitModal } from "@/features/patients/PatientLimitModal";
 
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { Button } from "@/components/ui/button";
@@ -54,6 +59,7 @@ import {
   updatePatient,
   setPatientLifecycle,
   revealPatientContact,
+  getPatientUsage,
   type PatientDTO,
 } from "@/features/patients/patients.functions";
 
@@ -111,12 +117,14 @@ async function copyAndAutoClear(value: string, label: string) {
 
 function PatientsPage() {
   const queryClient = useQueryClient();
+  const auth = useAuth();
   const [status, setStatus] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
   const [details, setDetails] = useState<PatientDTO | null>(null);
   const [editing, setEditing] = useState<PatientDTO | null>(null);
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<PatientDTO | null>(null);
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
 
   const patientsQuery = useQuery({
     queryKey: ["patients", status, search],
@@ -125,15 +133,23 @@ function PatientsPage() {
     staleTime: 10_000,
   });
 
+  const usageQuery = useQuery({
+    queryKey: ["patients", "usage"],
+    queryFn: () => getPatientUsage(),
+    staleTime: 10_000,
+  });
+  const usage = usageQuery.data;
+
   const lifecycleMutation = useMutation({
     mutationFn: (input: { id: string; action: "archive" | "restore_active" | "soft_delete" }) =>
       setPatientLifecycle({ data: input }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patients", "usage"] });
       const labels = {
         archive: "Paciente arquivado.",
         restore_active: "Paciente reativado.",
-        soft_delete: "Paciente removido.",
+        soft_delete: "Excluído. 30 dias pra restaurar.",
       } as const;
       toast.success(labels[vars.action]);
       setConfirmDelete(null);
@@ -182,12 +198,19 @@ function PatientsPage() {
       </header>
 
       <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
-          <TabsList>
-            <TabsTrigger value="active">Ativos</TabsTrigger>
-            <TabsTrigger value="archived">Arquivados</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-3">
+          <Tabs value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+            <TabsList>
+              <TabsTrigger value="active">Ativos</TabsTrigger>
+              <TabsTrigger value="archived">Arquivados</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/patients/deleted">
+              <Trash className="mr-2 h-4 w-4" /> Excluídos
+            </Link>
+          </Button>
+        </div>
 
         <div className="relative w-full sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -200,6 +223,17 @@ function PatientsPage() {
           />
         </div>
       </div>
+
+      {usage && usage.max != null ? (
+        <div className="mt-6">
+          <PatientLimitBanner
+            used={usage.used}
+            max={usage.max}
+            tier={usage.tier}
+            onJoinWaitlist={() => setLimitModalOpen(true)}
+          />
+        </div>
+      ) : null}
 
       <section className="mt-6">
         {patientsQuery.isLoading ? (
@@ -323,9 +357,14 @@ function PatientsPage() {
         open={creating}
         onOpenChange={(o) => !o && setCreating(false)}
         patient={null}
+        onLimitReached={() => {
+          setCreating(false);
+          setLimitModalOpen(true);
+        }}
         onSaved={() => {
           setCreating(false);
           queryClient.invalidateQueries({ queryKey: ["patients"] });
+          queryClient.invalidateQueries({ queryKey: ["patients", "usage"] });
         }}
       />
 
@@ -347,6 +386,16 @@ function PatientsPage() {
         }
         pending={lifecycleMutation.isPending}
       />
+
+      {usage && usage.max != null ? (
+        <PatientLimitModal
+          open={limitModalOpen}
+          onOpenChange={setLimitModalOpen}
+          tier={usage.tier}
+          max={usage.max}
+          ownerEmail={auth.user?.email ?? null}
+        />
+      ) : null}
     </div>
   );
 }
@@ -529,14 +578,16 @@ function DeleteConfirmDialog({
     <AlertDialog open onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir este paciente?</AlertDialogTitle>
+          <AlertDialogTitle>Excluir {patient.display_name}?</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>
-                O paciente sai da sua lista imediatamente. O registro continua
-                preservado no banco (cifrado) pra auditoria, conforme a retenção
-                exigida pela HIPAA — não conseguimos recuperar pela interface
-                depois de excluir.
+                Os dados ficam cifrados e disponíveis pra restauração por{" "}
+                <strong>30 dias</strong>. Após esse período, nome, email e telefone
+                são apagados em definitivo (audit trail é mantido sem dados pessoais).
+              </p>
+              <p>
+                Pra restaurar antes do prazo: <strong>Pacientes → Excluídos</strong>.
               </p>
               <p>
                 Pra confirmar, digite{" "}
@@ -587,9 +638,16 @@ interface PatientDialogProps {
   onOpenChange: (open: boolean) => void;
   patient: PatientDTO | null;
   onSaved: () => void;
+  onLimitReached?: () => void;
 }
 
-function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogProps) {
+function PatientDialog({
+  open,
+  onOpenChange,
+  patient,
+  onSaved,
+  onLimitReached,
+}: PatientDialogProps) {
   const isEdit = patient !== null;
 
   const form = useForm<PatientCreateInput>({
@@ -612,7 +670,15 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
       form.reset();
       onSaved();
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      // Marker estruturado vindo do servidor: abre o modal de limite contextual
+      // ao invés de toast genérico.
+      if (err.message.startsWith("__LIMIT_REACHED__") && onLimitReached) {
+        onLimitReached();
+        return;
+      }
+      toast.error(err.message);
+    },
   });
 
   const updateMut = useMutation({
