@@ -34,7 +34,20 @@ function DashboardPage() {
   const { profile, workspace } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
 
-  // Trial countdown
+  // Subscription pra detectar trial_expired sem tocar em billing/server.
+  const subQuery = useQuery({
+    queryKey: ["billing", "subscription"],
+    queryFn: () => getCurrentSubscription(),
+    staleTime: 30_000,
+  });
+  const subscription = subQuery.data?.subscription ?? null;
+  const trialStatus = deriveTrialStatus({
+    trialEndsAt: workspace?.trial_ends_at,
+    subscriptionStatus: subscription?.status,
+    stripeSubscriptionId: subscription?.stripe_subscription_id,
+  });
+
+  // Trial countdown (só relevante quando active)
   const trialEndsAt = workspace?.trial_ends_at
     ? new Date(workspace.trial_ends_at)
     : null;
