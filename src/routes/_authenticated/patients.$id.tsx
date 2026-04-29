@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Plus, Send, Slash } from "lucide-react";
+import { ArrowLeft, Copy, Plus, Send, ShieldCheck, Slash } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
@@ -58,9 +58,12 @@ import { getPatient } from "@/features/patients/patients.functions";
 import {
   assignActivity,
   listPatientActivities,
+  listPatientAuditLogs,
   revokeActivity,
   listAvailableActivities,
 } from "@/features/activities/activities.functions";
+import { useAuth } from "@/features/auth/AuthProvider";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
   head: () => ({
