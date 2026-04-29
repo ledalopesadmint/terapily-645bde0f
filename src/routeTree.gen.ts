@@ -23,6 +23,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
+import { Route as ApiDevCryptoCheckRouteImport } from './routes/api/dev/crypto-check'
 import { Route as AuthenticatedSettingsWorkspaceRouteImport } from './routes/_authenticated/settings.workspace'
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
@@ -99,6 +100,11 @@ const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   path: '/api/public/stripe-webhook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiDevCryptoCheckRoute = ApiDevCryptoCheckRouteImport.update({
+  id: '/api/dev/crypto-check',
+  path: '/api/dev/crypto-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedSettingsWorkspaceRoute =
   AuthenticatedSettingsWorkspaceRouteImport.update({
     id: '/workspace',
@@ -145,6 +151,7 @@ export interface FileRoutesByFullPath {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/settings/workspace': typeof AuthenticatedSettingsWorkspaceRoute
+  '/api/dev/crypto-check': typeof ApiDevCryptoCheckRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/settings/workspace': typeof AuthenticatedSettingsWorkspaceRoute
+  '/api/dev/crypto-check': typeof ApiDevCryptoCheckRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -186,6 +194,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/_authenticated/settings/workspace': typeof AuthenticatedSettingsWorkspaceRoute
+  '/api/dev/crypto-check': typeof ApiDevCryptoCheckRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -208,6 +217,7 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/settings/security'
     | '/settings/workspace'
+    | '/api/dev/crypto-check'
     | '/api/public/stripe-webhook'
     | '/admin/'
     | '/settings/'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/settings/profile'
     | '/settings/security'
     | '/settings/workspace'
+    | '/api/dev/crypto-check'
     | '/api/public/stripe-webhook'
     | '/admin'
     | '/settings'
@@ -248,6 +259,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/profile'
     | '/_authenticated/settings/security'
     | '/_authenticated/settings/workspace'
+    | '/api/dev/crypto-check'
     | '/api/public/stripe-webhook'
     | '/_authenticated/admin/'
     | '/_authenticated/settings/'
@@ -261,6 +273,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ApiDevCryptoCheckRoute: typeof ApiDevCryptoCheckRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
 }
 
@@ -364,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicStripeWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/dev/crypto-check': {
+      id: '/api/dev/crypto-check'
+      path: '/api/dev/crypto-check'
+      fullPath: '/api/dev/crypto-check'
+      preLoaderRoute: typeof ApiDevCryptoCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/settings/workspace': {
       id: '/_authenticated/settings/workspace'
       path: '/workspace'
@@ -453,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ApiDevCryptoCheckRoute: ApiDevCryptoCheckRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
 }
 export const routeTree = rootRouteImport
