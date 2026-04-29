@@ -117,12 +117,14 @@ async function copyAndAutoClear(value: string, label: string) {
 
 function PatientsPage() {
   const queryClient = useQueryClient();
+  const auth = useAuth();
   const [status, setStatus] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
   const [details, setDetails] = useState<PatientDTO | null>(null);
   const [editing, setEditing] = useState<PatientDTO | null>(null);
   const [creating, setCreating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<PatientDTO | null>(null);
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
 
   const patientsQuery = useQuery({
     queryKey: ["patients", status, search],
@@ -130,6 +132,13 @@ function PatientsPage() {
       listPatients({ data: { status, search: search || undefined, limit: 50 } }),
     staleTime: 10_000,
   });
+
+  const usageQuery = useQuery({
+    queryKey: ["patients", "usage"],
+    queryFn: () => getPatientUsage(),
+    staleTime: 10_000,
+  });
+  const usage = usageQuery.data;
 
   const lifecycleMutation = useMutation({
     mutationFn: (input: { id: string; action: "archive" | "restore_active" | "soft_delete" }) =>
