@@ -15,6 +15,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
@@ -59,6 +60,11 @@ const AuthenticatedRoute = AuthenticatedRouteImport.update({
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PTokenRoute = PTokenRouteImport.update({
+  id: '/p/$token',
+  path: '/p/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -161,6 +167,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -183,6 +190,7 @@ export interface FileRoutesByTo {
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -208,6 +216,7 @@ export interface FileRoutesById {
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/p/$token': typeof PTokenRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/_authenticated/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/welcome'
     | '/auth/callback'
+    | '/p/$token'
     | '/dev/roadmap'
     | '/patients/deleted'
     | '/settings/billing'
@@ -255,6 +265,7 @@ export interface FileRouteTypes {
     | '/patients'
     | '/welcome'
     | '/auth/callback'
+    | '/p/$token'
     | '/dev/roadmap'
     | '/patients/deleted'
     | '/settings/billing'
@@ -279,6 +290,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings'
     | '/_authenticated/welcome'
     | '/auth/callback'
+    | '/p/$token'
     | '/_authenticated/dev/roadmap'
     | '/_authenticated/patients/deleted'
     | '/_authenticated/settings/billing'
@@ -299,6 +311,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  PTokenRoute: typeof PTokenRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicHooksPurgePatientsRoute: typeof ApiPublicHooksPurgePatientsRoute
 }
@@ -345,6 +358,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$token': {
+      id: '/p/$token'
+      path: '/p/$token'
+      fullPath: '/p/$token'
+      preLoaderRoute: typeof PTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -528,6 +548,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  PTokenRoute: PTokenRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicHooksPurgePatientsRoute: ApiPublicHooksPurgePatientsRoute,
 }
