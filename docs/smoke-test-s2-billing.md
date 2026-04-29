@@ -18,12 +18,16 @@
    `https://www.terapily.com/api/public/stripe-webhook`
    (ou a URL publicada equivalente)
    e está escutando os eventos:
-   - `checkout.session.completed`
-   - `customer.subscription.created`
-   - `customer.subscription.updated`
-   - `customer.subscription.deleted`
-   - `invoice.payment_succeeded`
-   - `invoice.payment_failed`
+   - `checkout.session.completed` — vincula `stripe_customer_id` ao workspace; **crítico** (retry se workspace não resolver).
+   - `customer.subscription.created` — sincroniza `subscriptions` (status, tier, period_end); **crítico**.
+   - `customer.subscription.updated` — idem; **crítico**.
+   - `customer.subscription.deleted` — idem; **crítico**.
+   - `customer.subscription.trial_will_end` — **audit-only** (`billing.trial_will_end`). Hoje só registra `{stripe_subscription_id, trial_end}` no `audit_logs`. Não envia email nem altera status. Prepara aviso ao usuário (S5).
+   - `invoice.payment_succeeded` — resolve workspace via customer; audit genérico.
+   - `invoice.payment_failed` — idem; futuro disparo de aviso de cobrança.
+   - `charge.dispute.created` — **audit-only** (`billing.dispute_created`). Resolve workspace via `charge → customer`. Registra `{stripe_dispute_id, stripe_charge_id, amount, currency, reason, status}`. Se não conseguir resolver workspace, devolve **500 sem marcar como processado** pra Stripe reentregar — não perdemos sinal de chargeback. Prepara painel admin financeiro (S6).
+
+> Todos os eventos rodam com **assinatura Stripe verificada** (`STRIPE_WEBHOOK_SECRET`) e **idempotência via `stripe_events`** (PK = `event.id`). Metadata do audit é PII-safe: nunca contém email, nome, cartão, endereço ou dados do paciente — só IDs Stripe e valores numéricos.
 
 > Se algum dos itens acima estiver faltando, me avisa antes de continuar — eu te ajudo a configurar.
 
