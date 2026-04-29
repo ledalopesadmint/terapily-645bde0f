@@ -605,6 +605,13 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      purge_expired_patients: {
+        Args: never
+        Returns: {
+          purged_count: number
+          run_at: string
+        }[]
+      }
       restore_patient: {
         Args: { _patient_id: string }
         Returns: {
