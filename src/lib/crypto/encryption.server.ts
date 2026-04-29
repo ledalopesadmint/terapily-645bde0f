@@ -61,7 +61,7 @@ async function getKey(): Promise<CryptoKey> {
 
   cachedKey = await crypto.subtle.importKey(
     "raw",
-    keyBytes,
+    keyBytes.buffer as ArrayBuffer,
     { name: "AES-GCM" },
     false,
     ["encrypt", "decrypt"]
@@ -102,7 +102,7 @@ export async function decryptPHIServer(payload: string): Promise<string> {
     const plaintext = await crypto.subtle.decrypt(
       { name: "AES-GCM", iv },
       key,
-      data
+      data.buffer as ArrayBuffer
     );
     return new TextDecoder().decode(plaintext);
   } catch {
