@@ -346,7 +346,7 @@ export interface AuditLogRow {
   action: string;
   resource_type: string | null;
   resource_id: string | null;
-  metadata: Record<string, unknown>;
+  metadata: { [x: string]: unknown };
   created_at: string;
   actor_id: string | null;
 }
