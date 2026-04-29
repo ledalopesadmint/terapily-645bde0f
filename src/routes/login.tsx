@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { loginSchema, type LoginInput } from "@/lib/validation/schemas";
+import { useRedirectIfAuthenticated } from "@/features/auth/useRedirectIfAuthenticated";
 import { AuthShell } from "@/components/brand/AuthShell";
 import { GoogleButton } from "@/components/brand/GoogleButton";
 import { CapsLockHint } from "@/components/brand/CapsLockHint";
@@ -44,6 +45,7 @@ function LoginPage() {
   const navigate = useNavigate();
   const search = Route.useSearch();
   const [submitting, setSubmitting] = useState(false);
+  useRedirectIfAuthenticated(search.redirect || "/welcome");
 
   // Defesa: se o browser submeteu o form via GET (handler React não disparou),
   // a URL fica com ?email=...&password=... — limpa imediatamente do histórico
