@@ -268,42 +268,56 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
         <ul className="space-y-3">
           {activities.map((a) => {
             const status = a.status as ActivityStatus;
-            // Link só pode ser exibido novamente se tivermos o token cru — não temos.
-            // Após criação, o terapeuta gera novo link se precisar.
             const canRevoke =
               status !== "completed" && status !== "revoked" && status !== "expired";
             const response = Array.isArray(a.response) ? a.response[0] : a.response;
+            const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
+            const draftPct = a.draft_completion_percent ?? 0;
+            const displayStatus: ActivityStatus = hasDraft ? "in_progress" : status;
             return (
               <Card key={a.id}>
-                <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-                  <div className="space-y-1">
-                    <p className="font-medium text-foreground">
-                      {a.activity?.title ?? "Atividade"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
-                    </p>
+                <CardContent className="space-y-3 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="font-medium text-foreground">
+                        {a.activity?.title ?? "Atividade"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {response?.score != null && (
+                        <span className="text-sm">
+                          Score <strong>{response.score}</strong>
+                          {response.severity && (
+                            <span className="text-muted-foreground"> · {response.severity}</span>
+                          )}
+                        </span>
+                      )}
+                      <Badge variant={STATUS_VARIANT[displayStatus]}>
+                        {STATUS_LABEL[displayStatus]}
+                        {hasDraft && ` · ${draftPct}%`}
+                      </Badge>
+                      {canRevoke && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setRevokeTarget(a.id)}
+                        >
+                          <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {response?.score != null && (
-                      <span className="text-sm">
-                        Score <strong>{response.score}</strong>
-                        {response.severity && (
-                          <span className="text-muted-foreground"> · {response.severity}</span>
-                        )}
-                      </span>
-                    )}
-                    <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
-                    {canRevoke && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setRevokeTarget(a.id)}
-                      >
-                        <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
-                      </Button>
-                    )}
-                  </div>
+                  {hasDraft && (
+                    <div className="space-y-1">
+                      <Progress value={draftPct} className="h-1.5" />
+                      <p className="text-xs text-muted-foreground">
+                        Paciente está respondendo. Conteúdo cifrado — você verá só ao finalizar.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
