@@ -117,23 +117,58 @@ async function workspaceFromDispute(
   }
 }
 
-async function tierFromPriceId(priceId: string | null | undefined) {
-  if (!priceId) return null;
+/**
+ * Resolve o tier para um priceId consultando o catálogo local.
+ * IMPORTANTE: NÃO filtra por `active = true`. Plans/prices antigos podem
+ * estar inactive (ex: downgrade Practice → Basic, plan grandfathered),
+ * mas precisamos manter a capacidade de mapear o tier correto a partir do
+ * histórico salvo em stripe_products.
+ *
+ * Retorno:
+ *   - { found: true, tier }  → price existe no catálogo local.
+ *   - { found: false }       → price desconhecido. Caller deve pedir retry
+ *                              em eventos críticos de subscription, e nunca
+ *                              gravar `tier = null` silenciosamente.
+ */
+async function tierFromPriceId(
+  priceId: string | null | undefined,
+): Promise<
+  | { found: true; tier: string }
+  | { found: false }
+> {
+  if (!priceId) return { found: false };
   const { data } = await supabaseAdmin
     .from("stripe_products")
     .select("tier")
     .eq("stripe_price_id", priceId)
     .maybeSingle();
-  return data?.tier ?? null;
+  if (!data?.tier) return { found: false };
+  return { found: true, tier: data.tier };
 }
 
+/**
+ * Sincroniza public.subscriptions com o estado vindo do Stripe.
+ * Lança erro se:
+ *   - o priceId não puder ser resolvido contra o catálogo local
+ *     (caller deve devolver 500 sem markProcessed pra Stripe reentregar)
+ *   - o UPDATE no banco falhar
+ *
+ * Nunca grava `tier = null` silenciosamente.
+ */
 async function syncSubscription(
   workspaceId: string,
   sub: Stripe.Subscription,
 ): Promise<void> {
   const item = sub.items.data[0];
   const priceId = item?.price?.id ?? null;
-  const tier = (await tierFromPriceId(priceId)) ?? undefined;
+
+  const tierResult = await tierFromPriceId(priceId);
+  if (!tierResult.found) {
+    throw new Error(
+      `unknown_price_id:${priceId ?? "null"}`,
+    );
+  }
+
   const periodEndUnix =
     (sub as unknown as { current_period_end?: number }).current_period_end ??
     item?.current_period_end ??
@@ -143,18 +178,22 @@ async function syncSubscription(
     provider: "stripe",
     stripe_subscription_id: sub.id,
     stripe_price_id: priceId,
+    tier: tierResult.tier,
     status: mapStatus(sub.status),
     cancel_at_period_end: sub.cancel_at_period_end,
     current_period_end: periodEndUnix
       ? new Date(periodEndUnix * 1000).toISOString()
       : null,
   };
-  if (tier) update.tier = tier;
 
-  await supabaseAdmin
+  const { error: updErr } = await supabaseAdmin
     .from("subscriptions")
     .update(update as never)
     .eq("workspace_id", workspaceId);
+
+  if (updErr) {
+    throw new Error(`subscriptions_update_failed:${updErr.code ?? "unknown"}`);
+  }
 }
 
 export const Route = createFileRoute("/api/public/stripe-webhook")({
