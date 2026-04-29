@@ -18,7 +18,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
-import { withAudit, recordAudit } from "@/features/audit/audit.server";
+import { withAudit, recordAudit, parseOrAuditValidation } from "@/features/audit/audit.server";
 import { getWorkspacePlan } from "@/features/billing/plan.server";
 import {
   encryptPHIServer,
@@ -158,7 +158,7 @@ export const getPatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => patientIdSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
 
     const { data: row, error } = await supabase
       .from("patients")
@@ -173,7 +173,20 @@ export const getPatient = createServerFn({ method: "POST" })
     }
     if (!row) throw new Error("Paciente não encontrado.");
 
-    return { patient: await rowToDTO(row as PatientRow) };
+    // Access log de PHI: só registra DEPOIS que a leitura foi autorizada
+    // pela RLS (caso contrário row seria null). Metadata PII-safe — só IDs.
+    // listPatients NÃO registra (evita poluição do audit por scrolling).
+    const patientRow = row as PatientRow;
+    await recordAudit({
+      actorId: userId,
+      workspaceId: patientRow.workspace_id,
+      action: "patient.viewed",
+      resourceType: "patient",
+      resourceId: patientRow.id,
+      metadata: { patient_id: patientRow.id },
+    });
+
+    return { patient: await rowToDTO(patientRow) };
   });
 
 // =============================================================================
@@ -181,9 +194,16 @@ export const getPatient = createServerFn({ method: "POST" })
 // =============================================================================
 export const createPatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => patientCreateSchema.parse(input))
-  .handler(async ({ data, context }) => {
+  // Passthrough: validação real acontece no handler com audit de validation.failed.
+  .inputValidator((input: unknown) => input as PatientCreate)
+  .handler(async ({ data: rawInput, context }) => {
     const { supabase, userId } = context;
+    // Valida com auditoria de validation.failed (PII-safe: só nomes de campos).
+    const data = await parseOrAuditValidation(
+      patientCreateSchema,
+      rawInput,
+      { feature: "patients", actorId: userId },
+    );
 
     // 1. Resolve workspace ativo do usuário (membro vivo).
     const { data: membership, error: memberErr } = await supabase
@@ -289,9 +309,15 @@ export const createPatient = createServerFn({ method: "POST" })
 // =============================================================================
 export const updatePatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: unknown) => patientUpdateSchema.parse(input))
-  .handler(async ({ data, context }) => {
+  // Passthrough: validação real acontece no handler com audit de validation.failed.
+  .inputValidator((input: unknown) => input as PatientUpdate)
+  .handler(async ({ data: rawInput, context }) => {
     const { supabase, userId } = context;
+    const data = await parseOrAuditValidation(
+      patientUpdateSchema,
+      rawInput,
+      { feature: "patients", actorId: userId },
+    );
     const { id, assigned_therapist_id, ...rest } = data;
 
     const encrypted = await encryptPatientPayload({ ...rest, assigned_therapist_id });

@@ -122,3 +122,86 @@ export async function withAudit<T>(
   await recordAudit(entry);
   return result;
 }
+
+/**
+ * Faz `schema.parse(input)`. Se Zod falhar, registra `validation.failed`
+ * com a lista de campos inválidos (apenas NOMES — nunca os valores) e
+ * relança o ZodError pra UI tratar normalmente.
+ *
+ * Uso típico (dentro do .handler, depois de obter userId via middleware):
+ *
+ *   const data = await parseOrAuditValidation(
+ *     patientCreateSchema,
+ *     input,
+ *     { feature: "patients", actorId: userId, workspaceId },
+ *   );
+ *
+ * Metadata gravado é PII-safe: só `feature` (string fixa) e `fields` (lista
+ * de paths Zod). NUNCA inclui valores enviados pelo cliente.
+ */
+export async function parseOrAuditValidation<T>(
+  schema: { safeParse: (input: unknown) => { success: boolean; data?: T; error?: { issues: Array<{ path: Array<string | number> }> } } },
+  input: unknown,
+  ctx: { feature: string; actorId: string | null; workspaceId?: string | null },
+): Promise<T> {
+  const result = schema.safeParse(input);
+  if (result.success && result.data !== undefined) return result.data;
+
+  // Extrai só o primeiro segmento do path de cada issue (campo top-level).
+  // Dedup pra evitar repetição quando o mesmo campo tem múltiplos refinements.
+  const fields = Array.from(
+    new Set(
+      (result.error?.issues ?? [])
+        .map((i) => (i.path[0] !== undefined ? String(i.path[0]) : "<root>"))
+        .filter(Boolean),
+    ),
+  );
+
+  await recordAudit({
+    actorId: ctx.actorId,
+    workspaceId: ctx.workspaceId ?? null,
+    action: "validation.failed",
+    resourceType: ctx.feature,
+    metadata: {
+      feature: ctx.feature,
+      fields,
+    },
+  });
+
+  // Relança um Error com o mesmo formato Zod-friendly que o caller espera.
+  // Não inclui valores enviados — apenas a lista de campos.
+  const err = new Error(`Validation failed: ${fields.join(", ")}`);
+  (err as Error & { issues?: unknown }).issues = result.error?.issues;
+  throw err;
+}
+
+/**
+ * Helper padrão pra ações de admin (Leda) — uso futuro em S3+:
+ *   - publicação de atividade no catálogo
+ *   - alteração de planos
+ *   - alterações no catálogo Stripe (stripe_products)
+ *
+ * Convenção: action SEMPRE começa com `admin.` (enforçado).
+ * Metadata segue mesma regra PII-safe das outras entradas.
+ *
+ * Não registra workspace_id porque a maior parte das ações admin é global.
+ * Se houver workspace alvo, passe explicitamente via metadata.target_workspace_id.
+ */
+export async function recordAdminAction(
+  adminUserId: string,
+  action: string,
+  metadata: Record<string, unknown> = {},
+  resource?: { type: string; id?: string },
+): Promise<void> {
+  if (!action.startsWith("admin.")) {
+    throw new Error(`recordAdminAction: action must start with "admin." (got "${action}")`);
+  }
+  await recordAudit({
+    actorId: adminUserId,
+    workspaceId: null,
+    action,
+    resourceType: resource?.type,
+    resourceId: resource?.id,
+    metadata,
+  });
+}
