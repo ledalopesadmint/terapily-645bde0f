@@ -58,7 +58,10 @@ function PatientsPage() {
   if (childMatches.length > 0) {
     return <Outlet />;
   }
+  return <PatientsContent />;
+}
 
+function PatientsContent() {
   const queryClient = useQueryClient();
   const auth = useAuth();
   const [status, setStatus] = useState<PatientStatusFilter>("active");
