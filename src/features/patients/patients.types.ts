@@ -47,11 +47,33 @@ export interface DeletedPatientItem {
 
 /**
  * Marker estruturado devolvido pelo servidor quando o limite de pacientes é
- * atingido. A UI usa o prefixo pra abrir o modal de upgrade/waitlist no
- * lugar de um toast genérico.
+ * atingido. Formato: `__LIMIT_REACHED__:<tier>:<max>`.
+ *
+ * O servidor é a fonte da verdade — `getPatientUsage` no client é só
+ * preview/banner. Se a query estiver desatualizada, ausente, ou falhar, a
+ * UI ainda recebe `tier` e `max` autoritativos via este marker pra montar
+ * o modal correto.
  */
 export const LIMIT_REACHED_PREFIX = "__LIMIT_REACHED__";
 
+export interface LimitReachedInfo {
+  tier: string;
+  max: number;
+}
+
 export function isLimitReachedError(err: unknown): boolean {
   return err instanceof Error && err.message.startsWith(LIMIT_REACHED_PREFIX);
+}
+
+export function parseLimitReachedError(err: unknown): LimitReachedInfo | null {
+  if (!(err instanceof Error)) return null;
+  if (!err.message.startsWith(LIMIT_REACHED_PREFIX)) return null;
+  const parts = err.message.split(":");
+  // [__LIMIT_REACHED__, tier, max]
+  const tier = parts[1] ?? "basic";
+  const max = Number.parseInt(parts[2] ?? "0", 10);
+  return {
+    tier,
+    max: Number.isFinite(max) && max > 0 ? max : 0,
+  };
 }
