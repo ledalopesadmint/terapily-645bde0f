@@ -582,6 +582,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      assert_patient_capacity: {
+        Args: { _workspace_id: string }
+        Returns: undefined
+      }
       has_feature: {
         Args: { _flag: string; _workspace_id: string }
         Returns: boolean
