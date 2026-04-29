@@ -10,7 +10,8 @@
  *    (registro lido mas com PHI ilegível) — preferível a quebrar a tela toda.
  *  - `withAudit.metadata` NUNCA contém PHI: só ids, enums, contagens.
  *  - Soft delete via update `deleted_at = now()`. DELETE bloqueado pela RLS.
- *  - Gating de plano: checa `subscriptions.limits.max_patients` no servidor.
+ *  - Gating de plano: SEMPRE via `getWorkspacePlan()`. NUNCA leia
+ *    `subscriptions.limits` direto neste arquivo.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -18,6 +19,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
 import { withAudit, recordAudit } from "@/features/audit/audit.server";
+import { getWorkspacePlan } from "@/features/billing/plan.server";
 import {
   encryptPHIServer,
   decryptPHIServer,
@@ -30,24 +32,13 @@ import {
   type PatientCreate,
   type PatientUpdate,
 } from "@/lib/validation/schemas";
+import {
+  LIMIT_REACHED_PREFIX,
+  type PatientDTO,
+} from "./patients.types";
 
-// ----- shape devolvido pro client (PHI já decifrado) -----------------------
-export interface PatientDTO {
-  id: string;
-  workspace_id: string;
-  assigned_therapist_id: string;
-  display_name: string;
-  initials: string;
-  tags: string[];
-  status: "active" | "archived";
-  archived_at: string | null;
-  created_at: string;
-  updated_at: string;
-  // PHI decifrado (null se vazio ou falha de decrypt)
-  full_name: string | null;
-  email: string | null;
-  phone: string | null;
-}
+// Re-export pra não quebrar imports antigos (`from "patients.functions"`).
+export type { PatientDTO } from "./patients.types";
 
 // Colunas selecionadas — sempre as mesmas pra evitar leak acidental.
 const SELECT_COLS =
@@ -208,18 +199,13 @@ export const createPatient = createServerFn({ method: "POST" })
     }
     const workspace_id = membership.workspace_id;
 
-    // 2. Gating por plano — limite real consultado no servidor.
+    // 2. Gating por plano — limite real consultado no servidor via helper
+    //    centralizado. NUNCA leia `subscriptions.limits` direto aqui.
     //    REGRA (decidida 2026-04-29): pacientes ARQUIVADOS contam como vaga
     //    ocupada. Só excluídos (deleted_at) liberam vaga.
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("limits, status, tier")
-      .eq("workspace_id", workspace_id)
-      .maybeSingle();
-
-    const limitsObj = (sub?.limits ?? {}) as Record<string, unknown>;
-    const maxPatients = typeof limitsObj.max_patients === "number" ? limitsObj.max_patients : null;
-    const tier = (sub?.tier ?? "solo") as string;
+    const plan = await getWorkspacePlan(supabase, workspace_id);
+    const maxPatients = plan.max_patients;
+    const tier = plan.tier;
 
     if (maxPatients != null) {
       const { count: usedCount, error: countErr } = await supabase
@@ -232,8 +218,10 @@ export const createPatient = createServerFn({ method: "POST" })
         console.error("count patients failed", countErr);
         throw new Error("Não foi possível verificar o limite do plano.");
       }
-      if ((usedCount ?? 0) >= maxPatients) {
+      const currentCount = usedCount ?? 0;
+      if (currentCount >= maxPatients) {
         // Audit blind-spot fix: registra a tentativa bloqueada antes de lançar.
+        // Metadata PII-safe: só tier, números e nada de identificação.
         await recordAudit({
           actorId: userId,
           workspaceId: workspace_id,
@@ -242,15 +230,15 @@ export const createPatient = createServerFn({ method: "POST" })
           metadata: {
             tier,
             max_patients: maxPatients,
-            used: usedCount ?? 0,
+            current_count: currentCount,
+            attempted_count: currentCount + 1,
           },
         });
         // Marker estruturado pra UI distinguir "limite atingido" de outros
         // erros e abrir o modal contextual de upgrade/waitlist.
-        const err = new Error(
-          `__LIMIT_REACHED__:${tier}:${maxPatients}`,
+        throw new Error(
+          `${LIMIT_REACHED_PREFIX}:${tier}:${maxPatients}`,
         );
-        throw err;
       }
     }
 
@@ -457,14 +445,10 @@ export const getPatientUsage = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    if (!membership) return { used: 0, max: null, tier: "solo" as string };
+    if (!membership) return { used: 0, max: null, tier: "trial" as string };
 
-    const [{ data: sub }, { count }] = await Promise.all([
-      supabase
-        .from("subscriptions")
-        .select("limits, tier")
-        .eq("workspace_id", membership.workspace_id)
-        .maybeSingle(),
+    const [plan, { count }] = await Promise.all([
+      getWorkspacePlan(supabase, membership.workspace_id),
       supabase
         .from("patients")
         .select("id", { count: "exact", head: true })
@@ -472,14 +456,10 @@ export const getPatientUsage = createServerFn({ method: "GET" })
         .is("deleted_at", null),
     ]);
 
-    const limitsObj = (sub?.limits ?? {}) as Record<string, unknown>;
-    const max =
-      typeof limitsObj.max_patients === "number" ? limitsObj.max_patients : null;
-
     return {
       used: count ?? 0,
-      max,
-      tier: (sub?.tier ?? "solo") as string,
+      max: plan.max_patients,
+      tier: plan.tier as string,
     };
   });
 
