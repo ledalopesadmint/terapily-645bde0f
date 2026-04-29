@@ -56,6 +56,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     queryFn: () => getCurrentSubscription(),
     enabled: !!session,
     staleTime: 30_000,
+    refetchOnWindowFocus: true,
   });
   const subscription = subscriptionQuery.data?.subscription ?? null;
   const hasActivePlan =
