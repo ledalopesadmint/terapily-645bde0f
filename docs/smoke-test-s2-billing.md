@@ -24,10 +24,17 @@
    - `customer.subscription.deleted` — idem; **crítico**.
    - `customer.subscription.trial_will_end` — **audit-only** (`billing.trial_will_end`). Hoje só registra `{stripe_subscription_id, trial_end}` no `audit_logs`. Não envia email nem altera status. Prepara aviso ao usuário (S5).
    - `invoice.payment_succeeded` — resolve workspace via customer; audit genérico.
-   - `invoice.payment_failed` — idem; futuro disparo de aviso de cobrança.
+   - `invoice.payment_failed` — **audit estruturado** (`billing.payment_failed`). Resolve workspace via customer. Registra `{invoice_id, stripe_subscription_id, amount_due, currency, attempt_count, next_payment_attempt}`. Não altera status manualmente — quem reflete `past_due`/`unpaid` é o `customer.subscription.updated`. Serve pra suporte e painel admin futuro.
    - `charge.dispute.created` — **audit-only** (`billing.dispute_created`). Resolve workspace via `charge → customer`. Registra `{stripe_dispute_id, stripe_charge_id, amount, currency, reason, status}`. Se não conseguir resolver workspace, devolve **500 sem marcar como processado** pra Stripe reentregar — não perdemos sinal de chargeback. Prepara painel admin financeiro (S6).
 
-> Todos os eventos rodam com **assinatura Stripe verificada** (`STRIPE_WEBHOOK_SECRET`) e **idempotência via `stripe_events`** (PK = `event.id`). Metadata do audit é PII-safe: nunca contém email, nome, cartão, endereço ou dados do paciente — só IDs Stripe e valores numéricos.
+> **Garantias do webhook (regras inegociáveis):**
+> - **Assinatura verificada** com `STRIPE_WEBHOOK_SECRET` antes de qualquer leitura do payload.
+> - **Idempotência por `event.id`** via `stripe_events`. Duplicado retorna `200 ok (duplicate)` sem reprocessar.
+> - **Nunca marca como processado antes de completar a atualização local.** Se a sincronização falhar (workspace não resolve, price desconhecido, UPDATE no banco falha), o handler devolve `500` e a Stripe reentrega.
+> - **Eventos críticos** (`checkout.session.completed`, `customer.subscription.{created,updated,deleted}`) **exigem `workspace_id` resolvido** — caso contrário, `500` sem `markProcessed`. Evita "ghost paid plan" (assinatura ativa no Stripe sem espelho local).
+> - **`tier` nunca é gravado como `null` silenciosamente.** Se o `price_id` não existir em `stripe_products` (mesmo `inactive`), o handler devolve `500` em eventos de subscription. Isso protege downgrades Practice → Basic com price antigo desativado.
+> - **Audit metadata é PII-safe.** Nunca contém email, nome, cartão, endereço ou dados do paciente — só IDs Stripe, valores numéricos e timestamps.
+> - **Logs de erro são estruturados** (JSON com `op`/`code`/`event_id`) e nunca imprimem o payload completo do evento.
 
 > Se algum dos itens acima estiver faltando, me avisa antes de continuar — eu te ajudo a configurar.
 
