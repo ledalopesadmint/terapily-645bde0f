@@ -15,6 +15,7 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { logServerError } from "@/lib/logger.server";
 
 export const Route = createFileRoute("/api/public/hooks/purge-patients")({
   server: {
@@ -41,9 +42,9 @@ export const Route = createFileRoute("/api/public/hooks/purge-patients")({
         );
 
         if (error) {
-          console.error("[purge-patients] rpc failed", error);
+          logServerError("purgePatients.rpc", error);
           return new Response(
-            JSON.stringify({ ok: false, error: error.message }),
+            JSON.stringify({ ok: false, error: "purge failed" }),
             { status: 500, headers: { "Content-Type": "application/json" } },
           );
         }

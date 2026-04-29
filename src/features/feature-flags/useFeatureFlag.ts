@@ -15,6 +15,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { logClientError } from "@/lib/logger";
 
 export function useFeatureFlag(
   flagName: string,
@@ -30,7 +31,7 @@ export function useFeatureFlag(
         _flag: flagName,
       });
       if (error) {
-        console.error("Feature flag check failed:", error);
+        logClientError("featureFlag.check", error);
         return false;
       }
       return data === true;
