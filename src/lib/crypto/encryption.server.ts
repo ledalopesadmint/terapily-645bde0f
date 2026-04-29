@@ -100,7 +100,7 @@ export async function decryptPHIServer(payload: string): Promise<string> {
 
   try {
     const plaintext = await crypto.subtle.decrypt(
-      { name: "AES-GCM", iv },
+      { name: "AES-GCM", iv: iv.buffer as ArrayBuffer },
       key,
       data.buffer as ArrayBuffer
     );
