@@ -1,6 +1,8 @@
 # S3 — Definition of Done
 
 **Status:** Aprovado pela Leda. Implementação em curso.
+**Etapa 4 (UI do terapeuta + autosave seguro):** ✅ concluída em 2026-04-29.
+**Próxima etapa:** S3 — Etapa 5 (envio de email transacional via Resend, gating por BAA).
 
 S3 só pode ser marcada como concluída quando TODOS os itens abaixo estiverem ✅. Nenhum item é "nice to have" — todos são bloqueantes.
 
