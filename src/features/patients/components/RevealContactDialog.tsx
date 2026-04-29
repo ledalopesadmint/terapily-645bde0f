@@ -7,11 +7,13 @@
 import {
   Archive,
   ArchiveRestore,
+  ArrowUpRight,
   Mail,
   Pencil,
   Phone,
   Trash2,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import {
   Dialog,
   DialogContent,
@@ -66,6 +68,22 @@ export function RevealContactDialog({
             {p.status === "active" ? "Ativo" : "Arquivado"}
           </DialogDescription>
         </DialogHeader>
+
+        <Button asChild variant="secondary" className="w-full justify-between">
+          <Link
+            to="/patients/$id"
+            params={{ id: p.id }}
+            onClick={() => onOpenChange(false)}
+          >
+            <span className="inline-flex items-center">
+              <ArrowUpRight className="mr-2 h-4 w-4" />
+              Abrir perfil completo
+            </span>
+            <span className="text-xs text-muted-foreground">
+              Atividades · Auditoria
+            </span>
+          </Link>
+        </Button>
 
         <div className="space-y-4">
           {p.full_name && (
