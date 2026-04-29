@@ -111,20 +111,6 @@ async function workspaceFromDispute(
       const ws = await workspaceFromCustomer(customerId);
       if (ws) return ws;
     }
-
-    const invoiceId =
-      typeof charge.invoice === "string" ? charge.invoice : charge.invoice?.id;
-    if (invoiceId) {
-      const inv = await stripe().invoices.retrieve(invoiceId);
-      const invCustomer =
-        typeof inv.customer === "string"
-          ? inv.customer
-          : inv.customer?.id ?? null;
-      if (invCustomer) {
-        const ws = await workspaceFromCustomer(invCustomer);
-        if (ws) return ws;
-      }
-    }
     return null;
   } catch {
     return null;
