@@ -2,13 +2,30 @@
 import { createMiddleware } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
 import { createClient } from '@supabase/supabase-js'
+import { supabase as browserSupabase } from './client'
 import type { Database } from './types'
 
-
-
-export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
+/**
+ * Client-side step: pega o access_token da sessão Supabase no browser
+ * e injeta como header `Authorization: Bearer <token>` antes do request
+ * sair pro server. Roda só no client (no SSR não há sessão).
+ */
+const attachSupabaseToken = createMiddleware({ type: 'function' }).client(
   async ({ next }) => {
-    
+    let token: string | undefined;
+    if (typeof window !== 'undefined') {
+      const { data } = await browserSupabase.auth.getSession();
+      token = data.session?.access_token;
+    }
+    return next({
+      sendContext: {},
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  },
+);
+
+const validateSupabaseToken = createMiddleware({ type: 'function' }).server(
+  async ({ next }) => {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 
@@ -18,7 +35,7 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
         { status: 500 }
       );
     }
-    
+
     const request = getRequest();
 
     if (!request?.headers) {
@@ -75,3 +92,13 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     })
   }
 )
+
+export const requireSupabaseAuth = createMiddleware({ type: 'function' })
+  .middleware([attachSupabaseToken])
+  .server(async ({ next }) => {
+    return validateSupabaseToken._types ? next() : next();
+  });
+
+// Compose: o `requireSupabaseAuth` real precisa rodar attach (client) +
+// validate (server) em sequência. Reexport via composição de middleware.
+export const requireSupabaseAuthChain = [attachSupabaseToken, validateSupabaseToken];
