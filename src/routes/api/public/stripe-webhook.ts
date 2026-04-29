@@ -158,6 +158,16 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
 
         let workspaceId: string | null = null;
 
+        // Eventos críticos que MUITO precisam de workspace_id resolvido.
+        // Se não resolver, devolvemos 500 SEM marcar como processado pra
+        // Stripe reentregar (evita "ghost paid plan").
+        const CRITICAL_EVENTS = new Set([
+          "checkout.session.completed",
+          "customer.subscription.created",
+          "customer.subscription.updated",
+          "customer.subscription.deleted",
+        ]);
+
         try {
           switch (event.type) {
             case "checkout.session.completed": {
@@ -198,6 +208,18 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
             default:
               // Outros eventos: só marcamos como processados.
               break;
+          }
+
+          if (CRITICAL_EVENTS.has(event.type) && !workspaceId) {
+            console.error(
+              "[stripe-webhook] critical event sem workspace_id — pedindo retry",
+              { eventId: event.id, type: event.type },
+            );
+            // NÃO marca processado. Stripe reentrega com backoff.
+            return new Response(
+              "workspace_id unresolved, retry later",
+              { status: 500 },
+            );
           }
 
           await markProcessed(event, workspaceId);
