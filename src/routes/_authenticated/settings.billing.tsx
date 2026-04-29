@@ -78,6 +78,9 @@ function BillingSettingsPage() {
       toast.error(err.message ?? "Não foi possível abrir o checkout.");
     },
   });
+  const pendingPriceId = checkoutMutation.isPending
+    ? (checkoutMutation.variables as string | undefined)
+    : null;
 
   const portalMutation = useMutation({
     mutationFn: () => createBillingPortalSession(),
