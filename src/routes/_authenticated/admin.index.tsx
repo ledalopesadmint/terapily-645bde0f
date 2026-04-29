@@ -226,6 +226,13 @@ function AdminHomePage() {
         </section>
       )}
 
+      {/* Insights do catálogo (curadoria manual com base em dados reais) */}
+      <InsightsSection
+        onFeature={handleToggleFeatured}
+        featuringId={featuringId}
+        currentFeaturedId={data?.items.find((i) => i.is_featured)?.id ?? null}
+      />
+
       {/* Billing — sync catálogo Stripe */}
       <BillingSyncSection />
 
