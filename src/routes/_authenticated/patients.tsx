@@ -636,9 +636,16 @@ interface PatientDialogProps {
   onOpenChange: (open: boolean) => void;
   patient: PatientDTO | null;
   onSaved: () => void;
+  onLimitReached?: () => void;
 }
 
-function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogProps) {
+function PatientDialog({
+  open,
+  onOpenChange,
+  patient,
+  onSaved,
+  onLimitReached,
+}: PatientDialogProps) {
   const isEdit = patient !== null;
 
   const form = useForm<PatientCreateInput>({
@@ -661,7 +668,15 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
       form.reset();
       onSaved();
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      // Marker estruturado vindo do servidor: abre o modal de limite contextual
+      // ao invés de toast genérico.
+      if (err.message.startsWith("__LIMIT_REACHED__") && onLimitReached) {
+        onLimitReached();
+        return;
+      }
+      toast.error(err.message);
+    },
   });
 
   const updateMut = useMutation({
