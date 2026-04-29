@@ -38,6 +38,7 @@ function formatPrice(amount: number, currency: string) {
 function BillingSettingsPage() {
   const { workspace } = useAuth();
   const { checkout } = useSearch({ from: "/_authenticated/settings/billing" });
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const productsQuery = useQuery({
