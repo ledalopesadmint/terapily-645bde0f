@@ -56,13 +56,27 @@ Espelha `mem://features/s3-definition-of-done`.
 
 ## 5. UI — `/patients/:id` com tabs
 
-- [ ] Rota com tabs: **Visão geral** | **Atividades** | **Audit** (owner only)
-- [ ] Tab Atividades: timeline DESC com cards por status
-- [ ] Botão "Enviar atividade" no topo da aba
-- [ ] Modal de envio: seleção de atividade + delivery_mode + expiração
-- [ ] Após criar: link único mostrado 1x com botão "Copiar"
-- [ ] Card de atividade respondida: score + banda + data + botão "Ver respostas" (decifra on-demand)
-- [ ] Empty state da aba Atividades
+**Status: ✅ Etapa 4 concluída.** Módulo migrado pra `src/features/activities/`.
+
+- [x] Rota com tabs: **Visão geral** | **Atividades** | **Auditoria** (owner only)
+- [x] Tab Atividades: timeline DESC com cards por status
+- [x] Status suportados na timeline:
+  - `Pendente` — atividade criada, link ainda não gerado/aberto
+  - `Enviado` — link gerado, aguardando paciente abrir
+  - `Em andamento · %` — paciente abriu e tem draft salvo (percent vem de `activity_drafts.completion_percent`)
+  - `Respondido` — submit final feito (`used_at` preenchido, score calculado)
+  - `Expirado` — `token_expires_at` passou sem submit
+  - `Revogado` — terapeuta revogou (soft, status + token_hash zerado)
+- [x] Botão "Enviar atividade" no topo da aba
+- [x] Modal de envio com 3 delivery_modes: **`in_session`** | **`shared_link`** | **`both`**
+- [x] Modal coleta: atividade do catálogo + delivery_mode + janela de expiração
+- [x] Após criar: link único exibido **one-shot** com botão "Copiar" — token cru nunca mais é retornado pelo backend
+- [x] Card de atividade respondida: score + banda + data + botão "Ver respostas"
+- [x] Visualização de respostas via **gaveta lateral** (Sheet) com **decifra on-demand** server-side, sem cache no client (sem localStorage/sessionStorage/IndexedDB)
+- [x] Cada abertura da gaveta gera audit `activity.response_viewed`
+- [x] Aba **Auditoria** owner-only, escopada ao paciente, sem PHI no metadata
+- [x] Empty state da aba Atividades
+
 
 ---
 
