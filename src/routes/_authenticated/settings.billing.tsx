@@ -78,6 +78,9 @@ function BillingSettingsPage() {
       toast.error(err.message ?? "Não foi possível abrir o checkout.");
     },
   });
+  const pendingPriceId = checkoutMutation.isPending
+    ? (checkoutMutation.variables as string | undefined)
+    : null;
 
   const portalMutation = useMutation({
     mutationFn: () => createBillingPortalSession(),
@@ -267,7 +270,7 @@ function BillingSettingsPage() {
                   disabled={checkoutMutation.isPending}
                   className="mt-5 inline-flex h-10 w-full items-center justify-center gap-2 rounded-md bg-foreground px-4 text-sm font-medium text-background transition hover:opacity-90 disabled:opacity-60"
                 >
-                  {checkoutMutation.isPending ? (
+                  {pendingPriceId === p.stripe_price_id ? (
                     <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
                   ) : (
                     <>
