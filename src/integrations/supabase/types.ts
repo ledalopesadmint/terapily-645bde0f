@@ -670,7 +670,13 @@ export type Database = {
         | "incomplete"
         | "paused"
         | "expired"
-      subscription_tier: "solo" | "practice" | "clinic" | "basic" | "patient"
+      subscription_tier:
+        | "solo"
+        | "practice"
+        | "clinic"
+        | "basic"
+        | "patient"
+        | "trial"
       workspace_role: "owner" | "therapist" | "supervisor"
     }
     CompositeTypes: {
@@ -827,7 +833,14 @@ export const Constants = {
         "paused",
         "expired",
       ],
-      subscription_tier: ["solo", "practice", "clinic", "basic", "patient"],
+      subscription_tier: [
+        "solo",
+        "practice",
+        "clinic",
+        "basic",
+        "patient",
+        "trial",
+      ],
       workspace_role: ["owner", "therapist", "supervisor"],
     },
   },
