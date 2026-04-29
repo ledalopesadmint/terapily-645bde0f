@@ -125,7 +125,10 @@ export async function getWorkspacePlan(
     .maybeSingle();
 
   if (error) {
-    console.error("[plan.server] failed to read subscription", error);
+    // Logger seguro: nunca passar o objeto inteiro de erro do Supabase
+    // (campos details/hint/query podem vazar workspace_id ou filtros).
+    const { logServerError } = await import("@/lib/logger.server");
+    logServerError("getWorkspacePlan", error);
     return { ...DEFAULT_PLAN };
   }
 
