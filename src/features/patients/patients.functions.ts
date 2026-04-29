@@ -445,14 +445,10 @@ export const getPatientUsage = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
-    if (!membership) return { used: 0, max: null, tier: "solo" as string };
+    if (!membership) return { used: 0, max: null, tier: "trial" as string };
 
-    const [{ data: sub }, { count }] = await Promise.all([
-      supabase
-        .from("subscriptions")
-        .select("limits, tier")
-        .eq("workspace_id", membership.workspace_id)
-        .maybeSingle(),
+    const [plan, { count }] = await Promise.all([
+      getWorkspacePlan(supabase, membership.workspace_id),
       supabase
         .from("patients")
         .select("id", { count: "exact", head: true })
@@ -460,14 +456,10 @@ export const getPatientUsage = createServerFn({ method: "GET" })
         .is("deleted_at", null),
     ]);
 
-    const limitsObj = (sub?.limits ?? {}) as Record<string, unknown>;
-    const max =
-      typeof limitsObj.max_patients === "number" ? limitsObj.max_patients : null;
-
     return {
       used: count ?? 0,
-      max,
-      tier: (sub?.tier ?? "solo") as string,
+      max: plan.max_patients,
+      tier: plan.tier as string,
     };
   });
 
