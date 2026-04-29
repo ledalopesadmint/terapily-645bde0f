@@ -24,6 +24,7 @@ import {
   encryptPHIServer,
   decryptPHIServer,
 } from "@/lib/crypto/encryption.server";
+import { logServerError } from "@/lib/logger.server";
 import {
   patientCreateSchema,
   patientUpdateSchema,
@@ -66,7 +67,7 @@ async function safeDecrypt(value: string | null): Promise<string | null> {
     const out = await decryptPHIServer(value);
     return out === "" ? null : out;
   } catch (err) {
-    console.error("[patients] decrypt failed", err);
+    logServerError("patient.decrypt", err);
     return null;
   }
 }
@@ -142,7 +143,7 @@ export const listPatients = createServerFn({ method: "POST" })
 
     const { data: rows, error } = await query;
     if (error) {
-      console.error("listPatients failed", error);
+      logServerError("listPatients", error);
       throw new Error("Não foi possível carregar os pacientes.");
     }
 
@@ -167,7 +168,7 @@ export const getPatient = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (error) {
-      console.error("getPatient failed", error);
+      logServerError("getPatient", error);
       throw new Error("Não foi possível abrir o paciente.");
     }
     if (!row) throw new Error("Paciente não encontrado.");
@@ -215,7 +216,7 @@ export const createPatient = createServerFn({ method: "POST" })
         .is("deleted_at", null);
 
       if (countErr) {
-        console.error("count patients failed", countErr);
+        logServerError("createPatient.count", countErr);
         throw new Error("Não foi possível verificar o limite do plano.");
       }
       const currentCount = usedCount ?? 0;
@@ -274,7 +275,7 @@ export const createPatient = createServerFn({ method: "POST" })
           .single();
 
         if (error) {
-          console.error("createPatient failed", error);
+          logServerError("createPatient", error);
           throw new Error("Não foi possível criar o paciente.");
         }
 
@@ -319,7 +320,7 @@ export const updatePatient = createServerFn({ method: "POST" })
           .maybeSingle();
 
         if (error) {
-          console.error("updatePatient failed", error);
+          logServerError("updatePatient", error);
           throw new Error("Não foi possível salvar.");
         }
         if (!updated) throw new Error("Paciente não encontrado ou sem permissão.");
@@ -418,7 +419,7 @@ export const setPatientLifecycle = createServerFn({ method: "POST" })
           .maybeSingle();
 
         if (error) {
-          console.error("setPatientLifecycle failed", error);
+          logServerError("setPatientLifecycle", error);
           throw new Error("Ação não permitida.");
         }
         if (!updated) throw new Error("Paciente não encontrado ou sem permissão.");
@@ -484,7 +485,7 @@ export const listDeletedPatients = createServerFn({ method: "GET" })
       .limit(100);
 
     if (error) {
-      console.error("listDeletedPatients failed", error);
+      logServerError("listDeletedPatients", error);
       throw new Error("Não foi possível carregar os excluídos.");
     }
 
@@ -520,8 +521,8 @@ export const restorePatient = createServerFn({ method: "POST" })
     });
 
     if (error) {
-      console.error("restorePatient failed", error);
-      throw new Error(error.message || "Não foi possível restaurar.");
+      logServerError("restorePatient", error);
+      throw new Error("Não foi possível restaurar.");
     }
 
     await recordAudit({
@@ -575,7 +576,7 @@ export const joinClinicWaitlist = createServerFn({ method: "POST" })
       if (error.code === "23505") {
         return { ok: true, alreadyOnList: true };
       }
-      console.error("joinClinicWaitlist failed", error);
+      logServerError("joinClinicWaitlist", error);
       throw new Error("Não foi possível entrar na lista de espera.");
     }
 
