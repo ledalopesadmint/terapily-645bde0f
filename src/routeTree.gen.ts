@@ -30,6 +30,7 @@ import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_aut
 import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_authenticated/settings.profile'
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedPatientsDeletedRouteImport } from './routes/_authenticated/patients.deleted'
+import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
 import { Route as AuthenticatedDevRoadmapRouteImport } from './routes/_authenticated/dev.roadmap'
 import { Route as ApiPublicHooksPurgePatientsRouteImport } from './routes/api/public/hooks/purge-patients'
 
@@ -143,6 +144,11 @@ const AuthenticatedPatientsDeletedRoute =
     path: '/deleted',
     getParentRoute: () => AuthenticatedPatientsRoute,
   } as any)
+const AuthenticatedPatientsIdRoute = AuthenticatedPatientsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedPatientsRoute,
+} as any)
 const AuthenticatedDevRoadmapRoute = AuthenticatedDevRoadmapRouteImport.update({
   id: '/dev/roadmap',
   path: '/dev/roadmap',
@@ -169,6 +175,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
@@ -192,6 +199,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/settings/profile': typeof AuthenticatedSettingsProfileRoute
@@ -218,6 +226,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/_authenticated/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
   '/_authenticated/settings/profile': typeof AuthenticatedSettingsProfileRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/p/$token'
     | '/dev/roadmap'
+    | '/patients/$id'
     | '/patients/deleted'
     | '/settings/billing'
     | '/settings/profile'
@@ -267,6 +277,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/p/$token'
     | '/dev/roadmap'
+    | '/patients/$id'
     | '/patients/deleted'
     | '/settings/billing'
     | '/settings/profile'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/p/$token'
     | '/_authenticated/dev/roadmap'
+    | '/_authenticated/patients/$id'
     | '/_authenticated/patients/deleted'
     | '/_authenticated/settings/billing'
     | '/_authenticated/settings/profile'
@@ -465,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPatientsDeletedRouteImport
       parentRoute: typeof AuthenticatedPatientsRoute
     }
+    '/_authenticated/patients/$id': {
+      id: '/_authenticated/patients/$id'
+      path: '/$id'
+      fullPath: '/patients/$id'
+      preLoaderRoute: typeof AuthenticatedPatientsIdRouteImport
+      parentRoute: typeof AuthenticatedPatientsRoute
+    }
     '/_authenticated/dev/roadmap': {
       id: '/_authenticated/dev/roadmap'
       path: '/dev/roadmap'
@@ -483,10 +502,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedPatientsRouteChildren {
+  AuthenticatedPatientsIdRoute: typeof AuthenticatedPatientsIdRoute
   AuthenticatedPatientsDeletedRoute: typeof AuthenticatedPatientsDeletedRoute
 }
 
 const AuthenticatedPatientsRouteChildren: AuthenticatedPatientsRouteChildren = {
+  AuthenticatedPatientsIdRoute: AuthenticatedPatientsIdRoute,
   AuthenticatedPatientsDeletedRoute: AuthenticatedPatientsDeletedRoute,
 }
 
