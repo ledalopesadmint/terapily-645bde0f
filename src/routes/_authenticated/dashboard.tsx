@@ -91,8 +91,15 @@ function DashboardPage() {
         </p>
       </header>
 
-      {/* Card de status do trial — ocupa destaque, é a única coisa "viva" hoje */}
-      {daysLeft !== null && (
+      {/* Trial expirado → banner persistente. Comunicação apenas, sem gating. */}
+      {trialStatus === "expired" && (
+        <div className="mt-10">
+          <TrialExpiredBanner variant="full" />
+        </div>
+      )}
+
+      {/* Card de status do trial — só quando ainda está ativo */}
+      {trialStatus === "active" && daysLeft !== null && (
         <section className="mt-10 rounded-xl border border-border bg-card p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>
