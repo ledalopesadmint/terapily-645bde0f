@@ -199,18 +199,13 @@ export const createPatient = createServerFn({ method: "POST" })
     }
     const workspace_id = membership.workspace_id;
 
-    // 2. Gating por plano — limite real consultado no servidor.
+    // 2. Gating por plano — limite real consultado no servidor via helper
+    //    centralizado. NUNCA leia `subscriptions.limits` direto aqui.
     //    REGRA (decidida 2026-04-29): pacientes ARQUIVADOS contam como vaga
     //    ocupada. Só excluídos (deleted_at) liberam vaga.
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("limits, status, tier")
-      .eq("workspace_id", workspace_id)
-      .maybeSingle();
-
-    const limitsObj = (sub?.limits ?? {}) as Record<string, unknown>;
-    const maxPatients = typeof limitsObj.max_patients === "number" ? limitsObj.max_patients : null;
-    const tier = (sub?.tier ?? "solo") as string;
+    const plan = await getWorkspacePlan(supabase, workspace_id);
+    const maxPatients = plan.max_patients;
+    const tier = plan.tier;
 
     if (maxPatients != null) {
       const { count: usedCount, error: countErr } = await supabase
@@ -223,8 +218,10 @@ export const createPatient = createServerFn({ method: "POST" })
         console.error("count patients failed", countErr);
         throw new Error("Não foi possível verificar o limite do plano.");
       }
-      if ((usedCount ?? 0) >= maxPatients) {
+      const currentCount = usedCount ?? 0;
+      if (currentCount >= maxPatients) {
         // Audit blind-spot fix: registra a tentativa bloqueada antes de lançar.
+        // Metadata PII-safe: só tier, números e nada de identificação.
         await recordAudit({
           actorId: userId,
           workspaceId: workspace_id,
@@ -233,15 +230,15 @@ export const createPatient = createServerFn({ method: "POST" })
           metadata: {
             tier,
             max_patients: maxPatients,
-            used: usedCount ?? 0,
+            current_count: currentCount,
+            attempted_count: currentCount + 1,
           },
         });
         // Marker estruturado pra UI distinguir "limite atingido" de outros
         // erros e abrir o modal contextual de upgrade/waitlist.
-        const err = new Error(
-          `__LIMIT_REACHED__:${tier}:${maxPatients}`,
+        throw new Error(
+          `${LIMIT_REACHED_PREFIX}:${tier}:${maxPatients}`,
         );
-        throw err;
       }
     }
 
