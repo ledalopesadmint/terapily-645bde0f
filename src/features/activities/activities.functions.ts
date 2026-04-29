@@ -274,6 +274,28 @@ export const listAvailableActivities = createServerFn({ method: "GET" })
     return { activities: data ?? [] };
   });
 
+// --- getMyWorkspaceRole (gating client-side de Tabs owner-only) -----------
+
+const RoleSchema = z.object({ workspaceId: z.string().uuid() });
+
+export const getMyWorkspaceRole = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => RoleSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: row, error } = await supabase
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", data.workspaceId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error) {
+      console.error("[getMyWorkspaceRole] failed", { code: error.code });
+      return { role: null as null };
+    }
+    return { role: (row?.role ?? null) as "owner" | "therapist" | null };
+  });
+
 // --- listPatientAuditLogs (owner only) ------------------------------------
 // RLS de audit_logs já restringe leitura a `has_workspace_role(_, owner)`.
 // Aqui só filtramos por paciente (resource_id) e por ações relevantes a S3.
