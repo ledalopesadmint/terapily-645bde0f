@@ -153,7 +153,7 @@ export const patientCreateSchema = z.object({
     .min(1, "Required")
     .max(6, "Max 6 chars")
     .regex(/^[\p{L}\p{N} .'-]+$/u, "Only letters and spaces"),
-  tags: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
+  tags: patientTagsSchema,
   assigned_therapist_id: z.string().uuid().optional(), // default = caller
   // PHI (cifrado AES-GCM-256 antes de gravar)
   full_name: phiString(200),
