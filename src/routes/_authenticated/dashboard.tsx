@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Users, GamepadIcon, ListChecks, BookOpen } from "lucide-react";
+import { Users, GamepadIcon, ListChecks, BookOpen, ArrowRight } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { EmptyState } from "@/components/feedback/EmptyState";
+import { Badge } from "@/components/ui/badge";
 import { TRIAL_DURATION_DAYS } from "@/lib/constants";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
@@ -142,12 +143,26 @@ function DashboardPage() {
         </p>
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2">
-          <EmptyState
-            icon={Users}
-            title="Pacientes"
-            description="Cadastro, contato e observações criptografadas. A primeira feature de domínio."
-            comingSoonWeek="Semana 2"
-          />
+          <Link
+            to="/patients"
+            className="group flex flex-col items-center justify-center rounded-lg border border-border bg-card px-6 py-12 text-center transition-colors hover:border-secondary/60 hover:bg-card/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Ir para Pacientes"
+          >
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-secondary/15">
+              <Users className="h-6 w-6 text-secondary-foreground" />
+            </div>
+            <h3 className="font-display text-2xl text-foreground">Pacientes</h3>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              Cadastro, contato e observações criptografadas. A primeira feature de domínio.
+            </p>
+            <Badge variant="outline" className="mt-4 border-secondary/40 text-secondary-foreground">
+              Disponível
+            </Badge>
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+              Abrir pacientes
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </span>
+          </Link>
           <EmptyState
             icon={ListChecks}
             title="Tarefas (homework)"
