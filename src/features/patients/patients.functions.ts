@@ -16,6 +16,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Database } from "@/integrations/supabase/types";
 import { withAudit } from "@/features/audit/audit.server";
 import {
   encryptPHIServer,
@@ -302,7 +303,7 @@ export const updatePatient = createServerFn({ method: "POST" })
 
     const encrypted = await encryptPatientPayload({ ...rest, assigned_therapist_id });
 
-    const updatePayload: Record<string, unknown> = { ...encrypted };
+    const updatePayload: Database["public"]["Tables"]["patients"]["Update"] = { ...encrypted };
     if (assigned_therapist_id) updatePayload.assigned_therapist_id = assigned_therapist_id;
 
     return withAudit(
@@ -350,7 +351,7 @@ export const setPatientLifecycle = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
-    const patch: Record<string, unknown> =
+    const patch: Database["public"]["Tables"]["patients"]["Update"] =
       data.action === "archive"
         ? { status: "archived", archived_at: new Date().toISOString() }
         : data.action === "restore_active"
