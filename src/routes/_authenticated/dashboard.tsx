@@ -1,10 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Users, GamepadIcon, ListChecks, BookOpen, ArrowRight } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { EmptyState } from "@/components/feedback/EmptyState";
 import { Badge } from "@/components/ui/badge";
 import { TRIAL_DURATION_DAYS } from "@/lib/constants";
+import { getCurrentSubscription } from "@/features/billing/billing.functions";
+import { deriveTrialStatus } from "@/features/billing/trial-status";
+import { TrialExpiredBanner } from "@/features/billing/TrialExpiredBanner";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
@@ -30,7 +34,20 @@ function DashboardPage() {
   const { profile, workspace } = useAuth();
   const firstName = profile?.full_name?.split(" ")[0] ?? "";
 
-  // Trial countdown
+  // Subscription pra detectar trial_expired sem tocar em billing/server.
+  const subQuery = useQuery({
+    queryKey: ["billing", "subscription"],
+    queryFn: () => getCurrentSubscription(),
+    staleTime: 30_000,
+  });
+  const subscription = subQuery.data?.subscription ?? null;
+  const trialStatus = deriveTrialStatus({
+    trialEndsAt: workspace?.trial_ends_at,
+    subscriptionStatus: subscription?.status,
+    stripeSubscriptionId: subscription?.stripe_subscription_id,
+  });
+
+  // Trial countdown (só relevante quando active)
   const trialEndsAt = workspace?.trial_ends_at
     ? new Date(workspace.trial_ends_at)
     : null;
@@ -74,8 +91,15 @@ function DashboardPage() {
         </p>
       </header>
 
-      {/* Card de status do trial — ocupa destaque, é a única coisa "viva" hoje */}
-      {daysLeft !== null && (
+      {/* Trial expirado → banner persistente. Comunicação apenas, sem gating. */}
+      {trialStatus === "expired" && (
+        <div className="mt-10">
+          <TrialExpiredBanner variant="full" />
+        </div>
+      )}
+
+      {/* Card de status do trial — só quando ainda está ativo */}
+      {trialStatus === "active" && daysLeft !== null && (
         <section className="mt-10 rounded-xl border border-border bg-card p-6 sm:p-8">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
             <div>

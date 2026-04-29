@@ -58,6 +58,32 @@ Ver `mem://features/roadmap-6-weeks` para o detalhamento de cada semana.
 
 ### Dívidas técnicas obrigatórias antes do launch público (S5/S6)
 - **Rate limit durável**: migrar in-memory (`Map` por instância) pra store compartilhada (Postgres-based como default, reavaliar Cloudflare Rate Limiting). Detalhes em `docs/technical-debt.md` §4. Bloqueante de launch pós-S6.
+- **Trial gating real (pós-trial enforcement)**: hoje o trial é "soft" — `trialing → expired` não é automático e não há bloqueio de criação de novos recursos. S6 precisa entregar transição automática de status, banner persistente (já há comunicação visual em S3, falta backend), gating de criação de novos pacientes, fallback "continuar gratuito" e audit `trial.expired`. Detalhes em `docs/technical-debt.md` §5. Bloqueante de launch pós-S6.
+
+#### Trial gating — comportamento atual vs futuro
+
+**Atual (S2/S3 — soft trial, sem enforcement).**
+- Signup cria `subscription { tier: 'solo', status: 'trialing', trial_ends_at: now() + 14d }`.
+- Limite de 5 pacientes durante o trial (já enforced no banco via `enforce_patient_limit`).
+- UI comunica claramente o estado:
+  - sidebar mostra contagem regressiva, vira chip "Trial encerrado" quando `trial_ends_at < now()`;
+  - dashboard mostra banner persistente "Seu período de teste terminou" com CTAs "Fazer upgrade" / "Ver planos";
+  - `/settings/billing` reforça o banner e mantém os planos visíveis.
+- **Após `trial_ends_at`:** nenhuma mudança automática de status no banco, nenhuma restrição adicional além do limite de 5 já existente, nenhum downgrade. Terapeuta segue criando atividades, vendo respostas, gerando links.
+
+**Futuro (S6 — gating completo, bloqueante de launch).**
+- [ ] Atualizar status automaticamente: `trialing → expired` (trigger ou job leve, ainda não decidido).
+- [ ] Audit log: registrar evento `trial.expired` (1x por workspace).
+- [ ] Banner persistente já implementado em S3 — manter, conectar ao novo `expired` do servidor.
+- [ ] Gating de criação: bloquear `INSERT` de novo paciente quando `trial_expired && !active_subscription`.
+- [ ] Fallback controlado: opção "Continuar gratuito" cai pro tier `solo` permanente (5 pacientes, sem Compliance Report).
+- [ ] Garantir que pacientes, atividades e respostas existentes **continuam totalmente acessíveis** (read-only do que já há, somente criação nova é gated).
+
+**Regra inegociável.**
+
+> O trial não deve interromper acesso aos dados já gerados.
+> O gating atua apenas na criação de novos recursos.
+
 
 ## Future plan architecture
 

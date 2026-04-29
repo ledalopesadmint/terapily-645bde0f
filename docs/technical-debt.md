@@ -191,3 +191,48 @@ Migrar pra store durável e compartilhada quando **uma das seguintes condições
 - Schema novo precisa de RLS bloqueando read pelo client (igual `audit_logs`).
 - Cleanup automático (TTL ou cron) pra não inchar o banco.
 - Atualizar `docs/security.md` e `docs/autosave-security.md` quando implementar.
+
+---
+
+## 5. Trial gating — soft trial sem enforcement (impacta conversão)
+
+**Origem.**
+S2 entregou o ciclo de billing (Stripe BYOK, Checkout, webhook, subscriptions) com trial nativo de 14 dias: todo signup recebe `subscription { tier: 'solo', status: 'trialing', trial_ends_at: now() + 14 days }`. O limite de 5 pacientes é enforced no banco (`enforce_patient_limit`). Porém **a expiração não dispara nenhuma transição de estado nem gating adicional**.
+
+S3 (esta turn) adicionou apenas a **camada de comunicação visual** quando `trial_ends_at < now()`:
+- Banner persistente no dashboard ("Seu período de teste terminou. Você pode continuar usando com limitações ou fazer upgrade…") com CTAs "Fazer upgrade" / "Ver planos".
+- Chip da sidebar muda de "X dias restantes" → "Trial encerrado" (Mauve discreto).
+- `/settings/billing` substitui o card "Avaliação ativa" pelo mesmo banner com CTAs.
+- Helper `deriveTrialStatus()` em `src/features/billing/trial-status.ts` deriva o estado no client a partir de `subscription.status` + `trial_ends_at` + `stripe_subscription_id` — sem novas queries server, sem mudar billing.
+
+**Impacto.**
+- 🟡 **Dívida de produto, não de segurança.** Impacta conversão e clareza do contrato com o terapeuta, mas não expõe PHI nem fura RLS.
+- O usuário pode ficar usando indefinidamente o trial expirado dentro do limite de 5 pacientes, sem nunca ser empurrado pra upgrade.
+- Sem evento `trial.expired` no audit, perdemos métrica clara de quantos terapeutas chegaram ao fim do trial.
+- Sem downgrade controlado, não há "continuar gratuito" formal — é só ausência de pressão.
+
+**Mitigação atual (entregue em S3).**
+- Comunicação visual persistente em 3 superfícies (dashboard, sidebar, billing). Terapeuta não tem como **não saber** que o trial acabou.
+- Limite de 5 pacientes do tier `trial` continua valendo via trigger `enforce_patient_limit` — então mesmo sem gating adicional, o terapeuta não consegue criar acima de 5.
+- CTAs sempre visíveis e diretos pro Stripe Checkout (Basic $69 / Practice $159).
+
+**Condição de remoção (S6 — bloqueante de launch público).**
+
+Checklist obrigatório pra fechar S6:
+- [ ] **Transição automática de status**: `trialing → expired` quando `trial_ends_at < now()`. Implementação preliminar: trigger `BEFORE UPDATE/SELECT` em `subscriptions` ou job leve `pg_cron` 1x/dia. Decisão técnica fica pra S6 (não pré-resolver agora).
+- [ ] **Audit**: registrar evento `trial.expired` 1x por workspace, com metadata `{ trial_started_at, trial_ended_at, days_used }` (sem PHI).
+- [ ] **Gating de criação de novos pacientes**: quando `trial_expired && !active_subscription`, bloquear `INSERT` em `patients` com mensagem `__TRIAL_EXPIRED__:upgrade_required`. UI captura e abre modal de upgrade.
+- [ ] **Fallback "continuar gratuito"**: opção explícita no banner pra cair no tier `solo` permanente (mesmas regras: 5 pacientes, sem Compliance Report). Cria nova `subscription { tier: 'solo', status: 'active', provider: 'manual' }` e marca o trial como `expired_chose_free`.
+- [ ] **Acesso preservado**: pacientes, atividades, respostas existentes **continuam totalmente acessíveis** (read + edit). Gating atua APENAS na criação de novos recursos.
+- [ ] **Banner conectado ao backend real**: em vez de derivar `trial_expired` no client por timestamp, ler do `subscription.status === 'expired'` retornado pelo server. Banner já existe em S3, só precisa trocar a fonte.
+- [ ] **Reativação pós-pagamento**: webhook do Stripe que recebe `customer.subscription.created` (Basic/Practice) automaticamente apaga o estado `expired` e libera os limites do novo tier — sem ação manual.
+
+**Regra inegociável (vai pra `docs/roadmap.md` também).**
+
+> O trial não deve interromper acesso aos dados já gerados.
+> O gating atua apenas na criação de novos recursos.
+
+**Não esquecer.**
+- O helper `deriveTrialStatus()` em `src/features/billing/trial-status.ts` é APENAS comunicação. Quando S6 chegar, a fonte de verdade vira o `subscription.status` do servidor — o helper deve ser removido ou refatorado pra ler do server, não derivar do timestamp.
+- Limite de 5 pacientes do trial já existe no banco, então gating de criação extra é **adicional**, não substitui.
+- Auditar todas as superfícies que hoje mostram "X dias restantes" antes do launch — pra garantir que nenhuma esquece de tratar o caso `expired`.

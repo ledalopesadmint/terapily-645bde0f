@@ -13,6 +13,8 @@ import {
   getActiveProducts,
   getCurrentSubscription,
 } from "@/features/billing/billing.functions";
+import { deriveTrialStatus } from "@/features/billing/trial-status";
+import { TrialExpiredBanner } from "@/features/billing/TrialExpiredBanner";
 import { toast } from "sonner";
 
 const searchSchema = z.object({
@@ -130,6 +132,11 @@ function BillingSettingsPage() {
         year: "numeric",
       }).format(trialEndsAt)
     : null;
+  const trialStatus = deriveTrialStatus({
+    trialEndsAt: workspace?.trial_ends_at,
+    subscriptionStatus: subscription?.status,
+    stripeSubscriptionId: subscription?.stripe_subscription_id,
+  });
 
   const products = productsQuery.data?.products ?? [];
 
@@ -253,8 +260,13 @@ function BillingSettingsPage() {
         );
       })()}
 
-      {/* Trial ativo — só quando NÃO há assinatura paga */}
-      {!isActive && daysLeft !== null && (
+      {/* Trial expirado — banner persistente, reforço de CTA */}
+      {!isActive && trialStatus === "expired" && (
+        <TrialExpiredBanner variant="full" />
+      )}
+
+      {/* Trial ativo — só quando NÃO há assinatura paga e ainda não expirou */}
+      {!isActive && trialStatus === "active" && daysLeft !== null && (
         <div className="rounded-xl border border-border bg-card p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
