@@ -48,6 +48,8 @@ function BillingSettingsPage() {
   const subscriptionQuery = useQuery({
     queryKey: ["billing", "subscription"],
     queryFn: () => getCurrentSubscription(),
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
   });
 
   const subscription = subscriptionQuery.data?.subscription ?? null;
