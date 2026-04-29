@@ -21,31 +21,39 @@ export function PatientLimitBanner({ used, max, tier, onJoinWaitlist }: Props) {
 
   const isPractice = tier === "practice";
   const atLimit = used >= max;
+  const remaining = Math.max(0, max - used);
 
   return (
     <div className="mb-6 flex items-start gap-3 rounded-lg border border-mauve/30 bg-mauve/5 px-4 py-3">
       <div className="flex-1 text-sm">
-        <p className="text-foreground">
-          Você cadastrou <strong>{used} de {max} pacientes</strong> do plano{" "}
-          {isPractice ? "Practice" : "Basic"}.{" "}
+        <p className="font-medium text-foreground">
+          Você está chegando no limite do seu plano.
+        </p>
+        <p className="mt-1 text-foreground">
           {isPractice ? (
-            <>
-              {atLimit ? (
-                <>
-                  Estamos finalizando o plano <strong>Clinic</strong> (100+ pacientes).{" "}
-                  Quer entrar na lista de espera pra ser avisado primeiro?
-                </>
-              ) : (
-                <>
-                  Estamos finalizando o plano <strong>Clinic</strong> (100+ pacientes) —{" "}
-                  quer entrar na lista de espera?
-                </>
-              )}
-            </>
+            atLimit ? (
+              <>
+                Você atingiu <strong>{used} de {max} pacientes</strong> do Practice.
+                Estamos finalizando o plano <strong>Clinic</strong> (100+ pacientes) —
+                quer entrar na lista de espera pra ser avisado primeiro?
+              </>
+            ) : (
+              <>
+                Você cadastrou <strong>{used} de {max} pacientes</strong> do Practice.
+                Estamos finalizando o plano <strong>Clinic</strong> (100+ pacientes) —
+                quer entrar na lista de espera?
+              </>
+            )
           ) : (
             <>
-              Quando bater no limite, você precisará excluir alguém ou fazer upgrade pro{" "}
-              <strong>Practice</strong> (50 vagas).
+              {remaining === 1 ? (
+                <>Falta <strong>1 vaga</strong> </>
+              ) : (
+                <>Faltam <strong>{remaining} vagas</strong> </>
+              )}
+              para bloquear novos cadastros no plano Basic. Com o Practice, você atende
+              até <strong>50 pacientes ativos</strong> — mais do dobro da sua capacidade
+              atual.
             </>
           )}
         </p>
@@ -56,11 +64,11 @@ export function PatientLimitBanner({ used, max, tier, onJoinWaitlist }: Props) {
             </Button>
           ) : (
             <Button size="sm" asChild>
-              <Link to="/settings/billing">Ver Practice</Link>
+              <Link to="/settings/billing">Ver plano Practice</Link>
             </Button>
           )}
           <Button size="sm" variant="ghost" onClick={() => setDismissed(true)}>
-            Lembrar depois
+            Agora não
           </Button>
         </div>
       </div>
