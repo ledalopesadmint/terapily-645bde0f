@@ -198,12 +198,19 @@ function PatientsPage() {
       </header>
 
       <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Tabs value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
-          <TabsList>
-            <TabsTrigger value="active">Ativos</TabsTrigger>
-            <TabsTrigger value="archived">Arquivados</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <div className="flex items-center gap-3">
+          <Tabs value={status} onValueChange={(v) => setStatus(v as StatusFilter)}>
+            <TabsList>
+              <TabsTrigger value="active">Ativos</TabsTrigger>
+              <TabsTrigger value="archived">Arquivados</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/patients/deleted">
+              <Trash className="mr-2 h-4 w-4" /> Excluídos
+            </Link>
+          </Button>
+        </div>
 
         <div className="relative w-full sm:max-w-xs">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -216,6 +223,17 @@ function PatientsPage() {
           />
         </div>
       </div>
+
+      {usage && usage.max != null ? (
+        <div className="mt-6">
+          <PatientLimitBanner
+            used={usage.used}
+            max={usage.max}
+            tier={usage.tier}
+            onJoinWaitlist={() => setLimitModalOpen(true)}
+          />
+        </div>
+      ) : null}
 
       <section className="mt-6">
         {patientsQuery.isLoading ? (
