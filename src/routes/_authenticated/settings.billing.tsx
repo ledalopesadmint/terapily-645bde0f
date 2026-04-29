@@ -1,4 +1,4 @@
-import { createFileRoute, useSearch } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { CheckCircle2, CreditCard, ExternalLink, Loader2 } from "lucide-react";
@@ -38,6 +38,7 @@ function formatPrice(amount: number, currency: string) {
 function BillingSettingsPage() {
   const { workspace } = useAuth();
   const { checkout } = useSearch({ from: "/_authenticated/settings/billing" });
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const productsQuery = useQuery({
@@ -69,6 +70,20 @@ function BillingSettingsPage() {
     }, 2000);
     return () => clearInterval(interval);
   }, [checkout, isActive, queryClient]);
+
+  // Limpa ?checkout=... da URL assim que confirmamos o estado real.
+  // Evita que mensagens de "cancelado" persistam entre refreshes,
+  // especialmente quando o usuário já tem assinatura ativa de outra sessão.
+  useEffect(() => {
+    if (!checkout) return;
+    if (checkout === "cancelled" || (checkout === "success" && isActive)) {
+      void navigate({
+        to: "/settings/billing",
+        search: {},
+        replace: true,
+      });
+    }
+  }, [checkout, isActive, navigate]);
 
   const checkoutMutation = useMutation({
     mutationFn: (priceId: string) =>
