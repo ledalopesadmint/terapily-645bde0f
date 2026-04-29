@@ -54,8 +54,13 @@ function BillingSettingsPage() {
   });
 
   const subscription = subscriptionQuery.data?.subscription ?? null;
+  // "Ativo" = assinatura paga via Stripe (status active OU trialing pago no
+  // Stripe, que sempre traz stripe_subscription_id). O trial NATIVO de 14 dias
+  // do app é tier=solo + status=trialing SEM stripe_subscription_id — esse não
+  // conta como ativo, pra continuar mostrando os planos disponíveis.
   const isActive =
-    subscription?.status === "active" || subscription?.status === "trialing";
+    !!subscription?.stripe_subscription_id &&
+    (subscription.status === "active" || subscription.status === "trialing");
 
   // Após retornar do Stripe (?checkout=success), faz polling até o webhook
   // confirmar a subscription — em geral leva 1-3s.
