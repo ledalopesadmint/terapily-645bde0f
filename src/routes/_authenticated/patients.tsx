@@ -578,14 +578,16 @@ function DeleteConfirmDialog({
     <AlertDialog open onOpenChange={onOpenChange}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir este paciente?</AlertDialogTitle>
+          <AlertDialogTitle>Excluir {patient.display_name}?</AlertDialogTitle>
           <AlertDialogDescription asChild>
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>
-                O paciente sai da sua lista imediatamente. O registro continua
-                preservado no banco (cifrado) pra auditoria, conforme a retenção
-                exigida pela HIPAA — não conseguimos recuperar pela interface
-                depois de excluir.
+                Os dados ficam cifrados e disponíveis pra restauração por{" "}
+                <strong>30 dias</strong>. Após esse período, nome, email e telefone
+                são apagados em definitivo (audit trail é mantido sem dados pessoais).
+              </p>
+              <p>
+                Pra restaurar antes do prazo: <strong>Pacientes → Excluídos</strong>.
               </p>
               <p>
                 Pra confirmar, digite{" "}
