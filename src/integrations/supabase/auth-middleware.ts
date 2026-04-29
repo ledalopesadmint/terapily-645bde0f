@@ -2,13 +2,28 @@
 import { createMiddleware } from '@tanstack/react-start'
 import { getRequest } from '@tanstack/react-start/server'
 import { createClient } from '@supabase/supabase-js'
+import { supabase as browserSupabase } from './client'
 import type { Database } from './types'
 
-
-
-export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server(
-  async ({ next }) => {
-    
+/**
+ * Middleware único:
+ *  - .client(): pega o access_token da sessão Supabase no browser e injeta
+ *    como header `Authorization: Bearer <token>` antes do request sair.
+ *  - .server(): valida o token, cria um Supabase client server-side autenticado
+ *    como o user, e injeta { supabase, userId, claims } no contexto.
+ */
+export const requireSupabaseAuth = createMiddleware({ type: 'function' })
+  .client(async ({ next }) => {
+    let token: string | undefined;
+    if (typeof window !== 'undefined') {
+      const { data } = await browserSupabase.auth.getSession();
+      token = data.session?.access_token;
+    }
+    return next({
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+  })
+  .server(async ({ next }) => {
     const SUPABASE_URL = process.env.SUPABASE_URL;
     const SUPABASE_PUBLISHABLE_KEY = process.env.SUPABASE_PUBLISHABLE_KEY;
 
@@ -18,7 +33,7 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
         { status: 500 }
       );
     }
-    
+
     const request = getRequest();
 
     if (!request?.headers) {
@@ -41,8 +56,8 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
     }
 
     const supabase = createClient<Database>(
-      SUPABASE_URL!,
-      SUPABASE_PUBLISHABLE_KEY!,
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY,
       {
         global: {
           headers: {
@@ -72,6 +87,5 @@ export const requireSupabaseAuth = createMiddleware({ type: 'function' }).server
         userId: data.claims.sub,
         claims: data.claims,
       },
-    })
-  }
-)
+    });
+  });
