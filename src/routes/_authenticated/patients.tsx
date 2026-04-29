@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -12,8 +12,13 @@ import {
   Pencil,
   Mail,
   Phone,
+  Trash,
 } from "lucide-react";
 import { toast } from "sonner";
+
+import { useAuth } from "@/features/auth/AuthProvider";
+import { PatientLimitBanner } from "@/features/patients/PatientLimitBanner";
+import { PatientLimitModal } from "@/features/patients/PatientLimitModal";
 
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { Button } from "@/components/ui/button";
