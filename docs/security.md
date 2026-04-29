@@ -84,7 +84,24 @@ Em concreto:
 - **Email transacional**: subject e body não podem citar nome real do
   paciente. Use referências internas + magic link.
 - **PostHog / analytics**: identifier opaco, nunca email ou nome.
-
+- **Cache persistente do client**: PHI vive **só em memória** via TanStack
+  Query. **Nunca ativar `persistQueryClient`** (localStorage / sessionStorage
+  / IndexedDB) para queries que tocam PHI — em particular:
+  - `["patients", ...]` (listPatients)
+  - `["patient", id]` (getPatient)
+  - qualquer query que use `revealPatientContact`
+  - qualquer query cuja resposta contenha campos descriptografados
+    (`full_name`, `email`, `phone`).
+  Se um dia precisarmos de offline support, criar uma allowlist explícita
+  com apenas queries não-PHI (ex: catálogo de atividades, planos Stripe).
+- **Plaintext legado em `*_encrypted`**: `decryptPHIServer` rejeita
+  payloads sem prefixo `v1:` em produção (`NODE_ENV === "production"`
+  → throw). Em dev mantém passthrough com warning sanitizado pra não
+  travar fixtures. Roteiro completo em `docs/key-rotation.md`.
+- **Tags do paciente**: tags vão em texto plano (não-PHI), por isso o schema
+  bloqueia formatos identificáveis (email, telefone, CPF/SSN, datas,
+  strings com >2 palavras). Validação compartilhada client + server
+  (`patientTagsSchema` em `src/lib/validation/schemas.ts`).
 
 ## Roadmap de segurança
 

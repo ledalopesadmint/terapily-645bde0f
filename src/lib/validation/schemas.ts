@@ -97,6 +97,38 @@ const phiString = (max: number) =>
 const looksLikeEmail = /\S+@\S+\.\S+/;
 const looksLikePhone = /(?:\+?\d[\d\s().-]{7,})/;
 const looksLikeDocId = /\b\d{3}[.\-\s]?\d{3}[.\-\s]?\d{3}[-\s]?\d{2}\b|\b\d{3}-\d{2}-\d{4}\b/;
+// Datas em formatos comuns (DD/MM/YYYY, MM/DD/YYYY, YYYY-MM-DD, DD-MM-YYYY).
+// Tags são pra categorização clínica genérica ("ansiedade", "adolescente"),
+// nunca pra marcar dia de sessão ou data de nascimento.
+const looksLikeDate =
+  /\b(?:\d{1,2}[/\-.]\d{1,2}[/\-.]\d{2,4}|\d{4}[/\-.]\d{1,2}[/\-.]\d{1,2})\b/;
+
+// =============================================================================
+// Tags (não-PHI, mas precisam ser genéricas — não podem virar coluna paralela
+// de identificação. Validação compartilhada entre client e server.)
+// =============================================================================
+export const TAGS_INVALID_MESSAGE =
+  "Use tags genéricas. Não inclua nome, email, telefone, data ou informação clínica identificável.";
+
+const tagSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1)
+  .max(30, TAGS_INVALID_MESSAGE)
+  .refine((v) => !looksLikeEmail.test(v), TAGS_INVALID_MESSAGE)
+  .refine((v) => !looksLikePhone.test(v), TAGS_INVALID_MESSAGE)
+  .refine((v) => !looksLikeDocId.test(v), TAGS_INVALID_MESSAGE)
+  .refine((v) => !looksLikeDate.test(v), TAGS_INVALID_MESSAGE)
+  // Máximo 2 palavras (ex: "ansiedade social" OK, "Maria de Lourdes" não).
+  .refine((v) => v.split(/\s+/).filter(Boolean).length <= 2, TAGS_INVALID_MESSAGE);
+
+export const patientTagsSchema = z
+  .array(tagSchema)
+  .max(10, "Máximo de 10 tags por paciente.")
+  .default([])
+  // Normaliza: remove duplicadas mantendo ordem.
+  .transform((arr) => Array.from(new Set(arr)));
 
 export const displayNameSchema = z
   .string()
@@ -121,7 +153,7 @@ export const patientCreateSchema = z.object({
     .min(1, "Required")
     .max(6, "Max 6 chars")
     .regex(/^[\p{L}\p{N} .'-]+$/u, "Only letters and spaces"),
-  tags: z.array(z.string().trim().min(1).max(40)).max(10).default([]),
+  tags: patientTagsSchema,
   assigned_therapist_id: z.string().uuid().optional(), // default = caller
   // PHI (cifrado AES-GCM-256 antes de gravar)
   full_name: phiString(200),

@@ -72,7 +72,12 @@ function PatientsPage() {
   const usageQuery = useQuery({
     queryKey: ["patients", "usage"],
     queryFn: () => getPatientUsage(),
-    staleTime: 10_000,
+    // Banner é um espelho do limite — outro membro do workspace pode criar
+    // ou arquivar paciente. staleTime curto + refetch on focus mantém
+    // próximo do real sem martelar o servidor. O bloqueio real continua
+    // no servidor (createPatient + trigger BEFORE INSERT).
+    staleTime: 5_000,
+    refetchOnWindowFocus: true,
   });
   const usage = usageQuery.data;
 
@@ -238,6 +243,7 @@ function PatientsPage() {
         onSaved={() => {
           setEditing(null);
           queryClient.invalidateQueries({ queryKey: ["patients"] });
+          queryClient.invalidateQueries({ queryKey: ["patients", "usage"] });
         }}
       />
 

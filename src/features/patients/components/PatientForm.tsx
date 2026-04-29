@@ -200,10 +200,23 @@ export function PatientForm({
                     .map((t) => t.trim())
                     .filter(Boolean)
                     .slice(0, 10),
+                  { shouldValidate: true },
                 )
               }
               placeholder="ansiedade, adolescente"
+              aria-describedby="tags_help"
             />
+            <p id="tags_help" className="mt-1 text-xs text-muted-foreground">
+              Máx. 10 tags, até 30 caracteres cada. Use tags genéricas — não
+              inclua nome, email, telefone, data ou informação clínica
+              identificável.
+            </p>
+            {form.formState.errors.tags && (
+              <p className="mt-1 text-xs text-destructive">
+                {form.formState.errors.tags.message ??
+                  "Alguma tag não está em formato válido."}
+              </p>
+            )}
           </div>
 
           <div className="rounded-md border border-border bg-muted/20 p-4">
