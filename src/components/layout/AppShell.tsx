@@ -186,8 +186,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 Acesso completo · sem limite
               </p>
             </div>
+          ) : hasActivePlan ? (
+            <Link
+              to="/settings/billing"
+              className="mb-3 block rounded-md bg-secondary/15 px-3 py-2.5 transition hover:bg-secondary/25"
+            >
+              <p className="text-[0.5625rem] font-bold uppercase tracking-[0.14em] text-secondary">
+                Plano ativo
+              </p>
+              <p className="mt-1 text-sm text-sidebar-foreground">
+                Terapily{" "}
+                <span className="font-display text-lg">{planLabel}</span>
+              </p>
+            </Link>
           ) : trialDaysLeft !== null ? (
-            <div className="mb-3 rounded-md bg-sage/10 px-3 py-2.5">
+            <Link
+              to="/settings/billing"
+              className="mb-3 block rounded-md bg-sage/10 px-3 py-2.5 transition hover:bg-sage/20"
+            >
               <p className="text-[0.5625rem] font-bold uppercase tracking-[0.14em] text-sage">
                 Avaliação · {TRIAL_DURATION_DAYS} dias
               </p>
@@ -195,7 +211,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <span className="font-display text-lg">{trialDaysLeft}</span>{" "}
                 {trialDaysLeft === 1 ? "dia restante" : "dias restantes"}
               </p>
-            </div>
+            </Link>
           ) : null}
 
 
