@@ -86,17 +86,8 @@ const phiString = (max: number) =>
     .nullable()
     .optional();
 
-// Date como string ISO (YYYY-MM-DD). Mantido como texto até o decrypt — o
-// banco nunca vê como date pra não criar índice acidental sobre PHI.
-const phiDate = z
-  .string()
-  .trim()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use YYYY-MM-DD")
-  .refine((v) => !Number.isNaN(Date.parse(v)), "Invalid date")
-  .transform((v) => v)
-  .nullable()
-  .optional()
-  .or(z.literal("").transform(() => null));
+// (Removidos phiDate e intake_notes — não usamos data de nascimento nem
+// observações iniciais. Prontuário fica no EHR do terapeuta.)
 
 // Apelido / pseudônimo. NÃO é PHI: vai em texto plano, índice, busca e logs.
 // Por isso bloqueamos formatos que normalmente carregam identidade real:
