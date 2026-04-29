@@ -70,13 +70,18 @@ export const Route = createFileRoute("/_authenticated/patients")({
 type StatusFilter = "active" | "archived";
 
 function deriveInitials(displayName: string): string {
-  return displayName
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("")
-    .slice(0, 4);
+  // Apelido é pseudônimo curto — pegamos só os 2 primeiros caracteres
+  // alfabéticos. Não tentamos extrair "iniciais de nome" porque o campo
+  // não deve conter nome real.
+  const cleaned = displayName.trim().replace(/[^\p{L}\p{N}]/gu, "");
+  return cleaned.slice(0, 2).toUpperCase() || "??";
+}
+
+// Heurística leve: nome composto longo (3+ palavras com 2+ letras) tem cara
+// de "Primeiro Meio Sobrenome" — avisamos sem bloquear.
+function looksLikeRealName(value: string): boolean {
+  const words = value.trim().split(/\s+/).filter((w) => w.length >= 2);
+  return words.length >= 3;
 }
 
 function PatientsPage() {
@@ -121,9 +126,9 @@ function PatientsPage() {
             Suas pessoas em acompanhamento.
           </h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Dados sensíveis (nome completo, email, telefone, observações) são
-            criptografados antes de gravar. O apelido e iniciais ficam visíveis
-            pra você navegar com tranquilidade.
+            Use um <strong>apelido curto</strong> (ex: "Ana M.", "Paciente 12")
+            pra identificar visualmente. Nome completo, contato e observações
+            são criptografados antes de gravar.
           </p>
         </div>
         <Button onClick={() => setCreating(true)} size="lg">
@@ -391,8 +396,9 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
         <DialogHeader>
           <DialogTitle>{isEdit ? "Editar paciente" : "Novo paciente"}</DialogTitle>
           <DialogDescription>
-            Nome completo, contato e observações iniciais são criptografados
-            antes de gravar. Apelido e iniciais ficam visíveis pra navegação.
+            <strong>Apelido</strong> é só um identificador curto não-sensível —
+            evite digitar o nome real aqui. Os campos abaixo (nome completo,
+            contato, observações) são criptografados antes de gravar.
           </DialogDescription>
         </DialogHeader>
 
@@ -403,14 +409,27 @@ function PatientDialog({ open, onOpenChange, patient, onSaved }: PatientDialogPr
               <Input
                 id="display_name"
                 {...form.register("display_name")}
-                placeholder="Ex: Ana M."
+                placeholder='Ex: "Ana M.", "Paciente 12"'
                 autoComplete="off"
+                aria-describedby="display_name_help"
               />
+              <p id="display_name_help" className="mt-1 text-xs text-muted-foreground">
+                Aparece em listas, buscas e logs. Não use nome completo, email
+                ou telefone.
+              </p>
               {form.formState.errors.display_name && (
                 <p className="mt-1 text-xs text-destructive">
                   {form.formState.errors.display_name.message}
                 </p>
               )}
+              {!form.formState.errors.display_name &&
+                looksLikeRealName(form.watch("display_name") ?? "") && (
+                  <p className="mt-1 text-xs text-mauve">
+                    Parece um nome completo. Considere usar só primeiro nome +
+                    inicial (ex: "Ana M.") — o nome real vai no campo
+                    criptografado abaixo.
+                  </p>
+                )}
             </div>
             <div>
               <Label htmlFor="initials">Iniciais</Label>
