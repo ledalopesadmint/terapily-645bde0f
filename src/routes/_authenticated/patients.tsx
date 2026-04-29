@@ -149,7 +149,7 @@ function PatientsPage() {
       const labels = {
         archive: "Paciente arquivado.",
         restore_active: "Paciente reativado.",
-        soft_delete: "Paciente removido.",
+        soft_delete: "Excluído. 30 dias pra restaurar.",
       } as const;
       toast.success(labels[vars.action]);
       setConfirmDelete(null);
