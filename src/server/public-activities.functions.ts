@@ -14,15 +14,25 @@
  */
 
 import { createServerFn } from "@tanstack/react-start";
+import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { encryptPHIServer } from "@/lib/crypto/encryption.server";
 import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
+import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
 import {
   getPatientActivityByTokenHash,
   getActivityFromCatalog,
 } from "./activities.server";
+
+function getClientIp(): string {
+  try {
+    return getRequestIP({ xForwardedFor: true }) ?? "unknown";
+  } catch {
+    return "unknown";
+  }
+}
 
 const NEUTRAL_ERROR =
   "Este link não está disponível. Peça um novo link ao seu terapeuta.";
