@@ -164,19 +164,24 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     const encrypted = await encryptPHIServer(JSON.stringify(data.responses));
 
     // 3. Cria activity_responses
+    const submittedVia: "in_session" | "shared_link" =
+      pa.delivery_mode === "in_session" ? "in_session" : "shared_link";
+
+    const responseInsert = {
+      patient_activity_id: pa.id,
+      workspace_id: pa.workspace_id,
+      patient_id: pa.patient_id,
+      activity_id: pa.activity_id,
+      raw_responses_encrypted: encrypted,
+      score: result.score,
+      severity: result.severity,
+      scoring_metadata: result.metadata as never,
+      submitted_via: submittedVia,
+    };
+
     const { data: response, error: respErr } = await supabaseAdmin
       .from("activity_responses")
-      .insert({
-        patient_activity_id: pa.id,
-        workspace_id: pa.workspace_id,
-        patient_id: pa.patient_id,
-        activity_id: pa.activity_id,
-        raw_responses_encrypted: encrypted,
-        score: result.score,
-        severity: result.severity,
-        scoring_metadata: result.metadata,
-        submitted_via: pa.delivery_mode === "in_session" ? "in_session" : "shared_link",
-      })
+      .insert(responseInsert)
       .select("id, score, severity, submitted_at")
       .single();
 
