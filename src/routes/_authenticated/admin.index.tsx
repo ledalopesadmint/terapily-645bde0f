@@ -40,6 +40,7 @@ function AdminHomePage() {
   const [data, setData] = useState<AdminCatalogPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [featuringId, setFeaturingId] = useState<string | null>(null);
 
   // Gate de role no client (defesa em camada — RLS do banco já bloqueia).
   // Usamos useEffect+navigate em vez de beforeLoad porque a sessão Supabase
@@ -49,6 +50,19 @@ function AdminHomePage() {
       void navigate({ to: "/dashboard", replace: true });
     }
   }, [isLoading, hasRole, navigate]);
+
+  const reload = () => {
+    setLoading(true);
+    return getAdminCatalog()
+      .then((res) => {
+        setData(res);
+        setLoadError(null);
+      })
+      .catch((err: Error) => {
+        setLoadError(err.message);
+      })
+      .finally(() => setLoading(false));
+  };
 
   useEffect(() => {
     if (!hasRole("admin")) return;
@@ -71,6 +85,30 @@ function AdminHomePage() {
       cancelled = true;
     };
   }, [hasRole]);
+
+  const handleToggleFeatured = async (id: string, currentlyFeatured: boolean) => {
+    setFeaturingId(id);
+    try {
+      // Clicar na atividade já em destaque desliga; clicar em outra troca.
+      const targetId = currentlyFeatured ? null : id;
+      const res = await setFeaturedActivity({ data: { id: targetId } });
+      if (res.id) {
+        toast.success("Destaque atualizado", {
+          description: `${res.title} agora aparece no topo do acervo.`,
+        });
+      } else {
+        toast.success("Destaque removido", {
+          description: "O acervo vai exibir o fallback editorial.",
+        });
+      }
+      await reload();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao atualizar destaque.");
+    } finally {
+      setFeaturingId(null);
+    }
+  };
+
 
   if (isLoading || !hasRole("admin")) {
     return (
