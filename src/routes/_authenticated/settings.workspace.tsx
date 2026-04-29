@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { workspaceUpdateSchema } from "@/lib/validation/schemas";
 import { renameWorkspace } from "@/features/workspace/workspace.functions";
+import { logClientError } from "@/lib/logger";
 
 export const Route = createFileRoute("/_authenticated/settings/workspace")({
   head: () => ({
@@ -52,7 +53,7 @@ function WorkspaceSettingsPage() {
         .is("deleted_at", null)
         .order("created_at", { ascending: true });
       if (err) {
-        console.error("members fetch failed:", err);
+        logClientError("workspaceMembers.fetch", err);
         return [];
       }
       const ids = (mems ?? []).map((m) => m.user_id);
