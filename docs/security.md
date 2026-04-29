@@ -61,6 +61,31 @@ Nunca confiar no frontend lendo `limits`. Frontend pode usar para mostrar/escond
 - PHI (notas clínicas, observações de paciente) será criptografada com AES-GCM-256 via helper `encryptPHI()` na S2.
 - Chave gerenciada via secret no backend, nunca exposta ao cliente.
 
+## PHI: onde NÃO pode aparecer
+
+**Nunca** colocar PHI em filtros `WHERE`, querystring, logs ou metadata.
+PHI deve existir apenas em colunas `*_encrypted` e ser acessado por ID
+autorizado via RLS.
+
+Em concreto:
+
+- **Filtros SQL**: `WHERE`, `ILIKE`, `ORDER BY` só podem usar colunas
+  não-PHI (`display_name`, `initials`, `tags`, `status`, IDs). Buscar por
+  email ou nome real é proibido — abre canal lateral via timing/erros.
+- **URL / querystring**: nenhum endpoint pode receber email, nome ou
+  telefone na URL. Use o ID do paciente e descriptografe no servidor.
+- **Logs**: nunca `console.error("op failed", error)` com o objeto inteiro
+  de erro. Os campos `details`, `hint`, `query`, `body` do
+  Postgres/Supabase podem trazer valores reais. Usar `logServerError()`
+  de `@/lib/logger.server` — registra apenas operação, código sanitizado
+  e correlation_id opcional.
+- **`audit_logs.metadata`**: só UUIDs, enums, contagens e nomes de campos.
+  Nunca o valor do campo.
+- **Email transacional**: subject e body não podem citar nome real do
+  paciente. Use referências internas + magic link.
+- **PostHog / analytics**: identifier opaco, nunca email ou nome.
+
+
 ## Roadmap de segurança
 
 - **S1 (atual):** RLS + audit + roles + soft delete + HIBP password check.
