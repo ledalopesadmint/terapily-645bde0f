@@ -158,7 +158,7 @@ export const getPatient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => patientIdSchema.parse(input))
   .handler(async ({ data, context }) => {
-    const { supabase } = context;
+    const { supabase, userId } = context;
 
     const { data: row, error } = await supabase
       .from("patients")
@@ -173,7 +173,20 @@ export const getPatient = createServerFn({ method: "POST" })
     }
     if (!row) throw new Error("Paciente não encontrado.");
 
-    return { patient: await rowToDTO(row as PatientRow) };
+    // Access log de PHI: só registra DEPOIS que a leitura foi autorizada
+    // pela RLS (caso contrário row seria null). Metadata PII-safe — só IDs.
+    // listPatients NÃO registra (evita poluição do audit por scrolling).
+    const patientRow = row as PatientRow;
+    await recordAudit({
+      actorId: userId,
+      workspaceId: patientRow.workspace_id,
+      action: "patient.viewed",
+      resourceType: "patient",
+      resourceId: patientRow.id,
+      metadata: { patient_id: patientRow.id },
+    });
+
+    return { patient: await rowToDTO(patientRow) };
   });
 
 // =============================================================================
