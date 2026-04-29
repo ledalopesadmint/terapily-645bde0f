@@ -25,14 +25,23 @@ export const syncStripeCatalog = createServerFn({ method: "POST" })
       throw new Error("Acesso restrito ao admin.");
     }
 
+    // Tolerante: aceita "price_xxx" puro ou URL tipo "/v1/prices/price_xxx".
+    // Extrai sempre o último segmento e remove espaços/barras.
+    const normalize = (raw: string | undefined): string | undefined => {
+      if (!raw) return undefined;
+      const trimmed = raw.trim().replace(/\/+$/, "");
+      const last = trimmed.split("/").pop();
+      return last || undefined;
+    };
+
     const targets: Array<{ priceId: string | undefined; tier: "basic" | "practice"; nickname: string }> = [
       {
-        priceId: process.env.STRIPE_PRICE_BASIC,
+        priceId: normalize(process.env.STRIPE_PRICE_BASIC),
         tier: "basic",
         nickname: "Up to 20 active patients",
       },
       {
-        priceId: process.env.STRIPE_PRICE_PRACTICE,
+        priceId: normalize(process.env.STRIPE_PRICE_PRACTICE),
         tier: "practice",
         nickname: "Up to 50 active patients · Compliance Report",
       },
