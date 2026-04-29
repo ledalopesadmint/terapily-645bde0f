@@ -126,9 +126,9 @@ function PatientsPage() {
             Suas pessoas em acompanhamento.
           </h1>
           <p className="mt-3 max-w-xl text-sm text-muted-foreground">
-            Dados sensíveis (nome completo, email, telefone, observações) são
-            criptografados antes de gravar. O apelido e iniciais ficam visíveis
-            pra você navegar com tranquilidade.
+            Use um <strong>apelido curto</strong> (ex: "Ana M.", "Paciente 12")
+            pra identificar visualmente. Nome completo, contato e observações
+            são criptografados antes de gravar.
           </p>
         </div>
         <Button onClick={() => setCreating(true)} size="lg">
