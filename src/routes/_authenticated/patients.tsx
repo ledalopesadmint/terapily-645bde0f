@@ -81,7 +81,6 @@ function deriveInitials(displayName: string): string {
 
 function PatientsPage() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
   const [status, setStatus] = useState<StatusFilter>("active");
   const [search, setSearch] = useState("");
   const [editing, setEditing] = useState<PatientDTO | null>(null);
