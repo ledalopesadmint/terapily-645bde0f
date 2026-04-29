@@ -31,7 +31,7 @@ interface CheckResult {
   failedStep?: string;
 }
 
-export const Route = createFileRoute("/api/dev/crypto-check")({
+export const Route = createFileRoute("/api/public/crypto-check")({
   server: {
     handlers: {
       GET: async () => {
