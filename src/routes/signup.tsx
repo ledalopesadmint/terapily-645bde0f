@@ -22,6 +22,7 @@ export const Route = createFileRoute("/signup")({
 function SignupPage() {
   const [submitting, setSubmitting] = useState(false);
   const [emailSent, setEmailSent] = useState<string | null>(null);
+  useRedirectIfAuthenticated("/welcome");
 
   const {
     register,
