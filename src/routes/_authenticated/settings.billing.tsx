@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate, useSearch } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle2, CreditCard, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowUpRight, CheckCircle2, CreditCard, ExternalLink, Loader2, Sparkles } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
