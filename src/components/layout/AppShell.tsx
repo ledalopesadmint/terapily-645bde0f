@@ -48,8 +48,24 @@ const upcomingItems: ComingSoonItem[] = [
 ];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { workspace, profile, signOut, hasRole } = useAuth();
+  const { workspace, profile, signOut, hasRole, session } = useAuth();
   const location = useLocation();
+
+  const subscriptionQuery = useQuery({
+    queryKey: ["billing", "subscription"],
+    queryFn: () => getCurrentSubscription(),
+    enabled: !!session,
+    staleTime: 30_000,
+  });
+  const subscription = subscriptionQuery.data?.subscription ?? null;
+  const hasActivePlan =
+    subscription?.status === "active" || subscription?.status === "trialing";
+  const planLabel =
+    subscription?.tier === "practice"
+      ? "Practice"
+      : subscription?.tier === "basic"
+        ? "Basic"
+        : "Plano";
 
   const initials = (profile?.full_name ?? "")
     .split(" ")
