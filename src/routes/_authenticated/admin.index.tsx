@@ -18,14 +18,16 @@
 
 import { useEffect, useState } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star } from "lucide-react";
+import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star, Flame, CheckCircle2, Clock, Hourglass } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import {
   getAdminCatalog,
   setFeaturedActivity,
+  getCatalogInsights,
   type AdminCatalogPayload,
+  type CatalogInsights,
 } from "@/server/admin.functions";
 import { syncStripeCatalog } from "@/features/billing/admin.functions";
 import { ARCHETYPE_LIST } from "@/features/library/archetypes";
@@ -223,6 +225,13 @@ function AdminHomePage() {
           </div>
         </section>
       )}
+
+      {/* Insights do catálogo (curadoria manual com base em dados reais) */}
+      <InsightsSection
+        onFeature={handleToggleFeatured}
+        featuringId={featuringId}
+        currentFeaturedId={data?.items.find((i) => i.is_featured)?.id ?? null}
+      />
 
       {/* Billing — sync catálogo Stripe */}
       <BillingSyncSection />
@@ -481,4 +490,238 @@ function BillingSyncSection() {
       </div>
     </section>
   );
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// InsightsSection — painel de curadoria manual baseado em dados reais.
+//
+// Sem PHI. Tudo agregado por activity_id no servidor (getCatalogInsights).
+// Cada item tem botão "Definir como destaque" que reusa setFeaturedActivity
+// — o mesmo fluxo da estrela na tabela.
+//
+// FUTURE (S5/S6):
+// considerar modo automático com:
+// - mínimo de uso (ex: 50)
+// - fallback manual
+// - opt-in no admin
+// ────────────────────────────────────────────────────────────────────────────
+
+interface InsightsSectionProps {
+  onFeature: (id: string, currentlyFeatured: boolean) => Promise<void>;
+  featuringId: string | null;
+  currentFeaturedId: string | null;
+}
+
+function InsightsSection({ onFeature, featuringId, currentFeaturedId }: InsightsSectionProps) {
+  const [insights, setInsights] = useState<CatalogInsights | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
+  const load = () => {
+    setLoading(true);
+    return getCatalogInsights()
+      .then((res) => {
+        setInsights(res);
+        setErr(null);
+      })
+      .catch((e: Error) => setErr(e.message))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    getCatalogInsights()
+      .then((res) => {
+        if (!cancelled) {
+          setInsights(res);
+          setErr(null);
+        }
+      })
+      .catch((e: Error) => {
+        if (!cancelled) setErr(e.message);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentFeaturedId]); // recarrega quando o destaque muda
+
+  return (
+    <section aria-label="Insights do catálogo" className="mt-12">
+      <div className="mb-4 flex items-baseline justify-between">
+        <Eyebrow tone="mauve">Insights do catálogo</Eyebrow>
+        <button
+          type="button"
+          onClick={load}
+          disabled={loading}
+          className="text-xs text-muted-foreground hover:text-foreground disabled:opacity-50"
+        >
+          {loading ? "Atualizando…" : "Atualizar"}
+        </button>
+      </div>
+
+      <p className="mb-5 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+        Dados agregados pra apoiar sua escolha de destaque. Tudo cross-workspace,
+        sem nenhum dado de paciente. A decisão continua sendo sua —
+        automatizar o destaque cria viés de feedback e some com a curadoria editorial.
+      </p>
+
+      {err && (
+        <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-5 py-4">
+          <p className="eyebrow !text-destructive">Não consegui carregar</p>
+          <p className="mt-1 text-sm text-foreground">{err}</p>
+        </div>
+      )}
+
+      {insights && (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <InsightBlock
+            icon={Flame}
+            title="Mais usadas"
+            subtitle={`Últimos ${insights.window_days} dias`}
+            empty="Sem prescrições no período."
+            items={insights.top_used.map((u) => ({
+              id: u.activity_id,
+              title: u.title,
+              meta: `${u.count} ${u.count === 1 ? "uso" : "usos"}`,
+            }))}
+            onFeature={onFeature}
+            featuringId={featuringId}
+            currentFeaturedId={currentFeaturedId}
+          />
+
+          <InsightBlock
+            icon={CheckCircle2}
+            title="Maior conclusão"
+            subtitle="Mín. 10 envios"
+            empty="Ainda sem amostra suficiente."
+            items={insights.top_completion.map((c) => ({
+              id: c.activity_id,
+              title: c.title,
+              meta: `${c.completion_rate}% · ${c.total_completed}/${c.total_assigned}`,
+            }))}
+            onFeature={onFeature}
+            featuringId={featuringId}
+            currentFeaturedId={currentFeaturedId}
+          />
+
+          <InsightBlock
+            icon={Clock}
+            title="Última adicionada"
+            subtitle="No catálogo"
+            empty="Catálogo vazio."
+            items={
+              insights.latest_added
+                ? [
+                    {
+                      id: insights.latest_added.activity_id,
+                      title: insights.latest_added.title,
+                      meta: relativeDate(insights.latest_added.created_at),
+                    },
+                  ]
+                : []
+            }
+            onFeature={onFeature}
+            featuringId={featuringId}
+            currentFeaturedId={currentFeaturedId}
+          />
+
+          <InsightBlock
+            icon={Hourglass}
+            title="Nunca foi destaque"
+            subtitle="Oportunidades de descoberta"
+            empty="Todas já foram destaque pelo menos uma vez."
+            items={insights.never_featured.map((n) => ({
+              id: n.activity_id,
+              title: n.title,
+              meta: n.status === "published" ? "Publicada" : n.status,
+            }))}
+            onFeature={onFeature}
+            featuringId={featuringId}
+            currentFeaturedId={currentFeaturedId}
+          />
+        </div>
+      )}
+    </section>
+  );
+}
+
+interface InsightBlockProps {
+  icon: typeof Sparkles;
+  title: string;
+  subtitle: string;
+  empty: string;
+  items: Array<{ id: string; title: string; meta: string }>;
+  onFeature: (id: string, currentlyFeatured: boolean) => Promise<void>;
+  featuringId: string | null;
+  currentFeaturedId: string | null;
+}
+
+function InsightBlock({
+  icon: Icon,
+  title,
+  subtitle,
+  empty,
+  items,
+  onFeature,
+  featuringId,
+  currentFeaturedId,
+}: InsightBlockProps) {
+  return (
+    <div className="rounded-xl border border-border/50 bg-card p-5">
+      <div className="flex items-start gap-3">
+        <Icon className="mt-0.5 h-4 w-4 text-secondary" aria-hidden />
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="text-[0.6875rem] uppercase tracking-wider text-muted-foreground">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 space-y-2.5">
+        {items.length === 0 && (
+          <p className="text-xs text-muted-foreground">{empty}</p>
+        )}
+        {items.map((item) => {
+          const isCurrent = item.id === currentFeaturedId;
+          const busy = featuringId === item.id;
+          return (
+            <div
+              key={item.id}
+              className="flex items-center justify-between gap-3 rounded-md bg-muted/30 px-3 py-2"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {item.title}
+                </p>
+                <p className="text-xs text-muted-foreground">{item.meta}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onFeature(item.id, isCurrent)}
+                disabled={busy}
+                className="shrink-0 rounded-md border border-border/60 bg-background px-2.5 py-1 text-[0.6875rem] font-medium text-foreground transition hover:bg-muted disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {isCurrent ? "Em destaque" : busy ? "…" : "Destacar"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function relativeDate(iso: string): string {
+  const then = new Date(iso).getTime();
+  const days = Math.floor((Date.now() - then) / (1000 * 60 * 60 * 24));
+  if (days <= 0) return "hoje";
+  if (days === 1) return "ontem";
+  if (days < 30) return `há ${days} dias`;
+  const months = Math.floor(days / 30);
+  return months === 1 ? "há 1 mês" : `há ${months} meses`;
 }
