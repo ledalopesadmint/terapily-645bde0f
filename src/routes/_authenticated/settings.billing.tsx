@@ -1,6 +1,7 @@
 import { createFileRoute, useSearch } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { CreditCard, ExternalLink, Loader2 } from "lucide-react";
+import { useEffect, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { CheckCircle2, CreditCard, ExternalLink, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
@@ -10,6 +11,7 @@ import {
   createBillingPortalSession,
   createCheckoutSession,
   getActiveProducts,
+  getCurrentSubscription,
 } from "@/features/billing/billing.functions";
 import { toast } from "sonner";
 
