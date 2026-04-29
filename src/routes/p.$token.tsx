@@ -24,12 +24,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { resolvePublicToken, submitActivityResponse } from "@/server/public-activities.functions";
+import { resolvePublicToken, submitActivityResponse } from "@/features/activities/public-activities.functions";
 import {
   saveActivityDraft,
   getActivityDraft,
   discardActivityDraft,
-} from "@/server/activity-drafts.functions";
+} from "@/features/activities/activity-drafts.functions";
 
 export const Route = createFileRoute("/p/$token")({
   head: () => ({
