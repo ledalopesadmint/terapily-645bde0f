@@ -8,7 +8,9 @@
  * Eventos tratados:
  *   - checkout.session.completed
  *   - customer.subscription.created / updated / deleted
+ *   - customer.subscription.trial_will_end (audit-only, prepara aviso futuro)
  *   - invoice.payment_succeeded / payment_failed
+ *   - charge.dispute.created (audit-only, prepara painel admin)
  */
 import { createFileRoute } from "@tanstack/react-router";
 import type Stripe from "stripe";
