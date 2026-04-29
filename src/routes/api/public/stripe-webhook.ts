@@ -309,11 +309,24 @@ export const Route = createFileRoute("/api/public/stripe-webhook")({
               // customer.subscription.updated. Aqui só audit estruturado
               // pra suporte/admin futuro. Metadata 100% PII-safe — só IDs
               // Stripe e números, sem email/nome/cartão/endereço.
+              // Stripe novo: invoice.subscription foi removido. Tentamos:
+              //   1) parent.subscription_details.subscription (faturas geradas por subscription)
+              //   2) line item .subscription (fallback)
+              type InvParent = {
+                subscription_details?: {
+                  subscription?: string | { id?: string } | null;
+                } | null;
+              };
+              const parentSub = (inv as unknown as { parent?: InvParent | null })
+                .parent?.subscription_details?.subscription;
+              const lineSub = (
+                inv.lines?.data?.[0] as unknown as {
+                  subscription?: string | { id?: string } | null;
+                } | undefined
+              )?.subscription;
+              const rawSub = parentSub ?? lineSub ?? null;
               const subId =
-                typeof inv.subscription === "string"
-                  ? inv.subscription
-                  : (inv.subscription as Stripe.Subscription | null)?.id ??
-                    null;
+                typeof rawSub === "string" ? rawSub : rawSub?.id ?? null;
               extraAudit = {
                 action: "billing.payment_failed",
                 metadata: {
