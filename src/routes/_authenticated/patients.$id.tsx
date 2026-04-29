@@ -16,7 +16,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Copy, Plus, Send, ShieldCheck, Slash } from "lucide-react";
 import { toast } from "sonner";
 
-import { AppShell } from "@/components/layout/AppShell";
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -112,55 +112,47 @@ function PatientDetailPage() {
   });
 
   if (patientQuery.isLoading) {
-    return (
-      <AppShell>
-        <div className="p-6 text-muted-foreground">Carregando…</div>
-      </AppShell>
-    );
+    return <div className="p-6 text-muted-foreground">Carregando…</div>;
   }
 
   if (patientQuery.isError || !patientQuery.data?.patient) {
     return (
-      <AppShell>
-        <div className="p-6">
-          <p className="text-destructive">Paciente não encontrado.</p>
-          <Link to="/patients" className="text-sm underline mt-2 inline-block">
-            Voltar pra lista
-          </Link>
-        </div>
-      </AppShell>
+      <div className="p-6">
+        <p className="text-destructive">Paciente não encontrado.</p>
+        <Link to="/patients" className="text-sm underline mt-2 inline-block">
+          Voltar pra lista
+        </Link>
+      </div>
     );
   }
 
   const patient = patientQuery.data.patient;
 
   return (
-    <AppShell>
-      <div className="mx-auto max-w-5xl space-y-6 p-6">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Link to="/patients" className="inline-flex items-center gap-1 hover:text-foreground">
-            <ArrowLeft className="h-3.5 w-3.5" /> Pacientes
-          </Link>
-        </div>
-
-        <header className="flex items-center gap-4">
-          <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-lg font-medium text-foreground">
-            {patient.initials}
-          </div>
-          <div>
-            <h1 className="font-display text-3xl text-foreground">{patient.display_name}</h1>
-            <p className="text-sm text-muted-foreground">
-              {patient.tags && patient.tags.length > 0 ? patient.tags.join(" · ") : "Sem etiquetas"}
-            </p>
-          </div>
-        </header>
-
-        <PatientTabs
-          patientId={patient.id}
-          workspaceId={patient.workspace_id}
-        />
+    <div className="mx-auto max-w-5xl space-y-6 p-6">
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Link to="/patients" className="inline-flex items-center gap-1 hover:text-foreground">
+          <ArrowLeft className="h-3.5 w-3.5" /> Pacientes
+        </Link>
       </div>
-    </AppShell>
+
+      <header className="flex items-center gap-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-lg font-medium text-foreground">
+          {patient.initials}
+        </div>
+        <div>
+          <h1 className="font-display text-3xl text-foreground">{patient.display_name}</h1>
+          <p className="text-sm text-muted-foreground">
+            {patient.tags && patient.tags.length > 0 ? patient.tags.join(" · ") : "Sem etiquetas"}
+          </p>
+        </div>
+      </header>
+
+      <PatientTabs
+        patientId={patient.id}
+        workspaceId={patient.workspace_id}
+      />
+    </div>
   );
 }
 
