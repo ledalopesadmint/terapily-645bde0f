@@ -145,6 +145,7 @@ function PatientsPage() {
       setPatientLifecycle({ data: input }),
     onSuccess: (_, vars) => {
       queryClient.invalidateQueries({ queryKey: ["patients"] });
+      queryClient.invalidateQueries({ queryKey: ["patients", "usage"] });
       const labels = {
         archive: "Paciente arquivado.",
         restore_active: "Paciente reativado.",
