@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Plus, Send, Slash } from "lucide-react";
+import { ArrowLeft, Copy, Plus, Send, ShieldCheck, Slash } from "lucide-react";
 import { toast } from "sonner";
 
 import { AppShell } from "@/components/layout/AppShell";
@@ -57,10 +57,13 @@ import {
 import { getPatient } from "@/features/patients/patients.functions";
 import {
   assignActivity,
+  getMyWorkspaceRole,
   listPatientActivities,
+  listPatientAuditLogs,
   revokeActivity,
   listAvailableActivities,
-} from "@/server/activities.functions";
+} from "@/features/activities/activities.functions";
+import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
   head: () => ({
@@ -152,32 +155,58 @@ function PatientDetailPage() {
           </div>
         </header>
 
-        <Tabs defaultValue="activities" className="w-full">
-          <TabsList>
-            <TabsTrigger value="activities">Atividades</TabsTrigger>
-            <TabsTrigger value="info">Informações</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="activities" className="mt-6">
-            <ActivitiesTab
-              patientId={patient.id}
-              workspaceId={patient.workspace_id}
-            />
-          </TabsContent>
-
-          <TabsContent value="info" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Cadastro</CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm text-muted-foreground">
-                Apelido, iniciais e etiquetas. Dados de contato ficam cifrados.
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <PatientTabs
+          patientId={patient.id}
+          workspaceId={patient.workspace_id}
+        />
       </div>
     </AppShell>
+  );
+}
+
+function PatientTabs({
+  patientId,
+  workspaceId,
+}: {
+  patientId: string;
+  workspaceId: string;
+}) {
+  const roleQuery = useQuery({
+    queryKey: ["my-workspace-role", workspaceId],
+    queryFn: () => getMyWorkspaceRole({ data: { workspaceId } }),
+    staleTime: 60_000,
+  });
+  const isOwner = roleQuery.data?.role === "owner";
+
+  return (
+    <Tabs defaultValue="activities" className="w-full">
+      <TabsList>
+        <TabsTrigger value="activities">Atividades</TabsTrigger>
+        <TabsTrigger value="info">Informações</TabsTrigger>
+        {isOwner && <TabsTrigger value="audit">Auditoria</TabsTrigger>}
+      </TabsList>
+
+      <TabsContent value="activities" className="mt-6">
+        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} />
+      </TabsContent>
+
+      <TabsContent value="info" className="mt-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Cadastro</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-muted-foreground">
+            Apelido, iniciais e etiquetas. Dados de contato ficam cifrados.
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      {isOwner && (
+        <TabsContent value="audit" className="mt-6">
+          <AuditTab patientId={patientId} workspaceId={workspaceId} />
+        </TabsContent>
+      )}
+    </Tabs>
   );
 }
 
@@ -239,42 +268,56 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
         <ul className="space-y-3">
           {activities.map((a) => {
             const status = a.status as ActivityStatus;
-            // Link só pode ser exibido novamente se tivermos o token cru — não temos.
-            // Após criação, o terapeuta gera novo link se precisar.
             const canRevoke =
               status !== "completed" && status !== "revoked" && status !== "expired";
             const response = Array.isArray(a.response) ? a.response[0] : a.response;
+            const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
+            const draftPct = a.draft_completion_percent ?? 0;
+            const displayStatus: ActivityStatus = hasDraft ? "in_progress" : status;
             return (
               <Card key={a.id}>
-                <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-                  <div className="space-y-1">
-                    <p className="font-medium text-foreground">
-                      {a.activity?.title ?? "Atividade"}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
-                    </p>
+                <CardContent className="space-y-3 py-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="font-medium text-foreground">
+                        {a.activity?.title ?? "Atividade"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {response?.score != null && (
+                        <span className="text-sm">
+                          Score <strong>{response.score}</strong>
+                          {response.severity && (
+                            <span className="text-muted-foreground"> · {response.severity}</span>
+                          )}
+                        </span>
+                      )}
+                      <Badge variant={STATUS_VARIANT[displayStatus]}>
+                        {STATUS_LABEL[displayStatus]}
+                        {hasDraft && ` · ${draftPct}%`}
+                      </Badge>
+                      {canRevoke && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setRevokeTarget(a.id)}
+                        >
+                          <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {response?.score != null && (
-                      <span className="text-sm">
-                        Score <strong>{response.score}</strong>
-                        {response.severity && (
-                          <span className="text-muted-foreground"> · {response.severity}</span>
-                        )}
-                      </span>
-                    )}
-                    <Badge variant={STATUS_VARIANT[status]}>{STATUS_LABEL[status]}</Badge>
-                    {canRevoke && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => setRevokeTarget(a.id)}
-                      >
-                        <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
-                      </Button>
-                    )}
-                  </div>
+                  {hasDraft && (
+                    <div className="space-y-1">
+                      <Progress value={draftPct} className="h-1.5" />
+                      <p className="text-xs text-muted-foreground">
+                        Paciente está respondendo. Conteúdo cifrado — você verá só ao finalizar.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             );
@@ -499,5 +542,70 @@ function RevealLinkDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// =============================================================================
+// Aba Auditoria (owner only)
+// =============================================================================
+
+const AUDIT_LABEL: Record<string, string> = {
+  "activity.assigned": "Atividade enviada",
+  "activity.link_opened": "Link aberto pelo paciente",
+  "activity.draft_saved": "Progresso salvo",
+  "activity.draft_loaded": "Progresso retomado",
+  "activity.draft_discarded": "Rascunho descartado",
+  "activity.submitted": "Atividade respondida",
+  "activity.status_changed": "Status alterado",
+  "activity.response_recorded": "Resposta registrada",
+};
+
+function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: string }) {
+  const auditQuery = useQuery({
+    queryKey: ["patient-audit", patientId, workspaceId],
+    queryFn: () => listPatientAuditLogs({ data: { patientId, workspaceId, limit: 100 } }),
+  });
+
+  if (auditQuery.isLoading) {
+    return <p className="text-sm text-muted-foreground">Carregando auditoria…</p>;
+  }
+
+  const logs = auditQuery.data?.logs ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-start gap-3 rounded-md border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
+        <p>
+          Registros sem dados clínicos. Apenas IDs, ações e horários — visível só pra owner do workspace.
+        </p>
+      </div>
+
+      {logs.length === 0 ? (
+        <Card>
+          <CardContent className="py-12 text-center text-sm text-muted-foreground">
+            Nenhum evento registrado pra este paciente ainda.
+          </CardContent>
+        </Card>
+      ) : (
+        <ul className="divide-y divide-border rounded-md border border-border">
+          {logs.map((log) => (
+            <li key={log.id} className="flex items-start justify-between gap-3 px-4 py-3">
+              <div className="space-y-0.5">
+                <p className="text-sm font-medium text-foreground">
+                  {AUDIT_LABEL[log.action] ?? log.action}
+                </p>
+                <p className="text-xs text-muted-foreground font-mono">
+                  {log.action}
+                </p>
+              </div>
+              <time className="text-xs text-muted-foreground whitespace-nowrap">
+                {new Date(log.created_at).toLocaleString("pt-BR")}
+              </time>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

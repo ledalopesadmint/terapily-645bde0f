@@ -193,7 +193,7 @@ export const listPatientActivities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => ListSchema.parse(input))
   .handler(async ({ data, context }) => {
-    // Aqui usamos o client autenticado pra deixar a RLS validar.
+    // RLS via client autenticado garante isolamento.
     const { supabase } = context;
 
     const { data: rows, error } = await supabase
@@ -221,7 +221,38 @@ export const listPatientActivities = createServerFn({ method: "GET" })
       throw new Error("Não foi possível carregar as atividades.");
     }
 
-    return { activities: rows ?? [] };
+    // Enriquece com info de draft (sem PHI: só completion_percent + flag).
+    // Permite a UI mostrar "Em andamento · 60%" sem decifrar nada.
+    const ids = (rows ?? []).map((r) => r.id);
+    let draftMap = new Map<string, { percent: number; updatedAt: string }>();
+    if (ids.length > 0) {
+      const { data: drafts, error: draftErr } = await supabase
+        .from("activity_drafts")
+        .select("patient_activity_id, completion_percent, updated_at")
+        .in("patient_activity_id", ids);
+      if (draftErr) {
+        console.warn("[listPatientActivities] draft enrich failed", { code: draftErr.code });
+      } else {
+        draftMap = new Map(
+          (drafts ?? []).map((d) => [
+            d.patient_activity_id,
+            { percent: d.completion_percent ?? 0, updatedAt: d.updated_at },
+          ]),
+        );
+      }
+    }
+
+    const activities = (rows ?? []).map((r) => {
+      const draft = draftMap.get(r.id);
+      return {
+        ...r,
+        has_draft: !!draft,
+        draft_completion_percent: draft?.percent ?? null,
+        draft_updated_at: draft?.updatedAt ?? null,
+      };
+    });
+
+    return { activities };
   });
 
 // --- listAvailableActivities ----------------------------------------------
@@ -242,3 +273,103 @@ export const listAvailableActivities = createServerFn({ method: "GET" })
     }
     return { activities: data ?? [] };
   });
+
+// --- getMyWorkspaceRole (gating client-side de Tabs owner-only) -----------
+
+const RoleSchema = z.object({ workspaceId: z.string().uuid() });
+
+export const getMyWorkspaceRole = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => RoleSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: row, error } = await supabase
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", data.workspaceId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (error) {
+      console.error("[getMyWorkspaceRole] failed", { code: error.code });
+      return { role: null as null };
+    }
+    return { role: (row?.role ?? null) as "owner" | "therapist" | null };
+  });
+
+// --- listPatientAuditLogs (owner only) ------------------------------------
+// RLS de audit_logs já restringe leitura a `has_workspace_role(_, owner)`.
+// Aqui só filtramos por paciente (resource_id) e por ações relevantes a S3.
+
+const AuditListSchema = z.object({
+  patientId: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+  limit: z.number().int().min(1).max(200).default(50),
+});
+
+const ACTIVITY_AUDIT_ACTIONS = [
+  "activity.assigned",
+  "activity.link_opened",
+  "activity.draft_saved",
+  "activity.draft_loaded",
+  "activity.draft_discarded",
+  "activity.submitted",
+  "activity.status_changed",
+  "activity.response_recorded",
+] as const;
+
+export const listPatientAuditLogs = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => AuditListSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    // 1. Audits ligados a patient_activities deste paciente.
+    //    Buscamos os IDs primeiro (RLS já garante visibilidade do paciente).
+    const { data: pas, error: paErr } = await supabase
+      .from("patient_activities")
+      .select("id")
+      .eq("patient_id", data.patientId)
+      .eq("workspace_id", data.workspaceId);
+
+    if (paErr) {
+      console.error("[listPatientAuditLogs] pa lookup failed", { code: paErr.code });
+      throw new Error("Não foi possível carregar a auditoria.");
+    }
+    const paIds = (pas ?? []).map((p) => p.id);
+
+    // Sem nenhuma atividade, retornamos vazio sem consultar audit_logs.
+    if (paIds.length === 0) {
+      return { logs: [] as AuditLogRow[] };
+    }
+
+    const { data: logs, error: logsErr } = await supabase
+      .from("audit_logs")
+      .select("id, action, resource_type, resource_id, metadata, created_at, actor_id")
+      .in("action", ACTIVITY_AUDIT_ACTIONS as unknown as string[])
+      .in("resource_id", paIds)
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: false })
+      .limit(data.limit);
+
+    if (logsErr) {
+      // Se RLS recusou (terapeuta não-owner), devolve vazio em vez de vazar erro.
+      if (logsErr.code === "PGRST301" || logsErr.code === "42501") {
+        return { logs: [] as AuditLogRow[], denied: true };
+      }
+      console.error("[listPatientAuditLogs] audit_logs failed", { code: logsErr.code });
+      throw new Error("Não foi possível carregar a auditoria.");
+    }
+
+    return { logs: (logs ?? []) as AuditLogRow[] };
+  });
+
+export interface AuditLogRow {
+  id: string;
+  action: string;
+  resource_type: string | null;
+  resource_id: string | null;
+  // Casamos com o tipo inferido pelo Supabase Generated (jsonb).
+  metadata: { [x: string]: {} };
+  created_at: string;
+  actor_id: string | null;
+}

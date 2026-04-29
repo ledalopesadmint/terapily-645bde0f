@@ -1,58 +1,93 @@
-# Terapily — Arquitetura
+# Arquitetura — Terapily
 
-## Visão geral
+> **Regra global:** Toda regra, arquitetura e feature crítica fica em `/docs`.
+> Se não está no GitHub, não existe. Memórias `mem://` são índice e contexto da
+> Leda — não substituem documentação versionada.
 
-Terapily é uma plataforma para psicoterapeutas (e, no futuro, pacientes B2C). A arquitetura é construída para suportar **4 planos** sem refatoração estrutural, mesmo que a Semana 1 entregue apenas o plano básico.
+---
 
-- **Frontend:** React 19 + TanStack Start (SSR) + Tailwind v4.
-- **Backend:** Lovable Cloud (PostgreSQL + Auth + Edge Functions).
-- **Server functions:** TanStack `createServerFn` com middleware `requireSupabaseAuth` + Zod + `withAudit()`.
-- **Segurança:** RLS em todas as tabelas, roles separados em `user_roles` (global) e `workspace_members` (escopo de workspace).
+## Stack
 
-## Camadas
+- **Frontend & SSR:** React 19 + TanStack Start (file-based routing)
+- **Estilo:** Tailwind v4 (tokens em `src/styles.css` com `oklch`) + shadcn/ui
+- **Backend:** Lovable Cloud (Supabase) — Postgres + RLS + Auth
+- **Server logic:** `createServerFn` (TanStack) sobre Cloudflare Worker (nodejs_compat)
+- **Pagamentos:** Stripe BYOK
+- **Email transacional:** Resend (gating por `RESEND_BAA_SIGNED`)
+
+---
+
+## Organização de pastas
 
 ```
-┌───────────────────────────────┐
-│ React UI (apenas apresentação)│
-├───────────────────────────────┤
-│ Server functions (Zod + audit)│
-├───────────────────────────────┤
-│ Postgres + RLS (verdade real) │
-└───────────────────────────────┘
+docs/                 Documentação versionada (source of truth pro repo)
+src/
+  routes/             File-based routing (TanStack)
+    _authenticated/   Tudo atrás de auth
+    api/              Server routes (webhooks, cron)
+    p.$token.tsx      Rota PÚBLICA do magic link (sem auth)
+  features/           Módulos de domínio
+    activities/       Magic link, scoring, drafts, audit (S3)
+    patients/         Cadastro, soft delete, restore (S2)
+    auth/             AuthProvider + Supabase session
+    billing/          Stripe BYOK (S2)
+    workspace/        Multi-tenant
+    audit/            Helpers compartilhados de audit
+    games/            Placeholder S3+
+    library/          Placeholder S3+
+  components/         UI compartilhada (shadcn + brand)
+  lib/
+    crypto/           encryption.server.ts (AES-256-GCM, server-only)
+    tokens/           magic-link.server.ts (gerar/hash de tokens)
+    rate-limit/       Rate limit em memória do worker
+    scoring/          Engine de auto-scoring (PHQ-9, GAD-7…)
+  integrations/
+    supabase/         client.ts (browser), client.server.ts (admin),
+                      auth-middleware.ts (server fn autenticada)
+supabase/
+  migrations/         SQL versionado
 ```
 
-**Regra inviolável:** o frontend nunca é fonte de verdade para permissão. Toda regra crítica é validada no backend/RLS.
+**Regra:** todo código de domínio mora em `src/features/<dominio>/`. `src/server/`
+não deve crescer — preferimos co-localizar `*.functions.ts` + `*.server.ts` perto
+da feature.
 
-## Future plan architecture
+---
 
-A arquitetura suporta 4 planos. Apenas **Basic** e **Practice** são implementados ativamente; **Clinic** e **Patient** estão preparados estruturalmente mas não implementados.
+## Trust boundaries
 
-| Plano | Status | Terapeutas | Workspace | Notas |
-|---|---|---|---|---|
-| **Basic** | implementado | 1 | 1 workspace solo | MVP atual |
-| **Practice** | implementado | até 2 | 1 workspace compartilhado | Owner + 1 therapist convidado |
-| **Clinic** | **futuro** | até 10 | 1 workspace = clínica | Owner + supervisor + therapists |
-| **Patient** (B2C) | **futuro** | 0 | sem workspace clínico | Conta própria do paciente |
+| Camada                                    | Auth                       | RLS              | Pode ver PHI? |
+| ----------------------------------------- | -------------------------- | ---------------- | ------------- |
+| Browser (`@/integrations/supabase/client`) | sessão do user             | Sim (como user)  | Só do próprio workspace, decifrado on-demand |
+| Server fn autenticada (`requireSupabaseAuth`) | bearer do user           | Sim (como user)  | Idem, mais helpers de scoring/PDF |
+| Admin server (`@/integrations/supabase/client.server`) | service role | Bypass (cuidado) | Só dentro de server fns / server routes verificadas |
 
-### O que sustenta os 4 planos hoje
+`*.server.ts` é proibido importar do client (Vite import-protection). Helpers
+sensíveis (criptografia, tokens, rate-limit) são `*.server.ts` puro e acessados
+apenas por server fns.
 
-- `subscription_tier` enum: `basic`, `practice`, `clinic`, `patient` (e `solo` legado).
-- `subscriptions.limits jsonb`: campo declarativo para `max_therapists`, `max_patients` etc. **Nunca é fonte de verdade para segurança** — apenas referência para UI/billing.
-- `app_role` enum global: `admin`, `therapist`, `patient`.
-- `workspace_role` enum: `owner`, `therapist`, `supervisor`.
-- RLS já genérica via `is_workspace_member()` e `has_workspace_role()`.
+---
 
-### O que ainda precisará ser ajustado quando Clinic/Patient entrarem
+## Segurança transversal
 
-1. **Patient B2C:** o trigger `handle_new_user` hoje cria sempre um workspace solo. Quando Patient B2C entrar, o trigger precisará ler `raw_user_meta_data->>'account_type'` e pular a criação de workspace para `account_type = 'patient'`.
-2. **Vínculo terapeuta ↔ paciente B2C:** será necessária uma tabela `therapist_patient_links` com consentimento explícito.
-3. **Limites por plano:** server functions precisarão checar `subscriptions.limits.max_therapists` antes de aceitar convites em Practice/Clinic.
+Detalhes em:
 
-Nenhum desses ajustes exige refator estrutural — são adições incrementais.
+- [`docs/security.md`](./security.md) — RLS, encryption, audit, soft delete
+- [`docs/magic-link-rules-locked.md`](./magic-link-rules-locked.md) — tokens, single-use, neutral errors
+- [`docs/autosave-security.md`](./autosave-security.md) — drafts cifrados, expiração, purge
+- [`docs/activities.md`](./activities.md) — fluxo end-to-end do módulo activities
 
-## Documentos relacionados
+---
 
-- [`security.md`](./security.md) — RLS, roles, audit, encryption.
-- [`database-schema.md`](./database-schema.md) — tabelas, enums, triggers.
-- [`roadmap.md`](./roadmap.md) — cronograma 6 semanas.
-- [`brand.md`](./brand.md) — identidade visual.
+## Princípios
+
+1. **Future-proof por padrão.** Toda feature nova entra com schema, RLS e UI
+   reais; nada de mock visual sem backend.
+2. **Soft delete sempre.** Nunca `DELETE FROM patients`. 30 dias de janela +
+   purge irreversível de PHI mantendo audit.
+3. **PHI nunca em URL, log, push, audit metadata, PostHog ou email
+   subject/body.** Audit `metadata` JSONB só carrega UUIDs e enums.
+4. **Magic link:** EXPIRA O ACESSO → NÃO EXPIRA O DADO.
+5. **Vínculo obrigatório:** todo `patient_activity` tem
+   workspace + patient + therapist + activity. Nunca link genérico/órfão.
+6. **Admin é exclusivo da Leda** (`admin@terapily.com`). Banco bloqueia 2º admin.
