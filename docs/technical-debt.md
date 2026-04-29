@@ -145,3 +145,49 @@ Quando o pacote `@lovable.dev/cloud-auth-js` publicar uma versão em que o tipo 
 **Mitigação atual (até implementar).** Mensagem de erro funcional no `createPatient`, sem upsell visual. Suficiente porque ainda não temos terapeutas reais.
 
 **Não esquecer:** este item é o primeiro card da S3, antes de mexer em activity catalog.
+
+---
+
+## 4. Rate limit em memória (in-process) — migrar pra solução durável
+
+**Origem.**
+S3 introduziu rate limiting em várias rotas sensíveis pra mitigar abuso de magic link e endpoints públicos:
+- `/p/$token` (load público da atividade)
+- `submitActivityResponse` (POST público)
+- `saveDraft` / `loadDraft` (autosave PHI parcial)
+- outras server functions chamadas anonimamente
+
+A implementação atual (`src/server/_shared/rate-limit.server.ts` e equivalentes) é **in-memory**, baseada em `Map` por chave (IP+token). Funciona dentro de uma única instância do Worker, mas **não é compartilhada entre instâncias** nem sobrevive a restart/cold start.
+
+**Impacto.**
+- 🟡 **Bypass parcial em escala**: atacante distribuído (múltiplas instâncias roteando a requests diferentes) pode driblar o limite. Hoje, com tráfego baixo, o roteador tende a fixar IP em uma instância, então o limite ainda morde.
+- 🟡 **Reset em deploy**: cada deploy zera contadores. Janela curta de exposição.
+- 🟢 **PHI continua protegida** por outras camadas: token hash + expiração + single-use após submit + RLS + criptografia AES-256.
+- 🟢 **Audit log permanece** registrando todas as tentativas (pra forense post-hoc).
+- 🟢 **Fail-safe** já está implementado: falha de rate limit → não salva draft, não submete, retorna erro seguro.
+
+**Mitigação atual.**
+- Limites apertados (ex.: 10 req/min/IP em rotas públicas).
+- IP capturado via `getRequestIP({ xForwardedFor: true })` — confiável atrás do edge.
+- Janela curta (60s) reduz acúmulo de estado e impacto de reset.
+- Audit log de todas as 429 (`rate_limit.exceeded` em metadata) permite detectar padrão de abuso mesmo se contador resetar.
+- Fail-safe: se o `Map` corromper ou explodir em memória, a função retorna erro em vez de pular o check.
+
+**Condição de remoção.**
+Migrar pra store durável e compartilhada quando **uma das seguintes condições** for atendida:
+1. Volume de tráfego cruzar ~100 req/min sustentadas em rotas públicas (sinal de que single-instance não dá mais conta).
+2. Observarmos no audit padrão de abuso distribuído driblando o contador.
+3. Antes do **launch público pós-S6**, como hardening obrigatório de produção.
+
+**Opções a avaliar em S5/S6** (decisão técnica fica pra lá, não pré-resolver agora):
+- **Postgres-based** (tabela `rate_limit_buckets` com `key`, `window_start`, `count`, índice por `key`+`window_start`, cleanup via `pg_cron`). Vantagem: zero dependência nova, transacional, audit nativo. Custo: 1 round-trip por check.
+- **Upstash Redis / Cloudflare KV / Durable Objects**: latência menor, mas adiciona dependência externa e BAA novo (KV/Redis tocam metadata de PHI indireta — IP+token).
+- **Cloudflare Rate Limiting (nativo do edge)**: zero código, mas configuração fica fora do repo (não versionável da mesma forma).
+
+**Decisão preliminar (não-vinculante):** começar por Postgres-based em S5 (mantém tudo no perímetro Lovable Cloud, sem novo BAA), reavaliar Cloudflare Rate Limiting se latência incomodar.
+
+**Não esquecer:**
+- Migração precisa preservar comportamento fail-safe atual (falha do store ≠ bypass).
+- Schema novo precisa de RLS bloqueando read pelo client (igual `audit_logs`).
+- Cleanup automático (TTL ou cron) pra não inchar o banco.
+- Atualizar `docs/security.md` e `docs/autosave-security.md` quando implementar.
