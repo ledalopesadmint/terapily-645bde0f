@@ -662,3 +662,35 @@ export const joinClinicWaitlist = createServerFn({ method: "POST" })
 
     return { ok: true, alreadyOnList: false };
   });
+
+// =============================================================================
+// getPatientNickname — leitura LEVE pra contexto não-PHI (ex: header do Acervo
+// em modo seleção). Retorna apenas display_name + workspace_id, ambos não-PHI.
+// NÃO registra audit (evita poluir trilha com cliques de navegação).
+// RLS de patients já garante que só workspace member vê.
+// =============================================================================
+export const getPatientNickname = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) =>
+    z.object({ id: z.string().uuid() }).parse(input),
+  )
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+    const { data: row, error } = await supabase
+      .from("patients")
+      .select("id, display_name, workspace_id")
+      .eq("id", data.id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      logServerError("getPatientNickname", error);
+      throw new Error("Não foi possível abrir o paciente.");
+    }
+    if (!row) throw new Error("Paciente não encontrado.");
+    return {
+      id: row.id,
+      displayName: row.display_name,
+      workspaceId: row.workspace_id,
+    };
+  });

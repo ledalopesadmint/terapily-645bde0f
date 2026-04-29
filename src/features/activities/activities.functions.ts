@@ -48,10 +48,19 @@ export const assignActivity = createServerFn({ method: "POST" })
       throw new Error("Paciente não encontrado neste workspace.");
     }
 
-    // 2. Valida atividade publicada
+    // 2. Valida atividade publicada (drafts liberados se preview ligado)
     const activity = await getActivityFromCatalog(data.activityId);
-    if (!activity || activity.status !== "published") {
+    if (!activity) {
       throw new Error("Atividade indisponível.");
+    }
+    if (activity.status !== "published") {
+      const { data: previewFlag } = await supabaseAdmin.rpc("has_feature", {
+        _workspace_id: data.workspaceId,
+        _flag: "library_selection_preview",
+      });
+      if (!previewFlag) {
+        throw new Error("Atividade indisponível.");
+      }
     }
 
     // 3. Membership + permissão de prescrição (terapeuta atribuído OU owner)
@@ -257,21 +266,39 @@ export const listPatientActivities = createServerFn({ method: "GET" })
 
 // --- listAvailableActivities ----------------------------------------------
 
+const ListAvailableSchema = z.object({
+  workspaceId: z.string().uuid().optional(),
+});
+
 export const listAvailableActivities = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((input: unknown) => ListAvailableSchema.parse(input ?? {}))
+  .handler(async ({ data, context }) => {
     const { supabase } = context;
-    const { data, error } = await supabase
+
+    // Se a flag library_selection_preview estiver ligada pro workspace,
+    // drafts também aparecem (preview interno enquanto o player não chegou).
+    let includeDrafts = false;
+    if (data.workspaceId) {
+      const { data: flagOn } = await supabase.rpc("has_feature", {
+        _workspace_id: data.workspaceId,
+        _flag: "library_selection_preview",
+      });
+      includeDrafts = Boolean(flagOn);
+    }
+
+    const statuses: ("draft" | "published")[] = includeDrafts ? ["published", "draft"] : ["published"];
+    const { data: rows, error } = await supabase
       .from("activity_catalog")
-      .select("id, slug, title, archetype, short_description, category")
-      .eq("status", "published")
+      .select("id, slug, title, archetype, short_description, category, status, theme, config")
+      .in("status", statuses)
       .order("title", { ascending: true });
 
     if (error) {
       console.error("[listAvailableActivities] failed", { code: error.code });
       throw new Error("Não foi possível carregar o catálogo.");
     }
-    return { activities: data ?? [] };
+    return { activities: rows ?? [], includeDrafts };
   });
 
 // --- getMyWorkspaceRole (gating client-side de Tabs owner-only) -----------
