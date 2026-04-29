@@ -70,13 +70,18 @@ export const Route = createFileRoute("/_authenticated/patients")({
 type StatusFilter = "active" | "archived";
 
 function deriveInitials(displayName: string): string {
-  return displayName
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("")
-    .slice(0, 4);
+  // Apelido é pseudônimo curto — pegamos só os 2 primeiros caracteres
+  // alfabéticos. Não tentamos extrair "iniciais de nome" porque o campo
+  // não deve conter nome real.
+  const cleaned = displayName.trim().replace(/[^\p{L}\p{N}]/gu, "");
+  return cleaned.slice(0, 2).toUpperCase() || "??";
+}
+
+// Heurística leve: nome composto longo (3+ palavras com 2+ letras) tem cara
+// de "Primeiro Meio Sobrenome" — avisamos sem bloquear.
+function looksLikeRealName(value: string): boolean {
+  const words = value.trim().split(/\s+/).filter((w) => w.length >= 2);
+  return words.length >= 3;
 }
 
 function PatientsPage() {
