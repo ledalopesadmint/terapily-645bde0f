@@ -279,6 +279,17 @@ export const revokeActivity = createServerFn({ method: "POST" })
       throw new Error("Não foi possível revogar a atividade.");
     }
 
+    // Audit nominal: além do trigger automático de status_changed, registramos
+    // um evento dedicado `activity.revoked` com o actor explícito. Sem PHI.
+    await recordAudit({
+      actorId: userId,
+      workspaceId: pa.workspace_id,
+      action: "activity.revoked",
+      resourceType: "patient_activity",
+      resourceId: pa.id,
+      metadata: { previous_status: pa.status },
+    });
+
     return { id: pa.id, status: "revoked" as const, alreadyRevoked: false };
   });
 
