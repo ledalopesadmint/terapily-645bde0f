@@ -348,6 +348,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             );
           })}
         </ul>
+        </>
       )}
 
       <AssignActivityDialog
