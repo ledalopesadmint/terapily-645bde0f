@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Plus, Send, ShieldCheck, Slash } from "lucide-react";
+import { ArrowLeft, Copy, Mail, MessageCircle, Plus, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -54,12 +55,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { getPatient } from "@/features/patients/patients.functions";
+import { getPatient, revealPatientContact } from "@/features/patients/patients.functions";
 import {
   assignActivity,
   getMyWorkspaceRole,
   listPatientActivities,
   listPatientAuditLogs,
+  recordShareIntent,
   revokeActivity,
   listAvailableActivities,
 } from "@/features/activities/activities.functions";
