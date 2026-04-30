@@ -506,39 +506,194 @@ function AssignActivityDialog({
 }
 
 // =============================================================================
-// Modal "Link gerado" — mostra UMA vez
+// Modal "Link gerado" — entrega manual via canal do terapeuta
+// (mem://constraint/no-automated-email-policy)
+//
+// 4 ações: WhatsApp · SMS · Email pessoal · Copiar.
+// Telefone/email são decifrados ON-DEMAND via `revealPatientContact`
+// só na hora do clique. Nunca persistem em URL nem em audit metadata.
 // =============================================================================
 
-function RevealLinkDialog({
-  url,
+interface ShareLinkPayload {
+  url: string;
+  patientActivityId: string;
+}
+
+function ShareLinkDialog({
+  payload,
+  patientId,
   onClose,
 }: {
-  url: string | null;
+  payload: ShareLinkPayload | null;
+  patientId: string;
   onClose: () => void;
 }) {
-  const copy = () => {
-    if (!url) return;
-    navigator.clipboard.writeText(url);
-    toast.success("Link copiado.");
+  const url = payload?.url ?? "";
+  const [message, setMessage] = useState(
+    "Oi! Aqui está a atividade pra antes da nossa próxima sessão. Leva poucos minutos. Qualquer dúvida me chama.",
+  );
+  const [busy, setBusy] = useState<null | "whatsapp" | "sms" | "mailto" | "copy">(null);
+
+  const composedBody = `${message}\n\n${url}`;
+
+  const logIntent = async (channel: "whatsapp" | "sms" | "mailto" | "copy") => {
+    if (!payload) return;
+    try {
+      await recordShareIntent({
+        data: { patientActivityId: payload.patientActivityId, channel },
+      });
+    } catch {
+      // Audit é best-effort; não bloqueia o terapeuta.
+    }
+  };
+
+  const onCopy = async () => {
+    if (!payload) return;
+    setBusy("copy");
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copiado.");
+      await logIntent("copy");
+    } catch {
+      toast.error("Não foi possível copiar o link.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const openWhatsapp = async () => {
+    if (!payload) return;
+    setBusy("whatsapp");
+    try {
+      let phone = "";
+      try {
+        const r = await revealPatientContact({
+          data: { id: patientId, field: "phone" },
+        });
+        phone = (r.value ?? "").replace(/\D/g, "");
+      } catch {
+        // Sem telefone cadastrado — abre o seletor genérico do WhatsApp.
+      }
+      const target = phone
+        ? `https://wa.me/${phone}?text=${encodeURIComponent(composedBody)}`
+        : `https://wa.me/?text=${encodeURIComponent(composedBody)}`;
+      window.open(target, "_blank", "noopener,noreferrer");
+      await logIntent("whatsapp");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const openSms = async () => {
+    if (!payload) return;
+    setBusy("sms");
+    try {
+      let phone = "";
+      try {
+        const r = await revealPatientContact({
+          data: { id: patientId, field: "phone" },
+        });
+        phone = r.value ?? "";
+      } catch {
+        // Sem telefone — abre o app de SMS sem destinatário.
+      }
+      // iOS aceita `?body=`, Android aceita `?body=` com `?` ou `&`. Forma comum:
+      const target = phone
+        ? `sms:${phone}?body=${encodeURIComponent(composedBody)}`
+        : `sms:?body=${encodeURIComponent(composedBody)}`;
+      window.location.href = target;
+      await logIntent("sms");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const openMailto = async () => {
+    if (!payload) return;
+    setBusy("mailto");
+    try {
+      let email = "";
+      try {
+        const r = await revealPatientContact({
+          data: { id: patientId, field: "email" },
+        });
+        email = r.value ?? "";
+      } catch {
+        // Sem email cadastrado — abre o cliente de email sem destinatário.
+      }
+      const subject = encodeURIComponent("Sua atividade");
+      const body = encodeURIComponent(composedBody);
+      const target = `mailto:${email}?subject=${subject}&body=${body}`;
+      window.location.href = target;
+      await logIntent("mailto");
+    } finally {
+      setBusy(null);
+    }
   };
 
   return (
-    <Dialog open={!!url} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+    <Dialog open={!!payload} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>Link gerado</DialogTitle>
           <DialogDescription>
-            Compartilhe este link diretamente com o paciente. Por segurança, ele
-            só será exibido <strong>uma vez</strong>.
+            Envie pelo seu canal — o que o paciente realmente abre. O link só
+            será exibido <strong>agora</strong>.
           </DialogDescription>
         </DialogHeader>
-        <div className="rounded-md border border-border bg-muted/30 p-3 break-all font-mono text-xs">
-          {url}
+
+        <div className="space-y-4">
+          <div className="rounded-md border border-border bg-muted/30 p-3 break-all font-mono text-xs">
+            {url}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="share-message">Mensagem sugerida (editável)</Label>
+            <Textarea
+              id="share-message"
+              rows={3}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <Button
+              variant="secondary"
+              disabled={!!busy}
+              onClick={openWhatsapp}
+            >
+              <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={!!busy}
+              onClick={openSms}
+            >
+              <Smartphone className="mr-1 h-4 w-4" /> SMS
+            </Button>
+            <Button
+              variant="secondary"
+              disabled={!!busy}
+              onClick={openMailto}
+            >
+              <Mail className="mr-1 h-4 w-4" /> Email
+            </Button>
+            <Button disabled={!!busy} onClick={onCopy}>
+              <Copy className="mr-1 h-4 w-4" /> Copiar
+            </Button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            🔒 Terapily não envia nada ao paciente. Você compartilha pelo seu
+            próprio canal — sem <code>noreply@</code> no meio. Cada
+            compartilhamento fica em auditoria (canal, sem PHI).
+          </p>
         </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Fechar</Button>
-          <Button onClick={copy}>
-            <Copy className="mr-1 h-4 w-4" /> Copiar link
+          <Button variant="outline" onClick={onClose}>
+            Fechar
           </Button>
         </DialogFooter>
       </DialogContent>
