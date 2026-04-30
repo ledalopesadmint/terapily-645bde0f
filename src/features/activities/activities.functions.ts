@@ -13,6 +13,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { recordAudit } from "@/features/audit/audit.server";
 import {
   generateMagicLinkToken,
   hashMagicLinkToken,
@@ -335,6 +336,7 @@ const AuditListSchema = z.object({
 
 const ACTIVITY_AUDIT_ACTIONS = [
   "activity.assigned",
+  "activity.share_intent",
   "activity.link_opened",
   "activity.draft_saved",
   "activity.draft_loaded",
@@ -388,6 +390,57 @@ export const listPatientAuditLogs = createServerFn({ method: "GET" })
     }
 
     return { logs: (logs ?? []) as AuditLogRow[] };
+  });
+
+// --- recordShareIntent -----------------------------------------------------
+// Registra a INTENÇÃO de compartilhar o link via canal externo do terapeuta
+// (WhatsApp / SMS / mailto / clipboard). NÃO confirma envio — só registra
+// que o terapeuta clicou no botão. Sem PHI no metadata: só UUIDs e enum.
+// Substitui o antigo `activity.email_sent`.
+// Ver `mem://constraint/no-automated-email-policy`.
+
+const ShareIntentSchema = z.object({
+  patientActivityId: z.string().uuid(),
+  channel: z.enum(["whatsapp", "sms", "mailto", "copy"]),
+});
+
+export const recordShareIntent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ShareIntentSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa, error } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, assigned_by")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (error || !pa) return { ok: false as const };
+
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    const isOwner = membership?.role === "owner";
+    if (!isOwner && pa.assigned_by !== userId) {
+      return { ok: false as const };
+    }
+
+    await recordAudit({
+      actorId: userId,
+      workspaceId: pa.workspace_id,
+      action: "activity.share_intent",
+      resourceType: "patient_activity",
+      resourceId: pa.id,
+      metadata: { channel: data.channel },
+    });
+
+    return { ok: true as const };
   });
 
 export interface AuditLogRow {
