@@ -414,6 +414,41 @@ export const revealPatientContact = createServerFn({ method: "POST" })
   });
 
 // =============================================================================
+// getPatientContactAvailability
+// Retorna SOMENTE booleans (hasPhone, hasEmail) — NÃO decifra, NÃO audita.
+// Usado pelo modal "Link gerado" pra desabilitar botões cujo canal não tem
+// destinatário cadastrado, sem gastar audit `patient.phi_copied`.
+// =============================================================================
+
+const contactAvailabilitySchema = z.object({
+  id: z.string().uuid(),
+});
+
+export const getPatientContactAvailability = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => contactAvailabilitySchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    const { data: row, error } = await supabase
+      .from("patients")
+      .select("id, email_encrypted, phone_encrypted")
+      .eq("id", data.id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error || !row) {
+      // Não vazamos detalhe — o modal trata como "sem contato disponível".
+      return { hasEmail: false, hasPhone: false };
+    }
+
+    return {
+      hasEmail: !!row.email_encrypted,
+      hasPhone: !!row.phone_encrypted,
+    };
+  });
+
+// =============================================================================
 // ARCHIVE / RESTORE / SOFT DELETE
 // =============================================================================
 const statusActionSchema = z.object({
