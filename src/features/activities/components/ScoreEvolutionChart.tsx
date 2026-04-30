@@ -169,32 +169,32 @@ function ScoreCard({ group }: { group: SeriesGroup }) {
               margin={{ top: 8, right: 8, bottom: 0, left: -20 }}
             >
               <CartesianGrid
-                stroke="hsl(var(--border))"
+                stroke="var(--border)"
                 strokeDasharray="3 3"
                 vertical={false}
               />
               <XAxis
                 dataKey="date"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
                 domain={[0, yMax]}
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                 tickLine={false}
                 axisLine={false}
                 width={32}
               />
               <Tooltip
-                cursor={{ stroke: "hsl(var(--border))" }}
+                cursor={{ stroke: "var(--border)" }}
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--card)",
+                  border: "1px solid var(--border)",
                   borderRadius: 8,
                   fontSize: 12,
                 }}
-                labelStyle={{ color: "hsl(var(--foreground))" }}
+                labelStyle={{ color: "var(--foreground)" }}
                 formatter={(value: number, _name, item) => {
                   const sev = (item?.payload as Point | undefined)?.severity;
                   return [sev ? `${value} · ${sev}` : value, "Score"];
@@ -203,9 +203,9 @@ function ScoreCard({ group }: { group: SeriesGroup }) {
               <Line
                 type="monotone"
                 dataKey="score"
-                stroke="hsl(var(--primary))"
+                stroke="var(--primary)"
                 strokeWidth={2}
-                dot={{ r: 3, fill: "hsl(var(--primary))" }}
+                dot={{ r: 3, fill: "var(--primary)" }}
                 activeDot={{ r: 5 }}
                 isAnimationActive={false}
               />
@@ -213,8 +213,8 @@ function ScoreCard({ group }: { group: SeriesGroup }) {
                 x={latest.date}
                 y={latest.score}
                 r={5}
-                fill="hsl(var(--primary))"
-                stroke="hsl(var(--background))"
+                fill="var(--primary)"
+                stroke="var(--background)"
                 strokeWidth={2}
               />
             </LineChart>
