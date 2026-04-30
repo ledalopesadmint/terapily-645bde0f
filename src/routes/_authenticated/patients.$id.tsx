@@ -449,7 +449,7 @@ function AssignActivityDialog({
     },
   });
 
-  const activities = catalogQuery.data?.activities ?? [];
+  const catalogActivities = catalogQuery.data?.activities ?? [];
   const needsLink = deliveryMode !== "in_session";
   const canSubmit = !!activityId && !assignMutation.isPending;
 
@@ -472,7 +472,7 @@ function AssignActivityDialog({
                 <SelectValue placeholder="Escolher atividade…" />
               </SelectTrigger>
               <SelectContent>
-                {activities.map((a) => (
+                {catalogActivities.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.title}
                   </SelectItem>

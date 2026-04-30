@@ -283,14 +283,14 @@ function LibrarySelectionMode() {
   const openPreview = (real: CatalogRow) => {
     navigate({
       to: "/library",
-      search: (prev) => ({ ...prev, preview: real.id }),
+      search: (prev: Record<string, unknown>) => ({ ...prev, preview: real.id }),
     });
   };
 
   const closePreview = () => {
     navigate({
       to: "/library",
-      search: (prev) => {
+      search: (prev: Record<string, unknown>) => {
         const next = { ...prev };
         delete next.preview;
         return next;
