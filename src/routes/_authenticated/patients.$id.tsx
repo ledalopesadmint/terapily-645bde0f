@@ -55,15 +55,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { getPatient, revealPatientContact } from "@/features/patients/patients.functions";
+import {
+  getPatient,
+  getPatientContactAvailability,
+  revealPatientContact,
+} from "@/features/patients/patients.functions";
 import {
   assignActivity,
+  getActivityShareSummary,
   getMyWorkspaceRole,
   listPatientActivities,
   listPatientAuditLogs,
   recordShareIntent,
   revokeActivity,
   listAvailableActivities,
+  type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
 import { Progress } from "@/components/ui/progress";
 
