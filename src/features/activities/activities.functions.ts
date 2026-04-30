@@ -649,3 +649,216 @@ export const getActivityShareSummary = createServerFn({ method: "GET" })
 
     return { summaries };
   });
+
+// ============================================================
+// generateInSessionLink — link 1h fixo (paciente segura o
+// device do terapeuta na sessão). Não-configurável.
+// ============================================================
+const GenInSessionSchema = z.object({
+  patientActivityId: z.string().uuid(),
+});
+
+export const generateInSessionLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => GenInSessionSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa, error } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, assigned_by, status, used_at")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (error || !pa) throw new Error("Atividade não encontrada.");
+    if (pa.used_at) throw new Error("Esta atividade já foi respondida.");
+    if (pa.status === "revoked" || pa.status === "completed") {
+      throw new Error("Esta atividade não está disponível.");
+    }
+
+    // Permissão: assigned_by OU owner
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    const isOwner = membership?.role === "owner";
+    if (!isOwner && pa.assigned_by !== userId) {
+      throw new Error("Sem permissão para gerar link desta atividade.");
+    }
+
+    const rawToken = generateMagicLinkToken();
+    const tokenHash = await hashMagicLinkToken(rawToken);
+    const expiresAt = new Date(
+      Date.now() + IN_SESSION_LINK_HOURS * 3600 * 1000,
+    ).toISOString();
+
+    const { error: updErr } = await supabaseAdmin
+      .from("patient_activities")
+      .update({
+        token_hash: tokenHash,
+        token_expires_at: expiresAt,
+        token_sent_at: new Date().toISOString(),
+        delivery_mode: "shared_link",
+      })
+      .eq("id", pa.id);
+
+    if (updErr) {
+      console.error("[generateInSessionLink] update failed", { code: updErr.code });
+      throw new Error("Não foi possível gerar o link.");
+    }
+
+    return {
+      rawToken,
+      expiresAt,
+      linkPath: `/p/${rawToken}`,
+    };
+  });
+
+// ============================================================
+// recordInSessionResponse — terapeuta aplicou ao vivo.
+// Score + cifra de PHI + Mauve flag (PHQ-9 item 9, etc.).
+// ============================================================
+const RecordResponseSchema = z.object({
+  patientActivityId: z.string().uuid(),
+  responses: z.record(
+    z.string().min(1).max(64),
+    z.union([z.number(), z.string(), z.boolean(), z.null()]),
+  ),
+});
+
+export const recordInSessionResponse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => RecordResponseSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa, error: paErr } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, patient_id, activity_id, assigned_by, used_at, status")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (paErr || !pa) throw new Error("Atividade não encontrada.");
+    if (pa.used_at) throw new Error("Esta atividade já foi respondida.");
+    if (pa.status === "revoked") throw new Error("Esta atividade foi revogada.");
+
+    // Permissão: assigned_by OU owner
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    const isOwner = membership?.role === "owner";
+    if (!isOwner && pa.assigned_by !== userId) {
+      throw new Error("Sem permissão para registrar resposta desta atividade.");
+    }
+
+    const { data: activity, error: actErr } = await supabaseAdmin
+      .from("activity_catalog")
+      .select("id, archetype, config")
+      .eq("id", pa.activity_id)
+      .single();
+
+    if (actErr || !activity) throw new Error("Atividade não encontrada no catálogo.");
+
+    // Score + Mauve flag
+    const result = scoreActivity(activity.archetype, activity.config, data.responses);
+    const flag = detectClinicalFlag(activity.config, data.responses);
+
+    // Cifra respostas brutas (PHI). raw_responses_encrypted nunca em log/URL.
+    const encrypted = await encryptPHIServer(JSON.stringify(data.responses));
+
+    const { data: response, error: respErr } = await supabaseAdmin
+      .from("activity_responses")
+      .insert({
+        workspace_id: pa.workspace_id,
+        patient_id: pa.patient_id,
+        patient_activity_id: pa.id,
+        activity_id: pa.activity_id,
+        score: result.score,
+        severity: result.severity === "not_applicable" ? null : result.severity,
+        scoring_metadata: {
+          ...result.metadata,
+          clinical_flag: flag.raised
+            ? { flag: flag.flag, item_id: flag.item_id }
+            : null,
+        },
+        raw_responses_encrypted: encrypted,
+        submitted_via: "in_session",
+      })
+      .select("id")
+      .single();
+
+    if (respErr || !response) {
+      console.error("[recordInSessionResponse] insert failed", { code: respErr?.code });
+      throw new Error("Não foi possível salvar a resposta.");
+    }
+
+    // Marca patient_activity como aplicado + queima token se houver
+    const nowIso = new Date().toISOString();
+    await supabaseAdmin
+      .from("patient_activities")
+      .update({
+        status: "completed",
+        used_at: nowIso,
+        applied_at: nowIso,
+        response_id: response.id,
+        token_hash: null,
+        token_expires_at: null,
+      })
+      .eq("id", pa.id);
+
+    // Audit nominal de Mauve flag (PHI-safe: só UUIDs e enum).
+    if (flag.raised) {
+      await recordAudit({
+        actorId: userId,
+        workspaceId: pa.workspace_id,
+        action: "clinical_flag.raised",
+        resourceType: "activity_response",
+        resourceId: response.id,
+        metadata: {
+          patient_id: pa.patient_id,
+          activity_id: pa.activity_id,
+          flag: flag.flag,
+          item_id: flag.item_id,
+          submitted_via: "in_session",
+        },
+      });
+    }
+
+    return {
+      responseId: response.id,
+      score: result.score,
+      severity: result.severity,
+      clinicalFlag: { raised: flag.raised, flag: flag.flag },
+    };
+  });
+
+// ============================================================
+// getTierLinkLimits — UI usa pra montar dropdown de duração
+// filtrado por tier do workspace.
+// ============================================================
+const TierLimitsSchema = z.object({ workspaceId: z.string().uuid() });
+
+export const getTierLinkLimits = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => TierLimitsSchema.parse(input))
+  .handler(async ({ data }) => {
+    const tier = await getWorkspaceTier(data.workspaceId);
+    const defaultHours = TIER_LINK_DEFAULT_HOURS[tier] ?? 24;
+    const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
+    const allOptions = [24, 48, 24 * 7, 24 * 14, 24 * 30];
+    return {
+      tier,
+      defaultHours,
+      maxHours,
+      allowedOptionsHours: allOptions.filter((h) => h <= maxHours),
+    };
+  });
