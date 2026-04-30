@@ -559,6 +559,18 @@ function ShareLinkDialog({
   );
   const [busy, setBusy] = useState<null | "whatsapp" | "sms" | "mailto" | "copy">(null);
 
+  // Pré-checa disponibilidade de telefone/email SEM decifrar e SEM auditar.
+  // Só roda quando o modal abre. Resposta = só booleans.
+  const availabilityQuery = useQuery({
+    queryKey: ["patient-contact-availability", patientId],
+    queryFn: () => getPatientContactAvailability({ data: { id: patientId } }),
+    enabled: !!payload,
+    staleTime: 30_000,
+  });
+  const hasPhone = availabilityQuery.data?.hasPhone ?? false;
+  const hasEmail = availabilityQuery.data?.hasEmail ?? false;
+  const checking = availabilityQuery.isLoading;
+
   const composedBody = `${message}\n\n${url}`;
 
   const logIntent = async (channel: "whatsapp" | "sms" | "mailto" | "copy") => {
@@ -587,7 +599,7 @@ function ShareLinkDialog({
   };
 
   const openWhatsapp = async () => {
-    if (!payload) return;
+    if (!payload || !hasPhone) return;
     setBusy("whatsapp");
     try {
       let phone = "";
@@ -597,11 +609,11 @@ function ShareLinkDialog({
         });
         phone = (r.value ?? "").replace(/\D/g, "");
       } catch {
-        // Sem telefone cadastrado — abre o seletor genérico do WhatsApp.
+        // Inconsistência rara: availability disse sim, mas decrypt falhou.
+        toast.error("Não foi possível abrir o WhatsApp. Use Copiar link.");
+        return;
       }
-      const target = phone
-        ? `https://wa.me/${phone}?text=${encodeURIComponent(composedBody)}`
-        : `https://wa.me/?text=${encodeURIComponent(composedBody)}`;
+      const target = `https://wa.me/${phone}?text=${encodeURIComponent(composedBody)}`;
       window.open(target, "_blank", "noopener,noreferrer");
       await logIntent("whatsapp");
     } finally {
@@ -610,7 +622,7 @@ function ShareLinkDialog({
   };
 
   const openSms = async () => {
-    if (!payload) return;
+    if (!payload || !hasPhone) return;
     setBusy("sms");
     try {
       let phone = "";
@@ -620,12 +632,10 @@ function ShareLinkDialog({
         });
         phone = r.value ?? "";
       } catch {
-        // Sem telefone — abre o app de SMS sem destinatário.
+        toast.error("Não foi possível abrir o SMS. Use Copiar link.");
+        return;
       }
-      // iOS aceita `?body=`, Android aceita `?body=` com `?` ou `&`. Forma comum:
-      const target = phone
-        ? `sms:${phone}?body=${encodeURIComponent(composedBody)}`
-        : `sms:?body=${encodeURIComponent(composedBody)}`;
+      const target = `sms:${phone}?body=${encodeURIComponent(composedBody)}`;
       window.location.href = target;
       await logIntent("sms");
     } finally {
@@ -634,7 +644,7 @@ function ShareLinkDialog({
   };
 
   const openMailto = async () => {
-    if (!payload) return;
+    if (!payload || !hasEmail) return;
     setBusy("mailto");
     try {
       let email = "";
@@ -644,7 +654,8 @@ function ShareLinkDialog({
         });
         email = r.value ?? "";
       } catch {
-        // Sem email cadastrado — abre o cliente de email sem destinatário.
+        toast.error("Não foi possível abrir o Email. Use Copiar link.");
+        return;
       }
       const subject = encodeURIComponent("Sua atividade");
       const body = encodeURIComponent(composedBody);
@@ -655,6 +666,15 @@ function ShareLinkDialog({
       setBusy(null);
     }
   };
+
+  const showFallbackHint = !checking && (!hasPhone || !hasEmail);
+  const fallbackParts: string[] = [];
+  if (!hasPhone) fallbackParts.push("telefone");
+  if (!hasEmail) fallbackParts.push("email");
+  const fallbackText =
+    fallbackParts.length === 2
+      ? "Sem telefone nem email cadastrados — use Copiar link."
+      : `Sem ${fallbackParts[0]} cadastrado — use Copiar link como alternativa.`;
 
   return (
     <Dialog open={!!payload} onOpenChange={(o) => !o && onClose()}>
@@ -682,25 +702,34 @@ function ShareLinkDialog({
             />
           </div>
 
+          {showFallbackHint && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+              {fallbackText}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Button
               variant="secondary"
-              disabled={!!busy}
+              disabled={!!busy || checking || !hasPhone}
               onClick={openWhatsapp}
+              title={!hasPhone ? "Sem telefone cadastrado" : undefined}
             >
               <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
             </Button>
             <Button
               variant="secondary"
-              disabled={!!busy}
+              disabled={!!busy || checking || !hasPhone}
               onClick={openSms}
+              title={!hasPhone ? "Sem telefone cadastrado" : undefined}
             >
               <Smartphone className="mr-1 h-4 w-4" /> SMS
             </Button>
             <Button
               variant="secondary"
-              disabled={!!busy}
+              disabled={!!busy || checking || !hasEmail}
               onClick={openMailto}
+              title={!hasEmail ? "Sem email cadastrado" : undefined}
             >
               <Mail className="mr-1 h-4 w-4" /> Email
             </Button>
