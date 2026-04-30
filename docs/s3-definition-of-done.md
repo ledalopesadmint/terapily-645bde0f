@@ -100,14 +100,19 @@ Espelha `mem://features/s3-definition-of-done`.
 
 ---
 
-## 7. Email transacional (Resend)
+## 7. Entrega manual do link (substitui email transacional)
 
-- [ ] Subject fixo: "Sua terapeuta enviou uma atividade" (sem PHI)
-- [ ] From: `noreply@terapily.com`
-- [ ] Body neutro com botão "Abrir atividade"
-- [ ] Link: `https://app.terapily.com/p/{token}`
-- [ ] **BLOQUEIO**: envio só ativa se `RESEND_BAA_SIGNED=true`. Sem BAA → loga `activity.email_skipped_no_baa` e retorna link pro terapeuta copiar
-- [ ] Botão "Reenviar email" no card pendente
+**Decisão (2026-04-30):** Resend e email automático REMOVIDOS do escopo S3. Ver `mem://constraint/no-automated-email-policy` e `docs/magic-link-rules-locked.md` §8.
+
+- [ ] Modal "Link Generated" exibido **uma vez** após `assignActivity`
+- [ ] 4 botões: **WhatsApp** (`wa.me`), **SMS** (`sms:`), **Email pessoal** (`mailto:`), **Copiar** (clipboard)
+- [ ] Texto sugerido editável pelo terapeuta antes de compartilhar
+- [ ] Phone/email do paciente decifrados server-side só pra preencher o deep link — nunca persistem em URL nem em audit
+- [ ] Aviso "Este link só será mostrado agora. Expira em {N dias}."
+- [ ] Botão "Gerar novo link" no card de atividade pendente/expirada (substitui "Reenviar email")
+- [ ] **Sem** server function de envio Resend
+- [ ] **Sem** template de email transacional
+- [ ] **Sem** env var `RESEND_BAA_SIGNED`
 
 ---
 
@@ -134,7 +139,7 @@ Eventos obrigatórios (todos com `metadata` JSONB **sem PHI** — só UUIDs/enum
 - [x] `activity.response_viewed` — cada abertura da gaveta lateral pelo terapeuta
 - [x] `activity.revoked` — soft revoke pelo terapeuta
 - [x] `activity.draft_saved` / `activity.draft_loaded` / `activity.draft_discarded`
-- [ ] `activity.email_sent` / `activity.email_skipped_no_baa`
+- [ ] `activity.share_intent` (actor=therapist, metadata: `{patient_activity_id, channel: 'whatsapp'|'sms'|'mailto'|'copy'}`)
 - [ ] `compliance_report.generated`
 - [ ] `patient.contact_revealed`
 
