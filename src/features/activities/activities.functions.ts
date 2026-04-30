@@ -22,6 +22,64 @@ import {
   getActivePatientForWorkspace,
   getActivityFromCatalog,
 } from "./activities.server";
+import { encryptPHIServer } from "@/lib/crypto/encryption.server";
+import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
+
+// ----------------------------------------------------------------
+// Tier → janela de shared_link (em horas)
+// Ver mem://features/activity-modes-and-link-duration
+// ----------------------------------------------------------------
+const TIER_LINK_DEFAULT_HOURS: Record<string, number> = {
+  trial: 24,
+  solo: 24,
+  basic: 48,
+  practice: 24 * 7,
+  clinic: 24 * 7,
+};
+
+const TIER_LINK_MAX_HOURS: Record<string, number> = {
+  trial: 24,
+  solo: 24,
+  basic: 24 * 7,
+  practice: 24 * 14,
+  clinic: 24 * 30,
+};
+
+// In-session "patient holds my device" → link de 1h fixo, não-configurável.
+const IN_SESSION_LINK_HOURS = 1;
+
+async function getWorkspaceTier(workspaceId: string): Promise<string> {
+  const { data } = await supabaseAdmin
+    .from("subscriptions")
+    .select("tier")
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  return data?.tier ?? "trial";
+}
+
+/**
+ * Detecta clinical flag em respostas (PHQ-9 item 9, etc.).
+ * Lê `clinical_flag` + `flag_threshold` (default 1) de cada item do config.
+ * Sem PHI: só inspeciona valores numéricos das respostas.
+ */
+function detectClinicalFlag(
+  config: unknown,
+  responses: Record<string, unknown>,
+): { raised: boolean; flag: string | null; item_id: string | null } {
+  const items = Array.isArray((config as { items?: unknown[] })?.items)
+    ? ((config as { items: unknown[] }).items)
+    : [];
+  for (const item of items) {
+    const it = item as { id?: string; clinical_flag?: string; flag_threshold?: number };
+    if (!it?.clinical_flag || !it.id) continue;
+    const threshold = typeof it.flag_threshold === "number" ? it.flag_threshold : 1;
+    const raw = responses[it.id];
+    if (typeof raw === "number" && raw >= threshold) {
+      return { raised: true, flag: it.clinical_flag, item_id: it.id };
+    }
+  }
+  return { raised: false, flag: null, item_id: null };
+}
 
 // --- assignActivity --------------------------------------------------------
 
