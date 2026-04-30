@@ -292,6 +292,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
             const draftPct = a.draft_completion_percent ?? 0;
             const displayStatus: ActivityStatus = hasDraft ? "in_progress" : status;
+            const share: ShareSummaryRow | undefined = shareSummaries[a.id];
             return (
               <Card key={a.id}>
                 <CardContent className="space-y-3 py-4">
