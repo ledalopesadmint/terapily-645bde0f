@@ -216,7 +216,10 @@ interface ActivitiesTabProps {
 function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
-  const [revealedLink, setRevealedLink] = useState<string | null>(null);
+  const [revealedLink, setRevealedLink] = useState<{
+    url: string;
+    patientActivityId: string;
+  } | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
 
   const listQuery = useQuery({
@@ -324,11 +327,12 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
         onOpenChange={setOpen}
         patientId={patientId}
         workspaceId={workspaceId}
-        onLinkGenerated={(url) => setRevealedLink(url)}
+        onLinkGenerated={(payload) => setRevealedLink(payload)}
       />
 
-      <RevealLinkDialog
-        url={revealedLink}
+      <ShareLinkDialog
+        payload={revealedLink}
+        patientId={patientId}
         onClose={() => setRevealedLink(null)}
       />
 
