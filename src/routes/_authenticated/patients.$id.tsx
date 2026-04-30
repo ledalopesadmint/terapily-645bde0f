@@ -233,12 +233,29 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
     queryFn: () => listPatientActivities({ data: { patientId, workspaceId } }),
   });
 
+  const activities = listQuery.data?.activities ?? [];
+  const activityIds = activities.map((a) => a.id);
+
+  // Mini-resumo de compartilhamento (audit_logs.action='activity.share_intent').
+  // Owner-only por RLS — terapeuta comum recebe {} e a UI simplesmente
+  // não renderiza o resumo.
+  const shareSummaryQuery = useQuery({
+    queryKey: ["activity-share-summary", workspaceId, activityIds.join(",")],
+    queryFn: () =>
+      getActivityShareSummary({
+        data: { workspaceId, patientActivityIds: activityIds },
+      }),
+    enabled: activityIds.length > 0,
+  });
+  const shareSummaries = shareSummaryQuery.data?.summaries ?? {};
+
   const revokeMutation = useMutation({
     mutationFn: (paId: string) =>
       revokeActivity({ data: { patientActivityId: paId } }),
     onSuccess: () => {
       toast.success("Link revogado. Histórico mantido.");
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
+      qc.invalidateQueries({ queryKey: ["activity-share-summary", workspaceId] });
       setRevokeTarget(null);
     },
     onError: (e) => {
