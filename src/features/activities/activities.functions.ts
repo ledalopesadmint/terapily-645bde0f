@@ -453,3 +453,98 @@ export interface AuditLogRow {
   created_at: string;
   actor_id: string | null;
 }
+
+// --- getActivityShareSummary ----------------------------------------------
+// Agrega audit_logs com action='activity.share_intent' para um lote de
+// patient_activities. Retorna, por id: total de compartilhamentos, contagem
+// por canal e timestamp do último share. Sem PHI — só UUIDs, enums e datas.
+//
+// Usado no mini-resumo da aba "Atividades" do paciente. Por isso o input é
+// um array de patient_activity ids (uma chamada serve a aba inteira).
+//
+// Permissão: RLS de audit_logs já restringe SELECT a admin OU owner do
+// workspace. Terapeuta comum recebe array vazio (sem erro). É consistente
+// com a aba de Auditoria.
+
+const ShareSummarySchema = z.object({
+  workspaceId: z.string().uuid(),
+  patientActivityIds: z.array(z.string().uuid()).min(0).max(200),
+});
+
+export interface ShareChannelCounts {
+  whatsapp: number;
+  sms: number;
+  mailto: number;
+  copy: number;
+}
+
+export interface ShareSummaryRow {
+  patientActivityId: string;
+  total: number;
+  byChannel: ShareChannelCounts;
+  lastSharedAt: string | null;
+}
+
+export const getActivityShareSummary = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ShareSummarySchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const empty = (): Record<string, ShareSummaryRow> => ({});
+
+    if (data.patientActivityIds.length === 0) {
+      return { summaries: empty() };
+    }
+
+    const { supabase } = context;
+
+    const { data: logs, error } = await supabase
+      .from("audit_logs")
+      .select("resource_id, metadata, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .eq("action", "activity.share_intent")
+      .in("resource_id", data.patientActivityIds)
+      .order("created_at", { ascending: false })
+      .limit(1000);
+
+    if (error) {
+      // RLS recusou (terapeuta não-owner) → silencia, devolve vazio.
+      // É o mesmo comportamento de listPatientAuditLogs.
+      if (error.code === "PGRST301" || error.code === "42501") {
+        return { summaries: empty() };
+      }
+      console.error("[getActivityShareSummary] failed", { code: error.code });
+      return { summaries: empty() };
+    }
+
+    const summaries: Record<string, ShareSummaryRow> = {};
+    for (const id of data.patientActivityIds) {
+      summaries[id] = {
+        patientActivityId: id,
+        total: 0,
+        byChannel: { whatsapp: 0, sms: 0, mailto: 0, copy: 0 },
+        lastSharedAt: null,
+      };
+    }
+
+    for (const log of logs ?? []) {
+      const id = log.resource_id;
+      if (!id || !summaries[id]) continue;
+      const row = summaries[id];
+      row.total += 1;
+      const channel = (log.metadata as { channel?: string } | null)?.channel;
+      if (
+        channel === "whatsapp" ||
+        channel === "sms" ||
+        channel === "mailto" ||
+        channel === "copy"
+      ) {
+        row.byChannel[channel] += 1;
+      }
+      // logs vêm DESC por created_at → o primeiro encontrado é o mais recente.
+      if (!row.lastSharedAt) {
+        row.lastSharedAt = log.created_at;
+      }
+    }
+
+    return { summaries };
+  });

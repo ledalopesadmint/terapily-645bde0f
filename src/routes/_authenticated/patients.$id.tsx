@@ -55,15 +55,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-import { getPatient, revealPatientContact } from "@/features/patients/patients.functions";
+import {
+  getPatient,
+  getPatientContactAvailability,
+  revealPatientContact,
+} from "@/features/patients/patients.functions";
 import {
   assignActivity,
+  getActivityShareSummary,
   getMyWorkspaceRole,
   listPatientActivities,
   listPatientAuditLogs,
   recordShareIntent,
   revokeActivity,
   listAvailableActivities,
+  type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
 import { Progress } from "@/components/ui/progress";
 
@@ -227,20 +233,35 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
     queryFn: () => listPatientActivities({ data: { patientId, workspaceId } }),
   });
 
+  const activities = listQuery.data?.activities ?? [];
+  const activityIds = activities.map((a) => a.id);
+
+  // Mini-resumo de compartilhamento (audit_logs.action='activity.share_intent').
+  // Owner-only por RLS — terapeuta comum recebe {} e a UI simplesmente
+  // não renderiza o resumo.
+  const shareSummaryQuery = useQuery({
+    queryKey: ["activity-share-summary", workspaceId, activityIds.join(",")],
+    queryFn: () =>
+      getActivityShareSummary({
+        data: { workspaceId, patientActivityIds: activityIds },
+      }),
+    enabled: activityIds.length > 0,
+  });
+  const shareSummaries = shareSummaryQuery.data?.summaries ?? {};
+
   const revokeMutation = useMutation({
     mutationFn: (paId: string) =>
       revokeActivity({ data: { patientActivityId: paId } }),
     onSuccess: () => {
       toast.success("Link revogado. Histórico mantido.");
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
+      qc.invalidateQueries({ queryKey: ["activity-share-summary", workspaceId] });
       setRevokeTarget(null);
     },
     onError: (e) => {
       toast.error(e instanceof Error ? e.message : "Não foi possível revogar.");
     },
   });
-
-  const activities = listQuery.data?.activities ?? [];
 
   return (
     <div className="space-y-4">
@@ -271,6 +292,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
             const draftPct = a.draft_completion_percent ?? 0;
             const displayStatus: ActivityStatus = hasDraft ? "in_progress" : status;
+            const share: ShareSummaryRow | undefined = shareSummaries[a.id];
             return (
               <Card key={a.id}>
                 <CardContent className="space-y-3 py-4">
@@ -314,6 +336,9 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                         Paciente está respondendo. Conteúdo cifrado — você verá só ao finalizar.
                       </p>
                     </div>
+                  )}
+                  {share && share.total > 0 && (
+                    <ShareSummaryLine summary={share} />
                   )}
                 </CardContent>
               </Card>
@@ -534,6 +559,18 @@ function ShareLinkDialog({
   );
   const [busy, setBusy] = useState<null | "whatsapp" | "sms" | "mailto" | "copy">(null);
 
+  // Pré-checa disponibilidade de telefone/email SEM decifrar e SEM auditar.
+  // Só roda quando o modal abre. Resposta = só booleans.
+  const availabilityQuery = useQuery({
+    queryKey: ["patient-contact-availability", patientId],
+    queryFn: () => getPatientContactAvailability({ data: { id: patientId } }),
+    enabled: !!payload,
+    staleTime: 30_000,
+  });
+  const hasPhone = availabilityQuery.data?.hasPhone ?? false;
+  const hasEmail = availabilityQuery.data?.hasEmail ?? false;
+  const checking = availabilityQuery.isLoading;
+
   const composedBody = `${message}\n\n${url}`;
 
   const logIntent = async (channel: "whatsapp" | "sms" | "mailto" | "copy") => {
@@ -562,7 +599,7 @@ function ShareLinkDialog({
   };
 
   const openWhatsapp = async () => {
-    if (!payload) return;
+    if (!payload || !hasPhone) return;
     setBusy("whatsapp");
     try {
       let phone = "";
@@ -572,11 +609,11 @@ function ShareLinkDialog({
         });
         phone = (r.value ?? "").replace(/\D/g, "");
       } catch {
-        // Sem telefone cadastrado — abre o seletor genérico do WhatsApp.
+        // Inconsistência rara: availability disse sim, mas decrypt falhou.
+        toast.error("Não foi possível abrir o WhatsApp. Use Copiar link.");
+        return;
       }
-      const target = phone
-        ? `https://wa.me/${phone}?text=${encodeURIComponent(composedBody)}`
-        : `https://wa.me/?text=${encodeURIComponent(composedBody)}`;
+      const target = `https://wa.me/${phone}?text=${encodeURIComponent(composedBody)}`;
       window.open(target, "_blank", "noopener,noreferrer");
       await logIntent("whatsapp");
     } finally {
@@ -585,7 +622,7 @@ function ShareLinkDialog({
   };
 
   const openSms = async () => {
-    if (!payload) return;
+    if (!payload || !hasPhone) return;
     setBusy("sms");
     try {
       let phone = "";
@@ -595,12 +632,10 @@ function ShareLinkDialog({
         });
         phone = r.value ?? "";
       } catch {
-        // Sem telefone — abre o app de SMS sem destinatário.
+        toast.error("Não foi possível abrir o SMS. Use Copiar link.");
+        return;
       }
-      // iOS aceita `?body=`, Android aceita `?body=` com `?` ou `&`. Forma comum:
-      const target = phone
-        ? `sms:${phone}?body=${encodeURIComponent(composedBody)}`
-        : `sms:?body=${encodeURIComponent(composedBody)}`;
+      const target = `sms:${phone}?body=${encodeURIComponent(composedBody)}`;
       window.location.href = target;
       await logIntent("sms");
     } finally {
@@ -609,7 +644,7 @@ function ShareLinkDialog({
   };
 
   const openMailto = async () => {
-    if (!payload) return;
+    if (!payload || !hasEmail) return;
     setBusy("mailto");
     try {
       let email = "";
@@ -619,7 +654,8 @@ function ShareLinkDialog({
         });
         email = r.value ?? "";
       } catch {
-        // Sem email cadastrado — abre o cliente de email sem destinatário.
+        toast.error("Não foi possível abrir o Email. Use Copiar link.");
+        return;
       }
       const subject = encodeURIComponent("Sua atividade");
       const body = encodeURIComponent(composedBody);
@@ -630,6 +666,15 @@ function ShareLinkDialog({
       setBusy(null);
     }
   };
+
+  const showFallbackHint = !checking && (!hasPhone || !hasEmail);
+  const fallbackParts: string[] = [];
+  if (!hasPhone) fallbackParts.push("telefone");
+  if (!hasEmail) fallbackParts.push("email");
+  const fallbackText =
+    fallbackParts.length === 2
+      ? "Sem telefone nem email cadastrados — use Copiar link."
+      : `Sem ${fallbackParts[0]} cadastrado — use Copiar link como alternativa.`;
 
   return (
     <Dialog open={!!payload} onOpenChange={(o) => !o && onClose()}>
@@ -657,25 +702,34 @@ function ShareLinkDialog({
             />
           </div>
 
+          {showFallbackHint && (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+              {fallbackText}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Button
               variant="secondary"
-              disabled={!!busy}
+              disabled={!!busy || checking || !hasPhone}
               onClick={openWhatsapp}
+              title={!hasPhone ? "Sem telefone cadastrado" : undefined}
             >
               <MessageCircle className="mr-1 h-4 w-4" /> WhatsApp
             </Button>
             <Button
               variant="secondary"
-              disabled={!!busy}
+              disabled={!!busy || checking || !hasPhone}
               onClick={openSms}
+              title={!hasPhone ? "Sem telefone cadastrado" : undefined}
             >
               <Smartphone className="mr-1 h-4 w-4" /> SMS
             </Button>
             <Button
               variant="secondary"
-              disabled={!!busy}
+              disabled={!!busy || checking || !hasEmail}
               onClick={openMailto}
+              title={!hasEmail ? "Sem email cadastrado" : undefined}
             >
               <Mail className="mr-1 h-4 w-4" /> Email
             </Button>
@@ -764,5 +818,31 @@ function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: 
         </ul>
       )}
     </div>
+  );
+}
+
+// =============================================================================
+// ShareSummaryLine — mini-resumo de compartilhamento por canal.
+// Renderiza só se houver pelo menos 1 share intent. Sem PHI.
+// =============================================================================
+function ShareSummaryLine({ summary }: { summary: ShareSummaryRow }) {
+  const parts: string[] = [];
+  if (summary.byChannel.whatsapp > 0) parts.push(`WhatsApp ${summary.byChannel.whatsapp}`);
+  if (summary.byChannel.sms > 0) parts.push(`SMS ${summary.byChannel.sms}`);
+  if (summary.byChannel.mailto > 0) parts.push(`Email ${summary.byChannel.mailto}`);
+  if (summary.byChannel.copy > 0) parts.push(`Copiar ${summary.byChannel.copy}`);
+
+  const last = summary.lastSharedAt
+    ? new Date(summary.lastSharedAt).toLocaleString("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short",
+      })
+    : null;
+
+  return (
+    <p className="text-xs text-muted-foreground">
+      Compartilhada {summary.total}× · {parts.join(" · ")}
+      {last && ` · última: ${last}`}
+    </p>
   );
 }
