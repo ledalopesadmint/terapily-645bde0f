@@ -488,6 +488,54 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_applications: {
+        Row: {
+          activity_id: string
+          cancelled_at: string | null
+          completed_at: string | null
+          completed_response_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          patient_id: string
+          scheduled_by: string
+          scheduled_for_date: string
+          status: Database["public"]["Enums"]["scheduled_application_status"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          activity_id: string
+          cancelled_at?: string | null
+          completed_at?: string | null
+          completed_response_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          scheduled_by: string
+          scheduled_for_date: string
+          status?: Database["public"]["Enums"]["scheduled_application_status"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          activity_id?: string
+          cancelled_at?: string | null
+          completed_at?: string | null
+          completed_response_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          scheduled_by?: string
+          scheduled_for_date?: string
+          status?: Database["public"]["Enums"]["scheduled_application_status"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       stripe_events: {
         Row: {
           id: string
@@ -881,6 +929,11 @@ export type Database = {
         | "expired"
         | "revoked"
       patient_status: "active" | "archived"
+      scheduled_application_status:
+        | "pending"
+        | "completed"
+        | "skipped"
+        | "cancelled"
       subscription_status:
         | "trialing"
         | "active"
@@ -1059,6 +1112,12 @@ export const Constants = {
         "revoked",
       ],
       patient_status: ["active", "archived"],
+      scheduled_application_status: [
+        "pending",
+        "completed",
+        "skipped",
+        "cancelled",
+      ],
       subscription_status: [
         "trialing",
         "active",
