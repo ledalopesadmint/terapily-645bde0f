@@ -71,6 +71,7 @@ import {
   listAvailableActivities,
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
+import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
