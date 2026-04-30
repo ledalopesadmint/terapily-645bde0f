@@ -13,6 +13,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { recordAudit } from "@/features/audit/audit.server";
 import {
   generateMagicLinkToken,
   hashMagicLinkToken,
@@ -335,6 +336,7 @@ const AuditListSchema = z.object({
 
 const ACTIVITY_AUDIT_ACTIONS = [
   "activity.assigned",
+  "activity.share_intent",
   "activity.link_opened",
   "activity.draft_saved",
   "activity.draft_loaded",
