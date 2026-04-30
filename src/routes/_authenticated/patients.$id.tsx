@@ -284,6 +284,8 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
           </CardContent>
         </Card>
       ) : (
+        <>
+          <ScoreEvolutionChart activities={activities} />
         <ul className="space-y-3">
           {activities.map((a) => {
             const status = a.status as ActivityStatus;
