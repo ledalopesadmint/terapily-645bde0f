@@ -71,7 +71,15 @@ function PublicActivityPage() {
 
   const resolveQuery = useQuery({
     queryKey: ["public-activity", token],
-    queryFn: () => resolvePublicToken({ data: { token } }),
+    queryFn: async () => {
+      try {
+        return await resolvePublicToken({ data: { token } });
+      } catch {
+        // Falha esperada (link inválido/expirado/usado/revogado).
+        // Mensagem neutra é tratada na UI; não propagamos pra não acionar overlays.
+        return null;
+      }
+    },
     retry: false,
     refetchOnWindowFocus: false,
   });
@@ -80,7 +88,7 @@ function PublicActivityPage() {
     return <CenterShell><p className="text-muted-foreground">Carregando…</p></CenterShell>;
   }
 
-  if (resolveQuery.isError || !resolveQuery.data) {
+  if (!resolveQuery.data) {
     return (
       <CenterShell>
         <h1 className="font-display text-3xl text-foreground">Link indisponível</h1>
