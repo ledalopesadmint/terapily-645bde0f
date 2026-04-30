@@ -71,6 +71,7 @@ import {
   listAvailableActivities,
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
+import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
@@ -283,6 +284,8 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
           </CardContent>
         </Card>
       ) : (
+        <>
+          <ScoreEvolutionChart activities={activities} />
         <ul className="space-y-3">
           {activities.map((a) => {
             const status = a.status as ActivityStatus;
@@ -345,6 +348,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             );
           })}
         </ul>
+        </>
       )}
 
       <AssignActivityDialog
