@@ -35,8 +35,8 @@ Todo magic link DEVE estar vinculado a:
 4. Seleciona atividade (PHQ-9, GAD-7, etc) + delivery_mode + expiração
 5. Server cria linha em `patient_activities`
 6. Server gera token único (`crypto.randomBytes(32)` → base64url)
-7. Server gera link `/p/{token}` e mostra ao terapeuta **1 vez**
-8. Terapeuta envia (email automático OU copia manualmente)
+7. Server gera link `/p/{token}` e mostra ao terapeuta **1 vez** no modal "Link Generated"
+8. Terapeuta envia pelo **canal dele** (WhatsApp / SMS / email pessoal / copiar) — Terapily NUNCA envia direto
 9. Paciente acessa sem login
 10. Paciente responde
 11. Server salva em `activity_responses`
@@ -119,6 +119,7 @@ URL é **apenas** `/p/{token_base64url}`.
 
 Eventos a registrar — todos com `metadata` JSONB **sem PHI** (só UUIDs e enums):
 - `activity.assigned` — actor=therapist
+- `activity.share_intent` — actor=therapist; metadata: `{channel: 'whatsapp'|'sms'|'mailto'|'copy'}`
 - `activity.link_opened` — actor=null/anon
 - `activity.submitted` — actor=null/anon
 - `activity.status_changed` — actor=therapist|system
@@ -135,22 +136,24 @@ Eventos a registrar — todos com `metadata` JSONB **sem PHI** (só UUIDs e enum
 
 ---
 
-## 8. Email / envio
+## 8. Entrega do link — MANUAL OBRIGATÓRIO
 
-**Assunto fixo:** "Sua terapeuta enviou uma atividade"
-- Sem nome do paciente
-- Sem nome da atividade
-- Sem qualquer PHI
+**Terapily NÃO envia comunicação ao paciente.** Sem email automático, sem SMS, sem push. Decisão travada em 2026-04-30 — ver `mem://constraint/no-automated-email-policy`.
 
-**Corpo:** nome do terapeuta + 1 frase neutra + botão "Abrir atividade"
-**From:** `noreply@terapily.com`
+Após `assignActivity`, server retorna o token cru **uma vez** e o frontend mostra o modal "Link Generated" com 4 ações:
 
-**Sem BAA assinado com Resend (S3 inicial):**
-- NÃO enviar email automático
-- Server function retorna o link pro terapeuta copiar manualmente
-- Audit log: `activity.email_skipped_no_baa`
+1. **WhatsApp** — `https://wa.me/{phone?}?text={encoded}`
+2. **SMS** — `sms:{phone?}?body={encoded}`
+3. **Email pessoal** — `mailto:{email?}?subject=...&body=...` (abre o cliente do terapeuta)
+4. **Copiar** — `navigator.clipboard.writeText(link)`
 
-Envio real só ativa quando `RESEND_BAA_SIGNED=true` (env var de feature flag).
+Texto sugerido **editável** pelo terapeuta antes de enviar. Phone/email do paciente são decifrados server-side só na hora de gerar o deep link — nunca persistem em URL nem em audit metadata.
+
+**PROIBIDO:**
+- Server function que faça POST pra Resend/SES/Twilio/qualquer API de envio
+- `noreply@terapily.com` enviando qualquer coisa pro paciente
+- Botão "Send email automatically" no app
+- Domínio verificado pra envio em nome do terapeuta
 
 ---
 
