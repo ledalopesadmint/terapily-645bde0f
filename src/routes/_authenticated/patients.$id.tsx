@@ -707,6 +707,7 @@ function ShareLinkDialog({
 
 const AUDIT_LABEL: Record<string, string> = {
   "activity.assigned": "Atividade enviada",
+  "activity.share_intent": "Link compartilhado pelo terapeuta",
   "activity.link_opened": "Link aberto pelo paciente",
   "activity.draft_saved": "Progresso salvo",
   "activity.draft_loaded": "Progresso retomado",
