@@ -371,7 +371,7 @@ interface AssignDialogProps {
   onOpenChange: (open: boolean) => void;
   patientId: string;
   workspaceId: string;
-  onLinkGenerated: (url: string) => void;
+  onLinkGenerated: (payload: { url: string; patientActivityId: string }) => void;
 }
 
 function AssignActivityDialog({
@@ -411,7 +411,10 @@ function AssignActivityDialog({
       setExpiresInDays(7);
       if (res.rawToken) {
         const origin = typeof window !== "undefined" ? window.location.origin : "";
-        onLinkGenerated(`${origin}/p/${res.rawToken}`);
+        onLinkGenerated({
+          url: `${origin}/p/${res.rawToken}`,
+          patientActivityId: res.id,
+        });
       } else {
         toast.success("Atividade aplicada.");
       }
