@@ -1,0 +1,1 @@
+DELETE FROM patient_activities WHERE id='75777a8c-c07a-4a5d-ad9b-85a015df5ac3';
