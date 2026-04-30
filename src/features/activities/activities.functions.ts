@@ -22,6 +22,64 @@ import {
   getActivePatientForWorkspace,
   getActivityFromCatalog,
 } from "./activities.server";
+import { encryptPHIServer } from "@/lib/crypto/encryption.server";
+import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
+
+// ----------------------------------------------------------------
+// Tier → janela de shared_link (em horas)
+// Ver mem://features/activity-modes-and-link-duration
+// ----------------------------------------------------------------
+const TIER_LINK_DEFAULT_HOURS: Record<string, number> = {
+  trial: 24,
+  solo: 24,
+  basic: 48,
+  practice: 24 * 7,
+  clinic: 24 * 7,
+};
+
+const TIER_LINK_MAX_HOURS: Record<string, number> = {
+  trial: 24,
+  solo: 24,
+  basic: 24 * 7,
+  practice: 24 * 14,
+  clinic: 24 * 30,
+};
+
+// In-session "patient holds my device" → link de 1h fixo, não-configurável.
+const IN_SESSION_LINK_HOURS = 1;
+
+async function getWorkspaceTier(workspaceId: string): Promise<string> {
+  const { data } = await supabaseAdmin
+    .from("subscriptions")
+    .select("tier")
+    .eq("workspace_id", workspaceId)
+    .maybeSingle();
+  return data?.tier ?? "trial";
+}
+
+/**
+ * Detecta clinical flag em respostas (PHQ-9 item 9, etc.).
+ * Lê `clinical_flag` + `flag_threshold` (default 1) de cada item do config.
+ * Sem PHI: só inspeciona valores numéricos das respostas.
+ */
+function detectClinicalFlag(
+  config: unknown,
+  responses: Record<string, unknown>,
+): { raised: boolean; flag: string | null; item_id: string | null } {
+  const items = Array.isArray((config as { items?: unknown[] })?.items)
+    ? ((config as { items: unknown[] }).items)
+    : [];
+  for (const item of items) {
+    const it = item as { id?: string; clinical_flag?: string; flag_threshold?: number };
+    if (!it?.clinical_flag || !it.id) continue;
+    const threshold = typeof it.flag_threshold === "number" ? it.flag_threshold : 1;
+    const raw = responses[it.id];
+    if (typeof raw === "number" && raw >= threshold) {
+      return { raised: true, flag: it.clinical_flag, item_id: it.id };
+    }
+  }
+  return { raised: false, flag: null, item_id: null };
+}
 
 // --- assignActivity --------------------------------------------------------
 
@@ -81,6 +139,29 @@ export const assignActivity = createServerFn({ method: "POST" })
       throw new Error("Sem permissão pra prescrever atividades pra este paciente.");
     }
 
+    // 3.5. Gating de modo: a atividade declara `supported_modes` no config.
+    //      PHQ-9/PCL-5/C-SSRS = ["in_session"]; demais = ambos.
+    //      Ver mem://features/activity-modes-and-link-duration
+    const supportedModes: string[] = Array.isArray(
+      (activity.config as { supported_modes?: unknown })?.supported_modes,
+    )
+      ? ((activity.config as { supported_modes: string[] }).supported_modes)
+      : ["in_session", "shared_link", "both"];
+
+    const requiredModes: string[] =
+      data.deliveryMode === "shared_link"
+        ? ["shared_link"]
+        : data.deliveryMode === "both"
+          ? ["in_session", "shared_link"]
+          : ["in_session"];
+
+    if (!requiredModes.every((m) => supportedModes.includes(m))) {
+      const reason =
+        (activity.config as { restricted_reason?: string })?.restricted_reason ??
+        "Esta atividade não pode ser entregue nesse modo.";
+      throw new Error(reason);
+    }
+
     // 4. Gera token só se delivery envolve link
     let rawToken: string | null = null;
     let tokenHash: string | null = null;
@@ -89,6 +170,15 @@ export const assignActivity = createServerFn({ method: "POST" })
       data.deliveryMode === "shared_link" || data.deliveryMode === "both";
 
     if (needsLink) {
+      // Gating de tier: clamp da janela de expiração ao máximo do plano.
+      const tier = await getWorkspaceTier(data.workspaceId);
+      const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
+      if (data.expiresInHours > maxHours) {
+        throw new Error(
+          `Seu plano permite no máximo ${maxHours}h de duração para o link.`,
+        );
+      }
+
       rawToken = generateMagicLinkToken();
       tokenHash = await hashMagicLinkToken(rawToken);
       tokenExpiresAt = new Date(
@@ -188,6 +278,17 @@ export const revokeActivity = createServerFn({ method: "POST" })
       console.error("[revokeActivity] update failed", { code: updErr.code });
       throw new Error("Não foi possível revogar a atividade.");
     }
+
+    // Audit nominal: além do trigger automático de status_changed, registramos
+    // um evento dedicado `activity.revoked` com o actor explícito. Sem PHI.
+    await recordAudit({
+      actorId: userId,
+      workspaceId: pa.workspace_id,
+      action: "activity.revoked",
+      resourceType: "patient_activity",
+      resourceId: pa.id,
+      metadata: { previous_status: pa.status },
+    });
 
     return { id: pa.id, status: "revoked" as const, alreadyRevoked: false };
   });
@@ -547,4 +648,217 @@ export const getActivityShareSummary = createServerFn({ method: "GET" })
     }
 
     return { summaries };
+  });
+
+// ============================================================
+// generateInSessionLink — link 1h fixo (paciente segura o
+// device do terapeuta na sessão). Não-configurável.
+// ============================================================
+const GenInSessionSchema = z.object({
+  patientActivityId: z.string().uuid(),
+});
+
+export const generateInSessionLink = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => GenInSessionSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa, error } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, assigned_by, status, used_at")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (error || !pa) throw new Error("Atividade não encontrada.");
+    if (pa.used_at) throw new Error("Esta atividade já foi respondida.");
+    if (pa.status === "revoked" || pa.status === "completed") {
+      throw new Error("Esta atividade não está disponível.");
+    }
+
+    // Permissão: assigned_by OU owner
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    const isOwner = membership?.role === "owner";
+    if (!isOwner && pa.assigned_by !== userId) {
+      throw new Error("Sem permissão para gerar link desta atividade.");
+    }
+
+    const rawToken = generateMagicLinkToken();
+    const tokenHash = await hashMagicLinkToken(rawToken);
+    const expiresAt = new Date(
+      Date.now() + IN_SESSION_LINK_HOURS * 3600 * 1000,
+    ).toISOString();
+
+    const { error: updErr } = await supabaseAdmin
+      .from("patient_activities")
+      .update({
+        token_hash: tokenHash,
+        token_expires_at: expiresAt,
+        token_sent_at: new Date().toISOString(),
+        delivery_mode: "shared_link",
+      })
+      .eq("id", pa.id);
+
+    if (updErr) {
+      console.error("[generateInSessionLink] update failed", { code: updErr.code });
+      throw new Error("Não foi possível gerar o link.");
+    }
+
+    return {
+      rawToken,
+      expiresAt,
+      linkPath: `/p/${rawToken}`,
+    };
+  });
+
+// ============================================================
+// recordInSessionResponse — terapeuta aplicou ao vivo.
+// Score + cifra de PHI + Mauve flag (PHQ-9 item 9, etc.).
+// ============================================================
+const RecordResponseSchema = z.object({
+  patientActivityId: z.string().uuid(),
+  responses: z.record(
+    z.string().min(1).max(64),
+    z.union([z.number(), z.string(), z.boolean(), z.null()]),
+  ),
+});
+
+export const recordInSessionResponse = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => RecordResponseSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa, error: paErr } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, patient_id, activity_id, assigned_by, used_at, status")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (paErr || !pa) throw new Error("Atividade não encontrada.");
+    if (pa.used_at) throw new Error("Esta atividade já foi respondida.");
+    if (pa.status === "revoked") throw new Error("Esta atividade foi revogada.");
+
+    // Permissão: assigned_by OU owner
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    const isOwner = membership?.role === "owner";
+    if (!isOwner && pa.assigned_by !== userId) {
+      throw new Error("Sem permissão para registrar resposta desta atividade.");
+    }
+
+    const { data: activity, error: actErr } = await supabaseAdmin
+      .from("activity_catalog")
+      .select("id, archetype, config")
+      .eq("id", pa.activity_id)
+      .single();
+
+    if (actErr || !activity) throw new Error("Atividade não encontrada no catálogo.");
+
+    // Score + Mauve flag
+    const result = scoreActivity(activity.archetype, activity.config, data.responses);
+    const flag = detectClinicalFlag(activity.config, data.responses);
+
+    // Cifra respostas brutas (PHI). raw_responses_encrypted nunca em log/URL.
+    const encrypted = await encryptPHIServer(JSON.stringify(data.responses));
+
+    const { data: response, error: respErr } = await supabaseAdmin
+      .from("activity_responses")
+      .insert({
+        workspace_id: pa.workspace_id,
+        patient_id: pa.patient_id,
+        patient_activity_id: pa.id,
+        activity_id: pa.activity_id,
+        score: result.score,
+        severity: result.severity === "not_applicable" ? null : result.severity,
+        scoring_metadata: {
+          ...result.metadata,
+          clinical_flag: flag.raised
+            ? { flag: flag.flag, item_id: flag.item_id }
+            : null,
+        },
+        raw_responses_encrypted: encrypted,
+        submitted_via: "in_session",
+      })
+      .select("id")
+      .single();
+
+    if (respErr || !response) {
+      console.error("[recordInSessionResponse] insert failed", { code: respErr?.code });
+      throw new Error("Não foi possível salvar a resposta.");
+    }
+
+    // Marca patient_activity como aplicado + queima token se houver
+    const nowIso = new Date().toISOString();
+    await supabaseAdmin
+      .from("patient_activities")
+      .update({
+        status: "completed",
+        used_at: nowIso,
+        applied_at: nowIso,
+        response_id: response.id,
+        token_hash: null,
+        token_expires_at: null,
+      })
+      .eq("id", pa.id);
+
+    // Audit nominal de Mauve flag (PHI-safe: só UUIDs e enum).
+    if (flag.raised) {
+      await recordAudit({
+        actorId: userId,
+        workspaceId: pa.workspace_id,
+        action: "clinical_flag.raised",
+        resourceType: "activity_response",
+        resourceId: response.id,
+        metadata: {
+          patient_id: pa.patient_id,
+          activity_id: pa.activity_id,
+          flag: flag.flag,
+          item_id: flag.item_id,
+          submitted_via: "in_session",
+        },
+      });
+    }
+
+    return {
+      responseId: response.id,
+      score: result.score,
+      severity: result.severity,
+      clinicalFlag: { raised: flag.raised, flag: flag.flag },
+    };
+  });
+
+// ============================================================
+// getTierLinkLimits — UI usa pra montar dropdown de duração
+// filtrado por tier do workspace.
+// ============================================================
+const TierLimitsSchema = z.object({ workspaceId: z.string().uuid() });
+
+export const getTierLinkLimits = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => TierLimitsSchema.parse(input))
+  .handler(async ({ data }) => {
+    const tier = await getWorkspaceTier(data.workspaceId);
+    const defaultHours = TIER_LINK_DEFAULT_HOURS[tier] ?? 24;
+    const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
+    const allOptions = [24, 48, 24 * 7, 24 * 14, 24 * 30];
+    return {
+      tier,
+      defaultHours,
+      maxHours,
+      allowedOptionsHours: allOptions.filter((h) => h <= maxHours),
+    };
   });
