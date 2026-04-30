@@ -449,7 +449,7 @@ function AssignActivityDialog({
     },
   });
 
-  const activities = catalogQuery.data?.activities ?? [];
+  const catalogActivities = catalogQuery.data?.activities ?? [];
   const needsLink = deliveryMode !== "in_session";
   const canSubmit = !!activityId && !assignMutation.isPending;
 
