@@ -791,3 +791,29 @@ function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: 
     </div>
   );
 }
+
+// =============================================================================
+// ShareSummaryLine — mini-resumo de compartilhamento por canal.
+// Renderiza só se houver pelo menos 1 share intent. Sem PHI.
+// =============================================================================
+function ShareSummaryLine({ summary }: { summary: ShareSummaryRow }) {
+  const parts: string[] = [];
+  if (summary.byChannel.whatsapp > 0) parts.push(`WhatsApp ${summary.byChannel.whatsapp}`);
+  if (summary.byChannel.sms > 0) parts.push(`SMS ${summary.byChannel.sms}`);
+  if (summary.byChannel.mailto > 0) parts.push(`Email ${summary.byChannel.mailto}`);
+  if (summary.byChannel.copy > 0) parts.push(`Copiar ${summary.byChannel.copy}`);
+
+  const last = summary.lastSharedAt
+    ? new Date(summary.lastSharedAt).toLocaleString("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short",
+      })
+    : null;
+
+  return (
+    <p className="text-xs text-muted-foreground">
+      Compartilhada {summary.total}× · {parts.join(" · ")}
+      {last && ` · última: ${last}`}
+    </p>
+  );
+}
