@@ -472,7 +472,7 @@ function AssignActivityDialog({
                 <SelectValue placeholder="Escolher atividade…" />
               </SelectTrigger>
               <SelectContent>
-                {activities.map((a) => (
+                {catalogActivities.map((a) => (
                   <SelectItem key={a.id} value={a.id}>
                     {a.title}
                   </SelectItem>
