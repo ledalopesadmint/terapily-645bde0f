@@ -139,6 +139,29 @@ export const assignActivity = createServerFn({ method: "POST" })
       throw new Error("Sem permissão pra prescrever atividades pra este paciente.");
     }
 
+    // 3.5. Gating de modo: a atividade declara `supported_modes` no config.
+    //      PHQ-9/PCL-5/C-SSRS = ["in_session"]; demais = ambos.
+    //      Ver mem://features/activity-modes-and-link-duration
+    const supportedModes: string[] = Array.isArray(
+      (activity.config as { supported_modes?: unknown })?.supported_modes,
+    )
+      ? ((activity.config as { supported_modes: string[] }).supported_modes)
+      : ["in_session", "shared_link", "both"];
+
+    const requiredModes: string[] =
+      data.deliveryMode === "shared_link"
+        ? ["shared_link"]
+        : data.deliveryMode === "both"
+          ? ["in_session", "shared_link"]
+          : ["in_session"];
+
+    if (!requiredModes.every((m) => supportedModes.includes(m))) {
+      const reason =
+        (activity.config as { restricted_reason?: string })?.restricted_reason ??
+        "Esta atividade não pode ser entregue nesse modo.";
+      throw new Error(reason);
+    }
+
     // 4. Gera token só se delivery envolve link
     let rawToken: string | null = null;
     let tokenHash: string | null = null;
@@ -147,6 +170,15 @@ export const assignActivity = createServerFn({ method: "POST" })
       data.deliveryMode === "shared_link" || data.deliveryMode === "both";
 
     if (needsLink) {
+      // Gating de tier: clamp da janela de expiração ao máximo do plano.
+      const tier = await getWorkspaceTier(data.workspaceId);
+      const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
+      if (data.expiresInHours > maxHours) {
+        throw new Error(
+          `Seu plano permite no máximo ${maxHours}h de duração para o link.`,
+        );
+      }
+
       rawToken = generateMagicLinkToken();
       tokenHash = await hashMagicLinkToken(rawToken);
       tokenExpiresAt = new Date(
