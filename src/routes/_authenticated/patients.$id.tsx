@@ -337,6 +337,9 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                       </p>
                     </div>
                   )}
+                  {share && share.total > 0 && (
+                    <ShareSummaryLine summary={share} />
+                  )}
                 </CardContent>
               </Card>
             );
