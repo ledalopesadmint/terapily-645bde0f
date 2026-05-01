@@ -96,8 +96,8 @@ export function RevealContactDialog({
           )}
 
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-md border border-border bg-muted/20 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="rounded-md border border-navy/30 bg-navy/5 p-3">
+              <p className="text-[11px] uppercase tracking-wider text-navy/70">
                 Email
               </p>
               <p className="mt-1 truncate text-sm text-foreground">
@@ -105,16 +105,15 @@ export function RevealContactDialog({
               </p>
               <Button
                 size="sm"
-                variant="outline"
-                className="mt-2 w-full"
+                className="mt-2 w-full border border-navy/40 bg-navy/10 text-navy hover:bg-navy/20 hover:text-navy"
                 disabled={!hasEmail || copying}
                 onClick={() => onCopy(p, "email", "Email")}
               >
                 <Mail className="mr-2 h-3.5 w-3.5" /> Copiar
               </Button>
             </div>
-            <div className="rounded-md border border-border bg-muted/20 p-3">
-              <p className="text-[11px] uppercase tracking-wider text-muted-foreground">
+            <div className="rounded-md border border-sage/30 bg-sage/5 p-3">
+              <p className="text-[11px] uppercase tracking-wider text-sage/70">
                 Telefone
               </p>
               <p className="mt-1 truncate text-sm text-foreground">
@@ -122,8 +121,7 @@ export function RevealContactDialog({
               </p>
               <Button
                 size="sm"
-                variant="outline"
-                className="mt-2 w-full"
+                className="mt-2 w-full border border-sage/40 bg-sage/10 text-sage hover:bg-sage/20 hover:text-sage"
                 disabled={!hasPhone || copying}
                 onClick={() => onCopy(p, "phone", "Telefone")}
               >
