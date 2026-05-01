@@ -327,8 +327,7 @@ function LibrarySelectionMode() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Apenas as atividades disponíveis no seu workspace ficam selecionáveis.
-          As demais aparecem com a etiqueta "Em breve" — chegam junto com o
-          player na Semana 3.
+          As demais aparecem com a etiqueta "Em breve".
         </p>
         {!hasPreview && !catalogQuery.isLoading && (
           <p className="mt-3 rounded-md border border-dashed border-border bg-card/40 p-3 text-xs text-muted-foreground">
