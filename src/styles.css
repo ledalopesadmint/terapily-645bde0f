@@ -90,6 +90,28 @@
   --color-action-patient-report-fg: var(--action-patient-report-fg);
   --color-action-therapist-report: var(--action-therapist-report);
   --color-action-therapist-report-fg: var(--action-therapist-report-fg);
+
+  /* Status semáforo */
+  --color-status-active: var(--status-active);
+  --color-status-active-fg: var(--status-active-fg);
+  --color-status-active-subtle: var(--status-active-subtle);
+  --color-status-active-muted: var(--status-active-muted);
+  --color-status-archived: var(--status-archived);
+  --color-status-archived-fg: var(--status-archived-fg);
+  --color-status-archived-subtle: var(--status-archived-subtle);
+  --color-status-archived-muted: var(--status-archived-muted);
+  --color-status-deleted: var(--status-deleted);
+  --color-status-deleted-fg: var(--status-deleted-fg);
+  --color-status-deleted-subtle: var(--status-deleted-subtle);
+  --color-status-deleted-muted: var(--status-deleted-muted);
+
+  /* Contact icon buttons */
+  --color-contact-email: var(--contact-email);
+  --color-contact-email-fg: var(--contact-email-fg);
+  --color-contact-email-border: var(--contact-email-border);
+  --color-contact-phone: var(--contact-phone);
+  --color-contact-phone-fg: var(--contact-phone-fg);
+  --color-contact-phone-border: var(--contact-phone-border);
 }
 
 /*
@@ -136,6 +158,28 @@
   --action-patient-report-fg: oklch(0.98 0.005 175);
   --action-therapist-report: oklch(0.55 0.12 350);  /* rosa queimado — uso interno terapeuta */
   --action-therapist-report-fg: oklch(0.98 0.01 350);
+
+  /* ── Status semáforo (filtros Ativos / Arquivados / Excluídos) ── */
+  --status-active: oklch(0.55 0.17 155);             /* emerald-600 — "siga" */
+  --status-active-fg: oklch(0.98 0.005 155);
+  --status-active-subtle: oklch(0.92 0.06 155);      /* bg quando inativo */
+  --status-active-muted: oklch(0.48 0.12 155);       /* texto quando inativo */
+  --status-archived: oklch(0.72 0.17 75);            /* amber-500 — "atenção" */
+  --status-archived-fg: oklch(0.98 0.01 90);
+  --status-archived-subtle: oklch(0.93 0.05 75);
+  --status-archived-muted: oklch(0.52 0.12 75);
+  --status-deleted: oklch(0.53 0.21 27);             /* red-600 — "pare" */
+  --status-deleted-fg: oklch(0.98 0.005 27);
+  --status-deleted-subtle: oklch(0.92 0.05 27);
+  --status-deleted-muted: oklch(0.50 0.18 27);
+
+  /* ── Contact icon buttons (lista de pacientes) ── */
+  --contact-email: var(--navy);                       /* navy sólido */
+  --contact-email-fg: oklch(0.98 0.005 90);           /* branco */
+  --contact-email-border: oklch(0.98 0.005 90);       /* contorno branco */
+  --contact-phone: var(--sage);                       /* sage sólido */
+  --contact-phone-fg: oklch(0.98 0.005 90);           /* branco */
+  --contact-phone-border: var(--navy);                /* contorno navy */
 
   /* Mapping semântico shadcn → paleta Terapily */
   --background: var(--cream);
