@@ -3,10 +3,11 @@
  * Fullscreen presentation mode com o ActivityPlayer slide-a-slide.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { VinhetaIntro } from "./VinhetaIntro";
 
 import {
   ActivityPlayer,
@@ -37,6 +38,8 @@ export function InSessionPlayerDialog({
   const qc = useQueryClient();
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [vinhetaDone, setVinhetaDone] = useState(false);
+  const handleVinhetaComplete = useCallback(() => setVinhetaDone(true), []);
 
   const configQuery = useQuery({
     queryKey: ["activity-config", patientActivityId],
@@ -70,6 +73,11 @@ export function InSessionPlayerDialog({
       );
     },
   });
+
+  // Vinheta intro (plays before any content)
+  if (!vinhetaDone) {
+    return <VinhetaIntro onComplete={handleVinhetaComplete} />;
+  }
 
   // Loading
   if (configQuery.isLoading) {
