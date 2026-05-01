@@ -423,7 +423,24 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
   } | null>(null);
   const [viewResponseId, setViewResponseId] = useState<string | null>(null);
 
-  const downloadScaleResult = async (
+  // Auto-open in-session player when navigated from Acervo with startSession param
+  const [startSessionConsumed, setStartSessionConsumed] = useState(false);
+  useEffect(() => {
+    if (!startSession || startSessionConsumed) return;
+    // Wait for activities to load so we can find the title
+    if (!listQuery?.data) return;
+    const match = (listQuery.data.activities ?? []).find(
+      (a: { id: string }) => a.id === startSession,
+    );
+    if (match) {
+      setInSessionTarget({
+        patientActivityId: startSession,
+        activityTitle: (match as { activity?: { title?: string } }).activity?.title ?? "Atividade",
+      });
+    }
+    setStartSessionConsumed(true);
+  }, [startSession, startSessionConsumed, listQuery?.data]);
+
     responseId: string,
     variant: "patient" | "therapist",
   ) => {
