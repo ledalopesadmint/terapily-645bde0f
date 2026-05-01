@@ -104,15 +104,15 @@ Espelha `mem://features/s3-definition-of-done`.
 
 **Decisão (2026-04-30):** Resend e email automático REMOVIDOS do escopo S3. Ver `mem://constraint/no-automated-email-policy` e `docs/magic-link-rules-locked.md` §8.
 
-- [ ] Modal "Link Generated" exibido **uma vez** após `assignActivity`
-- [ ] 4 botões: **WhatsApp** (`wa.me`), **SMS** (`sms:`), **Email pessoal** (`mailto:`), **Copiar** (clipboard)
-- [ ] Texto sugerido editável pelo terapeuta antes de compartilhar
-- [ ] Phone/email do paciente decifrados server-side só pra preencher o deep link — nunca persistem em URL nem em audit
-- [ ] Aviso "Este link só será mostrado agora. Expira em {N dias}."
-- [ ] Botão "Gerar novo link" no card de atividade pendente/expirada (substitui "Reenviar email")
-- [ ] **Sem** server function de envio Resend
-- [ ] **Sem** template de email transacional
-- [ ] **Sem** env var `RESEND_BAA_SIGNED`
+- [x] Modal "Link Generated" exibido **uma vez** após `assignActivity`
+- [x] 4 botões: **WhatsApp** (`wa.me`), **SMS** (`sms:`), **Email pessoal** (`mailto:`), **Copiar** (clipboard)
+- [x] Texto sugerido editável pelo terapeuta antes de compartilhar
+- [x] Phone/email do paciente decifrados server-side só pra preencher o deep link — nunca persistem em URL nem em audit
+- [x] Aviso "Este link só será mostrado agora." no modal
+- [x] Botão "Gerar novo link" no card de atividade pendente/expirada
+- [x] **Sem** server function de envio Resend
+- [x] **Sem** template de email transacional
+- [x] **Sem** env var `RESEND_BAA_SIGNED`
 
 ---
 
