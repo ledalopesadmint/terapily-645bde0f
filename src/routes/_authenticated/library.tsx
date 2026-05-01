@@ -169,6 +169,13 @@ function LibraryStandardMode() {
         <LibraryHero activity={featured} onStart={handleStart} />
       </div>
 
+      <div className="mt-10">
+        <InSessionQuickAccess
+          activities={ACTIVITIES}
+          onStartInSession={(activity) => handleStart(activity, "in_session")}
+        />
+      </div>
+
       <div className="mt-14 space-y-12">
         {CATEGORIES.map((category) => {
           const items = getActivitiesByCategory(category.id);
