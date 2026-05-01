@@ -290,7 +290,10 @@ export const revokeActivity = createServerFn({ method: "POST" })
       action: "activity.revoked",
       resourceType: "patient_activity",
       resourceId: pa.id,
-      metadata: { previous_status: pa.status },
+      metadata: {
+        previous_status: pa.status,
+        ...(data.reason ? { reason: data.reason } : {}),
+      },
     });
 
     return { id: pa.id, status: "revoked" as const, alreadyRevoked: false };
