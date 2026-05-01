@@ -99,13 +99,10 @@ function LibraryPage() {
 
 function LibraryStandardMode() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const handleStart = (activity: Activity, mode: "in_session" | "shared_link") => {
-    toast(activity.name, {
-      description:
-        mode === "in_session"
-          ? "O player ao vivo chega na Semana 3."
-          : "O envio por link chega na Semana 3.",
-    });
+    toast.info(`${activity.name} — selecione um paciente para ${mode === "in_session" ? "aplicar em sessão" : "enviar por link"}.`);
+    // TODO: navigate to patient picker or open assign modal
   };
 
   // Curadoria semanal: admin define no /admin via toggle "Destaque".
