@@ -47,6 +47,7 @@ import { CategoryRow } from "@/features/library/CategoryRow";
 import { LibraryHero } from "@/features/library/LibraryHero";
 import { CategoryBrowser } from "@/features/library/CategoryBrowser";
 import { RecommendedEmpty } from "@/features/library/RecommendedEmpty";
+import { InSessionQuickAccess } from "@/features/library/InSessionQuickAccess";
 import {
   ACTIVITIES,
   CATEGORIES,
