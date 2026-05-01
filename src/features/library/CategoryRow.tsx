@@ -17,7 +17,7 @@
 import { useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ActivityCard } from "./ActivityCard";
-import type { Activity, Category } from "./catalog";
+import type { Activity, Category } from "./library.types";
 
 interface CategoryRowProps {
   category: Category;

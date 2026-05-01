@@ -48,12 +48,12 @@ import { LibraryHero } from "@/features/library/LibraryHero";
 import { CategoryBrowser } from "@/features/library/CategoryBrowser";
 import { RecommendedEmpty } from "@/features/library/RecommendedEmpty";
 import { InSessionQuickAccess } from "@/features/library/InSessionQuickAccess";
+import type { Activity } from "@/features/library/library.types";
 import {
   ACTIVITIES,
   CATEGORIES,
   getActivitiesByCategory,
-  type Activity,
-} from "@/features/library/catalog";
+} from "@/features/library/seed-data";
 import { listAvailableActivities } from "@/features/activities/activities.functions";
 import { getFeaturedActivity } from "@/server/admin.functions";
 import { getPatientNickname } from "@/features/patients/patients.functions";

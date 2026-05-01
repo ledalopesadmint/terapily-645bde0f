@@ -9,7 +9,7 @@
  */
 
 import { Activity, Play } from "lucide-react";
-import type { Activity as ActivityType } from "./catalog";
+import type { Activity as ActivityType } from "./library.types";
 
 interface InSessionQuickAccessProps {
   /** All activities from the catalog */

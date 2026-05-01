@@ -14,7 +14,7 @@
  * Adicionar uma nova: criar componente, registrar no `ILLUSTRATIONS` no fim.
  */
 
-import { type Activity } from "./catalog";
+import { type Activity } from "./library.types";
 
 interface IllustrationProps {
   className?: string;

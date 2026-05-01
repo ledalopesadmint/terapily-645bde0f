@@ -9,7 +9,7 @@
  */
 
 import { Brain, HeartPulse, Wind, Moon, Sparkles, Anchor, Compass, ScrollText, LifeBuoy } from "lucide-react";
-import type { CategoryId } from "./catalog";
+import type { CategoryId } from "./library.types";
 
 interface CategoryMeta {
   id: CategoryId;
