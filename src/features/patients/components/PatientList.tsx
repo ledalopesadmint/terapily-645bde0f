@@ -128,13 +128,13 @@ export function PatientList({
                   <TooltipTrigger asChild>
                     <span>
                       <Button
-                        variant="ghost"
                         size="icon"
+                        className="h-8 w-8 rounded-md border border-navy bg-sage text-white shadow-sm hover:bg-sage/85 hover:text-white"
                         disabled={!hasPhone || copying}
                         onClick={() => onCopyContact(p, "phone", "Telefone")}
                         aria-label="Copiar telefone"
                       >
-                        <Phone className="h-4 w-4 text-sage" />
+                        <Phone className="h-4 w-4" />
                       </Button>
                     </span>
                   </TooltipTrigger>
