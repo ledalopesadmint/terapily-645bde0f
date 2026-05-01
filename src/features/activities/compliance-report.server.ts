@@ -383,17 +383,17 @@ function buildClinicalPDF(
   drawWatermark(doc);
   let y = drawHeader(doc);
 
-  // ── Clinician copy band — flush below header (no gap) ──
-  const bandH = 8;
+  // ── Clinician copy band — flush below header, FULL WIDTH like header ──
+  const bandH = 10;
   doc.setFillColor(253, 232, 232);
-  doc.rect(M, y, CW, bandH, "F"); // no rounded corners — sits flush
+  doc.rect(0, y, PAGE_W, bandH, "F"); // full width, edge to edge
   doc.setTextColor(...RED);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   const bandLabel = "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION";
   const bandW = doc.getTextWidth(bandLabel);
-  doc.text(bandLabel, M + (CW - bandW) / 2, y + bandH / 2 + 1.5);
-  y += bandH + 8; // breathing room before title
+  doc.text(bandLabel, (PAGE_W - bandW) / 2, y + bandH / 2 + 1.5);
+  y += bandH + 12; // 50% more space after band before title
 
   // ── Title (keep current padding) ──
   doc.setTextColor(...NAVY);
@@ -427,34 +427,38 @@ function buildClinicalPDF(
     y += 3;
   }
 
-  // ── Info block (keep current padding) ──
-  doc.setFillColor(247, 245, 240);
-  doc.roundedRect(M, y, CW, 24, 2, 2, "F");
-  let iy = y + 6;
+  // ── Info block — proper padding, centered content ──
   const infoItems = [
     ["Patient:", patientLabel],
     ["Therapist:", params.therapistName],
     ["Practice:", params.workspaceName],
     ["Period:", formatDateRange(params.from, params.to)],
   ];
+  const infoLineH = 6;
+  const infoPadY = 6; // padding top and bottom inside box
+  const infoBoxH = infoPadY * 2 + infoItems.length * infoLineH;
+  doc.setFillColor(247, 245, 240);
+  doc.roundedRect(M, y, CW, infoBoxH, 2, 2, "F");
+  let iy = y + infoPadY + 4; // baseline of first line
   for (const [label, val] of infoItems) {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setTextColor(...NAVY);
     doc.text(label, M + 4, iy);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...CHARCOAL);
     doc.text(val, M + 28, iy);
-    iy += 6;
+    iy += infoLineH;
   }
-  y += 30;
+  y += infoBoxH + 8;
 
-  // ── Section: Activity History ──
+  // ── Section: Activity History — 50% more padding above and below title ──
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(12);
+  y += 4; // extra space above
   doc.text("Activity History", M, y);
-  y += 5;
+  y += 8; // 50% more space below title
 
   // Table header — premium cell height with centered text
   const thH = 10;
