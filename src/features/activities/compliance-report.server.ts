@@ -119,7 +119,7 @@ function drawHeader(doc: jsPDF) {
   doc.setTextColor(...SAGE);
   doc.text(".", dotX, wmY);
 
-  return barH + 6; // return next Y position
+  return barH; // return next Y position (no gap — band sits flush)
 }
 
 function drawFooter(
@@ -380,18 +380,17 @@ function buildClinicalPDF(
   drawWatermark(doc);
   let y = drawHeader(doc);
 
-  // ── Clinician copy band — balanced padding ──
-  const bandPadding = 5;
-  y += bandPadding;
+  // ── Clinician copy band — flush below header (no gap) ──
+  const bandH = 8;
   doc.setFillColor(253, 232, 232);
-  doc.roundedRect(M, y, CW, 7, 1.5, 1.5, "F");
+  doc.rect(M, y, CW, bandH, "F"); // no rounded corners — sits flush
   doc.setTextColor(...RED);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   const bandLabel = "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION";
   const bandW = doc.getTextWidth(bandLabel);
-  doc.text(bandLabel, M + (CW - bandW) / 2, y + 5);
-  y += 7 + bandPadding;
+  doc.text(bandLabel, M + (CW - bandW) / 2, y + bandH / 2 + 1.5);
+  y += bandH + 8; // breathing room before title
 
   // ── Title (keep current padding) ──
   doc.setTextColor(...NAVY);
@@ -454,82 +453,87 @@ function buildClinicalPDF(
   doc.text("Activity History", M, y);
   y += 5;
 
-  // Table header
+  // Table header — premium cell height with centered text
+  const thH = 10;
   doc.setFillColor(...NAVY);
-  doc.roundedRect(M, y, CW, 7, 1, 1, "F");
-  const cols = [M + 3, M + 26, M + 82, M + 105, M + 123, M + 152];
+  doc.roundedRect(M, y, CW, thH, 1, 1, "F");
+  const cols = [M + 4, M + 28, M + 84, M + 108, M + 126, M + 155];
   doc.setTextColor(...WHITE);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   const headers = ["DATE", "ACTIVITY", "MODE", "SCORE", "SEVERITY", "FLAG"];
+  const thTextY = y + thH / 2 + 1.5; // vertically centered
   for (let i = 0; i < headers.length; i++) {
-    doc.text(headers[i], cols[i], y + 5);
+    doc.text(headers[i], cols[i], thTextY);
   }
-  y += 9;
+  y += thH + 2;
 
-  // Table rows — flow to near footer, continue on next page
+  // Table rows — premium spacing, flow to near footer, continue on next page
+  const ROW_H = 10; // generous row height
+  const ROW_ITEM_H = 15; // row with item breakdown
   for (let i = 0; i < rows.length; i++) {
-    const rowH = rows[i].items ? 12 : 7;
+    const rowH = rows[i].items ? ROW_ITEM_H : ROW_H;
     y = checkPage(y, rowH);
 
     // Re-draw table header if we just started a new page and this isn't the first row
     if (y < 30 && i > 0) {
       doc.setFillColor(...NAVY);
-      doc.roundedRect(M, y, CW, 7, 1, 1, "F");
+      doc.roundedRect(M, y, CW, thH, 1, 1, "F");
       doc.setTextColor(...WHITE);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7);
       for (let h = 0; h < headers.length; h++) {
-        doc.text(headers[h], cols[h], y + 5);
+        doc.text(headers[h], cols[h], y + thH / 2 + 1.5);
       }
-      y += 9;
+      y += thH + 2;
     }
 
     const row = rows[i];
     if (i % 2 === 0) {
       doc.setFillColor(249, 247, 243);
-      doc.rect(M, y - 4, CW, 7, "F");
+      doc.rect(M, y, CW, ROW_H, "F");
     }
+    const textY = y + ROW_H / 2 + 1; // vertically centered in cell
     doc.setTextColor(...CHARCOAL);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(formatDate(row.submittedAt), cols[0], y);
+    doc.setFontSize(7.5);
+    doc.text(formatDate(row.submittedAt), cols[0], textY);
     const title =
       row.activityTitle.length > 30
         ? row.activityTitle.slice(0, 27) + "…"
         : row.activityTitle;
-    doc.text(title, cols[1], y);
-    doc.text(row.deliveryMode.replace("_", " "), cols[2], y);
+    doc.text(title, cols[1], textY);
+    doc.text(row.deliveryMode.replace("_", " "), cols[2], textY);
     doc.setFont("helvetica", "bold");
     doc.text(
       row.score != null ? `${row.score}` : "—",
       cols[3],
-      y,
+      textY,
     );
     doc.setFont("helvetica", "normal");
-    doc.text(row.severity ?? "—", cols[4], y);
+    doc.text(row.severity ?? "—", cols[4], textY);
     if (row.flagLabel) {
       doc.setTextColor(...RED);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(6);
-      doc.text("FLAG", cols[5], y);
+      doc.setFontSize(6.5);
+      doc.text("FLAG", cols[5], textY);
     }
-    y += 7;
+    y += ROW_H;
 
-    // Item breakdown (tight)
+    // Item breakdown
     if (row.items) {
       doc.setTextColor(119, 119, 119);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6);
       const itemText =
         row.items.length > 90 ? row.items.slice(0, 87) + "…" : row.items;
-      doc.text(itemText, cols[1], y);
+      doc.text(itemText, cols[1], y + 2);
       if (row.flagLabel) {
         doc.setTextColor(...RED);
         doc.setFont("helvetica", "bold");
-        doc.text(row.flagLabel.slice(0, 30), M + 3, y);
+        doc.text(row.flagLabel.slice(0, 30), M + 4, y + 2);
       }
-      y += 4;
+      y += 5;
     }
   }
 
