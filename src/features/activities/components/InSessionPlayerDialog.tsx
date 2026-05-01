@@ -47,6 +47,7 @@ export function InSessionPlayerDialog({
     queryKey: ["activity-config", patientActivityId],
     queryFn: () =>
       getActivityConfig({ data: { patientActivityId } }),
+    retry: false,
   });
 
   const config = (configQuery.data?.activity?.config ?? {}) as QuizConfig;
