@@ -824,15 +824,15 @@ function ClinicalFlagBanner({
           <div key={flag.responseId} className="rounded-lg border-2 border-mauve bg-mauve/15 p-4 shadow-sm">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mauve/25 text-foreground">
-                  <AlertTriangle className="h-5 w-5 text-mauve" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-action-flag/15 text-action-flag">
+                  <AlertTriangle className="h-5 w-5" />
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-semibold text-foreground">
                       ⚠ Risco ativo · {formatClinicalFlagLabel(flag.flag)}
                     </p>
-                    <Badge variant="destructive" className="text-xs">ATIVO</Badge>
+                    <Badge variant="destructive" className="border-action-flag bg-action-flag text-action-flag-fg text-xs">ATIVO</Badge>
                   </div>
                   <p className="max-w-2xl text-sm text-foreground/80">
                     {flag.activityTitle} respondida em {submittedAt}. O sinal de risco persiste na aplicação mais recente desta escala.
