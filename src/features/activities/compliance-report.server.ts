@@ -8,7 +8,7 @@
  * v8 additions:
  *   - Quick Read box (data index, not clinical summary)
  *   - Score History graph (jsPDF primitives, no interpretation)
- *   - Significant Changes section (factual deltas only)
+ *   - Score Changes section (factual deltas only)
  *   - Full datetime+timezone on all dates
  *   - Report ID (was "SHA-256") label fix
  *   - Generated timestamp in info block
@@ -577,7 +577,8 @@ function buildClinicalPDF(
       }
     }
     const scaleEntries = Array.from(scaleMap.values());
-    const qrBoxH = qrHeaderH + scaleEntries.length * qrLineH + 6;
+    const severityCount = scaleEntries.filter((e) => e.severity).length;
+    const qrBoxH = qrHeaderH + scaleEntries.length * qrLineH + severityCount * 3.5 + 12;
 
     doc.setDrawColor(...NAVY);
     doc.setLineWidth(0.5);
@@ -599,7 +600,6 @@ function buildClinicalPDF(
       doc.setFontSize(8);
       doc.setTextColor(...CHARCOAL);
       let line = `${entry.title}: ${entry.score}`;
-      if (entry.severity) line += ` (${entry.severity})`;
       if (entry.delta != null && entry.delta !== 0) {
         const sign = entry.delta > 0 ? "+" : "";
         const arrow = entry.delta > 0 ? "(+)" : "(-)";
@@ -608,9 +608,28 @@ function buildClinicalPDF(
         line += " · (=) 0";
       }
       doc.text(line, M + 4, qy);
-      qy += qrLineH;
+      // Severity on secondary line (scale-defined label)
+      if (entry.severity) {
+        doc.setFontSize(6.5);
+        doc.setTextColor(130, 130, 130);
+        doc.text(`Severity: ${entry.severity} (scale-defined)`, M + 4, qy + 3.5);
+        doc.setTextColor(...CHARCOAL);
+        doc.setFontSize(8);
+      }
+      qy += entry.severity ? qrLineH + 3.5 : qrLineH;
     }
-    y += qrBoxH + 6;
+
+    // Delta disclaimer
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(5.5);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      "Changes reflect score differences only and do not imply clinical improvement or worsening.",
+      M + 4,
+      qy + 1,
+    );
+
+    y = qy + 8;
   }
 
   // ── Section: Activity History ──
@@ -624,7 +643,7 @@ function buildClinicalPDF(
   const thH = 10;
   doc.setFillColor(...NAVY);
   doc.roundedRect(M, y, CW, thH, 1, 1, "F");
-  const cols = [M + 4, M + 28, M + 84, M + 108, M + 126, M + 155];
+  const cols = [M + 4, M + 42, M + 90, M + 112, M + 130, M + 158];
   doc.setTextColor(...WHITE);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
@@ -661,9 +680,7 @@ function buildClinicalPDF(
     const textY = y + ROW_H / 2 + 1;
     doc.setTextColor(...CHARCOAL);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    // Full datetime in activity history
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.text(formatFullDateTime(row.submittedAt), cols[0], textY);
     const title =
       row.activityTitle.length > 25
@@ -825,7 +842,7 @@ function buildClinicalPDF(
     y += 6;
   }
 
-  // ── Section: Significant Changes ──
+  // ── Section: Score Changes ──
   const changesEntries = series.filter((s) => s.delta != null && s.delta !== 0);
   if (changesEntries.length > 0) {
     y += 4;
@@ -833,7 +850,7 @@ function buildClinicalPDF(
     doc.setTextColor(...NAVY);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text("Significant Changes", M, y);
+    doc.text("Score Changes", M, y);
     y += 6;
 
     for (const c of changesEntries) {
@@ -916,7 +933,7 @@ function buildClinicalPDF(
       doc.setFontSize(5.5);
       doc.setFont("helvetica", "italic");
       doc.text(
-        "This flag may require clinical follow-up. Consult your jurisdiction's applicable laws and your professional ethical guidelines.",
+        "This flag indicates a response that may be clinically relevant. Consult your jurisdiction's applicable laws and your professional ethical guidelines.",
         M + 3,
         flagTextTop + 10,
       );
