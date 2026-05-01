@@ -17,7 +17,7 @@ import { useAuth } from "@/features/auth/AuthProvider";
 import { PatientPickerSheet } from "@/features/library/PatientPickerSheet";
 import type { Activity as ActivityType } from "@/features/library/library.types";
 
-export const Route = createFileRoute("/_authenticated/library_/scales")({
+export const Route = createFileRoute("/_authenticated/scales")({
   head: () => ({
     meta: [
       { title: "Escalas validadas · Terapily" },
