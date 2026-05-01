@@ -643,6 +643,12 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                   <p className="text-xs text-muted-foreground">
                     {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
                   </p>
+                  {/* Linha 2b: Justificativa de revogação (abaixo da data, alinhada à esquerda) */}
+                  {status === "revoked" && a.revocation_reason && (
+                    <p className="text-xs text-muted-foreground italic" title={a.revocation_reason}>
+                      {a.revocation_reason}
+                    </p>
+                  )}
                   {/* Linha 3: Score/classificação à esquerda + ações alinhadas à direita */}
                   <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
                     <div className="min-w-0 flex-1">
@@ -660,11 +666,6 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
-                      {status === "revoked" && a.revocation_reason && (
-                        <span className="text-xs text-muted-foreground italic max-w-[280px] truncate" title={a.revocation_reason}>
-                          {a.revocation_reason}
-                        </span>
-                      )}
                       {/* Aplicar agora — in_session pendente */}
                       {(status === "pending" || status === "in_progress") &&
                         (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
