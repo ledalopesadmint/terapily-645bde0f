@@ -8,7 +8,7 @@
  * v8 additions:
  *   - Quick Read box (data index, not clinical summary)
  *   - Score History graph (jsPDF primitives, no interpretation)
- *   - Significant Changes section (factual deltas only)
+ *   - Score Changes section (factual deltas only)
  *   - Full datetime+timezone on all dates
  *   - Report ID (was "SHA-256") label fix
  *   - Generated timestamp in info block
