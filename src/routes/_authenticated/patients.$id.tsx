@@ -459,6 +459,21 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
 
   const activities = listQuery.data?.activities ?? [];
   const activityIds = activities.map((a) => a.id);
+
+  // Auto-open in-session player when navigated from Acervo with startSession param
+  useEffect(() => {
+    if (!startSession || startSessionConsumed) return;
+    if (!listQuery.data) return;
+    const match = activities.find((a) => a.id === startSession);
+    if (match) {
+      setInSessionTarget({
+        patientActivityId: startSession,
+        activityTitle: (match as { activity?: { title?: string } }).activity?.title ?? "Atividade",
+      });
+    }
+    setStartSessionConsumed(true);
+  }, [startSession, startSessionConsumed, listQuery.data, activities]);
+
   const clinicalFlagsWithLifecycle = useMemo(
     () => computeFlagLifecycle(activities as Array<{
       activity?: { slug?: string; title?: string } | null;
