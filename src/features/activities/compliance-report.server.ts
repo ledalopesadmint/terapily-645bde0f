@@ -714,26 +714,21 @@ function buildClinicalPDF(
 
   const ROW_H = 12;
   const ROW_ITEM_H = 18;
+  let prevPageForTable = currentPage;
   for (let i = 0; i < rows.length; i++) {
     const rowH = rows[i].items ? ROW_ITEM_H : ROW_H;
     y = checkPage(y, rowH);
 
-    if (y < 18 + CONTENT_GAP + 5 && i > 0) {
-      doc.setFillColor(...NAVY);
-      doc.roundedRect(M, y, CW, thH, 1, 1, "F");
-      doc.setTextColor(...WHITE);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      for (let h = 0; h < headers.length; h++) {
-        doc.text(headers[h], cols[h], y + thH / 2 + 1.5);
-      }
-      y += thH + 2;
+    // Re-draw table header after page break
+    if (currentPage !== prevPageForTable) {
+      y = drawActivityTableHeader(y);
+      prevPageForTable = currentPage;
     }
 
     const row = rows[i];
     if (i % 2 === 0) {
       doc.setFillColor(249, 247, 243);
-      doc.rect(M, y, CW, ROW_H, "F");
+      doc.rect(M, y, CW, rowH, "F");
     }
     const textY = y + ROW_H / 2 + 1;
     doc.setTextColor(...CHARCOAL);
