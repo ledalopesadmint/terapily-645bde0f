@@ -466,7 +466,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
     if (!startSession || startSessionConsumed) return;
     if (!listQuery.data) return;
     const match = activities.find((a) => a.id === startSession);
-    if (match) {
+    if (match && (match as { status?: string }).status !== "revoked") {
       setInSessionTarget({
         patientActivityId: startSession,
         activityTitle: (match as { activity?: { title?: string } }).activity?.title ?? "Atividade",
