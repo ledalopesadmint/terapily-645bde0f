@@ -450,6 +450,8 @@ const ACTIVITY_AUDIT_ACTIONS = [
   "compliance_report.generated",
   "patient.contact_revealed",
   "clinical_flag.raised",
+  "clinical_flag.resolved",
+  "clinical_flag.acknowledged",
 ] as const;
 
 export const listPatientAuditLogs = createServerFn({ method: "GET" })
