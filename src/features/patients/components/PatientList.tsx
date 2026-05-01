@@ -109,13 +109,13 @@ export function PatientList({
                   <TooltipTrigger asChild>
                     <span>
                       <Button
-                        variant="ghost"
                         size="icon"
+                        className="h-8 w-8 rounded-md border border-white bg-navy text-white shadow-sm hover:bg-navy/85 hover:text-white"
                         disabled={!hasEmail || copying}
                         onClick={() => onCopyContact(p, "email", "Email")}
                         aria-label="Copiar email"
                       >
-                        <Mail className="h-4 w-4 text-navy" />
+                        <Mail className="h-4 w-4" />
                       </Button>
                     </span>
                   </TooltipTrigger>
