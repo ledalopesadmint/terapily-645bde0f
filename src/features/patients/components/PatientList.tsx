@@ -94,10 +94,10 @@ export function PatientList({
               </div>
               {p.clinical_flags && p.clinical_flags.total > 0 && (
                 <span
-                  className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-mauve/60 bg-mauve/15 px-2 py-1 text-xs font-semibold text-foreground"
+                  className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-action-flag/60 bg-action-flag/15 px-2 py-1 text-xs font-semibold text-action-flag"
                   aria-label="Paciente com flag clínica"
                 >
-                  <AlertTriangle className="h-3.5 w-3.5 text-mauve" />
+                  <AlertTriangle className="h-3.5 w-3.5" />
                   Flag
                 </span>
               )}
@@ -115,7 +115,7 @@ export function PatientList({
                         onClick={() => onCopyContact(p, "email", "Email")}
                         aria-label="Copiar email"
                       >
-                        <Mail className="h-4 w-4" />
+                        <Mail className="h-4 w-4 text-navy" />
                       </Button>
                     </span>
                   </TooltipTrigger>
@@ -134,7 +134,7 @@ export function PatientList({
                         onClick={() => onCopyContact(p, "phone", "Telefone")}
                         aria-label="Copiar telefone"
                       >
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-4 w-4 text-sage" />
                       </Button>
                     </span>
                   </TooltipTrigger>
