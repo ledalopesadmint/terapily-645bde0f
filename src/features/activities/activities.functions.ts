@@ -57,30 +57,8 @@ async function getWorkspaceTier(workspaceId: string): Promise<string> {
     .maybeSingle();
   return data?.tier ?? "trial";
 }
-
-/**
- * Detecta clinical flag em respostas (PHQ-9 item 9, etc.).
- * Lê `clinical_flag` + `flag_threshold` (default 1) de cada item do config.
- * Sem PHI: só inspeciona valores numéricos das respostas.
- */
-function detectClinicalFlag(
-  config: unknown,
-  responses: Record<string, unknown>,
-): { raised: boolean; flag: string | null; item_id: string | null } {
-  const items = Array.isArray((config as { items?: unknown[] })?.items)
-    ? ((config as { items: unknown[] }).items)
-    : [];
-  for (const item of items) {
-    const it = item as { id?: string; clinical_flag?: string; flag_threshold?: number };
-    if (!it?.clinical_flag || !it.id) continue;
-    const threshold = typeof it.flag_threshold === "number" ? it.flag_threshold : 1;
-    const raw = responses[it.id];
-    if (typeof raw === "number" && raw >= threshold) {
-      return { raised: true, flag: it.clinical_flag, item_id: it.id };
-    }
-  }
-  return { raised: false, flag: null, item_id: null };
-}
+// Clinical flag detection — centralizada em src/server/clinical-flag.server.ts
+import { detectClinicalFlag } from "@/server/clinical-flag.server";
 
 // --- assignActivity --------------------------------------------------------
 
