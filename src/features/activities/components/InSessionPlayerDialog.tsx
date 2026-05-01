@@ -38,6 +38,8 @@ export function InSessionPlayerDialog({
   const qc = useQueryClient();
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [vinhetaDone, setVinhetaDone] = useState(false);
+  const handleVinhetaComplete = useCallback(() => setVinhetaDone(true), []);
 
   const configQuery = useQuery({
     queryKey: ["activity-config", patientActivityId],
