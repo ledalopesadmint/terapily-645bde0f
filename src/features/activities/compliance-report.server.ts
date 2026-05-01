@@ -580,10 +580,22 @@ function buildClinicalPDF(
     const severityCount = scaleEntries.filter((e) => e.severity).length;
     const qrBoxH = qrHeaderH + scaleEntries.length * qrLineH + severityCount * 3.5 + 12;
 
+    // Measure content first, then draw box
+    const qrStartY = y;
+    let qy = y + qrHeaderH + 2;
+    // Measure entries
+    for (const entry of scaleEntries) {
+      qy += entry.severity ? qrLineH + 3.5 : qrLineH;
+    }
+    // Disclaimer line + padding
+    const qrEndY = qy + 8;
+    const measuredBoxH = qrEndY - qrStartY;
+
+    // Draw box with measured height
     doc.setDrawColor(...NAVY);
     doc.setLineWidth(0.5);
     doc.setFillColor(250, 248, 244);
-    doc.roundedRect(M, y, CW, qrBoxH, 2, 2, "FD");
+    doc.roundedRect(M, y, CW, measuredBoxH, 2, 2, "FD");
 
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
@@ -594,7 +606,7 @@ function buildClinicalPDF(
     doc.setTextColor(...CHARCOAL);
     doc.text("Data index — not a clinical summary.", M + 30, y + 6);
 
-    let qy = y + qrHeaderH + 2;
+    qy = y + qrHeaderH + 2;
     for (const entry of scaleEntries) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
@@ -629,7 +641,7 @@ function buildClinicalPDF(
       qy + 1,
     );
 
-    y = qy + 8;
+    y = qrEndY;
   }
 
   // ── Section: Activity History ──
