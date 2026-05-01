@@ -196,6 +196,7 @@ export function scoreActivity(
       answered,
       expected,
       completion_rate: Number(completionRate.toFixed(2)),
+      ...(severityLabel ? { severity_label: severityLabel } : {}),
       ...(Object.keys(clusterScores).length > 0 ? { clusters: clusterScores } : {}),
     },
   };
