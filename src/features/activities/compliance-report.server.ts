@@ -643,7 +643,7 @@ function buildClinicalPDF(
   const thH = 10;
   doc.setFillColor(...NAVY);
   doc.roundedRect(M, y, CW, thH, 1, 1, "F");
-  const cols = [M + 4, M + 28, M + 84, M + 108, M + 126, M + 155];
+  const cols = [M + 4, M + 42, M + 90, M + 112, M + 130, M + 158];
   doc.setTextColor(...WHITE);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
