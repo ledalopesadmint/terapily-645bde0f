@@ -554,24 +554,15 @@ export async function buildScaleResultPDF(params: ScaleResultParams): Promise<Ui
   }
 
   // Important Notice (patient) or Notices (therapist)
-  y = checkPage(y, 35);
+  y = checkPage(y, 40);
   if (variant === "patient") {
-    const noticeH = 34;
-    doc.setFillColor(255, 248, 225);
-    doc.roundedRect(M, y, CW, noticeH, 2, 2, "F");
-    doc.setDrawColor(240, 208, 96);
-    doc.setLineWidth(0.4);
-    doc.roundedRect(M, y, CW, noticeH, 2, 2, "S");
-    let ny = y + 5;
-    doc.setTextColor(...NAVY);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("Important Notice", M + 4, ny);
-    ny += 5;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(...CHARCOAL);
-    const lines = [
+    const padX = 6;
+    const padTop = 7;
+    const padBottom = 7;
+    const titleLineH = 6;
+    const bodyLineH = 4;
+
+    const bodyLines = [
       `The score presented above reflects your responses to a validated clinical instrument`,
       `(${activity.title}) and is provided for informational purposes only. It does not`,
       `constitute a diagnosis, clinical assessment, or treatment recommendation.`,
@@ -580,7 +571,22 @@ export async function buildScaleResultPDF(params: ScaleResultParams): Promise<Ui
       ``,
       `This document does not replace a clinical evaluation.`,
     ];
-    for (const line of lines) { doc.text(line, M + 4, ny); ny += 4; }
+    const noticeH = padTop + titleLineH + bodyLines.length * bodyLineH + padBottom;
+    doc.setFillColor(255, 248, 225);
+    doc.roundedRect(M, y, CW, noticeH, 2, 2, "F");
+    doc.setDrawColor(240, 208, 96);
+    doc.setLineWidth(0.4);
+    doc.roundedRect(M, y, CW, noticeH, 2, 2, "S");
+    let ny = y + padTop;
+    doc.setTextColor(...NAVY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text("Important Notice", M + padX, ny);
+    ny += titleLineH;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...CHARCOAL);
+    for (const line of bodyLines) { doc.text(line, M + padX, ny); ny += bodyLineH; }
   } else {
     doc.setTextColor(...NAVY);
     doc.setFont("times", "bold");
