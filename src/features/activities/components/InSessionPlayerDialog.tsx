@@ -40,6 +40,7 @@ export function InSessionPlayerDialog({
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [vinhetaDone, setVinhetaDone] = useState(false);
+  const [introStarted, setIntroStarted] = useState(false);
   const handleVinhetaComplete = useCallback(() => setVinhetaDone(true), []);
 
   const configQuery = useQuery({
