@@ -298,6 +298,28 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       });
     }
 
-    // Resposta neutra pro paciente (sem score técnico — quem interpreta é o terapeuta)
-    return { ok: true };
+    // Generate patient PDF (auto-download after submit)
+    let pdfBase64: string | null = null;
+    try {
+      if (activity.archetype === "quiz_scale") {
+        const pdfBuffer = await buildScaleResultPDF({
+          activityResponseId: response.id,
+          workspaceId: pa.workspace_id,
+          variant: "patient",
+        });
+        const bytes = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer);
+        let binary = "";
+        for (let i = 0; i < bytes.length; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        pdfBase64 = btoa(binary);
+      }
+    } catch (err) {
+      // PDF generation failure should NOT block submit
+      console.warn("[submitActivityResponse] PDF generation failed, continuing without", {
+        error: err instanceof Error ? err.message : "unknown",
+      });
+    }
+
+    return { ok: true, pdf: pdfBase64 };
   });
