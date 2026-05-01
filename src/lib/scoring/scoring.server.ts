@@ -69,6 +69,18 @@ const VALID_SEVERITIES: Severity[] = [
   "not_applicable",
 ];
 
+/** Map descriptive band labels to standard severity enum via keyword matching. */
+function mapLabelToSeverity(label: string): Severity {
+  const l = label.toLowerCase();
+  if (/\bextrem/.test(l) && /\bsevere\b/.test(l)) return "severe";
+  if (/\bmoderate(?:ly)?[\s_-]*severe\b/.test(l)) return "moderately_severe";
+  if (/\bsevere\b/.test(l) || /\bprobable\b/.test(l) || /\bhigh risk\b/.test(l) || /\bintensive\b/.test(l) || /\bclinical range\b/.test(l) || /\bclinically significant\b/.test(l)) return "severe";
+  if (/\bmoderate\b/.test(l) || /\bpossible\b/.test(l) || /\bsubstantial\b/.test(l) || /\bnear threshold\b/.test(l)) return "moderate";
+  if (/\bmild\b/.test(l) || /\blow[\s_-](?:to[\s_-])?moderate\b/.test(l) || /\bhazardous\b/.test(l) || /\bhigher normal\b/.test(l) || /\bpositive screen\b/.test(l)) return "mild";
+  if (/\bminimal\b/.test(l) || /\bnone\b/.test(l) || /\bnegative screen\b/.test(l) || /\bnormal\b/.test(l) || /\blow\b/.test(l) || /\bno\b/.test(l) || /\bgood\b/.test(l) || /\bsubclinical\b/.test(l) || /\bwell\b/.test(l) || /\badequate\b/.test(l)) return "minimal";
+  return "moderate"; // fallback for unrecognized labels
+}
+
 function isFiniteNumber(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v);
 }
