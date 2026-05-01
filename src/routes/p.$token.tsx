@@ -195,7 +195,10 @@ function ActivityRunner({
   const submitMutation = useMutation({
     mutationFn: () =>
       submitActivityResponse({ data: { token, responses } }),
-    onSuccess: () => setSubmitted(true),
+    onSuccess: (data) => {
+      setSubmitted(true);
+      if (data.pdf) setResultPdf(data.pdf);
+    },
   });
 
   const expires = resolved.expiresAt ? formatExpires(resolved.expiresAt) : null;
