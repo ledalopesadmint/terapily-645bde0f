@@ -117,6 +117,25 @@
   --cream-tan: oklch(0.918 0.022 82);    /* faixa cream tostada (stats strip) */
   --rust: oklch(0.52 0.105 35);          /* vermelho queimado dessaturado — sinaliza ausência sem alarmar */
 
+  /* ── Action button tokens (cores ÚNICAS, exclusivas destes botões) ── */
+  /* Regra: estas cores NÃO aparecem em nenhum outro lugar do sistema.
+     Objetivo: memorização por cor → prevenção de erro humano. */
+  --action-flag: oklch(0.58 0.18 22);             /* coral-vermelho vivo — flag clínica / atenção imediata */
+  --action-flag-fg: oklch(0.98 0.005 90);          /* branco quente sobre vermelho */
+  --action-flag-subtle: oklch(0.92 0.04 22);       /* bg sutil para badge inline da flag */
+  --action-patient-report: oklch(0.56 0.10 175);   /* teal-verde — seguro pra compartilhar com paciente */
+  --action-patient-report-fg: oklch(0.98 0.005 175);
+  --action-therapist-report: oklch(0.62 0.13 75);  /* âmbar profundo — uso interno terapeuta */
+  --action-therapist-report-fg: oklch(0.20 0.02 75);
+
+  --color-action-flag: var(--action-flag);
+  --color-action-flag-fg: var(--action-flag-fg);
+  --color-action-flag-subtle: var(--action-flag-subtle);
+  --color-action-patient-report: var(--action-patient-report);
+  --color-action-patient-report-fg: var(--action-patient-report-fg);
+  --color-action-therapist-report: var(--action-therapist-report);
+  --color-action-therapist-report-fg: var(--action-therapist-report-fg);
+
   /* Mapping semântico shadcn → paleta Terapily */
   --background: var(--cream);
   --foreground: var(--charcoal);
