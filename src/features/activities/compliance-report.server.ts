@@ -577,7 +577,8 @@ function buildClinicalPDF(
       }
     }
     const scaleEntries = Array.from(scaleMap.values());
-    const qrBoxH = qrHeaderH + scaleEntries.length * qrLineH + 6;
+    const severityCount = scaleEntries.filter((e) => e.severity).length;
+    const qrBoxH = qrHeaderH + scaleEntries.length * qrLineH + severityCount * 3.5 + 12;
 
     doc.setDrawColor(...NAVY);
     doc.setLineWidth(0.5);
