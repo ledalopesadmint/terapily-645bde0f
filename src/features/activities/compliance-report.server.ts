@@ -1159,10 +1159,29 @@ function buildClinicalPDF(
 
 // ── Main entry point ──
 
+import {
+  validateReportInput,
+  validateGeneratedPDF,
+  COMPLIANCE_RULES as RULES,
+} from "./compliance-report-rules.server";
+
 export async function buildComplianceReportPDF(
   params: ReportParams,
   variant: ReportVariant = "clinical",
 ): Promise<Uint8Array> {
+  // ── PRE-GENERATION VALIDATION (mandatory) ──
+  const preCheck = validateReportInput({
+    patientId: params.patientId,
+    workspaceId: params.workspaceId,
+    from: params.from,
+    to: params.to,
+    therapistName: params.therapistName,
+  });
+  if (!preCheck.valid) {
+    throw new Error(
+      `Compliance Report — input validation failed:\n${preCheck.errors.join("\n")}`,
+    );
+  }
   // 1. Fetch patient name (decrypt)
   const { data: patient } = await supabaseAdmin
     .from("patients")
