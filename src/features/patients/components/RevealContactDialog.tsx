@@ -141,7 +141,10 @@ export function RevealContactDialog({
             <Pencil className="mr-2 h-4 w-4" /> Editar
           </Button>
           <div className="flex gap-2">
-            <Button variant="ghost" onClick={() => onArchive(p)}>
+            <Button
+              className="border-2 border-amber-500 bg-amber-500/15 text-amber-700 hover:bg-amber-500/25 hover:text-amber-800"
+              onClick={() => onArchive(p)}
+            >
               {p.status === "active" ? (
                 <>
                   <Archive className="mr-2 h-4 w-4" /> Arquivar
@@ -153,8 +156,7 @@ export function RevealContactDialog({
               )}
             </Button>
             <Button
-              variant="ghost"
-              className="text-destructive hover:text-destructive"
+              className="bg-red-600 text-white hover:bg-red-700"
               onClick={() => onAskDelete(p)}
             >
               <Trash2 className="mr-2 h-4 w-4" /> Excluir
