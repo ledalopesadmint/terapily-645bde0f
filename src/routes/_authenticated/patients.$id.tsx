@@ -441,6 +441,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
     setStartSessionConsumed(true);
   }, [startSession, startSessionConsumed, listQuery?.data]);
 
+  const downloadScaleResult = async (
     responseId: string,
     variant: "patient" | "therapist",
   ) => {
