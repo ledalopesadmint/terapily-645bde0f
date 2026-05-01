@@ -364,9 +364,11 @@ function PatientDetailPage() {
 function PatientTabs({
   patientId,
   workspaceId,
+  startSession,
 }: {
   patientId: string;
   workspaceId: string;
+  startSession?: string;
 }) {
   const roleQuery = useQuery({
     queryKey: ["my-workspace-role", workspaceId],
