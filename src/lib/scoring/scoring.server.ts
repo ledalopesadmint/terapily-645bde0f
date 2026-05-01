@@ -50,6 +50,8 @@ interface ScoringConfig {
     questions?: QuestionSpec[];
     reverse?: string[];
     max_per_item?: number;
+    /** PCL-5 style cluster subscores. Keys = cluster name, values = question ids. */
+    clusters?: Record<string, string[]>;
   };
   severity_bands?: Array<{
     min: number;
