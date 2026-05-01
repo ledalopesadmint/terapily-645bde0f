@@ -70,6 +70,7 @@ import {
   revokeActivity,
   listAvailableActivities,
   generateInSessionLink,
+  acknowledgeClinicalFlag,
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
 import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
@@ -116,21 +117,39 @@ const STATUS_VARIANT: Record<
   revoked: "destructive",
 };
 
+// ============================================================
+// Clinical Flag Lifecycle Types
+// States: ACTIVE (risk detected) → MONITORING (resolved) → ACKNOWLEDGED
+// ============================================================
+
+type FlagLifecycleStatus = "active" | "monitoring" | "acknowledged";
+
 interface ClinicalFlagInfo {
   flag: string;
   item_id: string | null;
   responseId: string;
   patientActivityId: string;
   activityTitle: string;
+  activitySlug: string;
   submittedAt: string | null;
   submittedVia: string | null;
   score: number | null;
   severity: string | null;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+}
+
+interface ClinicalFlagWithLifecycle extends ClinicalFlagInfo {
+  lifecycleStatus: FlagLifecycleStatus;
+  /** The response that resolved this flag (no longer triggers) */
+  resolvedByResponseId?: string;
+  resolvedAt?: string;
 }
 
 function getClinicalFlagFromResponse(
   response: unknown,
   activityTitle: string,
+  activitySlug: string,
   patientActivityId: string,
 ): ClinicalFlagInfo | null {
   if (!response || typeof response !== "object") return null;
@@ -140,6 +159,8 @@ function getClinicalFlagFromResponse(
     severity?: string | null;
     submitted_at?: string | null;
     submitted_via?: string | null;
+    acknowledged_at?: string | null;
+    acknowledged_by?: string | null;
     scoring_metadata?: { clinical_flag?: { flag?: string; item_id?: string | null } | null } | null;
   };
   const flag = row.scoring_metadata?.clinical_flag;
@@ -150,15 +171,128 @@ function getClinicalFlagFromResponse(
     responseId: row.id,
     patientActivityId,
     activityTitle,
+    activitySlug,
     submittedAt: row.submitted_at ?? null,
     submittedVia: row.submitted_via ?? null,
     score: row.score ?? null,
     severity: row.severity ?? null,
+    acknowledgedAt: row.acknowledged_at ?? null,
+    acknowledgedBy: row.acknowledged_by ?? null,
   };
+}
+
+/**
+ * Computes clinical flag lifecycle status by comparing sequential applications
+ * of the same scale (activity slug) for the same patient.
+ *
+ * Logic:
+ * - Group all flags by activity slug
+ * - For each slug, sort by submission date
+ * - If the LATEST application raised a flag → ACTIVE
+ * - If the LATEST did NOT raise but a previous one did → MONITORING (until acknowledged)
+ * - If the therapist acknowledged → ACKNOWLEDGED (hidden from banner, visible in history)
+ * - If a new application raises again after acknowledged → new ACTIVE cycle
+ */
+function computeFlagLifecycle(
+  allActivities: Array<{
+    activity?: { slug?: string; title?: string } | null;
+    response?: unknown;
+    id: string;
+    created_at?: string;
+  }>,
+): ClinicalFlagWithLifecycle[] {
+  // Group activities by slug
+  const bySlug = new Map<string, typeof allActivities>();
+  for (const a of allActivities) {
+    const slug = a.activity?.slug ?? "unknown";
+    const arr = bySlug.get(slug) ?? [];
+    arr.push(a);
+    bySlug.set(slug, arr);
+  }
+
+  const results: ClinicalFlagWithLifecycle[] = [];
+
+  for (const [slug, slugActivities] of bySlug) {
+    // Sort by created_at ascending (oldest first)
+    const sorted = [...slugActivities].sort((a, b) =>
+      (a.created_at ?? "").localeCompare(b.created_at ?? ""),
+    );
+
+    // Extract flags from each application
+    const flagsInOrder: Array<{
+      flag: ClinicalFlagInfo | null;
+      hasFlag: boolean;
+      responseObj: unknown;
+      activityId: string;
+    }> = sorted.map((a) => {
+      const response = Array.isArray(a.response) ? a.response[0] : a.response;
+      const extracted = getClinicalFlagFromResponse(
+        response,
+        a.activity?.title ?? "Atividade",
+        slug,
+        a.id,
+      );
+      return {
+        flag: extracted,
+        hasFlag: !!extracted,
+        responseObj: response,
+        activityId: a.id,
+      };
+    });
+
+    // Find the latest flagged response
+    let latestFlagged: ClinicalFlagInfo | null = null;
+    let latestFlaggedIndex = -1;
+    for (let i = flagsInOrder.length - 1; i >= 0; i--) {
+      if (flagsInOrder[i].hasFlag && flagsInOrder[i].flag) {
+        latestFlagged = flagsInOrder[i].flag;
+        latestFlaggedIndex = i;
+        break;
+      }
+    }
+
+    if (!latestFlagged) continue;
+
+    // Is there a newer application (after the flagged one) that did NOT raise?
+    const latestOverall = flagsInOrder[flagsInOrder.length - 1];
+    const isLatestTheFlagged = latestFlaggedIndex === flagsInOrder.length - 1;
+
+    if (isLatestTheFlagged) {
+      // Latest application raised the flag
+      if (latestFlagged.acknowledgedAt) {
+        results.push({ ...latestFlagged, lifecycleStatus: "acknowledged" });
+      } else {
+        results.push({ ...latestFlagged, lifecycleStatus: "active" });
+      }
+    } else {
+      // There's a newer application that didn't raise → MONITORING or ACKNOWLEDGED
+      const resolverResponse = latestOverall.responseObj as { id?: string; submitted_at?: string } | null;
+      if (latestFlagged.acknowledgedAt) {
+        results.push({
+          ...latestFlagged,
+          lifecycleStatus: "acknowledged",
+          resolvedByResponseId: resolverResponse?.id ?? undefined,
+          resolvedAt: resolverResponse?.submitted_at ?? undefined,
+        });
+      } else {
+        results.push({
+          ...latestFlagged,
+          lifecycleStatus: "monitoring",
+          resolvedByResponseId: resolverResponse?.id ?? undefined,
+          resolvedAt: resolverResponse?.submitted_at ?? undefined,
+        });
+      }
+    }
+  }
+
+  return results;
 }
 
 function formatClinicalFlagLabel(flag: string) {
   if (flag === "suicidal_ideation") return "Ideação suicida";
+  if (flag === "self_harm") return "Autolesão";
+  if (flag === "homicidal_ideation") return "Ideação homicida";
+  if (flag === "substance_abuse") return "Uso de substâncias";
   return flag.replace(/_/g, " ");
 }
 
@@ -292,16 +426,20 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
 
   const activities = listQuery.data?.activities ?? [];
   const activityIds = activities.map((a) => a.id);
-  const clinicalFlags = activities
-    .map((a) => {
-      const response = Array.isArray(a.response) ? a.response[0] : a.response;
-      return getClinicalFlagFromResponse(
-        response,
-        a.activity?.title ?? "Atividade",
-        a.id,
-      );
-    })
-    .filter((flag): flag is ClinicalFlagInfo => Boolean(flag));
+  const clinicalFlagsWithLifecycle = useMemo(
+    () => computeFlagLifecycle(activities as Array<{
+      activity?: { slug?: string; title?: string } | null;
+      response?: unknown;
+      id: string;
+      created_at?: string;
+    }>),
+    [activities],
+  );
+
+  // Only show ACTIVE and MONITORING in the banner (not ACKNOWLEDGED)
+  const visibleFlags = clinicalFlagsWithLifecycle.filter(
+    (f) => f.lifecycleStatus === "active" || f.lifecycleStatus === "monitoring",
+  );
 
   const shareSummaryQuery = useQuery({
     queryKey: ["activity-share-summary", workspaceId, activityIds.join(",")],
@@ -393,10 +531,12 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
         </div>
       </div>
 
-      {clinicalFlags.length > 0 && (
+      {visibleFlags.length > 0 && (
         <ClinicalFlagBanner
-          flags={clinicalFlags}
+          flags={visibleFlags}
           onViewResponse={(responseId) => setViewResponseId(responseId)}
+          patientId={patientId}
+          workspaceId={workspaceId}
         />
       )}
 
@@ -422,6 +562,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const flagInfo = getClinicalFlagFromResponse(
               response,
               a.activity?.title ?? "Atividade",
+              (a.activity as { slug?: string })?.slug ?? "unknown",
               a.id,
             );
             const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
@@ -592,45 +733,149 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
 function ClinicalFlagBanner({
   flags,
   onViewResponse,
+  patientId,
+  workspaceId,
 }: {
-  flags: ClinicalFlagInfo[];
+  flags: ClinicalFlagWithLifecycle[];
   onViewResponse: (responseId: string) => void;
+  patientId: string;
+  workspaceId: string;
 }) {
-  const primary = flags[0];
-  const submittedAt = primary.submittedAt
-    ? new Date(primary.submittedAt).toLocaleString("pt-BR")
-    : "agora";
+  const qc = useQueryClient();
+  const [showGuidance, setShowGuidance] = useState(false);
+
+  const acknowledgeMutation = useMutation({
+    mutationFn: (responseId: string) =>
+      acknowledgeClinicalFlag({ data: { responseId, workspaceId } }),
+    onSuccess: () => {
+      toast.success("Flag reconhecida. Registrado na auditoria.");
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Erro ao reconhecer flag.");
+    },
+  });
+
+  const activeFlags = flags.filter((f) => f.lifecycleStatus === "active");
+  const monitoringFlags = flags.filter((f) => f.lifecycleStatus === "monitoring");
 
   return (
-    <div className="rounded-lg border-2 border-mauve bg-mauve/15 p-4 shadow-sm">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mauve/25 text-foreground">
-            <AlertTriangle className="h-5 w-5 text-mauve" />
+    <div className="space-y-3">
+      {/* ACTIVE flags — Mauve */}
+      {activeFlags.map((flag) => {
+        const submittedAt = flag.submittedAt
+          ? new Date(flag.submittedAt).toLocaleString("pt-BR")
+          : "agora";
+        return (
+          <div key={flag.responseId} className="rounded-lg border-2 border-mauve bg-mauve/15 p-4 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mauve/25 text-foreground">
+                  <AlertTriangle className="h-5 w-5 text-mauve" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      ⚠ Risco ativo · {formatClinicalFlagLabel(flag.flag)}
+                    </p>
+                    <Badge variant="destructive" className="text-xs">ATIVO</Badge>
+                  </div>
+                  <p className="max-w-2xl text-sm text-foreground/80">
+                    {flag.activityTitle} respondida em {submittedAt}. O sinal de risco persiste na aplicação mais recente desta escala.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Score {flag.score ?? "—"}{flag.severity ? ` · ${flag.severity}` : ""}
+                    {flag.item_id ? ` · item ${flag.item_id.replace(/^q/i, "")}` : ""}
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-mauve/70 bg-card hover:bg-mauve/10"
+                onClick={() => onViewResponse(flag.responseId)}
+              >
+                <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
+              </Button>
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">
-              Flag clínica detectada · {formatClinicalFlagLabel(primary.flag)}
-            </p>
-            <p className="max-w-2xl text-sm text-foreground/80">
-              {primary.activityTitle} foi respondida em {submittedAt}. Revise a resposta antes de encerrar a revisão clínica.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Score {primary.score ?? "—"}{primary.severity ? ` · ${primary.severity}` : ""}
-              {primary.item_id ? ` · item ${primary.item_id.replace(/^q/i, "")}` : ""}
-              {flags.length > 1 ? ` · ${flags.length} flags no histórico` : ""}
-            </p>
+        );
+      })}
+
+      {/* MONITORING flags — Amber/Gold */}
+      {monitoringFlags.map((flag) => {
+        const submittedAt = flag.submittedAt
+          ? new Date(flag.submittedAt).toLocaleString("pt-BR")
+          : "—";
+        const resolvedAt = flag.resolvedAt
+          ? new Date(flag.resolvedAt).toLocaleString("pt-BR")
+          : "recentemente";
+        return (
+          <div key={flag.responseId} className="rounded-lg border-2 border-amber-400/60 bg-amber-50/40 dark:bg-amber-900/15 p-4 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-foreground">
+                  <Eye className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      👁 Em monitoramento · {formatClinicalFlagLabel(flag.flag)}
+                    </p>
+                    <Badge variant="outline" className="text-xs border-amber-400 text-amber-700 dark:text-amber-300">MONITORAMENTO</Badge>
+                  </div>
+                  <p className="max-w-2xl text-sm text-foreground/80">
+                    Flag anterior (detectada em {submittedAt}) não foi disparada na aplicação mais recente ({resolvedAt}). Monitoramento recomendado.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Score original {flag.score ?? "—"}{flag.severity ? ` · ${flag.severity}` : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-400/70 bg-card hover:bg-amber-50"
+                  onClick={() => onViewResponse(flag.responseId)}
+                >
+                  <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-sage hover:bg-sage/90 text-white"
+                  disabled={acknowledgeMutation.isPending}
+                  onClick={() => acknowledgeMutation.mutate(flag.responseId)}
+                >
+                  <ShieldCheck className="mr-1 h-3.5 w-3.5" /> Reconhecer
+                </Button>
+              </div>
+            </div>
+
+            {/* Collapsible US legal guidance */}
+            <div className="mt-3 border-t border-amber-200/60 dark:border-amber-800/40 pt-3">
+              <button
+                type="button"
+                className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline"
+                onClick={() => setShowGuidance(!showGuidance)}
+              >
+                {showGuidance ? "▾ Ocultar orientações" : "▸ Orientações clínicas (EUA)"}
+              </button>
+              {showGuidance && (
+                <div className="mt-2 rounded-md bg-amber-50/60 dark:bg-amber-900/20 p-3 text-xs text-foreground/80 space-y-2">
+                  <p><strong>Tarasoff v. Regents (1976):</strong> Duty to warn/protect applies when a patient poses a serious threat of violence to an identifiable third party. Most US states have adopted some version of this duty.</p>
+                  <p><strong>Mandatory reporting:</strong> All 50 states require reporting suspected child abuse/neglect. Many states extend to elder/dependent adult abuse.</p>
+                  <p><strong>Suicide risk:</strong> No federal duty-to-warn for self-harm, but standard of care requires documented safety planning, risk assessment, and appropriate follow-up.</p>
+                  <p><strong>Documentation:</strong> Record the clinical reasoning behind your risk assessment, the interventions applied, and any referrals made. Terapily's audit trail captures flag detection and resolution timestamps automatically.</p>
+                  <p><strong>Consult your licensing board</strong> for jurisdiction-specific obligations.</p>
+                  <p className="italic text-muted-foreground mt-2">This information is for reference only and does not constitute legal advice. Consult a qualified attorney or your licensing board for jurisdiction-specific requirements.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="border-mauve/70 bg-card hover:bg-mauve/10"
-          onClick={() => onViewResponse(primary.responseId)}
-        >
-          <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
-        </Button>
-      </div>
+        );
+      })}
     </div>
   );
 }
@@ -1021,6 +1266,8 @@ const AUDIT_LABEL: Record<string, string> = {
   "compliance_report.generated": "Compliance Report gerado",
   "patient.contact_revealed": "Contato revelado",
   "clinical_flag.raised": "Flag clínica detectada",
+  "clinical_flag.resolved": "Flag clínica resolvida",
+  "clinical_flag.acknowledged": "Flag clínica reconhecida",
 };
 
 function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: string }) {

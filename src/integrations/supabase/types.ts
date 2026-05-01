@@ -100,6 +100,8 @@ export type Database = {
       }
       activity_responses: {
         Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
           activity_id: string
           created_at: string
           id: string
@@ -117,6 +119,8 @@ export type Database = {
           workspace_id: string
         }
         Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
           activity_id: string
           created_at?: string
           id?: string
@@ -134,6 +138,8 @@ export type Database = {
           workspace_id: string
         }
         Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
           activity_id?: string
           created_at?: string
           id?: string

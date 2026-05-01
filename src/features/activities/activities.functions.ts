@@ -321,7 +321,7 @@ export const listPatientActivities = createServerFn({ method: "GET" })
         applied_at,
         created_at,
         activity:activity_catalog!inner ( id, slug, title, archetype ),
-        response:activity_responses!patient_activities_response_fk ( id, score, severity, scoring_metadata, submitted_via, submitted_at )
+        response:activity_responses!patient_activities_response_fk ( id, score, severity, scoring_metadata, submitted_via, submitted_at, acknowledged_at, acknowledged_by )
       `,
       )
       .eq("patient_id", data.patientId)
@@ -450,6 +450,8 @@ const ACTIVITY_AUDIT_ACTIONS = [
   "compliance_report.generated",
   "patient.contact_revealed",
   "clinical_flag.raised",
+  "clinical_flag.resolved",
+  "clinical_flag.acknowledged",
 ] as const;
 
 export const listPatientAuditLogs = createServerFn({ method: "GET" })
@@ -1026,4 +1028,76 @@ export const getActivityConfig = createServerFn({ method: "GET" })
         config: activity.config,
       },
     };
+  });
+
+// ============================================================
+// acknowledgeClinicalFlag — terapeuta reconhece flag clínica.
+// Marca acknowledged_at/acknowledged_by no activity_response.
+// Audit: clinical_flag.acknowledged
+// ============================================================
+const AcknowledgeFlagSchema = z.object({
+  responseId: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+});
+
+export const acknowledgeClinicalFlag = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => AcknowledgeFlagSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    // Verifica que a response existe e pertence ao workspace
+    const { data: resp, error } = await supabaseAdmin
+      .from("activity_responses")
+      .select("id, workspace_id, patient_id, activity_id, scoring_metadata, acknowledged_at")
+      .eq("id", data.responseId)
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+
+    if (error || !resp) throw new Error("Resposta não encontrada.");
+    if (resp.acknowledged_at) throw new Error("Flag já foi reconhecida.");
+
+    // Permissão: workspace member
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", resp.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!membership) throw new Error("Sem permissão.");
+
+    const isOwner = membership.role === "owner";
+    if (!isOwner) {
+      const { data: patient } = await supabaseAdmin
+        .from("patients")
+        .select("assigned_therapist_id")
+        .eq("id", resp.patient_id)
+        .eq("workspace_id", resp.workspace_id)
+        .maybeSingle();
+      if (patient?.assigned_therapist_id !== userId) {
+        throw new Error("Sem permissão para reconhecer esta flag.");
+      }
+    }
+
+    const now = new Date().toISOString();
+    await supabaseAdmin
+      .from("activity_responses")
+      .update({ acknowledged_at: now, acknowledged_by: userId })
+      .eq("id", resp.id);
+
+    await recordAudit({
+      actorId: userId,
+      workspaceId: resp.workspace_id,
+      action: "clinical_flag.acknowledged",
+      resourceType: "activity_response",
+      resourceId: resp.id,
+      metadata: {
+        patient_id: resp.patient_id,
+        activity_id: resp.activity_id,
+      },
+    });
+
+    return { acknowledged: true };
   });
