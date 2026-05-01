@@ -12,16 +12,6 @@
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { resolvePublicToken, submitActivityResponse } from "@/features/activities/public-activities.functions";
 import {
   saveActivityDraft,
@@ -33,6 +23,15 @@ import {
   getCompletionStats,
   type QuizConfig,
 } from "@/features/activities/components/ActivityPlayer";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/p/$token")({
   head: () => ({
@@ -119,6 +118,7 @@ function ActivityRunner({
   const config = resolved.activity.config as QuizConfig;
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [started, setStarted] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, number>;
     completionPercent: number;
@@ -147,11 +147,13 @@ function ActivityRunner({
   const acceptDraft = useCallback(() => {
     if (draftPrompt) setResponses(draftPrompt.draft);
     setDraftPrompt(null);
+    setStarted(true);
   }, [draftPrompt]);
 
   const restartDraft = useCallback(async () => {
     setDraftPrompt(null);
     setResponses({});
+    setStarted(true);
     try {
       await discardActivityDraft({ data: { token } });
     } catch {
@@ -177,7 +179,7 @@ function ActivityRunner({
   const { total, answered, completion, allAnswered } = getCompletionStats(config, responses);
 
   useEffect(() => {
-    if (submitted || draftPrompt) return;
+    if (submitted || draftPrompt || !started) return;
     if (Object.keys(responses).length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -186,7 +188,7 @@ function ActivityRunner({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [responses, completion, saveMutation, submitted, draftPrompt]);
+  }, [responses, completion, saveMutation, submitted, draftPrompt, started]);
 
   // 3. Submit
   const submitMutation = useMutation({
@@ -197,92 +199,105 @@ function ActivityRunner({
 
   const expires = resolved.expiresAt ? formatExpires(resolved.expiresAt) : null;
 
+  // Thank you screen
   if (submitted) {
     return (
-      <CenterShell>
-        <h1 className="font-display text-3xl text-foreground">Recebido. Obrigado por completar.</h1>
-        <p className="mt-3 text-muted-foreground">
-          Se precisar, fale com sua terapeuta. Você pode fechar esta página.
-        </p>
-      </CenterShell>
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-[var(--sage)]/15 flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--sage)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h1 className="font-display text-3xl text-foreground">Recebido. Obrigado.</h1>
+          <p className="text-muted-foreground">
+            Se precisar, fale com sua terapeuta. Você pode fechar esta página.
+          </p>
+        </div>
+      </div>
     );
   }
 
-  return (
-    <div className="min-h-screen bg-background py-10 px-4">
-      <div className="mx-auto max-w-2xl space-y-6">
-        {/* Header */}
-        <header className="space-y-2">
-          <p className="eyebrow text-muted-foreground">Atividade</p>
-          <h1 className="font-display text-3xl text-foreground">
+  // Welcome / intro screen before starting
+  if (!started && !draftPrompt) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-lg text-center space-y-6">
+          <p className="text-xs font-medium tracking-widest uppercase text-[var(--sage)]">
+            Atividade
+          </p>
+          <h1 className="font-display text-3xl md:text-4xl text-foreground leading-tight">
             {resolved.activity.title}
           </h1>
           {config?.introduction && (
-            <p className="text-sm text-muted-foreground">{config.introduction}</p>
+            <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-md mx-auto">
+              {config.introduction}
+            </p>
           )}
-        </header>
 
-        {/* Autosave banner */}
-        <div className="rounded-md border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
-          Você pode começar agora e terminar depois. Seu progresso será salvo com segurança.
+          {expires && (
+            <p
+              className={`text-xs ${
+                expires.urgent ? "text-destructive" : "text-muted-foreground"
+              }`}
+            >
+              {expires.label}
+            </p>
+          )}
+
+          <div className="pt-2">
+            <button
+              onClick={() => setStarted(true)}
+              className="px-8 py-3 rounded-xl bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-all shadow-sm hover:shadow-md"
+            >
+              Começar
+            </button>
+          </div>
+
+          <p className="text-xs text-muted-foreground">
+            Suas respostas são criptografadas e enviadas apenas à sua terapeuta.
+          </p>
         </div>
+      </div>
+    );
+  }
 
-        {/* Expiration banner */}
-        {expires && (
-          <div
-            className={`rounded-md border px-4 py-3 text-sm ${
-              expires.urgent
-                ? "border-destructive/40 bg-destructive/5 text-destructive"
-                : "border-border bg-muted/40 text-muted-foreground"
-            }`}
-          >
-            {expires.label}
-          </div>
-        )}
+  // Player
+  return (
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Minimal top bar */}
+      <header className="flex items-center justify-between px-6 py-3 border-b border-border/40">
+        <span className="font-display text-sm text-foreground truncate">
+          {resolved.activity.title}
+        </span>
+        <span className="text-xs text-muted-foreground">
+          {saveMutation.isPending
+            ? "Salvando…"
+            : savedAt
+              ? "Progresso salvo."
+              : ""}
+        </span>
+      </header>
 
-        {/* Progress */}
-        {total > 0 && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>{answered} de {total} respondidas</span>
-              <span aria-live="polite">
-                {saveMutation.isPending
-                  ? "Salvando…"
-                  : savedAt
-                    ? "Progresso salvo."
-                    : ""}
-              </span>
-            </div>
-            <Progress value={completion} />
-          </div>
-        )}
-
-        {/* Questions */}
+      {/* Player fills remaining space */}
+      <div className="flex-1 flex flex-col">
         <ActivityPlayer
           config={config}
           responses={responses}
           onResponse={(qId, val) =>
             setResponses((prev) => ({ ...prev, [qId]: val }))
           }
+          onSubmit={() => submitMutation.mutate()}
+          submitting={submitMutation.isPending}
+          submitLabel="Enviar respostas"
         />
-
-        {/* Submit */}
-        <div className="flex flex-col gap-3 pt-2">
-          <Button
-            size="lg"
-            disabled={!allAnswered || submitMutation.isPending}
-            onClick={() => submitMutation.mutate()}
-          >
-            {submitMutation.isPending ? "Enviando…" : "Enviar respostas"}
-          </Button>
-          {submitMutation.isError && (
-            <p className="text-sm text-destructive text-center">{NEUTRAL_MESSAGE}</p>
-          )}
-          <p className="text-xs text-muted-foreground text-center">
-            Suas respostas são criptografadas e enviadas apenas à sua terapeuta.
-          </p>
-        </div>
       </div>
+
+      {submitMutation.isError && (
+        <div className="px-6 py-3 text-center">
+          <p className="text-sm text-destructive">{NEUTRAL_MESSAGE}</p>
+        </div>
+      )}
 
       {/* Resume draft modal */}
       <Dialog open={!!draftPrompt} onOpenChange={(open) => !open && setDraftPrompt(null)}>
