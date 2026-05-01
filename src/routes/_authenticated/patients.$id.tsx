@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -115,6 +115,52 @@ const STATUS_VARIANT: Record<
   expired: "outline",
   revoked: "destructive",
 };
+
+interface ClinicalFlagInfo {
+  flag: string;
+  item_id: string | null;
+  responseId: string;
+  patientActivityId: string;
+  activityTitle: string;
+  submittedAt: string | null;
+  submittedVia: string | null;
+  score: number | null;
+  severity: string | null;
+}
+
+function getClinicalFlagFromResponse(
+  response: unknown,
+  activityTitle: string,
+  patientActivityId: string,
+): ClinicalFlagInfo | null {
+  if (!response || typeof response !== "object") return null;
+  const row = response as {
+    id?: string;
+    score?: number | null;
+    severity?: string | null;
+    submitted_at?: string | null;
+    submitted_via?: string | null;
+    scoring_metadata?: { clinical_flag?: { flag?: string; item_id?: string | null } | null } | null;
+  };
+  const flag = row.scoring_metadata?.clinical_flag;
+  if (!row.id || !flag?.flag) return null;
+  return {
+    flag: flag.flag,
+    item_id: flag.item_id ?? null,
+    responseId: row.id,
+    patientActivityId,
+    activityTitle,
+    submittedAt: row.submitted_at ?? null,
+    submittedVia: row.submitted_via ?? null,
+    score: row.score ?? null,
+    severity: row.severity ?? null,
+  };
+}
+
+function formatClinicalFlagLabel(flag: string) {
+  if (flag === "suicidal_ideation") return "Ideação suicida";
+  return flag.replace(/_/g, " ");
+}
 
 function PatientDetailPage() {
   const { id } = useParams({ from: "/_authenticated/patients/$id" });
@@ -246,6 +292,16 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
 
   const activities = listQuery.data?.activities ?? [];
   const activityIds = activities.map((a) => a.id);
+  const clinicalFlags = activities
+    .map((a) => {
+      const response = Array.isArray(a.response) ? a.response[0] : a.response;
+      return getClinicalFlagFromResponse(
+        response,
+        a.activity?.title ?? "Atividade",
+        a.id,
+      );
+    })
+    .filter((flag): flag is ClinicalFlagInfo => Boolean(flag));
 
   const shareSummaryQuery = useQuery({
     queryKey: ["activity-share-summary", workspaceId, activityIds.join(",")],
@@ -337,6 +393,13 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
         </div>
       </div>
 
+      {clinicalFlags.length > 0 && (
+        <ClinicalFlagBanner
+          flags={clinicalFlags}
+          onViewResponse={(responseId) => setViewResponseId(responseId)}
+        />
+      )}
+
       {listQuery.isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : activities.length === 0 ? (
@@ -356,6 +419,11 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const canRegenLink =
               status === "pending" || status === "expired";
             const response = Array.isArray(a.response) ? a.response[0] : a.response;
+            const flagInfo = getClinicalFlagFromResponse(
+              response,
+              a.activity?.title ?? "Atividade",
+              a.id,
+            );
             const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
             const draftPct = a.draft_completion_percent ?? 0;
             const displayStatus: ActivityStatus = hasDraft ? "in_progress" : status;
@@ -380,6 +448,17 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                             <span className="text-muted-foreground"> · {response.severity}</span>
                           )}
                         </span>
+                      )}
+                      {flagInfo && (
+                        <button
+                          type="button"
+                          onClick={() => setViewResponseId(flagInfo.responseId)}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-mauve/60 bg-mauve/15 px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-mauve/25"
+                          aria-label="Abrir resposta com flag clínica"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 text-mauve" />
+                          {formatClinicalFlagLabel(flagInfo.flag)}
+                        </button>
                       )}
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
@@ -506,6 +585,52 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
         workspaceId={workspaceId}
         onClose={() => setViewResponseId(null)}
       />
+    </div>
+  );
+}
+
+function ClinicalFlagBanner({
+  flags,
+  onViewResponse,
+}: {
+  flags: ClinicalFlagInfo[];
+  onViewResponse: (responseId: string) => void;
+}) {
+  const primary = flags[0];
+  const submittedAt = primary.submittedAt
+    ? new Date(primary.submittedAt).toLocaleString("pt-BR")
+    : "agora";
+
+  return (
+    <div className="rounded-lg border-2 border-mauve bg-mauve/15 p-4 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mauve/25 text-foreground">
+            <AlertTriangle className="h-5 w-5 text-mauve" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">
+              Flag clínica detectada · {formatClinicalFlagLabel(primary.flag)}
+            </p>
+            <p className="max-w-2xl text-sm text-foreground/80">
+              {primary.activityTitle} foi respondida em {submittedAt}. Revise a resposta antes de encerrar a revisão clínica.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Score {primary.score ?? "—"}{primary.severity ? ` · ${primary.severity}` : ""}
+              {primary.item_id ? ` · item ${primary.item_id.replace(/^q/i, "")}` : ""}
+              {flags.length > 1 ? ` · ${flags.length} flags no histórico` : ""}
+            </p>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="border-mauve/70 bg-card hover:bg-mauve/10"
+          onClick={() => onViewResponse(primary.responseId)}
+        >
+          <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
+        </Button>
+      </div>
     </div>
   );
 }

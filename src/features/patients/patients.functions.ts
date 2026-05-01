@@ -17,6 +17,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import type { Database } from "@/integrations/supabase/types";
 import { withAudit, recordAudit, parseOrAuditValidation } from "@/features/audit/audit.server";
 import { getWorkspacePlan } from "@/features/billing/plan.server";
@@ -96,6 +97,43 @@ async function rowToDTO(row: PatientRow): Promise<PatientDTO> {
   };
 }
 
+async function attachClinicalFlags(patients: PatientDTO[]): Promise<PatientDTO[]> {
+  if (patients.length === 0) return patients;
+  const patientIds = patients.map((p) => p.id);
+  const { data, error } = await supabaseAdmin
+    .from("activity_responses")
+    .select("patient_id, scoring_metadata, submitted_at")
+    .in("patient_id", patientIds)
+    .not("scoring_metadata->clinical_flag", "is", null)
+    .order("submitted_at", { ascending: false })
+    .limit(1000);
+
+  if (error) {
+    logServerError("patients.attachClinicalFlags", error);
+    return patients;
+  }
+
+  const byPatient = new Map<string, { total: number; latest_flag: string | null; latest_at: string | null }>();
+  for (const row of data ?? []) {
+    const existing = byPatient.get(row.patient_id) ?? {
+      total: 0,
+      latest_flag: null,
+      latest_at: null,
+    };
+    const flag = (row.scoring_metadata as { clinical_flag?: { flag?: string } } | null)?.clinical_flag?.flag ?? null;
+    byPatient.set(row.patient_id, {
+      total: existing.total + 1,
+      latest_flag: existing.latest_flag ?? flag,
+      latest_at: existing.latest_at ?? row.submitted_at,
+    });
+  }
+
+  return patients.map((patient) => ({
+    ...patient,
+    clinical_flags: byPatient.get(patient.id) ?? { total: 0, latest_flag: null, latest_at: null },
+  }));
+}
+
 async function encryptOrNull(v: string | null | undefined) {
   if (v == null || v === "") return null;
   return encryptPHIServer(v);
@@ -148,7 +186,7 @@ export const listPatients = createServerFn({ method: "POST" })
     }
 
     const patients = await Promise.all((rows ?? []).map((r) => rowToDTO(r as PatientRow)));
-    return { patients };
+    return { patients: await attachClinicalFlags(patients) };
   });
 
 // =============================================================================

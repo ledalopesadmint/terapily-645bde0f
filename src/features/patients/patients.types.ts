@@ -25,6 +25,11 @@ export interface PatientDTO {
   full_name: string | null;
   email: string | null;
   phone: string | null;
+  clinical_flags?: {
+    total: number;
+    latest_flag: string | null;
+    latest_at: string | null;
+  };
 }
 
 export type PatientStatusFilter = "active" | "archived";

@@ -4,7 +4,7 @@
  */
 
 import { useQuery } from "@tanstack/react-query";
-import { Eye, X } from "lucide-react";
+import { AlertTriangle, Eye } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,10 @@ export function ResponseDetailDrawer({
   const questions: QuizQuestion[] = Array.isArray(config?.questions)
     ? config.questions
     : [];
+  const clinicalFlag =
+    detail?.scoringMetadata && typeof detail.scoringMetadata === "object"
+      ? (detail.scoringMetadata as { clinical_flag?: { flag?: string; item_id?: string | null } | null }).clinical_flag
+      : null;
 
   return (
     <Sheet open={!!responseId} onOpenChange={(o) => !o && onClose()}>
@@ -86,6 +90,22 @@ export function ResponseDetailDrawer({
                 </Badge>
               )}
             </div>
+
+            {clinicalFlag?.flag && (
+              <div className="rounded-md border-2 border-mauve bg-mauve/15 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-mauve" />
+                  <div className="space-y-1">
+                    <p className="text-sm font-semibold text-foreground">
+                      Flag clínica detectada · {clinicalFlag.flag.replace(/_/g, " ")}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Item {clinicalFlag.item_id?.replace(/^q/i, "") ?? "—"}. Evento registrado na auditoria.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="text-xs text-muted-foreground space-y-1">
               <p>

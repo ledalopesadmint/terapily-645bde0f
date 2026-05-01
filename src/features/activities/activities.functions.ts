@@ -321,7 +321,7 @@ export const listPatientActivities = createServerFn({ method: "GET" })
         applied_at,
         created_at,
         activity:activity_catalog!inner ( id, slug, title, archetype ),
-        response:activity_responses!patient_activities_response_fk ( id, score, severity, submitted_at )
+        response:activity_responses!patient_activities_response_fk ( id, score, severity, scoring_metadata, submitted_via, submitted_at )
       `,
       )
       .eq("patient_id", data.patientId)
@@ -472,16 +472,28 @@ export const listPatientAuditLogs = createServerFn({ method: "GET" })
     }
     const paIds = (pas ?? []).map((p) => p.id);
 
-    // Sem nenhuma atividade, retornamos vazio sem consultar audit_logs.
-    if (paIds.length === 0) {
-      return { logs: [] as AuditLogRow[] };
+    const responseIds: string[] = [];
+    if (paIds.length > 0) {
+      const { data: responses, error: responseErr } = await supabase
+        .from("activity_responses")
+        .select("id")
+        .eq("patient_id", data.patientId)
+        .eq("workspace_id", data.workspaceId);
+
+      if (responseErr) {
+        console.error("[listPatientAuditLogs] response lookup failed", { code: responseErr.code });
+        throw new Error("Não foi possível carregar a auditoria.");
+      }
+      responseIds.push(...(responses ?? []).map((r) => r.id));
     }
+
+    const resourceIds = Array.from(new Set([...paIds, ...responseIds, data.patientId]));
 
     const { data: logs, error: logsErr } = await supabase
       .from("audit_logs")
       .select("id, action, resource_type, resource_id, metadata, created_at, actor_id")
       .in("action", ACTIVITY_AUDIT_ACTIONS as unknown as string[])
-      .in("resource_id", paIds)
+      .in("resource_id", resourceIds)
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false })
       .limit(data.limit);

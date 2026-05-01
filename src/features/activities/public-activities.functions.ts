@@ -20,6 +20,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { encryptPHIServer } from "@/lib/crypto/encryption.server";
 import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
+import { recordAudit } from "@/features/audit/audit.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
 import {
   getPatientActivityByTokenHash,
@@ -47,6 +48,28 @@ class PublicLinkError extends Error {
 /** Não loga o token nem PHI; só categoria do problema. */
 function logLinkFailure(reason: string) {
   console.warn("[public-link] denied", { reason });
+}
+
+/** Clinical flag detector PHI-safe: only numeric item values + config enums. */
+function detectClinicalFlag(
+  config: unknown,
+  responses: Record<string, unknown>,
+): { raised: boolean; flag: string | null; item_id: string | null } {
+  const items = Array.isArray((config as { items?: unknown[] })?.items)
+    ? (config as { items: unknown[] }).items
+    : [];
+
+  for (const item of items) {
+    const it = item as { id?: string; clinical_flag?: string; flag_threshold?: number };
+    if (!it.id || !it.clinical_flag) continue;
+    const threshold = typeof it.flag_threshold === "number" ? it.flag_threshold : 1;
+    const value = responses[it.id];
+    if (typeof value === "number" && value >= threshold) {
+      return { raised: true, flag: it.clinical_flag, item_id: it.id };
+    }
+  }
+
+  return { raised: false, flag: null, item_id: null };
 }
 
 // --- resolvePublicToken ----------------------------------------------------
@@ -179,6 +202,10 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       activity.config,
       data.responses as Record<string, unknown>,
     );
+    const flag = detectClinicalFlag(
+      activity.config,
+      data.responses as Record<string, unknown>,
+    );
 
     // 2. Cifra raw responses (PHI potencial — depende da escala)
     const encrypted = await encryptPHIServer(JSON.stringify(data.responses));
@@ -195,7 +222,12 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       raw_responses_encrypted: encrypted,
       score: result.score,
       severity: result.severity,
-      scoring_metadata: result.metadata as never,
+      scoring_metadata: {
+        ...result.metadata,
+        clinical_flag: flag.raised
+          ? { flag: flag.flag, item_id: flag.item_id }
+          : null,
+      } as never,
       submitted_via: submittedVia,
     };
 
@@ -244,6 +276,24 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       // Não falha o submit por causa disso — só registra. Próxima purge job pega.
       console.warn("[submitActivityResponse] draft purge failed", {
         code: draftErr.code,
+      });
+    }
+
+    if (flag.raised) {
+      await recordAudit({
+        actorId: null,
+        workspaceId: pa.workspace_id,
+        action: "clinical_flag.raised",
+        resourceType: "activity_response",
+        resourceId: response.id,
+        metadata: {
+          patient_id: pa.patient_id,
+          patient_activity_id: pa.id,
+          activity_id: pa.activity_id,
+          flag: flag.flag,
+          item_id: flag.item_id,
+          submitted_via: submittedVia,
+        },
       });
     }
 

@@ -6,7 +6,7 @@
  * O acesso a email/telefone é feito via botões de cópia que disparam o
  * server function `revealPatientContact` (auditado).
  */
-import { Plus, Mail, Phone } from "lucide-react";
+import { AlertTriangle, Plus, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -92,6 +92,15 @@ export function PatientList({
                   {p.tags.length > 0 ? p.tags.join(" · ") : "Sem etiquetas"}
                 </p>
               </div>
+              {p.clinical_flags && p.clinical_flags.total > 0 && (
+                <span
+                  className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-mauve/60 bg-mauve/15 px-2 py-1 text-xs font-semibold text-foreground"
+                  aria-label="Paciente com flag clínica"
+                >
+                  <AlertTriangle className="h-3.5 w-3.5 text-mauve" />
+                  Flag
+                </span>
+              )}
             </button>
 
             <TooltipProvider delayDuration={150}>
