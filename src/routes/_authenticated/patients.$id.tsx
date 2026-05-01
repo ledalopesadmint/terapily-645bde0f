@@ -603,89 +603,91 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const share: ShareSummaryRow | undefined = shareSummaries[a.id];
             return (
               <Card key={a.id}>
-                <CardContent className="space-y-3 py-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="space-y-1">
-                      <p className="font-medium text-foreground">
-                        {a.activity?.title ?? "Atividade"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
-                      </p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {response?.score != null && (
-                        <span className="text-sm">
-                          Score <strong>{response.score}</strong>
-                          {response.severity && (
-                            <span className="text-muted-foreground"> · {response.severity}</span>
-                          )}
-                        </span>
-                      )}
-                      {flagInfo && (
-                        <button
-                          type="button"
-                          onClick={() => setViewResponseId(flagInfo.responseId)}
-                          className="inline-flex items-center gap-1.5 rounded-md border-2 border-action-flag bg-action-flag-subtle px-2.5 py-1 text-xs font-bold text-action-flag shadow-sm shadow-action-flag/20 transition hover:bg-action-flag hover:text-action-flag-fg"
-                          aria-label="Abrir resposta com flag clínica"
-                        >
-                          <AlertTriangle className="h-3.5 w-3.5" />
-                          {formatClinicalFlagLabel(flagInfo.flag)}
-                        </button>
-                      )}
-                      <Badge variant={STATUS_VARIANT[displayStatus]}>
-                        {STATUS_LABEL[displayStatus]}
-                        {hasDraft && ` · ${draftPct}%`}
-                      </Badge>
-                      {/* Aplicar agora — in_session pendente */}
-                      {(status === "pending" || status === "in_progress") &&
-                        (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
-                        !a.used_at && (
+                <CardContent className="space-y-2 py-4">
+                  {/* Linha 1: Nome do teste (esquerda) + Flag (direita) */}
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium text-foreground">
+                      {a.activity?.title ?? "Atividade"}
+                    </p>
+                    {flagInfo && (
+                      <button
+                        type="button"
+                        onClick={() => setViewResponseId(flagInfo.responseId)}
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border-2 border-action-flag bg-action-flag-subtle px-2.5 py-1 text-xs font-bold text-action-flag shadow-sm shadow-action-flag/20 transition hover:bg-action-flag hover:text-action-flag-fg"
+                        aria-label="Abrir resposta com flag clínica"
+                      >
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        {formatClinicalFlagLabel(flagInfo.flag)}
+                      </button>
+                    )}
+                  </div>
+                  {/* Linha 2: Data, horário, modo */}
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
+                  </p>
+                  {/* Linha 3: Score · severity + badges + botões */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {response?.score != null && (
+                      <span className="text-sm">
+                        Score <strong>{response.score}</strong>
+                        {response.severity && (
+                          <span className="text-muted-foreground"> · {response.severity}</span>
+                        )}
+                      </span>
+                    )}
+                    <Badge variant={STATUS_VARIANT[displayStatus]}>
+                      {STATUS_LABEL[displayStatus]}
+                      {hasDraft && ` · ${draftPct}%`}
+                    </Badge>
+                    {/* Aplicar agora — in_session pendente */}
+                    {(status === "pending" || status === "in_progress") &&
+                      (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
+                      !a.used_at && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() =>
+                          setInSessionTarget({
+                            patientActivityId: a.id,
+                            activityTitle: a.activity?.title ?? "Atividade",
+                          })
+                        }
+                      >
+                        <Play className="mr-1 h-3.5 w-3.5" /> Aplicar agora
+                      </Button>
+                    )}
+                    {/* Ver respostas — completa */}
+                    {status === "completed" && response?.id && (
+                      <>
                         <Button
                           size="sm"
-                          variant="default"
-                          onClick={() =>
-                            setInSessionTarget({
-                              patientActivityId: a.id,
-                              activityTitle: a.activity?.title ?? "Atividade",
-                            })
-                          }
+                          variant="outline"
+                          onClick={() => setViewResponseId(response.id)}
                         >
-                          <Play className="mr-1 h-3.5 w-3.5" /> Aplicar agora
+                          <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
                         </Button>
-                      )}
-                      {/* Ver respostas — completa */}
-                      {status === "completed" && response?.id && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setViewResponseId(response.id)}
-                          >
-                            <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-action-patient-report bg-action-patient-report text-action-patient-report-fg hover:bg-action-patient-report/85 hover:text-action-patient-report-fg"
-                            disabled={scaleResultBusy === `${response.id}-patient`}
-                            onClick={() => downloadScaleResult(response.id, "patient")}
-                          >
-                            <Download className="mr-1 h-3.5 w-3.5" />
-                            {scaleResultBusy === `${response.id}-patient` ? "Gerando…" : "Relatório Paciente"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg hover:bg-action-therapist-report/85 hover:text-action-therapist-report-fg"
-                            disabled={scaleResultBusy === `${response.id}-therapist`}
-                            onClick={() => downloadScaleResult(response.id, "therapist")}
-                          >
-                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                            {scaleResultBusy === `${response.id}-therapist` ? "Gerando…" : "Relatório Terapeuta"}
-                          </Button>
-                        </>
-                      )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-action-patient-report bg-action-patient-report text-action-patient-report-fg hover:bg-action-patient-report/85 hover:text-action-patient-report-fg"
+                          disabled={scaleResultBusy === `${response.id}-patient`}
+                          onClick={() => downloadScaleResult(response.id, "patient")}
+                        >
+                          <Download className="mr-1 h-3.5 w-3.5" />
+                          {scaleResultBusy === `${response.id}-patient` ? "Gerando…" : "Relatório Paciente"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg hover:bg-action-therapist-report/85 hover:text-action-therapist-report-fg"
+                          disabled={scaleResultBusy === `${response.id}-therapist`}
+                          onClick={() => downloadScaleResult(response.id, "therapist")}
+                        >
+                          <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                          {scaleResultBusy === `${response.id}-therapist` ? "Gerando…" : "Relatório Terapeuta"}
+                        </Button>
+                      </>
+                    )}
                       {canRegenLink && (
                         <Button
                           size="sm"
