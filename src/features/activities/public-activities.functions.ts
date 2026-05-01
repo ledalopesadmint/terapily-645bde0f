@@ -22,6 +22,7 @@ import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
 import { recordAudit } from "@/features/audit/audit.server";
 import { buildScaleResultPDF } from "./scale-result-pdf.server";
+import { detectClinicalFlag } from "@/server/clinical-flag.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
 import {
   getPatientActivityByTokenHash,
@@ -51,8 +52,6 @@ function logLinkFailure(reason: string) {
   console.warn("[public-link] denied", { reason });
 }
 
-// Clinical flag detection — centralizada em src/server/clinical-flag.server.ts
-import { detectClinicalFlag } from "@/server/clinical-flag.server";
 
 // --- resolvePublicToken ----------------------------------------------------
 
