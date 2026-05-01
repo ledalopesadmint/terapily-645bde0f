@@ -643,16 +643,14 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                   <p className="text-xs text-muted-foreground">
                     {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
                   </p>
-                  {/* Linha 2b: Justificativa de revogação (abaixo da data, alinhada à esquerda) */}
-                  {status === "revoked" && a.revocation_reason && (
-                    <p className="text-xs text-muted-foreground italic" title={a.revocation_reason}>
-                      {a.revocation_reason}
-                    </p>
-                  )}
-                  {/* Linha 3: Score/classificação à esquerda + ações alinhadas à direita */}
-                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+                  {/* Linha 3: Justificativa/score à esquerda + ações alinhadas à direita */}
+                  <div className="flex items-center gap-3">
                     <div className="min-w-0 flex-1">
-                      {response?.score != null && (
+                      {status === "revoked" && a.revocation_reason ? (
+                        <p className="truncate text-xs text-muted-foreground italic" title={a.revocation_reason}>
+                          {a.revocation_reason}
+                        </p>
+                      ) : response?.score != null && (
                         <span className="text-sm">
                           Score <strong>{response.score}</strong>
                           {response.severity && (
@@ -661,7 +659,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         </span>
                       )}
                     </div>
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
