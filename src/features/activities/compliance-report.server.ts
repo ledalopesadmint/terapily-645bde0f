@@ -624,13 +624,6 @@ export async function buildComplianceReportPDF(
   // 3. Build PDF
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
-  // jsPDF drawString polyfill (alias for text)
-  if (!(doc as any).drawString) {
-    (doc as any).drawString = function (text: string, x: number, y: number) {
-      this.text(text, x, y);
-    };
-  }
-
   if (variant === "patient") {
     buildPatientPDF(doc, params, patientLabel, rows);
   } else {
