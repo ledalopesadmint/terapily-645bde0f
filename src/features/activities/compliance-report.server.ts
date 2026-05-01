@@ -369,13 +369,17 @@ function buildClinicalPDF(
   }
   const integrityHash = Math.abs(hash).toString(16).padStart(8, "0") + "…";
 
+  // Content must NEVER start above or on the header.
+  // After a page break the first content Y = headerH + CONTENT_GAP.
+  const CONTENT_GAP = 9; // 50% of header height ≈ padding below header
+
   function checkPage(y: number, needed = 10): number {
     if (y + needed > FOOTER_ZONE) {
       drawFooter(doc, currentPage, totalPages, "clinical", integrityHash);
       doc.addPage();
       currentPage++;
       drawWatermark(doc);
-      return drawHeader(doc);
+      return drawHeader(doc) + CONTENT_GAP;
     }
     return y;
   }
