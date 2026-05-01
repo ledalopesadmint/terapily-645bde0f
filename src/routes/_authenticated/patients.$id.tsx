@@ -613,7 +613,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                       <button
                         type="button"
                         onClick={() => setViewResponseId(flagInfo.responseId)}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border-2 border-action-flag bg-action-flag-subtle px-2.5 py-1 text-xs font-bold text-action-flag shadow-sm shadow-action-flag/20 transition hover:bg-action-flag hover:text-action-flag-fg"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border-2 border-action-flag bg-action-flag-subtle px-2.5 py-1 text-xs font-bold text-action-flag shadow-sm shadow-action-flag/20 transition-all duration-150 hover:scale-105 hover:shadow-md hover:shadow-action-flag/30 hover:brightness-110 active:scale-95"
                         aria-label="Abrir resposta com flag clínica"
                       >
                         <AlertTriangle className="h-3.5 w-3.5" />
