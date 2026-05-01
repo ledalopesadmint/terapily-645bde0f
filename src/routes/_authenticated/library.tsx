@@ -47,6 +47,7 @@ import { CategoryRow } from "@/features/library/CategoryRow";
 import { LibraryHero } from "@/features/library/LibraryHero";
 import { CategoryBrowser } from "@/features/library/CategoryBrowser";
 import { RecommendedEmpty } from "@/features/library/RecommendedEmpty";
+import { InSessionQuickAccess } from "@/features/library/InSessionQuickAccess";
 import {
   ACTIVITIES,
   CATEGORIES,
@@ -166,6 +167,13 @@ function LibraryStandardMode() {
 
       <div className="mx-auto max-w-6xl px-4 sm:px-8">
         <LibraryHero activity={featured} onStart={handleStart} />
+      </div>
+
+      <div className="mt-10">
+        <InSessionQuickAccess
+          activities={ACTIVITIES}
+          onStartInSession={(activity) => handleStart(activity, "in_session")}
+        />
       </div>
 
       <div className="mt-14 space-y-12">
