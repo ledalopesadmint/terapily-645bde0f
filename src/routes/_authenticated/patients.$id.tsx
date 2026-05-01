@@ -117,21 +117,39 @@ const STATUS_VARIANT: Record<
   revoked: "destructive",
 };
 
+// ============================================================
+// Clinical Flag Lifecycle Types
+// States: ACTIVE (risk detected) → MONITORING (resolved) → ACKNOWLEDGED
+// ============================================================
+
+type FlagLifecycleStatus = "active" | "monitoring" | "acknowledged";
+
 interface ClinicalFlagInfo {
   flag: string;
   item_id: string | null;
   responseId: string;
   patientActivityId: string;
   activityTitle: string;
+  activitySlug: string;
   submittedAt: string | null;
   submittedVia: string | null;
   score: number | null;
   severity: string | null;
+  acknowledgedAt: string | null;
+  acknowledgedBy: string | null;
+}
+
+interface ClinicalFlagWithLifecycle extends ClinicalFlagInfo {
+  lifecycleStatus: FlagLifecycleStatus;
+  /** The response that resolved this flag (no longer triggers) */
+  resolvedByResponseId?: string;
+  resolvedAt?: string;
 }
 
 function getClinicalFlagFromResponse(
   response: unknown,
   activityTitle: string,
+  activitySlug: string,
   patientActivityId: string,
 ): ClinicalFlagInfo | null {
   if (!response || typeof response !== "object") return null;
@@ -141,6 +159,8 @@ function getClinicalFlagFromResponse(
     severity?: string | null;
     submitted_at?: string | null;
     submitted_via?: string | null;
+    acknowledged_at?: string | null;
+    acknowledged_by?: string | null;
     scoring_metadata?: { clinical_flag?: { flag?: string; item_id?: string | null } | null } | null;
   };
   const flag = row.scoring_metadata?.clinical_flag;
@@ -151,15 +171,128 @@ function getClinicalFlagFromResponse(
     responseId: row.id,
     patientActivityId,
     activityTitle,
+    activitySlug,
     submittedAt: row.submitted_at ?? null,
     submittedVia: row.submitted_via ?? null,
     score: row.score ?? null,
     severity: row.severity ?? null,
+    acknowledgedAt: row.acknowledged_at ?? null,
+    acknowledgedBy: row.acknowledged_by ?? null,
   };
+}
+
+/**
+ * Computes clinical flag lifecycle status by comparing sequential applications
+ * of the same scale (activity slug) for the same patient.
+ *
+ * Logic:
+ * - Group all flags by activity slug
+ * - For each slug, sort by submission date
+ * - If the LATEST application raised a flag → ACTIVE
+ * - If the LATEST did NOT raise but a previous one did → MONITORING (until acknowledged)
+ * - If the therapist acknowledged → ACKNOWLEDGED (hidden from banner, visible in history)
+ * - If a new application raises again after acknowledged → new ACTIVE cycle
+ */
+function computeFlagLifecycle(
+  allActivities: Array<{
+    activity?: { slug?: string; title?: string } | null;
+    response?: unknown;
+    id: string;
+    created_at?: string;
+  }>,
+): ClinicalFlagWithLifecycle[] {
+  // Group activities by slug
+  const bySlug = new Map<string, typeof allActivities>();
+  for (const a of allActivities) {
+    const slug = a.activity?.slug ?? "unknown";
+    const arr = bySlug.get(slug) ?? [];
+    arr.push(a);
+    bySlug.set(slug, arr);
+  }
+
+  const results: ClinicalFlagWithLifecycle[] = [];
+
+  for (const [slug, slugActivities] of bySlug) {
+    // Sort by created_at ascending (oldest first)
+    const sorted = [...slugActivities].sort((a, b) =>
+      (a.created_at ?? "").localeCompare(b.created_at ?? ""),
+    );
+
+    // Extract flags from each application
+    const flagsInOrder: Array<{
+      flag: ClinicalFlagInfo | null;
+      hasFlag: boolean;
+      responseObj: unknown;
+      activityId: string;
+    }> = sorted.map((a) => {
+      const response = Array.isArray(a.response) ? a.response[0] : a.response;
+      const extracted = getClinicalFlagFromResponse(
+        response,
+        a.activity?.title ?? "Atividade",
+        slug,
+        a.id,
+      );
+      return {
+        flag: extracted,
+        hasFlag: !!extracted,
+        responseObj: response,
+        activityId: a.id,
+      };
+    });
+
+    // Find the latest flagged response
+    let latestFlagged: ClinicalFlagInfo | null = null;
+    let latestFlaggedIndex = -1;
+    for (let i = flagsInOrder.length - 1; i >= 0; i--) {
+      if (flagsInOrder[i].hasFlag && flagsInOrder[i].flag) {
+        latestFlagged = flagsInOrder[i].flag;
+        latestFlaggedIndex = i;
+        break;
+      }
+    }
+
+    if (!latestFlagged) continue;
+
+    // Is there a newer application (after the flagged one) that did NOT raise?
+    const latestOverall = flagsInOrder[flagsInOrder.length - 1];
+    const isLatestTheFlagged = latestFlaggedIndex === flagsInOrder.length - 1;
+
+    if (isLatestTheFlagged) {
+      // Latest application raised the flag
+      if (latestFlagged.acknowledgedAt) {
+        results.push({ ...latestFlagged, lifecycleStatus: "acknowledged" });
+      } else {
+        results.push({ ...latestFlagged, lifecycleStatus: "active" });
+      }
+    } else {
+      // There's a newer application that didn't raise → MONITORING or ACKNOWLEDGED
+      const resolverResponse = latestOverall.responseObj as { id?: string; submitted_at?: string } | null;
+      if (latestFlagged.acknowledgedAt) {
+        results.push({
+          ...latestFlagged,
+          lifecycleStatus: "acknowledged",
+          resolvedByResponseId: resolverResponse?.id ?? undefined,
+          resolvedAt: resolverResponse?.submitted_at ?? undefined,
+        });
+      } else {
+        results.push({
+          ...latestFlagged,
+          lifecycleStatus: "monitoring",
+          resolvedByResponseId: resolverResponse?.id ?? undefined,
+          resolvedAt: resolverResponse?.submitted_at ?? undefined,
+        });
+      }
+    }
+  }
+
+  return results;
 }
 
 function formatClinicalFlagLabel(flag: string) {
   if (flag === "suicidal_ideation") return "Ideação suicida";
+  if (flag === "self_harm") return "Autolesão";
+  if (flag === "homicidal_ideation") return "Ideação homicida";
+  if (flag === "substance_abuse") return "Uso de substâncias";
   return flag.replace(/_/g, " ");
 }
 
