@@ -404,7 +404,7 @@ export const revealPatientContact = createServerFn({ method: "POST" })
     await recordAudit({
       actorId: userId,
       workspaceId: (row as { workspace_id: string }).workspace_id,
-      action: "patient.phi_copied",
+      action: "patient.contact_revealed",
       resourceType: "patient",
       resourceId: data.id,
       metadata: { field: data.field },
@@ -417,7 +417,7 @@ export const revealPatientContact = createServerFn({ method: "POST" })
 // getPatientContactAvailability
 // Retorna SOMENTE booleans (hasPhone, hasEmail) — NÃO decifra, NÃO audita.
 // Usado pelo modal "Link gerado" pra desabilitar botões cujo canal não tem
-// destinatário cadastrado, sem gastar audit `patient.phi_copied`.
+// destinatário cadastrado, sem gastar audit `patient.contact_revealed`.
 // =============================================================================
 
 const contactAvailabilitySchema = z.object({

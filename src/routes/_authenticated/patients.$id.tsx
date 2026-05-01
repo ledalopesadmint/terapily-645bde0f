@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Mail, MessageCircle, Plus, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
+import { ArrowLeft, Copy, Download, Mail, MessageCircle, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -69,8 +69,10 @@ import {
   recordShareIntent,
   revokeActivity,
   listAvailableActivities,
+  generateInSessionLink,
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
+import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { Progress } from "@/components/ui/progress";
 
@@ -228,6 +230,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
     patientActivityId: string;
   } | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const [reportBusy, setReportBusy] = useState(false);
 
   const listQuery = useQuery({
     queryKey: ["patient-activities", patientId, workspaceId],
@@ -237,9 +240,6 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
   const activities = listQuery.data?.activities ?? [];
   const activityIds = activities.map((a) => a.id);
 
-  // Mini-resumo de compartilhamento (audit_logs.action='activity.share_intent').
-  // Owner-only por RLS — terapeuta comum recebe {} e a UI simplesmente
-  // não renderiza o resumo.
   const shareSummaryQuery = useQuery({
     queryKey: ["activity-share-summary", workspaceId, activityIds.join(",")],
     queryFn: () =>
@@ -264,15 +264,70 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
     },
   });
 
+  const regenLinkMutation = useMutation({
+    mutationFn: (paId: string) =>
+      generateInSessionLink({ data: { patientActivityId: paId } }),
+    onSuccess: (res, paId) => {
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      setRevealedLink({
+        url: `${origin}${res.linkPath}`,
+        patientActivityId: paId,
+      });
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar link.");
+    },
+  });
+
+  const downloadReport = async () => {
+    setReportBusy(true);
+    try {
+      const now = new Date();
+      const sixMonthsAgo = new Date(now);
+      sixMonthsAgo.setMonth(now.getMonth() - 6);
+      const res = await generateComplianceReport({
+        data: {
+          patientId,
+          workspaceId,
+          from: sixMonthsAgo.toISOString(),
+          to: now.toISOString(),
+        },
+      });
+      // Decode base64 to blob and trigger download
+      const binary = atob(res.pdf);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `compliance-report-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Relatório baixado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar o relatório.");
+    } finally {
+      setReportBusy(false);
+    }
+  };
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm text-muted-foreground">
           Atividades aplicadas em sessão e enviadas por link.
         </p>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-1 h-4 w-4" /> Enviar atividade
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={downloadReport} disabled={reportBusy}>
+            <Download className="mr-1 h-4 w-4" />
+            {reportBusy ? "Gerando…" : "Compliance Report"}
+          </Button>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-1 h-4 w-4" /> Enviar atividade
+          </Button>
+        </div>
       </div>
 
       {listQuery.isLoading ? (
@@ -291,6 +346,8 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const status = a.status as ActivityStatus;
             const canRevoke =
               status !== "completed" && status !== "revoked" && status !== "expired";
+            const canRegenLink =
+              status === "pending" || status === "expired";
             const response = Array.isArray(a.response) ? a.response[0] : a.response;
             const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
             const draftPct = a.draft_completion_percent ?? 0;
@@ -321,6 +378,16 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
+                      {canRegenLink && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={regenLinkMutation.isPending}
+                          onClick={() => regenLinkMutation.mutate(a.id)}
+                        >
+                          <RefreshCw className="mr-1 h-3.5 w-3.5" /> Gerar novo link
+                        </Button>
+                      )}
                       {canRevoke && (
                         <Button
                           size="sm"
@@ -686,8 +753,8 @@ function ShareLinkDialog({
         <DialogHeader>
           <DialogTitle>Link gerado</DialogTitle>
           <DialogDescription>
-            Envie pelo seu canal — o que o paciente realmente abre. O link só
-            será exibido <strong>agora</strong>.
+            Envie pelo seu canal — o que o paciente realmente abre. Este link só
+            será exibido <strong>agora</strong> e não poderá ser recuperado depois.
           </DialogDescription>
         </DialogHeader>
 
@@ -773,6 +840,10 @@ const AUDIT_LABEL: Record<string, string> = {
   "activity.submitted": "Atividade respondida",
   "activity.status_changed": "Status alterado",
   "activity.response_recorded": "Resposta registrada",
+  "activity.revoked": "Atividade revogada",
+  "compliance_report.generated": "Compliance Report gerado",
+  "patient.contact_revealed": "Contato revelado",
+  "clinical_flag.raised": "Flag clínica detectada",
 };
 
 function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: string }) {
