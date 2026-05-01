@@ -1,5 +1,5 @@
 /**
- * Clinical Activity Report — PDF generation (S3 §8, v8).
+ * Clinical Activity Report — PDF generation (S3 §8, v10).
  *
  * SERVER-ONLY. Two variants:
  *   - Patient Activity Summary (no severity, no flags, no audit)
@@ -299,7 +299,22 @@ function buildPatientPDF(
   patientLabel: string,
   rows: ReportRow[],
 ) {
-  const totalPages = 1;
+  let totalPages = 1;
+  let currentPage = 1;
+  const FOOTER_ZONE = PAGE_H - 22;
+  const CONTENT_GAP = 9;
+
+  function patientCheckPage(yPos: number, needed = 10): number {
+    if (yPos + needed > FOOTER_ZONE) {
+      drawFooter(doc, currentPage, totalPages, "patient");
+      doc.addPage();
+      currentPage++;
+      drawWatermark(doc);
+      return drawHeader(doc) + CONTENT_GAP;
+    }
+    return yPos;
+  }
+
   drawWatermark(doc);
   let y = drawHeader(doc) + 10;
 
@@ -346,27 +361,34 @@ function buildPatientPDF(
     doc.text("No completed activities in this period.", M, y);
   } else {
     const pThH = 10;
-    doc.setFillColor(...NAVY);
-    doc.roundedRect(M, y, CW, pThH, 1, 1, "F");
     const cols = [M + 4, M + 32, M + 102, M + 135];
-    doc.setTextColor(...WHITE);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    const thY = y + pThH / 2 + 1.5;
-    doc.text("DATE", cols[0], thY);
-    doc.text("ACTIVITY", cols[1], thY);
-    doc.text("MODE", cols[2], thY);
-    doc.text("SCORE", cols[3], thY);
-    y += pThH + 2;
+    const pHeaders = ["DATE", "ACTIVITY", "MODE", "SCORE"];
+
+    function drawPatientTableHeader(atY: number): number {
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(M, atY, CW, pThH, 1, 1, "F");
+      doc.setTextColor(...WHITE);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      const thY = atY + pThH / 2 + 1.5;
+      for (let h = 0; h < pHeaders.length; h++) {
+        doc.text(pHeaders[h], cols[h], thY);
+      }
+      return atY + pThH + 2;
+    }
+
+    y = drawPatientTableHeader(y);
 
     const P_ROW_H = 10;
     doc.setFont("helvetica", "normal");
     for (let i = 0; i < rows.length; i++) {
-      if (y + P_ROW_H > 260) {
-        drawFooter(doc, 1, totalPages, "patient");
+      if (y + P_ROW_H > FOOTER_ZONE) {
+        drawFooter(doc, currentPage, totalPages, "patient");
         doc.addPage();
+        currentPage++;
         drawWatermark(doc);
-        y = drawHeader(doc) + 6;
+        y = drawHeader(doc) + CONTENT_GAP;
+        y = drawPatientTableHeader(y);
       }
       const row = rows[i];
       if (i % 2 === 0) {
@@ -375,6 +397,7 @@ function buildPatientPDF(
       }
       const pTextY = y + P_ROW_H / 2 + 1;
       doc.setTextColor(...CHARCOAL);
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.text(formatDate(row.submittedAt), cols[0], pTextY);
       const title =
@@ -395,8 +418,11 @@ function buildPatientPDF(
   }
   y += 6;
 
-  doc.setFillColor(255, 248, 225);
+  // Important Notice — check page break first
   const noticeH = 32;
+  y = patientCheckPage(y, noticeH + 10);
+
+  doc.setFillColor(255, 248, 225);
   doc.roundedRect(M, y, CW, noticeH, 2, 2, "F");
   doc.setDrawColor(240, 208, 96);
   doc.setLineWidth(0.4);
@@ -427,7 +453,22 @@ function buildPatientPDF(
     ny += 4;
   }
 
-  drawFooter(doc, 1, totalPages, "patient");
+  drawFooter(doc, currentPage, totalPages, "patient");
+
+  // 2nd-pass: fix total page count on all pages
+  totalPages = currentPage;
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(PAGE_W / 2 - 15, PAGE_H - 16, 30, 6, "F");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...CHARCOAL);
+    const pg = `${p} / ${totalPages}`;
+    const pgW = doc.getTextWidth(pg);
+    doc.text(pg, (PAGE_W - pgW) / 2, PAGE_H - 12);
+  }
 }
 
 // ── Clinical Activity Report ──
@@ -654,41 +695,40 @@ function buildClinicalPDF(
   y += 8;
 
   const thH = 10;
-  doc.setFillColor(...NAVY);
-  doc.roundedRect(M, y, CW, thH, 1, 1, "F");
   const cols = [M + 4, M + 42, M + 90, M + 112, M + 130, M + 158];
-  doc.setTextColor(...WHITE);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
   const headers = ["DATE", "ACTIVITY", "MODE", "SCORE", "SEVERITY", "FLAG"];
-  const thTextY = y + thH / 2 + 1.5;
-  for (let i = 0; i < headers.length; i++) {
-    doc.text(headers[i], cols[i], thTextY);
+
+  function drawActivityTableHeader(atY: number): number {
+    doc.setFillColor(...NAVY);
+    doc.roundedRect(M, atY, CW, thH, 1, 1, "F");
+    doc.setTextColor(...WHITE);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    for (let h = 0; h < headers.length; h++) {
+      doc.text(headers[h], cols[h], atY + thH / 2 + 1.5);
+    }
+    return atY + thH + 2;
   }
-  y += thH + 2;
+
+  y = drawActivityTableHeader(y);
 
   const ROW_H = 12;
   const ROW_ITEM_H = 18;
+  let prevPageForTable = currentPage;
   for (let i = 0; i < rows.length; i++) {
     const rowH = rows[i].items ? ROW_ITEM_H : ROW_H;
     y = checkPage(y, rowH);
 
-    if (y < 18 + CONTENT_GAP + 5 && i > 0) {
-      doc.setFillColor(...NAVY);
-      doc.roundedRect(M, y, CW, thH, 1, 1, "F");
-      doc.setTextColor(...WHITE);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      for (let h = 0; h < headers.length; h++) {
-        doc.text(headers[h], cols[h], y + thH / 2 + 1.5);
-      }
-      y += thH + 2;
+    // Re-draw table header after page break
+    if (currentPage !== prevPageForTable) {
+      y = drawActivityTableHeader(y);
+      prevPageForTable = currentPage;
     }
 
     const row = rows[i];
     if (i % 2 === 0) {
       doc.setFillColor(249, 247, 243);
-      doc.rect(M, y, CW, ROW_H, "F");
+      doc.rect(M, y, CW, rowH, "F");
     }
     const textY = y + ROW_H / 2 + 1;
     doc.setTextColor(...CHARCOAL);
@@ -972,20 +1012,35 @@ function buildClinicalPDF(
     y += 5;
   } else {
     const auditThH = 10;
-    doc.setFillColor(...NAVY);
-    doc.roundedRect(M, y, CW, auditThH, 1, 1, "F");
-    doc.setTextColor(...WHITE);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    const auditThTextY = y + auditThH / 2 + 1.5;
-    doc.text("TIMESTAMP", M + 4, auditThTextY);
-    doc.text("ACTION", M + 55, auditThTextY);
-    doc.text("ACTOR", M + 120, auditThTextY);
-    y += auditThH + 2;
+    const auditCols = [M + 4, M + 55, M + 120];
+    const auditHeaders = ["TIMESTAMP", "ACTION", "ACTOR"];
+
+    function drawAuditTableHeader(atY: number): number {
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(M, atY, CW, auditThH, 1, 1, "F");
+      doc.setTextColor(...WHITE);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      const thY = atY + auditThH / 2 + 1.5;
+      for (let h = 0; h < auditHeaders.length; h++) {
+        doc.text(auditHeaders[h], auditCols[h], thY);
+      }
+      return atY + auditThH + 2;
+    }
+
+    y = drawAuditTableHeader(y);
 
     const AUDIT_ROW_H = 10;
+    let prevPageForAudit = currentPage;
     for (let i = 0; i < auditEntries.length; i++) {
       y = checkPage(y, AUDIT_ROW_H);
+
+      // Re-draw table header after page break
+      if (currentPage !== prevPageForAudit) {
+        y = drawAuditTableHeader(y);
+        prevPageForAudit = currentPage;
+      }
+
       const entry = auditEntries[i];
       if (i % 2 === 0) {
         doc.setFillColor(249, 247, 243);
@@ -994,12 +1049,11 @@ function buildClinicalPDF(
       const auditTextY = y + AUDIT_ROW_H / 2 + 1;
       doc.setTextColor(...CHARCOAL);
       doc.setFont("helvetica", "normal");
-      // Full datetime in audit trail
       doc.setFontSize(7);
-      doc.text(formatFullDateTime(entry.timestamp), M + 4, auditTextY);
+      doc.text(formatFullDateTime(entry.timestamp), auditCols[0], auditTextY);
       doc.setFontSize(8);
-      doc.text(entry.action.slice(0, 35), M + 55, auditTextY);
-      doc.text(entry.actorLabel.slice(0, 25), M + 120, auditTextY);
+      doc.text(entry.action.slice(0, 35), auditCols[1], auditTextY);
+      doc.text(entry.actorLabel.slice(0, 25), auditCols[2], auditTextY);
       y += AUDIT_ROW_H;
     }
 
