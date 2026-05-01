@@ -103,88 +103,109 @@ export function InSessionPlayerDialog({
     );
   }
 
-  // ── Determine main content (underneath vinheta/overlay) ──
-  let mainContent: React.ReactNode;
-
-  if (configQuery.isLoading) {
-    mainContent = (
-      <FullscreenShell title={activityTitle} onClose={onClose}>
-        <div className="flex-1 flex items-center justify-center">
-          <p className="text-muted-foreground">Carregando atividade…</p>
-        </div>
-      </FullscreenShell>
-    );
-  } else if (submitted) {
-    const result = submitMutation.data;
-    mainContent = (
-      <FullscreenShell title={activityTitle} onClose={onClose}>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
-          <div className="w-16 h-16 rounded-full bg-[var(--sage)]/15 flex items-center justify-center">
-            <svg className="w-8 h-8 text-[var(--sage)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h2 className="font-display text-2xl text-foreground">Atividade registrada</h2>
-          {result?.score != null && (
-            <p className="text-lg text-foreground">
-              Score: <strong>{result.score}</strong>
-              {result.severity && result.severity !== "not_applicable" && (
-                <span className="text-muted-foreground"> · {result.severity}</span>
-              )}
-            </p>
-          )}
-          <button
-            onClick={onClose}
-            className="mt-4 px-6 py-2.5 rounded-lg bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-colors"
-          >
-            Fechar
-          </button>
-        </div>
-      </FullscreenShell>
-    );
-  } else if (vinhetaDone && !introStarted) {
-    mainContent = (
-      <ScaleIntro
-        title={activityTitle}
-        config={config}
-        onStart={() => setIntroStarted(true)}
-      />
-    );
-  } else {
-    mainContent = (
-      <FullscreenShell title={activityTitle} onClose={onClose} subtitle="Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.">
-        <ActivityPlayer
-          config={config}
-          responses={responses}
-          onResponse={(qId, val) =>
-            setResponses((prev) => ({ ...prev, [qId]: val }))
-          }
-          onSubmit={() => submitMutation.mutate()}
-          submitting={submitMutation.isPending}
-          submitLabel="Registrar respostas"
-        />
-      </FullscreenShell>
-    );
-  }
+  // ── All phases render INSIDE a single persistent fullscreen container ──
+  // This prevents any flash of the underlying page between phase transitions.
 
   return (
-    <>
-      {mainContent}
-
-      {/* Cream overlay — stays visible during vinheta, fades out smoothly after */}
-      {overlayVisible && (
-        <div
-          className="fixed inset-0 z-[55] bg-[var(--cream)] pointer-events-none"
-          style={{
-            transition: "opacity 500ms ease-out",
-            opacity: vinhetaDone ? 0 : 1,
-          }}
-        />
+    <div className="fixed inset-0 z-50 bg-[var(--cream)]">
+      {/* Phase: Activity Player (rendered underneath, always mounted when ready) */}
+      {introStarted && !submitted && (
+        <div className="absolute inset-0 bg-background flex flex-col animate-in fade-in duration-300">
+          <header className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+            <div className="min-w-0 flex-1">
+              <h1 className="font-display text-lg text-foreground truncate">{activityTitle}</h1>
+              <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="ml-4 flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5 text-foreground" />
+            </button>
+          </header>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <ActivityPlayer
+              config={config}
+              responses={responses}
+              onResponse={(qId, val) =>
+                setResponses((prev) => ({ ...prev, [qId]: val }))
+              }
+              onSubmit={() => submitMutation.mutate()}
+              submitting={submitMutation.isPending}
+              submitLabel="Registrar respostas"
+            />
+          </div>
+        </div>
       )}
 
-      {/* Vinheta video — on top of everything */}
-      {!vinhetaDone && <VinhetaIntro onComplete={handleVinhetaComplete} />}
-    </>
+      {/* Phase: Submitted */}
+      {submitted && (
+        <div className="absolute inset-0 bg-background flex flex-col animate-in fade-in duration-300">
+          <header className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+            <div className="min-w-0 flex-1">
+              <h1 className="font-display text-lg text-foreground truncate">{activityTitle}</h1>
+            </div>
+            <button
+              onClick={onClose}
+              className="ml-4 flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+              aria-label="Fechar"
+            >
+              <X className="w-5 h-5 text-foreground" />
+            </button>
+          </header>
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-[var(--sage)]/15 flex items-center justify-center">
+              <svg className="w-8 h-8 text-[var(--sage)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="font-display text-2xl text-foreground">Atividade registrada</h2>
+            {submitMutation.data?.score != null && (
+              <p className="text-lg text-foreground">
+                Score: <strong>{submitMutation.data.score}</strong>
+                {submitMutation.data.severity && submitMutation.data.severity !== "not_applicable" && (
+                  <span className="text-muted-foreground"> · {submitMutation.data.severity}</span>
+                )}
+              </p>
+            )}
+            <button
+              onClick={onClose}
+              className="mt-4 px-6 py-2.5 rounded-lg bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-colors"
+            >
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Phase: Loading */}
+      {configQuery.isLoading && (
+        <div className="absolute inset-0 bg-[var(--cream)] flex items-center justify-center">
+          <p className="text-muted-foreground">Carregando atividade…</p>
+        </div>
+      )}
+
+      {/* Phase: Scale Intro (on top of player, cream background) */}
+      {vinhetaDone && !introStarted && !configQuery.isLoading && (
+        <div className="absolute inset-0 bg-[var(--cream)] animate-in fade-in duration-300">
+          <ScaleIntro
+            title={activityTitle}
+            config={config}
+            onStart={() => setIntroStarted(true)}
+          />
+        </div>
+      )}
+
+      {/* Phase: Vinheta (topmost layer, cream background) */}
+      {!vinhetaDone && (
+        <div className="absolute inset-0 bg-[var(--cream)]">
+          <VinhetaIntro onComplete={handleVinhetaComplete} />
+        </div>
+      )}
+    </div>
   );
 }
 
