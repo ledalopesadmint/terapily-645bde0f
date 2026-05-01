@@ -355,6 +355,7 @@ function PatientDetailPage() {
       <PatientTabs
         patientId={patient.id}
         workspaceId={patient.workspace_id}
+        startSession={startSession}
       />
     </div>
   );
