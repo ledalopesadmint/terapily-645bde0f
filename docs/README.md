@@ -20,6 +20,8 @@ agente (`mem://...`).
   projeto: RLS, multi-tenant, PHI, audit, single admin, HIPAA.
 - [`autosave-security.md`](./autosave-security.md) — Regras inegociáveis do
   autosave (`activity_drafts`) tratado como extensão crítica de PHI.
+- [`scale-result-pdf-template.md`](./scale-result-pdf-template.md) — Template
+  TRAVADO (v10) do Scale Result PDF. Padrão mínimo de qualidade inegociável.
 
 ## Regra de ouro
 
