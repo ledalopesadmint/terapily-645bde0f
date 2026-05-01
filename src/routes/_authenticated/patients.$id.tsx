@@ -419,6 +419,11 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const canRegenLink =
               status === "pending" || status === "expired";
             const response = Array.isArray(a.response) ? a.response[0] : a.response;
+            const flagInfo = getClinicalFlagFromResponse(
+              response,
+              a.activity?.title ?? "Atividade",
+              a.id,
+            );
             const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
             const draftPct = a.draft_completion_percent ?? 0;
             const displayStatus: ActivityStatus = hasDraft ? "in_progress" : status;
@@ -443,6 +448,17 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                             <span className="text-muted-foreground"> · {response.severity}</span>
                           )}
                         </span>
+                      )}
+                      {flagInfo && (
+                        <button
+                          type="button"
+                          onClick={() => setViewResponseId(flagInfo.responseId)}
+                          className="inline-flex items-center gap-1.5 rounded-md border border-mauve/60 bg-mauve/15 px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-mauve/25"
+                          aria-label="Abrir resposta com flag clínica"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5 text-mauve" />
+                          {formatClinicalFlagLabel(flagInfo.flag)}
+                        </button>
                       )}
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
