@@ -803,13 +803,42 @@ export async function buildComplianceReportPDF(
     submittedAt: r.submitted_at,
   }));
 
-  // 3. Build PDF
+  // 3. Fetch clinical flags from flagged rows
+  const flags: ClinicalFlagEntry[] = rows
+    .filter((r) => r.flagLabel)
+    .map((r) => ({
+      status: "ACTIVE",
+      date: r.submittedAt,
+      description: `${r.activityTitle}: ${r.flagLabel ?? "Flagged"}`,
+    }));
+
+  // 4. Fetch audit trail
+  let auditEntries: AuditEntry[] = [];
+  if (variant === "clinical") {
+    const { data: auditData } = await supabaseAdmin
+      .from("audit_logs")
+      .select("action, created_at, actor_id")
+      .eq("workspace_id", params.workspaceId)
+      .eq("resource_id", params.patientId)
+      .gte("created_at", params.from)
+      .lte("created_at", params.to)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    auditEntries = (auditData ?? []).map((a) => ({
+      action: a.action,
+      timestamp: a.created_at,
+      actorLabel: a.actor_id ? `User ${String(a.actor_id).slice(0, 8)}…` : "System",
+    }));
+  }
+
+  // 5. Build PDF
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
 
   if (variant === "patient") {
     buildPatientPDF(doc, params, patientLabel, rows);
   } else {
-    buildClinicalPDF(doc, params, patientLabel, rows, hasPHI);
+    buildClinicalPDF(doc, params, patientLabel, rows, hasPHI, flags, auditEntries);
   }
 
   return doc.output("arraybuffer") as unknown as Uint8Array;
