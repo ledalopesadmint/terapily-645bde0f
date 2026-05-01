@@ -8,7 +8,7 @@
  *  - Submit marca used_at (single-use) e cria activity_responses cifrado.
  *  - Audit metadata NUNCA contém PHI (só UUIDs e enums).
  */
-// @ts-nocheck — large file, TS happy at build time
+
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
