@@ -142,6 +142,16 @@ export const assignActivity = createServerFn({ method: "POST" })
     }
 
     // 4. Gera token só se delivery envolve link
+    //
+    // REGRA DE CONSTRAINT (documentar, não alterar):
+    //   - delivery_mode = "in_session" → token_hash PODE ser null (paciente usa
+    //     o dispositivo do terapeuta, sem link externo).
+    //   - delivery_mode = "shared_link" → token_hash OBRIGATÓRIO (acesso via magic link).
+    //   - delivery_mode = "both" → token_hash gerado (terapeuta aplica E prescreve).
+    //   - generateShareLink() (abaixo) pode transformar uma atividade in_session em
+    //     shared_link ao gerar link posteriormente — nesse caso token_hash é preenchido
+    //     e delivery_mode atualizado.
+    //
     let rawToken: string | null = null;
     let tokenHash: string | null = null;
     let tokenExpiresAt: string | null = null;
