@@ -84,7 +84,12 @@ import { InSessionPlayerDialog } from "@/features/activities/components/InSessio
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
 import { Progress } from "@/components/ui/progress";
 
+const patientSearchSchema = z.object({
+  startSession: z.string().uuid().optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/patients/$id")({
+  validateSearch: patientSearchSchema,
   head: () => ({
     meta: [
       { title: "Paciente · Terapily" },
