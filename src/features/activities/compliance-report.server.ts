@@ -1159,10 +1159,29 @@ function buildClinicalPDF(
 
 // ── Main entry point ──
 
+import {
+  validateReportInput,
+  validateGeneratedPDF,
+  COMPLIANCE_RULES as RULES,
+} from "./compliance-report-rules.server";
+
 export async function buildComplianceReportPDF(
   params: ReportParams,
   variant: ReportVariant = "clinical",
 ): Promise<Uint8Array> {
+  // ── PRE-GENERATION VALIDATION (mandatory) ──
+  const preCheck = validateReportInput({
+    patientId: params.patientId,
+    workspaceId: params.workspaceId,
+    from: params.from,
+    to: params.to,
+    therapistName: params.therapistName,
+  });
+  if (!preCheck.valid) {
+    throw new Error(
+      `Compliance Report — input validation failed:\n${preCheck.errors.join("\n")}`,
+    );
+  }
   // 1. Fetch patient name (decrypt)
   const { data: patient } = await supabaseAdmin
     .from("patients")
@@ -1270,5 +1289,18 @@ export async function buildComplianceReportPDF(
     buildClinicalPDF(doc, params, patientLabel, rows, hasPHI, flags, auditEntries);
   }
 
-  return doc.output("arraybuffer") as unknown as Uint8Array;
+  const pdfBuffer = doc.output("arraybuffer");
+
+  // ── POST-GENERATION VALIDATION (mandatory) ──
+  const postCheck = validateGeneratedPDF(pdfBuffer);
+  if (!postCheck.valid) {
+    logServerError("compliance-report.post-validation", new Error(
+      `PDF validation failed: ${postCheck.errors.join("; ")}`,
+    ));
+    throw new Error(
+      `Compliance Report — PDF validation failed:\n${postCheck.errors.join("\n")}`,
+    );
+  }
+
+  return pdfBuffer as unknown as Uint8Array;
 }
