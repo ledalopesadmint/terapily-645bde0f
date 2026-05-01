@@ -68,15 +68,27 @@ export function PatientPickerSheet({
   // Precisamos do ID real da atividade no banco (não o seed id)
   const catalogQuery = useQuery({
     queryKey: ["activity-catalog", workspaceId],
-    queryFn: () => listAvailableActivities(),
+    queryFn: () =>
+      listAvailableActivities(
+        workspaceId ? { data: { workspaceId } } : undefined,
+      ),
     enabled: open && !!activity,
     staleTime: 30_000,
   });
 
-  // Encontrar a atividade real no banco pelo code/slug
+  // Encontrar a atividade real no banco pelo code/slug/uuid
   const findRealActivityId = (): string | null => {
     if (!activity) return null;
     const catalog = catalogQuery.data?.activities ?? [];
+
+    // Se activity.id já é UUID (veio do banco via featured), usa direto
+    const uuidRe = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRe.test(activity.id)) {
+      const exists = catalog.find((a) => a.id === activity.id);
+      if (exists) return exists.id;
+    }
+
+    // Senão, match por code ou slug (atividades do seed)
     for (const a of catalog) {
       const code = ((a as Record<string, unknown>).config as Record<string, unknown> | null)?.code as string | undefined;
       if (code && code.toLowerCase() === activity.code.toLowerCase()) return a.id;
