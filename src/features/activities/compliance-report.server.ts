@@ -745,6 +745,10 @@ function buildClinicalPDF(
     const lines = doc.splitTextToSize(body, CW - 2);
     for (const line of lines) {
       y = checkPage(y, 5);
+      // Re-apply paragraph formatting after page break (header resets font state)
+      doc.setTextColor(...CHARCOAL);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
       doc.text(line, M, y);
       y += 4;
     }
