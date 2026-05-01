@@ -884,7 +884,7 @@ function ClinicalFlagBanner({
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Score {flag.score ?? "—"}{flag.severity ? ` · ${flag.severity}` : ""}
-                    {flag.item_id ? ` · item ${flag.item_id.replace(/^q/i, "")}` : ""}
+                    {flag.item_id ? ` · item ${typeof flag.item_id === "string" ? flag.item_id.replace(/^q/i, "") : flag.item_id}` : ""}
                   </p>
                 </div>
               </div>
