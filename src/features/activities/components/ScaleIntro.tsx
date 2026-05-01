@@ -20,8 +20,8 @@ export function ScaleIntro({ title, config, onStart }: ScaleIntroProps) {
   return (
     <div className="fixed inset-0 z-50 bg-[var(--cream)] flex flex-col animate-in fade-in duration-300">
       {/* Content centered */}
-      <div className="flex-1 flex items-center justify-center px-6">
-        <div className="max-w-md w-full text-center space-y-8">
+      <div className="flex-1 flex items-center justify-center px-[10%] sm:px-[20%]">
+        <div className="w-full text-center space-y-8">
           {/* Icon */}
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--navy)]/8">
             <ClipboardList className="h-8 w-8 text-[var(--navy)]" aria-hidden />
@@ -33,7 +33,7 @@ export function ScaleIntro({ title, config, onStart }: ScaleIntroProps) {
               {title}
             </h1>
             {hasIntroduction && (
-              <div className="text-sm text-[var(--charcoal)]/70 leading-relaxed max-w-sm mx-auto space-y-3 text-left">
+              <div className="text-sm text-[var(--charcoal)]/70 leading-relaxed space-y-3 text-center">
                 {config.introduction!.split("\n\n").map((paragraph, i) => (
                   <p key={i}>{paragraph}</p>
                 ))}
