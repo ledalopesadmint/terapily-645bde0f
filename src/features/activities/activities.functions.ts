@@ -273,6 +273,7 @@ export const revokeActivity = createServerFn({ method: "POST" })
         status: "revoked",
         token_hash: null,
         token_expires_at: null,
+        revocation_reason: data.reason || null,
       })
       .eq("id", pa.id);
 
