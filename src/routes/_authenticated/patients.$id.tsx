@@ -426,16 +426,20 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
 
   const activities = listQuery.data?.activities ?? [];
   const activityIds = activities.map((a) => a.id);
-  const clinicalFlags = activities
-    .map((a) => {
-      const response = Array.isArray(a.response) ? a.response[0] : a.response;
-      return getClinicalFlagFromResponse(
-        response,
-        a.activity?.title ?? "Atividade",
-        a.id,
-      );
-    })
-    .filter((flag): flag is ClinicalFlagInfo => Boolean(flag));
+  const clinicalFlagsWithLifecycle = useMemo(
+    () => computeFlagLifecycle(activities as Array<{
+      activity?: { slug?: string; title?: string } | null;
+      response?: unknown;
+      id: string;
+      created_at?: string;
+    }>),
+    [activities],
+  );
+
+  // Only show ACTIVE and MONITORING in the banner (not ACKNOWLEDGED)
+  const visibleFlags = clinicalFlagsWithLifecycle.filter(
+    (f) => f.lifecycleStatus === "active" || f.lifecycleStatus === "monitoring",
+  );
 
   const shareSummaryQuery = useQuery({
     queryKey: ["activity-share-summary", workspaceId, activityIds.join(",")],
