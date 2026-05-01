@@ -695,18 +695,22 @@ function buildClinicalPDF(
   y += 8;
 
   const thH = 10;
-  doc.setFillColor(...NAVY);
-  doc.roundedRect(M, y, CW, thH, 1, 1, "F");
   const cols = [M + 4, M + 42, M + 90, M + 112, M + 130, M + 158];
-  doc.setTextColor(...WHITE);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(7);
   const headers = ["DATE", "ACTIVITY", "MODE", "SCORE", "SEVERITY", "FLAG"];
-  const thTextY = y + thH / 2 + 1.5;
-  for (let i = 0; i < headers.length; i++) {
-    doc.text(headers[i], cols[i], thTextY);
+
+  function drawActivityTableHeader(atY: number): number {
+    doc.setFillColor(...NAVY);
+    doc.roundedRect(M, atY, CW, thH, 1, 1, "F");
+    doc.setTextColor(...WHITE);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    for (let h = 0; h < headers.length; h++) {
+      doc.text(headers[h], cols[h], atY + thH / 2 + 1.5);
+    }
+    return atY + thH + 2;
   }
-  y += thH + 2;
+
+  y = drawActivityTableHeader(y);
 
   const ROW_H = 12;
   const ROW_ITEM_H = 18;
