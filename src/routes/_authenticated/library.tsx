@@ -101,9 +101,13 @@ function LibraryPage() {
 function LibraryStandardMode() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerActivity, setPickerActivity] = useState<Activity | null>(null);
+
   const handleStart = (activity: Activity, mode: "in_session" | "shared_link") => {
-    toast.info(`${activity.name} — selecione um paciente para ${mode === "in_session" ? "aplicar em sessão" : "enviar por link"}.`);
-    // TODO: navigate to patient picker or open assign modal
+    // Para in_session: abrir gaveta de seleção de paciente
+    setPickerActivity(activity);
+    setPickerOpen(true);
   };
 
   // Curadoria semanal: admin define no /admin via toggle "Destaque".
