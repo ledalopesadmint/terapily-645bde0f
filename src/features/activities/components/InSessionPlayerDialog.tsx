@@ -81,6 +81,17 @@ export function InSessionPlayerDialog({
     return <VinhetaIntro onComplete={handleVinhetaComplete} />;
   }
 
+  // Scale intro page (after vinheta, before questions)
+  if (!introStarted && !configQuery.isLoading && !configQuery.isError) {
+    return (
+      <ScaleIntro
+        title={activityTitle}
+        config={config}
+        onStart={() => setIntroStarted(true)}
+      />
+    );
+  }
+
   // Loading
   if (configQuery.isLoading) {
     return (
