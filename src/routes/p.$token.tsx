@@ -11,11 +11,9 @@
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +28,11 @@ import {
   getActivityDraft,
   discardActivityDraft,
 } from "@/features/activities/activity-drafts.functions";
+import {
+  ActivityPlayer,
+  getCompletionStats,
+  type QuizConfig,
+} from "@/features/activities/components/ActivityPlayer";
 
 export const Route = createFileRoute("/p/$token")({
   head: () => ({
@@ -40,18 +43,6 @@ export const Route = createFileRoute("/p/$token")({
   }),
   component: PublicActivityPage,
 });
-
-interface QuizQuestion {
-  id: string;
-  text: string;
-  options: { value: number; label: string }[];
-}
-
-interface QuizConfig {
-  introduction?: string;
-  questions?: QuizQuestion[];
-  scoring?: { questions?: { id: string }[] };
-}
 
 const NEUTRAL_MESSAGE = "Este link não está disponível. Peça um novo link ao seu terapeuta.";
 
@@ -75,8 +66,6 @@ function PublicActivityPage() {
       try {
         return await resolvePublicToken({ data: { token } });
       } catch {
-        // Falha esperada (link inválido/expirado/usado/revogado).
-        // Mensagem neutra é tratada na UI; não propagamos pra não acionar overlays.
         return null;
       }
     },
@@ -128,11 +117,6 @@ function ActivityRunner({
   resolved: ResolvedActivity;
 }) {
   const config = resolved.activity.config as QuizConfig;
-  const questions = useMemo<QuizQuestion[]>(
-    () => Array.isArray(config?.questions) ? config.questions : [],
-    [config],
-  );
-
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState<{
@@ -140,7 +124,7 @@ function ActivityRunner({
     completionPercent: number;
   } | null>(null);
 
-  // 1. Tenta carregar draft uma vez no mount.
+  // 1. Try to load draft once on mount.
   const loadedRef = useRef(false);
   useEffect(() => {
     if (loadedRef.current) return;
@@ -155,7 +139,7 @@ function ActivityRunner({
           }
         }
       } catch {
-        // mensagem neutra já exibida pelo resolve; aqui silenciamos.
+        // silent
       }
     })();
   }, [token]);
@@ -190,22 +174,21 @@ function ActivityRunner({
     onSuccess: () => setSavedAt(Date.now()),
   });
 
+  const { total, answered, completion, allAnswered } = getCompletionStats(config, responses);
+
   useEffect(() => {
     if (submitted || draftPrompt) return;
     if (Object.keys(responses).length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
-    const total = questions.length || 1;
-    const answered = Object.keys(responses).length;
-    const pct = Math.min(100, Math.round((answered / total) * 100));
     saveTimer.current = setTimeout(() => {
-      saveMutation.mutate({ draft: responses, completionPercent: pct });
+      saveMutation.mutate({ draft: responses, completionPercent: completion });
     }, 2000);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [responses, questions.length, saveMutation, submitted, draftPrompt]);
+  }, [responses, completion, saveMutation, submitted, draftPrompt]);
 
-  // 3. Submit final.
+  // 3. Submit
   const submitMutation = useMutation({
     mutationFn: () =>
       submitActivityResponse({ data: { token, responses } }),
@@ -213,10 +196,6 @@ function ActivityRunner({
   });
 
   const expires = resolved.expiresAt ? formatExpires(resolved.expiresAt) : null;
-  const total = questions.length;
-  const answered = Object.keys(responses).length;
-  const completion = total === 0 ? 0 : Math.round((answered / total) * 100);
-  const allAnswered = total > 0 && answered === total;
 
   if (submitted) {
     return (
@@ -243,12 +222,12 @@ function ActivityRunner({
           )}
         </header>
 
-        {/* Banner de autosave (tranquiliza o paciente) */}
+        {/* Autosave banner */}
         <div className="rounded-md border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
           Você pode começar agora e terminar depois. Seu progresso será salvo com segurança.
         </div>
 
-        {/* Banner de expiração */}
+        {/* Expiration banner */}
         {expires && (
           <div
             className={`rounded-md border px-4 py-3 text-sm ${
@@ -261,7 +240,7 @@ function ActivityRunner({
           </div>
         )}
 
-        {/* Progresso */}
+        {/* Progress */}
         {total > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -270,52 +249,22 @@ function ActivityRunner({
                 {saveMutation.isPending
                   ? "Salvando…"
                   : savedAt
-                  ? "Progresso salvo."
-                  : ""}
+                    ? "Progresso salvo."
+                    : ""}
               </span>
             </div>
             <Progress value={completion} />
           </div>
         )}
 
-        {/* Perguntas */}
-        {total === 0 ? (
-          <div className="rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">
-            Esta atividade ainda não está pronta para resposta automática. Fale com sua terapeuta.
-          </div>
-        ) : (
-          <ol className="space-y-6">
-            {questions.map((q, idx) => (
-              <li key={q.id} className="rounded-lg border border-border bg-card p-5">
-                <Label className="text-base font-medium text-foreground">
-                  {idx + 1}. {q.text}
-                </Label>
-                <RadioGroup
-                  className="mt-4 space-y-2"
-                  value={responses[q.id]?.toString() ?? ""}
-                  onValueChange={(value) =>
-                    setResponses((prev) => ({ ...prev, [q.id]: Number(value) }))
-                  }
-                >
-                  {q.options.map((opt) => (
-                    <div key={opt.value} className="flex items-center gap-3">
-                      <RadioGroupItem
-                        id={`${q.id}-${opt.value}`}
-                        value={opt.value.toString()}
-                      />
-                      <Label
-                        htmlFor={`${q.id}-${opt.value}`}
-                        className="font-normal text-sm text-foreground cursor-pointer"
-                      >
-                        {opt.label}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </li>
-            ))}
-          </ol>
-        )}
+        {/* Questions */}
+        <ActivityPlayer
+          config={config}
+          responses={responses}
+          onResponse={(qId, val) =>
+            setResponses((prev) => ({ ...prev, [qId]: val }))
+          }
+        />
 
         {/* Submit */}
         <div className="flex flex-col gap-3 pt-2">
@@ -335,7 +284,7 @@ function ActivityRunner({
         </div>
       </div>
 
-      {/* Modal de continuar de onde parou */}
+      {/* Resume draft modal */}
       <Dialog open={!!draftPrompt} onOpenChange={(open) => !open && setDraftPrompt(null)}>
         <DialogContent>
           <DialogHeader>
