@@ -1012,20 +1012,35 @@ function buildClinicalPDF(
     y += 5;
   } else {
     const auditThH = 10;
-    doc.setFillColor(...NAVY);
-    doc.roundedRect(M, y, CW, auditThH, 1, 1, "F");
-    doc.setTextColor(...WHITE);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    const auditThTextY = y + auditThH / 2 + 1.5;
-    doc.text("TIMESTAMP", M + 4, auditThTextY);
-    doc.text("ACTION", M + 55, auditThTextY);
-    doc.text("ACTOR", M + 120, auditThTextY);
-    y += auditThH + 2;
+    const auditCols = [M + 4, M + 55, M + 120];
+    const auditHeaders = ["TIMESTAMP", "ACTION", "ACTOR"];
+
+    function drawAuditTableHeader(atY: number): number {
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(M, atY, CW, auditThH, 1, 1, "F");
+      doc.setTextColor(...WHITE);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      const thY = atY + auditThH / 2 + 1.5;
+      for (let h = 0; h < auditHeaders.length; h++) {
+        doc.text(auditHeaders[h], auditCols[h], thY);
+      }
+      return atY + auditThH + 2;
+    }
+
+    y = drawAuditTableHeader(y);
 
     const AUDIT_ROW_H = 10;
+    let prevPageForAudit = currentPage;
     for (let i = 0; i < auditEntries.length; i++) {
       y = checkPage(y, AUDIT_ROW_H);
+
+      // Re-draw table header after page break
+      if (currentPage !== prevPageForAudit) {
+        y = drawAuditTableHeader(y);
+        prevPageForAudit = currentPage;
+      }
+
       const entry = auditEntries[i];
       if (i % 2 === 0) {
         doc.setFillColor(249, 247, 243);
@@ -1034,12 +1049,11 @@ function buildClinicalPDF(
       const auditTextY = y + AUDIT_ROW_H / 2 + 1;
       doc.setTextColor(...CHARCOAL);
       doc.setFont("helvetica", "normal");
-      // Full datetime in audit trail
       doc.setFontSize(7);
-      doc.text(formatFullDateTime(entry.timestamp), M + 4, auditTextY);
+      doc.text(formatFullDateTime(entry.timestamp), auditCols[0], auditTextY);
       doc.setFontSize(8);
-      doc.text(entry.action.slice(0, 35), M + 55, auditTextY);
-      doc.text(entry.actorLabel.slice(0, 25), M + 120, auditTextY);
+      doc.text(entry.action.slice(0, 35), auditCols[1], auditTextY);
+      doc.text(entry.actorLabel.slice(0, 25), auditCols[2], auditTextY);
       y += AUDIT_ROW_H;
     }
 
