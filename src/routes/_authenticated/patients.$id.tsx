@@ -371,23 +371,11 @@ function PatientTabs({
     <Tabs defaultValue="activities" className="w-full">
       <TabsList>
         <TabsTrigger value="activities">Atividades</TabsTrigger>
-        <TabsTrigger value="info">Informações</TabsTrigger>
         {isOwner && <TabsTrigger value="audit">Auditoria</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="activities" className="mt-6">
         <ActivitiesTab patientId={patientId} workspaceId={workspaceId} />
-      </TabsContent>
-
-      <TabsContent value="info" className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Cadastro</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground">
-            Apelido, iniciais e etiquetas. Dados de contato ficam cifrados.
-          </CardContent>
-        </Card>
       </TabsContent>
 
       {isOwner && (
