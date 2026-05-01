@@ -493,7 +493,7 @@ export async function buildScaleResultPDF(params: ScaleResultParams): Promise<Ui
 
   // Scoring transparency (therapist only)
   if (variant === "therapist") {
-    y = checkPage(y, 30);
+    y = checkPage(y, 45);
     doc.setTextColor(...NAVY);
     doc.setFont("times", "bold");
     doc.setFontSize(12);
@@ -508,13 +508,91 @@ export async function buildScaleResultPDF(params: ScaleResultParams): Promise<Ui
     doc.text(`Instrument: ${activity.title}`, M, y);
     y += 5;
 
+    // Explicit calculation formula
+    const answeredItems = items.filter((it) => it.points !== null);
+    if (answeredItems.length > 0) {
+      y = checkPage(y, 14);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(...NAVY);
+      doc.text("Calculation:", M, y);
+      y += 5;
+      doc.setFont("courier", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(...CHARCOAL);
+
+      // Build formula string: q1(2) + q2(2) + q3(1) + ... = 10
+      const parts: string[] = [];
+      for (const it of answeredItems) {
+        if (scoringType === "weighted_sum" && it.weight !== 1) {
+          parts.push(`${it.points}×${it.weight}`);
+        } else {
+          parts.push(`${it.points}`);
+        }
+      }
+      const formulaFull = parts.join(" + ") + ` = ${resp.score ?? "—"}`;
+      // Wrap if too long
+      const formulaLines = doc.splitTextToSize(formulaFull, CW - 6);
+      for (const fl of formulaLines) {
+        y = checkPage(y, 4);
+        doc.text(fl, M + 4, y);
+        y += 4;
+      }
+      y += 2;
+
+      // Labeled breakdown: Item 1 (q1) = 2, Item 2 (q2) = 2, ...
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.setTextColor(...CHARCOAL);
+      for (let i = 0; i < answeredItems.length; i++) {
+        y = checkPage(y, 4);
+        const it = answeredItems[i];
+        const labelShort = it.label.length > 45 ? it.label.slice(0, 42) + "…" : it.label;
+        let line = `  Item ${i + 1}: "${labelShort}" → response ${it.responseValue}`;
+        if (scoringType === "weighted_sum" && it.weight !== 1) {
+          line += ` × weight ${it.weight} = ${it.points} pts`;
+        } else {
+          line += ` = ${it.points} pts`;
+        }
+        doc.text(line, M + 2, y);
+        y += 4;
+      }
+      y += 3;
+
+      // Max possible score
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(`Maximum possible score: ${maxPossibleScore}`, M, y);
+      y += 5;
+    }
+
     const bands = config.severity_bands ?? [];
     if (bands.length > 0) {
-      doc.text("Defined bands:", M, y);
+      y = checkPage(y, 8 + bands.length * 4);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(...NAVY);
+      doc.text("Severity bands (per instrument definition):", M, y);
       y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setTextColor(...CHARCOAL);
+
+      // Highlight the matched band
       for (const band of bands) {
         y = checkPage(y, 5);
-        doc.text(`  ${band.min}–${band.max}: ${band.label}`, M + 4, y);
+        const isMatch = resp.score != null && resp.score >= band.min && resp.score <= band.max;
+        if (isMatch) {
+          doc.setFillColor(247, 250, 248);
+          doc.roundedRect(M, y - 3, CW, 5, 0.5, 0.5, "F");
+          doc.setDrawColor(...SAGE);
+          doc.setLineWidth(0.3);
+          doc.roundedRect(M, y - 3, CW, 5, 0.5, 0.5, "S");
+          doc.setFont("helvetica", "bold");
+          doc.text(`  ${band.min}–${band.max}: ${band.label}  ← score ${resp.score} falls here`, M + 4, y);
+          doc.setFont("helvetica", "normal");
+        } else {
+          doc.text(`  ${band.min}–${band.max}: ${band.label}`, M + 4, y);
+        }
         y += 4;
       }
       y += 3;
