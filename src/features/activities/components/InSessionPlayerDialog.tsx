@@ -77,13 +77,34 @@ export function InSessionPlayerDialog({
     },
   });
 
+  // Error — show immediately, skip vinheta
+  if (configQuery.isError) {
+    return (
+      <FullscreenShell title={activityTitle} onClose={onClose}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-foreground">
+            {configQuery.error instanceof Error
+              ? configQuery.error.message
+              : "Não foi possível carregar a atividade."}
+          </p>
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-lg bg-[var(--sage)] text-white text-sm font-medium"
+          >
+            Fechar
+          </button>
+        </div>
+      </FullscreenShell>
+    );
+  }
+
   // Vinheta intro (plays before any content)
   if (!vinhetaDone) {
     return <VinhetaIntro onComplete={handleVinhetaComplete} />;
   }
 
   // Scale intro page (after vinheta, before questions)
-  if (!introStarted && !configQuery.isLoading && !configQuery.isError) {
+  if (!introStarted && !configQuery.isLoading) {
     return (
       <ScaleIntro
         title={activityTitle}
