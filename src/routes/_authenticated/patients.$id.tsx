@@ -298,7 +298,8 @@ function computeFlagLifecycle(
   return results;
 }
 
-function formatClinicalFlagLabel(flag: string) {
+function formatClinicalFlagLabel(flag: unknown): string {
+  if (typeof flag !== "string") return "Sinal clínico detectado";
   if (flag === "suicidal_ideation") return "Ideação suicida";
   if (flag === "self_harm") return "Autolesão";
   if (flag === "homicidal_ideation") return "Ideação homicida";
