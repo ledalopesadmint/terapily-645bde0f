@@ -142,7 +142,7 @@ function AdminHomePage() {
             onClick={() =>
               toast.info("Disponível em breve", {
                 description:
-                  "O criador de atividades chega na Semana 3, junto com o Player. Por enquanto, esta tela é só de leitura.",
+                  "O criador de atividades chega em breve. Por enquanto, esta tela é só de leitura.",
               })
             }
             className="
@@ -256,8 +256,7 @@ function AdminHomePage() {
             </h3>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
               A tabela está pronta no banco e protegida — só você consegue
-              gravar aqui. O formulário de criação chega na Semana 3, quando o
-              Player que executa as atividades for ligado.
+              gravar aqui. O formulário de criação chega em breve.
             </p>
             <p className="mt-4 text-xs text-muted-foreground">
               Hoje, o protótipo visual em <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-[0.6875rem]">/library</code> usa

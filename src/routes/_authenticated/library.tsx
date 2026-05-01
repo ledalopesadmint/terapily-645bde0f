@@ -99,13 +99,10 @@ function LibraryPage() {
 
 function LibraryStandardMode() {
   const auth = useAuth();
+  const navigate = useNavigate();
   const handleStart = (activity: Activity, mode: "in_session" | "shared_link") => {
-    toast(activity.name, {
-      description:
-        mode === "in_session"
-          ? "O player ao vivo chega na Semana 3."
-          : "O envio por link chega na Semana 3.",
-    });
+    toast.info(`${activity.name} — selecione um paciente para ${mode === "in_session" ? "aplicar em sessão" : "enviar por link"}.`);
+    // TODO: navigate to patient picker or open assign modal
   };
 
   // Curadoria semanal: admin define no /admin via toggle "Destaque".
@@ -189,19 +186,7 @@ function LibraryStandardMode() {
         <RecommendedEmpty />
       </div>
 
-      <footer className="mx-auto mt-16 max-w-6xl px-4 sm:px-8">
-        <div className="rounded-lg border border-dashed border-border/70 bg-card/40 p-5 text-sm text-muted-foreground">
-          <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-secondary-foreground/80">
-            Visualização · Semana 1
-          </p>
-          <p className="mt-2">
-            Esta é a estética final do acervo. O catálogo completo de 80+
-            ferramentas, o player ao vivo e o envio por link entram na
-            Semana 3, junto com a tabela do banco e o controle de acesso por
-            espaço de trabalho.
-          </p>
-        </div>
-      </footer>
+      {/* footer placeholder removed — player and magic link are live */}
     </div>
   );
 }
@@ -342,8 +327,7 @@ function LibrarySelectionMode() {
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
           Apenas as atividades disponíveis no seu workspace ficam selecionáveis.
-          As demais aparecem com a etiqueta "Em breve" — chegam junto com o
-          player na Semana 3.
+          As demais aparecem com a etiqueta "Em breve".
         </p>
         {!hasPreview && !catalogQuery.isLoading && (
           <p className="mt-3 rounded-md border border-dashed border-border bg-card/40 p-3 text-xs text-muted-foreground">
@@ -474,9 +458,9 @@ function LibrarySelectionMode() {
                       Preview interno
                     </p>
                     <p className="mt-1">
-                      O conteúdo dos itens e o scoring entram na Etapa 5/6 da
-                      Semana 3. Você pode gerar o link de teste, mas o paciente
-                      ainda não consegue preencher.
+                      Os itens e o scoring desta atividade ainda não foram
+                      configurados. O link de teste pode ser gerado, mas o
+                      paciente ainda não consegue preencher.
                     </p>
                   </div>
                 )}

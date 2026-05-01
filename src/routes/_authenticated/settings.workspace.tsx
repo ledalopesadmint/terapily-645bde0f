@@ -152,7 +152,7 @@ function WorkspaceSettingsPage() {
           Quem tem acesso a este espaço.
         </h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          Convidar colegas chega na Semana 3 do roadmap.
+          Convidar colegas chega em breve.
         </p>
 
         <div className="mt-5 overflow-hidden rounded-lg border border-border/60">
