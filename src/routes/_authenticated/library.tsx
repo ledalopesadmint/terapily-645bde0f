@@ -458,9 +458,9 @@ function LibrarySelectionMode() {
                       Preview interno
                     </p>
                     <p className="mt-1">
-                      O conteúdo dos itens e o scoring entram na Etapa 5/6 da
-                      Semana 3. Você pode gerar o link de teste, mas o paciente
-                      ainda não consegue preencher.
+                      Os itens e o scoring desta atividade ainda não foram
+                      configurados. O link de teste pode ser gerado, mas o
+                      paciente ainda não consegue preencher.
                     </p>
                   </div>
                 )}
