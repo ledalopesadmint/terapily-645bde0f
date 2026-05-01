@@ -42,17 +42,17 @@ Espelha `mem://features/s3-definition-of-done`.
 - [x] `resolvePublicToken(token)` — público; valida hash + expiração + status, marca first_opened_at + bump open_count, retorna activity sem PHI
 - [x] `submitActivityResponse(token, responses)` — cifra resposta, calcula score, grava response, marca used_at + status completed + zera token_hash, **purga draft**, audit
 - [x] `saveActivityDraft / getActivityDraft / discardActivityDraft` — público, com rate limit por IP+token
-- [ ] `generateComplianceReport(patient_id, period)` — PDF agregando atividades submetidas
+- [x] `generateComplianceReport(patient_id, period)` — PDF agregando atividades submetidas
 
 ---
 
 ## 4. Auto-scoring engine
 
 - [x] Engine implementada com archetype `quiz_scale` (PHQ-9, GAD-7)
-- [ ] PCL-5: cluster scores + total
-- [ ] Demais escalas conforme `mem://features/clinical-scales-catalog`
+- [x] PCL-5: cluster scores + total (via `scoring.clusters` config)
+- [x] Demais escalas usam o mesmo engine genérico (sum/weighted_sum + severity_bands)
 - [x] Score salvo em `score` + `severity` na resposta
-- [ ] Testes unitários pra cada calculadora (input → output esperado)
+- [x] Testes unitários pra cada calculadora (PHQ-9, GAD-7, PCL-5, non-scored archetypes)
 
 ---
 
