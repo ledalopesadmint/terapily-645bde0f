@@ -445,6 +445,10 @@ const ACTIVITY_AUDIT_ACTIONS = [
   "activity.submitted",
   "activity.status_changed",
   "activity.response_recorded",
+  "activity.revoked",
+  "compliance_report.generated",
+  "patient.contact_revealed",
+  "clinical_flag.raised",
 ] as const;
 
 export const listPatientAuditLogs = createServerFn({ method: "GET" })
