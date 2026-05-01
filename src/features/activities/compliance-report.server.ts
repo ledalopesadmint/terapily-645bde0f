@@ -1,5 +1,5 @@
 /**
- * Clinical Activity Report — PDF generation (S3 §8, v8).
+ * Clinical Activity Report — PDF generation (S3 §8, v10).
  *
  * SERVER-ONLY. Two variants:
  *   - Patient Activity Summary (no severity, no flags, no audit)
