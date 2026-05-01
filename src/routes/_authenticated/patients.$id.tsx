@@ -667,6 +667,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                           <Button
                             size="sm"
                             variant="outline"
+                            className="border-action-patient-report bg-action-patient-report text-action-patient-report-fg hover:bg-action-patient-report/85 hover:text-action-patient-report-fg"
                             disabled={scaleResultBusy === `${response.id}-patient`}
                             onClick={() => downloadScaleResult(response.id, "patient")}
                           >
@@ -676,6 +677,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                           <Button
                             size="sm"
                             variant="outline"
+                            className="border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg hover:bg-action-therapist-report/85 hover:text-action-therapist-report-fg"
                             disabled={scaleResultBusy === `${response.id}-therapist`}
                             onClick={() => downloadScaleResult(response.id, "therapist")}
                           >
