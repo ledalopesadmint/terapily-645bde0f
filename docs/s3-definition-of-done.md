@@ -139,9 +139,9 @@ Eventos obrigatórios (todos com `metadata` JSONB **sem PHI** — só UUIDs/enum
 - [x] `activity.response_viewed` — cada abertura da gaveta lateral pelo terapeuta
 - [x] `activity.revoked` — soft revoke pelo terapeuta
 - [x] `activity.draft_saved` / `activity.draft_loaded` / `activity.draft_discarded`
-- [ ] `activity.share_intent` (actor=therapist, metadata: `{patient_activity_id, channel: 'whatsapp'|'sms'|'mailto'|'copy'}`)
-- [ ] `compliance_report.generated`
-- [ ] `patient.contact_revealed`
+- [x] `activity.share_intent` (actor=therapist, metadata: `{patient_activity_id, channel: 'whatsapp'|'sms'|'mailto'|'copy'}`)
+- [x] `compliance_report.generated`
+- [x] `patient.contact_revealed`
 
 ---
 
