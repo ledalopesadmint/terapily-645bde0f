@@ -553,14 +553,14 @@ function buildClinicalPDF(
     y += 6;
   }
 
-  // ── Section: Clinical Flag Timeline (tight after activity table) ──
-  y += 3;
+  // ── Section: Clinical Flag Timeline — 50% more padding ──
+  y += 6;
   y = checkPage(y, 20);
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(12);
   doc.text("Clinical Flag Timeline", M, y);
-  y += 5;
+  y += 8;
 
   if (flags.length === 0) {
     doc.setFontSize(8);
