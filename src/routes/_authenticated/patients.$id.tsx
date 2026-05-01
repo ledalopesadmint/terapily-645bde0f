@@ -74,6 +74,10 @@ import {
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
 import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
+import {
+  generateScaleResultPatient,
+  generateScaleResultTherapist,
+} from "@/features/activities/scale-result-pdf.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
@@ -413,11 +417,39 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
   } | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [reportBusy, setReportBusy] = useState(false);
+  const [scaleResultBusy, setScaleResultBusy] = useState<string | null>(null);
   const [inSessionTarget, setInSessionTarget] = useState<{
     patientActivityId: string;
     activityTitle: string;
   } | null>(null);
   const [viewResponseId, setViewResponseId] = useState<string | null>(null);
+
+  const downloadScaleResult = async (
+    responseId: string,
+    variant: "patient" | "therapist",
+  ) => {
+    setScaleResultBusy(`${responseId}-${variant}`);
+    try {
+      const fn = variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist;
+      const res = await fn({ data: { activityResponseId: responseId, workspaceId } });
+      const binary = atob(res.pdf);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      const blob = new Blob([bytes], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const suffix = variant === "patient" ? "patient" : "therapist";
+      a.download = `activity-result-${suffix}-${new Date().toISOString().slice(0, 10)}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Relatório baixado.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar o relatório.");
+    } finally {
+      setScaleResultBusy(null);
+    }
+  };
 
   const listQuery = useQuery({
     queryKey: ["patient-activities", patientId, workspaceId],
@@ -624,13 +656,33 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                       )}
                       {/* Ver respostas — completa */}
                       {status === "completed" && response?.id && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setViewResponseId(response.id)}
-                        >
-                          <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setViewResponseId(response.id)}
+                          >
+                            <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={scaleResultBusy === `${response.id}-patient`}
+                            onClick={() => downloadScaleResult(response.id, "patient")}
+                          >
+                            <Download className="mr-1 h-3.5 w-3.5" />
+                            {scaleResultBusy === `${response.id}-patient` ? "Gerando…" : "Relatório Paciente"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={scaleResultBusy === `${response.id}-therapist`}
+                            onClick={() => downloadScaleResult(response.id, "therapist")}
+                          >
+                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                            {scaleResultBusy === `${response.id}-therapist` ? "Gerando…" : "Relatório Terapeuta"}
+                          </Button>
+                        </>
                       )}
                       {canRegenLink && (
                         <Button

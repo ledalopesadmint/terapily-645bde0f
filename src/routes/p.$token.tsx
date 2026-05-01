@@ -118,6 +118,7 @@ function ActivityRunner({
   const config = resolved.activity.config as QuizConfig;
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, number>;
@@ -194,7 +195,10 @@ function ActivityRunner({
   const submitMutation = useMutation({
     mutationFn: () =>
       submitActivityResponse({ data: { token, responses } }),
-    onSuccess: () => setSubmitted(true),
+    onSuccess: (data) => {
+      setSubmitted(true);
+      if (data.pdf) setResultPdf(data.pdf);
+    },
   });
 
   const expires = resolved.expiresAt ? formatExpires(resolved.expiresAt) : null;
@@ -213,6 +217,28 @@ function ActivityRunner({
           <p className="text-muted-foreground">
             Se precisar, fale com sua terapeuta. Você pode fechar esta página.
           </p>
+          {resultPdf && (
+            <button
+              onClick={() => {
+                const binary = atob(resultPdf);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+                const blob = new Blob([bytes], { type: "application/pdf" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `activity-result-${new Date().toISOString().slice(0, 10)}.pdf`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-all shadow-sm hover:shadow-md"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download your results
+            </button>
+          )}
         </div>
       </div>
     );
