@@ -656,13 +656,33 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                       )}
                       {/* Ver respostas — completa */}
                       {status === "completed" && response?.id && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setViewResponseId(response.id)}
-                        >
-                          <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setViewResponseId(response.id)}
+                          >
+                            <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={scaleResultBusy === `${response.id}-patient`}
+                            onClick={() => downloadScaleResult(response.id, "patient")}
+                          >
+                            <Download className="mr-1 h-3.5 w-3.5" />
+                            {scaleResultBusy === `${response.id}-patient` ? "Gerando…" : "Relatório Paciente"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={scaleResultBusy === `${response.id}-therapist`}
+                            onClick={() => downloadScaleResult(response.id, "therapist")}
+                          >
+                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                            {scaleResultBusy === `${response.id}-therapist` ? "Gerando…" : "Relatório Terapeuta"}
+                          </Button>
+                        </>
                       )}
                       {canRegenLink && (
                         <Button
