@@ -846,7 +846,7 @@ function ClinicalFlagBanner({
               <Button
                 size="sm"
                 variant="outline"
-                className="border-mauve/70 bg-card hover:bg-mauve/10"
+                className="border-action-flag/40 bg-card hover:bg-action-flag/10 hover:text-action-flag"
                 onClick={() => onViewResponse(flag.responseId)}
               >
                 <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
