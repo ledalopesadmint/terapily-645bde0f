@@ -3,10 +3,11 @@
  * Fullscreen presentation mode com o ActivityPlayer slide-a-slide.
  */
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { VinhetaIntro } from "./VinhetaIntro";
 
 import {
   ActivityPlayer,
