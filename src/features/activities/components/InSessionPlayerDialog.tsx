@@ -103,55 +103,20 @@ export function InSessionPlayerDialog({
     );
   }
 
-  // Scale intro page (after vinheta, before questions)
-  if (vinhetaDone && !introStarted && !configQuery.isLoading) {
-    return (
-      <>
-        <ScaleIntro
-          title={activityTitle}
-          config={config}
-          onStart={() => setIntroStarted(true)}
-        />
-        {/* Cream overlay fades out after vinheta ends — prevents flash */}
-        {overlayVisible && (
-          <div
-            className={`fixed inset-0 z-[55] bg-[var(--cream)] pointer-events-none transition-opacity duration-500 ${vinhetaDone ? "opacity-0" : "opacity-100"}`}
-          />
-        )}
-        {!vinhetaDone && <VinhetaIntro onComplete={handleVinhetaComplete} />}
-      </>
-    );
-  }
+  // ── Determine main content (underneath vinheta/overlay) ──
+  let mainContent: React.ReactNode;
 
-  // Vinheta still playing (before anything renders underneath)
-  if (!vinhetaDone) {
-    return (
-      <>
-        <FullscreenShell title={activityTitle} onClose={onClose}>
-          <div className="flex-1" />
-        </FullscreenShell>
-        <div className="fixed inset-0 z-[55] bg-[var(--cream)]" />
-        <VinhetaIntro onComplete={handleVinhetaComplete} />
-      </>
-    );
-  }
-
-  // Loading
   if (configQuery.isLoading) {
-    return (
+    mainContent = (
       <FullscreenShell title={activityTitle} onClose={onClose}>
         <div className="flex-1 flex items-center justify-center">
           <p className="text-muted-foreground">Carregando atividade…</p>
         </div>
       </FullscreenShell>
     );
-  }
-
-
-  // Submitted
-  if (submitted) {
+  } else if (submitted) {
     const result = submitMutation.data;
-    return (
+    mainContent = (
       <FullscreenShell title={activityTitle} onClose={onClose}>
         <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
           <div className="w-16 h-16 rounded-full bg-[var(--sage)]/15 flex items-center justify-center">
@@ -177,21 +142,49 @@ export function InSessionPlayerDialog({
         </div>
       </FullscreenShell>
     );
+  } else if (vinhetaDone && !introStarted) {
+    mainContent = (
+      <ScaleIntro
+        title={activityTitle}
+        config={config}
+        onStart={() => setIntroStarted(true)}
+      />
+    );
+  } else {
+    mainContent = (
+      <FullscreenShell title={activityTitle} onClose={onClose} subtitle="Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.">
+        <ActivityPlayer
+          config={config}
+          responses={responses}
+          onResponse={(qId, val) =>
+            setResponses((prev) => ({ ...prev, [qId]: val }))
+          }
+          onSubmit={() => submitMutation.mutate()}
+          submitting={submitMutation.isPending}
+          submitLabel="Registrar respostas"
+        />
+      </FullscreenShell>
+    );
   }
 
   return (
-    <FullscreenShell title={activityTitle} onClose={onClose} subtitle="Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.">
-      <ActivityPlayer
-        config={config}
-        responses={responses}
-        onResponse={(qId, val) =>
-          setResponses((prev) => ({ ...prev, [qId]: val }))
-        }
-        onSubmit={() => submitMutation.mutate()}
-        submitting={submitMutation.isPending}
-        submitLabel="Registrar respostas"
-      />
-    </FullscreenShell>
+    <>
+      {mainContent}
+
+      {/* Cream overlay — stays visible during vinheta, fades out smoothly after */}
+      {overlayVisible && (
+        <div
+          className="fixed inset-0 z-[55] bg-[var(--cream)] pointer-events-none"
+          style={{
+            transition: "opacity 500ms ease-out",
+            opacity: vinhetaDone ? 0 : 1,
+          }}
+        />
+      )}
+
+      {/* Vinheta video — on top of everything */}
+      {!vinhetaDone && <VinhetaIntro onComplete={handleVinhetaComplete} />}
+    </>
   );
 }
 
