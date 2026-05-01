@@ -134,8 +134,8 @@
   --action-flag-subtle: oklch(0.92 0.04 22);       /* bg sutil para badge inline da flag */
   --action-patient-report: oklch(0.56 0.10 175);   /* teal-verde — seguro pra compartilhar com paciente */
   --action-patient-report-fg: oklch(0.98 0.005 175);
-  --action-therapist-report: oklch(0.62 0.13 75);  /* âmbar profundo — uso interno terapeuta */
-  --action-therapist-report-fg: oklch(0.20 0.02 75);
+  --action-therapist-report: oklch(0.55 0.12 350);  /* rosa queimado — uso interno terapeuta */
+  --action-therapist-report-fg: oklch(0.98 0.01 350);
 
   /* Mapping semântico shadcn → paleta Terapily */
   --background: var(--cream);
