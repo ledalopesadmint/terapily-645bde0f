@@ -94,7 +94,7 @@ export function PatientList({
               </div>
               {p.clinical_flags && p.clinical_flags.total > 0 && (
                 <span
-                  className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-action-flag/60 bg-action-flag/15 px-2 py-1 text-xs font-semibold text-action-flag"
+                  className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-action-flag bg-action-flag px-2 py-1 text-xs font-semibold text-white"
                   aria-label="Paciente com flag clínica"
                 >
                   <AlertTriangle className="h-3.5 w-3.5" />
@@ -109,13 +109,13 @@ export function PatientList({
                   <TooltipTrigger asChild>
                     <span>
                       <Button
-                        variant="ghost"
                         size="icon"
+                        className="h-8 w-8 rounded-md border border-white bg-navy text-white shadow-sm hover:bg-navy/85 hover:text-white"
                         disabled={!hasEmail || copying}
                         onClick={() => onCopyContact(p, "email", "Email")}
                         aria-label="Copiar email"
                       >
-                        <Mail className="h-4 w-4 text-navy" />
+                        <Mail className="h-4 w-4" />
                       </Button>
                     </span>
                   </TooltipTrigger>
@@ -128,13 +128,13 @@ export function PatientList({
                   <TooltipTrigger asChild>
                     <span>
                       <Button
-                        variant="ghost"
                         size="icon"
+                        className="h-8 w-8 rounded-md border border-navy bg-sage text-white shadow-sm hover:bg-sage/85 hover:text-white"
                         disabled={!hasPhone || copying}
                         onClick={() => onCopyContact(p, "phone", "Telefone")}
                         aria-label="Copiar telefone"
                       >
-                        <Phone className="h-4 w-4 text-sage" />
+                        <Phone className="h-4 w-4" />
                       </Button>
                     </span>
                   </TooltipTrigger>
