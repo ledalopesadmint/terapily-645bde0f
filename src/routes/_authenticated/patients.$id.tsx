@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
+import { AlertTriangle, ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -115,6 +115,52 @@ const STATUS_VARIANT: Record<
   expired: "outline",
   revoked: "destructive",
 };
+
+interface ClinicalFlagInfo {
+  flag: string;
+  item_id: string | null;
+  responseId: string;
+  patientActivityId: string;
+  activityTitle: string;
+  submittedAt: string | null;
+  submittedVia: string | null;
+  score: number | null;
+  severity: string | null;
+}
+
+function getClinicalFlagFromResponse(
+  response: unknown,
+  activityTitle: string,
+  patientActivityId: string,
+): ClinicalFlagInfo | null {
+  if (!response || typeof response !== "object") return null;
+  const row = response as {
+    id?: string;
+    score?: number | null;
+    severity?: string | null;
+    submitted_at?: string | null;
+    submitted_via?: string | null;
+    scoring_metadata?: { clinical_flag?: { flag?: string; item_id?: string | null } | null } | null;
+  };
+  const flag = row.scoring_metadata?.clinical_flag;
+  if (!row.id || !flag?.flag) return null;
+  return {
+    flag: flag.flag,
+    item_id: flag.item_id ?? null,
+    responseId: row.id,
+    patientActivityId,
+    activityTitle,
+    submittedAt: row.submitted_at ?? null,
+    submittedVia: row.submitted_via ?? null,
+    score: row.score ?? null,
+    severity: row.severity ?? null,
+  };
+}
+
+function formatClinicalFlagLabel(flag: string) {
+  if (flag === "suicidal_ideation") return "Ideação suicida";
+  return flag.replace(/_/g, " ");
+}
 
 function PatientDetailPage() {
   const { id } = useParams({ from: "/_authenticated/patients/$id" });
