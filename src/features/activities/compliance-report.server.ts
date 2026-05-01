@@ -641,11 +641,11 @@ function buildClinicalPDF(
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.setTextColor(...NAVY);
-    doc.text("Quick Read", M + 4, y + 6);
+    doc.text("Quick View", M + 4, y + 6);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...CHARCOAL);
-    doc.text("Data index — not a clinical summary.", M + 30, y + 6);
+    doc.text("Data index (non-interpretative).", M + 30, y + 6);
 
     qy = y + qrHeaderH + 2;
     for (const entry of scaleEntries) {
@@ -665,7 +665,7 @@ function buildClinicalPDF(
       if (entry.severity) {
         doc.setFontSize(6.5);
         doc.setTextColor(130, 130, 130);
-        doc.text(`Severity: ${entry.severity} (scale-defined)`, M + 4, qy + 3.5);
+        doc.text(`Band: ${entry.severity} (per instrument definition)`, M + 4, qy + 3.5);
         doc.setTextColor(...CHARCOAL);
         doc.setFontSize(8);
       }
@@ -986,7 +986,7 @@ function buildClinicalPDF(
       doc.setFontSize(5.5);
       doc.setFont("helvetica", "italic");
       doc.text(
-        "This flag indicates a response that may be clinically relevant. Consult your jurisdiction's applicable laws and your professional ethical guidelines.",
+        "This flag reflects a predefined scoring threshold within the instrument. Follow applicable legal and professional guidelines.",
         M + 3,
         flagTextTop + 10,
       );
@@ -1103,7 +1103,7 @@ function buildClinicalPDF(
     [
       "Data Integrity",
       `This report includes a Report ID (${integrityHash}) computed from report content at generation time. ` +
-        "Full hash-chain verification will be available in a future platform update.",
+        "Hash-chain verification is planned for a future update.",
     ],
     [
       "Protected Health Information",
