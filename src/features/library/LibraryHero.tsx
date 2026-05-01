@@ -12,7 +12,7 @@
  */
 
 import { ArrowRight } from "lucide-react";
-import type { Activity } from "./catalog";
+import type { Activity } from "./library.types";
 
 interface LibraryHeroProps {
   activity: Activity;

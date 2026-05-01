@@ -25,6 +25,7 @@ import {
 } from "./activities.server";
 import { encryptPHIServer, decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
+import { detectClinicalFlag } from "@/server/clinical-flag.server";
 
 // ----------------------------------------------------------------
 // Tier → janela de shared_link (em horas)
@@ -56,30 +57,6 @@ async function getWorkspaceTier(workspaceId: string): Promise<string> {
     .eq("workspace_id", workspaceId)
     .maybeSingle();
   return data?.tier ?? "trial";
-}
-
-/**
- * Detecta clinical flag em respostas (PHQ-9 item 9, etc.).
- * Lê `clinical_flag` + `flag_threshold` (default 1) de cada item do config.
- * Sem PHI: só inspeciona valores numéricos das respostas.
- */
-function detectClinicalFlag(
-  config: unknown,
-  responses: Record<string, unknown>,
-): { raised: boolean; flag: string | null; item_id: string | null } {
-  const items = Array.isArray((config as { items?: unknown[] })?.items)
-    ? ((config as { items: unknown[] }).items)
-    : [];
-  for (const item of items) {
-    const it = item as { id?: string; clinical_flag?: string; flag_threshold?: number };
-    if (!it?.clinical_flag || !it.id) continue;
-    const threshold = typeof it.flag_threshold === "number" ? it.flag_threshold : 1;
-    const raw = responses[it.id];
-    if (typeof raw === "number" && raw >= threshold) {
-      return { raised: true, flag: it.clinical_flag, item_id: it.id };
-    }
-  }
-  return { raised: false, flag: null, item_id: null };
 }
 
 // --- assignActivity --------------------------------------------------------
@@ -164,6 +141,16 @@ export const assignActivity = createServerFn({ method: "POST" })
     }
 
     // 4. Gera token só se delivery envolve link
+    //
+    // REGRA DE CONSTRAINT (documentar, não alterar):
+    //   - delivery_mode = "in_session" → token_hash PODE ser null (paciente usa
+    //     o dispositivo do terapeuta, sem link externo).
+    //   - delivery_mode = "shared_link" → token_hash OBRIGATÓRIO (acesso via magic link).
+    //   - delivery_mode = "both" → token_hash gerado (terapeuta aplica E prescreve).
+    //   - generateShareLink() (abaixo) pode transformar uma atividade in_session em
+    //     shared_link ao gerar link posteriormente — nesse caso token_hash é preenchido
+    //     e delivery_mode atualizado.
+    //
     let rawToken: string | null = null;
     let tokenHash: string | null = null;
     let tokenExpiresAt: string | null = null;

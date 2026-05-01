@@ -1,88 +1,18 @@
 /**
- * Catálogo MOCKADO do acervo (S1 — visualização do protótipo).
+ * Seed data do Acervo — dados estáticos de fallback (TEMPORÁRIO).
  *
- * IMPORTANTE: este arquivo é TEMPORÁRIO. Em S3 (semana de Activity catalog +
- * delivery_mode) ele é substituído por:
- *   - tabela `activity_catalog` no banco (RLS por workspace pra customização futura)
- *   - server function `getActivityCatalog()` que retorna estes mesmos campos
- *   - hook `useActivityCatalog()` consumindo via TanStack Query
+ * ⚠️  NÃO é a fonte de verdade. A fonte oficial é a tabela `activity_catalog`
+ *     no banco, consultada via `listAvailableActivities()`.
  *
- * O shape `Activity` aqui é INTENCIONALMENTE o mesmo que a tabela vai ter.
- * Quando migrar, só troca a fonte — nenhum componente precisa mudar.
+ * Esses dados existem APENAS para:
+ *   - Alimentar a UI do catálogo quando o banco ainda não tem atividades
+ *     de todos os arquétipos (S3: só quiz_scale está implementado)
+ *   - Dar density visual ao protótipo do acervo
  *
- * 8 atividades curadas de categorias diferentes pra mostrar densidade visual
- * sem inflar o seed (lista completa de 50+33 atividades vive em
- * `mem://features/clinical-scales-catalog` e no PDF de homeworks).
+ * Será removido quando todos os arquétipos estiverem populados no banco.
  */
 
-import type { ArchetypeId } from "./archetypes";
-
-export type DeliveryMode = "in_session" | "shared_link" | "both";
-
-/**
- * Tema visual da atividade. 6 paletas brand-coerentes definidas em styles.css.
- * Mesmos valores do enum `activity_theme` no banco (S3+).
- *   - sage      → calmo, respiração, mindfulness
- *   - mauve     → autocompaixão, vínculo
- *   - navy      → avaliações clínicas (escalas validadas)
- *   - cream     → psicoeducação, leitura
- *   - terracotta → somático, corpo
- *   - sage-dark → sono, noite, regulação
- */
-export type ActivityTheme =
-  | "sage"
-  | "mauve"
-  | "navy"
-  | "cream"
-  | "terracotta"
-  | "sage-dark";
-
-export type CategoryId =
-  | "anxiety"
-  | "depression"
-  | "cbt"
-  | "mindfulness"
-  | "trauma"
-  | "dbt"
-  | "act"
-  | "sleep"
-  | "crisis";
-
-export interface Category {
-  id: CategoryId;
-  label: string;        // EN (alinhado à landing internacional, embora app seja PT-BR)
-  subtitle: string;     // descrição editorial curta
-}
-
-export interface Activity {
-  id: string;
-  code: string;                          // ex: "PHQ-9", "CBT-01"
-  name: string;
-  approach: string;                      // ex: "CBT", "DBT", "ACT", "Mindfulness"
-  category: CategoryId;
-  archetype: ArchetypeId;
-  /** Tema visual (6 paletas brand). Default 'sage' se omitido. */
-  theme: ActivityTheme;
-  durationMin: number;
-  shortDescription: string;              // 1 frase pra hover/card expandido
-  /**
-   * Identificador da ilustração SVG inline.
-   * Em S3+ pode virar URL de WebP rico, mas a interface fica igual.
-   */
-  illustration:
-    | "petals"
-    | "tide"
-    | "lattice"
-    | "horizon"
-    | "spiral"
-    | "scattered"
-    | "anchor"
-    | "compass";
-  /** Quais modos de entrega esse exercício suporta. */
-  supportedModes: DeliveryMode[];
-  /** Marca exercícios sensíveis (Trauma, Crisis) — gating Practice em S5. */
-  sensitive?: boolean;
-}
+import type { Activity, Category, CategoryId } from "./library.types";
 
 export const CATEGORIES: Category[] = [
   {
@@ -102,12 +32,7 @@ export const CATEGORIES: Category[] = [
   },
 ];
 
-/**
- * Seed de 8 atividades pra alimentar o protótipo visual.
- * Distribuídas pelas 3 categorias acima.
- */
 export const ACTIVITIES: Activity[] = [
-  // —— Anxiety toolkit
   {
     id: "phq-9",
     code: "PHQ-9",
@@ -147,8 +72,6 @@ export const ACTIVITIES: Activity[] = [
     illustration: "spiral",
     supportedModes: ["in_session", "shared_link", "both"],
   },
-
-  // —— CBT essentials
   {
     id: "thought-record-3col",
     code: "CBT-01",
@@ -188,8 +111,6 @@ export const ACTIVITIES: Activity[] = [
     illustration: "compass",
     supportedModes: ["in_session", "shared_link", "both"],
   },
-
-  // —— Mindfulness & grounding
   {
     id: "grounding-54321",
     code: "TRA-02",

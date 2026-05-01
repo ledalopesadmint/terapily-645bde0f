@@ -22,6 +22,7 @@ import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
 import { recordAudit } from "@/features/audit/audit.server";
 import { buildScaleResultPDF } from "./scale-result-pdf.server";
+import { detectClinicalFlag } from "@/server/clinical-flag.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
 import {
   getPatientActivityByTokenHash,
@@ -51,27 +52,6 @@ function logLinkFailure(reason: string) {
   console.warn("[public-link] denied", { reason });
 }
 
-/** Clinical flag detector PHI-safe: only numeric item values + config enums. */
-function detectClinicalFlag(
-  config: unknown,
-  responses: Record<string, unknown>,
-): { raised: boolean; flag: string | null; item_id: string | null } {
-  const items = Array.isArray((config as { items?: unknown[] })?.items)
-    ? (config as { items: unknown[] }).items
-    : [];
-
-  for (const item of items) {
-    const it = item as { id?: string; clinical_flag?: string; flag_threshold?: number };
-    if (!it.id || !it.clinical_flag) continue;
-    const threshold = typeof it.flag_threshold === "number" ? it.flag_threshold : 1;
-    const value = responses[it.id];
-    if (typeof value === "number" && value >= threshold) {
-      return { raised: true, flag: it.clinical_flag, item_id: it.id };
-    }
-  }
-
-  return { raised: false, flag: null, item_id: null };
-}
 
 // --- resolvePublicToken ----------------------------------------------------
 

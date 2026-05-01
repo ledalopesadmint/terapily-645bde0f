@@ -22,7 +22,7 @@
 
 import { Play } from "lucide-react";
 import { ActivityIllustration } from "./illustrations";
-import type { Activity } from "./catalog";
+import type { Activity } from "./library.types";
 
 interface ActivityCardProps {
   activity: Activity;

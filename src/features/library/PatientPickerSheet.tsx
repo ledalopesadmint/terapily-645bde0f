@@ -34,7 +34,7 @@ import {
   assignActivity,
   listAvailableActivities,
 } from "@/features/activities/activities.functions";
-import type { Activity } from "./catalog";
+import type { Activity } from "./library.types";
 
 interface PatientPickerSheetProps {
   open: boolean;
