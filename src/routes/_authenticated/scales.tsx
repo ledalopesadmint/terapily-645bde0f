@@ -1,20 +1,19 @@
 /**
- * /library/scales — Página dedicada com todas as 33 escalas validadas.
+ * /scales — Página dedicada com todas as 33 escalas validadas.
  * Busca do banco via listAvailableActivities, filtra archetype=quiz_scale.
- * Leve: sem player pré-carregado, só grid de cards clicáveis.
+ * Cards editoriais com ilustração SVG, mesma estética do Acervo.
  */
 
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Play, Activity } from "lucide-react";
+import { ArrowLeft, Activity } from "lucide-react";
 
-
-import { Badge } from "@/components/ui/badge";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { listAvailableActivities } from "@/features/activities/activities.functions";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { PatientPickerSheet } from "@/features/library/PatientPickerSheet";
+import { ScaleCard, getScaleIllustration } from "@/features/library/ScaleCard";
 import type { Activity as ActivityType } from "@/features/library/library.types";
 
 export const Route = createFileRoute("/_authenticated/scales")({
@@ -31,7 +30,6 @@ export const Route = createFileRoute("/_authenticated/scales")({
   component: ScalesPage,
 });
 
-// Mapa de categorias pra agrupar visualmente
 const CATEGORY_LABELS: Record<string, string> = {
   depression: "Depression",
   anxiety: "Anxiety",
@@ -46,16 +44,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_ORDER = [
-  "depression",
-  "anxiety",
-  "trauma",
-  "substance_use",
-  "ocd",
-  "eating",
-  "sleep",
-  "wellbeing",
-  "cbt",
-  "act",
+  "depression", "anxiety", "trauma", "substance_use",
+  "ocd", "eating", "sleep", "wellbeing", "cbt", "act",
 ];
 
 type ScaleRow = {
@@ -89,7 +79,6 @@ function ScalesPage() {
     (a) => a.archetype === "quiz_scale",
   );
 
-  // Group by category
   const grouped = CATEGORY_ORDER.map((cat) => ({
     category: cat,
     label: CATEGORY_LABELS[cat] ?? cat,
@@ -108,7 +97,7 @@ function ScalesPage() {
       theme: (scale.theme === "sage_dark" ? "sage-dark" : scale.theme) as ActivityType["theme"],
       durationMin: (cfg.estimated_minutes as number) ?? 5,
       shortDescription: scale.short_description,
-      illustration: "petals",
+      illustration: getScaleIllustration(scale.category),
       supportedModes: (cfg.supported_modes as ActivityType["supportedModes"]) ?? ["in_session"],
     };
     setPickerActivity(activity);
@@ -150,10 +139,10 @@ function ScalesPage() {
       <div className="mx-auto max-w-6xl space-y-10 px-4 sm:px-8">
         {grouped.map((group) => (
           <section key={group.category}>
-            <h2 className="mb-3 text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-mauve">
+            <h2 className="mb-4 text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-mauve">
               {group.label}
             </h2>
-            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {group.scales.map((scale) => {
                 const cfg = scale.config ?? {};
                 const isExclusive =
@@ -164,38 +153,17 @@ function ScalesPage() {
                 const code = (cfg.code as string) ?? scale.slug.toUpperCase();
 
                 return (
-                  <button
+                  <ScaleCard
                     key={scale.id}
+                    code={code}
+                    name={scale.title}
+                    category={scale.category}
+                    durationMin={duration}
+                    shortDescription={scale.short_description}
+                    illustration={getScaleIllustration(scale.category)}
+                    isExclusive={isExclusive}
                     onClick={() => handleStartInSession(scale)}
-                    className="
-                      group flex items-center gap-3.5 rounded-xl border border-border/50
-                      bg-background p-3.5 text-left
-                      transition-all duration-200
-                      hover:border-[var(--sage)]/60 hover:shadow-sm hover:-translate-y-px
-                    "
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--navy)]/8 text-[var(--navy)] transition-colors group-hover:bg-[var(--sage)]/15 group-hover:text-[var(--sage)]">
-                      <Play className="h-4 w-4" aria-hidden />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-                          {code}
-                        </span>
-                        {isExclusive && (
-                          <Badge variant="outline" className="text-[0.5rem] px-1 py-0">
-                            Só em sessão
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="mt-0.5 text-sm font-medium text-foreground truncate">
-                        {scale.title}
-                      </p>
-                      <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                        {duration} min · Escala validada
-                      </p>
-                    </div>
-                  </button>
+                  />
                 );
               })}
             </div>

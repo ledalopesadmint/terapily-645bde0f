@@ -1,15 +1,14 @@
 /**
  * InSessionQuickAccess — seção destaque no Acervo.
  *
- * Mostra preview das primeiras escalas do seed + link "Ver todas"
- * que leva pra /library/scales com as 33 escalas do banco.
- *
- * O bloco inteiro é clicável (hover com elevação sutil).
+ * Mostra preview das primeiras escalas do seed com cards editoriais
+ * (ilustração + título + descrição) + link "Ver todas" → /scales.
  */
 
 import { Link } from "@tanstack/react-router";
-import { Activity, ArrowRight, Play } from "lucide-react";
+import { Activity, ArrowRight } from "lucide-react";
 import type { Activity as ActivityType } from "./library.types";
+import { ScaleCard, getScaleIllustration } from "./ScaleCard";
 
 interface InSessionQuickAccessProps {
   activities: ActivityType[];
@@ -36,8 +35,7 @@ export function InSessionQuickAccess({
     return a.code.localeCompare(b.code);
   });
 
-  // Show only first 6 as preview
-  const preview = sorted.slice(0, 6);
+  const preview = sorted.slice(0, 3);
 
   return (
     <section aria-labelledby="in-session-title" className="mx-auto max-w-6xl px-4 sm:px-8">
@@ -63,62 +61,40 @@ export function InSessionQuickAccess({
             </div>
           </div>
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-            Ver todas
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            Ver todas →
           </span>
         </Link>
-        <p className="mb-4 text-sm text-muted-foreground max-w-xl">
+        <p className="mb-5 text-sm text-muted-foreground max-w-xl">
           Selecione, escolha o paciente e comece. Score automático ao final.
         </p>
 
-        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {preview.map((scale) => {
             const isExclusive =
               scale.supportedModes.length === 1 &&
               scale.supportedModes[0] === "in_session";
             return (
-              <button
+              <ScaleCard
                 key={scale.id}
+                code={scale.code}
+                name={scale.name}
+                category={scale.category}
+                durationMin={scale.durationMin}
+                shortDescription={scale.shortDescription}
+                illustration={scale.illustration ?? getScaleIllustration(scale.category)}
+                isExclusive={isExclusive}
                 onClick={() => onStartInSession(scale)}
-                className="
-                  group/card flex items-center gap-3.5 rounded-xl border border-border/50
-                  bg-background p-3.5 text-left
-                  transition-all duration-200
-                  hover:border-[var(--sage)]/60 hover:shadow-sm hover:-translate-y-px
-                "
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--navy)]/8 text-[var(--navy)] transition-colors group-hover/card:bg-[var(--sage)]/15 group-hover/card:text-[var(--sage)]">
-                  <Play className="h-4 w-4" aria-hidden />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[0.6875rem] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-                      {scale.code}
-                    </span>
-                    {isExclusive && (
-                      <span className="inline-flex items-center rounded-full bg-[var(--navy)]/10 px-1.5 py-0.5 text-[0.5625rem] font-semibold uppercase tracking-wider text-[var(--navy)]">
-                        Só em sessão
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-0.5 text-sm font-medium text-foreground truncate">
-                    {scale.name}
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground truncate">
-                    {scale.durationMin} min · {scale.approach}
-                  </p>
-                </div>
-              </button>
+              />
             );
           })}
         </div>
 
-        {sorted.length > 6 && (
+        {sorted.length > 3 && (
           <Link
             to="/scales"
-            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
-            + {sorted.length - 6} escalas
+            + {sorted.length - 3} escalas
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />
           </Link>
         )}
