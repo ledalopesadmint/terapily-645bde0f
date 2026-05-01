@@ -31,6 +31,7 @@ import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedPatientsDeletedRouteImport } from './routes/_authenticated/patients.deleted'
 import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
+import { Route as AuthenticatedLibraryScalesRouteImport } from './routes/_authenticated/library.scales'
 import { Route as AuthenticatedDevRoadmapRouteImport } from './routes/_authenticated/dev.roadmap'
 import { Route as ApiPublicHooksPurgePatientsRouteImport } from './routes/api/public/hooks/purge-patients'
 
@@ -149,6 +150,12 @@ const AuthenticatedPatientsIdRoute = AuthenticatedPatientsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => AuthenticatedPatientsRoute,
 } as any)
+const AuthenticatedLibraryScalesRoute =
+  AuthenticatedLibraryScalesRouteImport.update({
+    id: '/scales',
+    path: '/scales',
+    getParentRoute: () => AuthenticatedLibraryRoute,
+  } as any)
 const AuthenticatedDevRoadmapRoute = AuthenticatedDevRoadmapRouteImport.update({
   id: '/dev/roadmap',
   path: '/dev/roadmap',
@@ -168,13 +175,14 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/library': typeof AuthenticatedLibraryRoute
+  '/library': typeof AuthenticatedLibraryRouteWithChildren
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/library/scales': typeof AuthenticatedLibraryScalesRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -193,12 +201,13 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/library': typeof AuthenticatedLibraryRoute
+  '/library': typeof AuthenticatedLibraryRouteWithChildren
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/library/scales': typeof AuthenticatedLibraryScalesRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -219,13 +228,14 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/library': typeof AuthenticatedLibraryRouteWithChildren
   '/_authenticated/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
+  '/_authenticated/library/scales': typeof AuthenticatedLibraryScalesRoute
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/_authenticated/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -253,6 +263,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/p/$token'
     | '/dev/roadmap'
+    | '/library/scales'
     | '/patients/$id'
     | '/patients/deleted'
     | '/settings/billing'
@@ -277,6 +288,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/p/$token'
     | '/dev/roadmap'
+    | '/library/scales'
     | '/patients/$id'
     | '/patients/deleted'
     | '/settings/billing'
@@ -303,6 +315,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/p/$token'
     | '/_authenticated/dev/roadmap'
+    | '/_authenticated/library/scales'
     | '/_authenticated/patients/$id'
     | '/_authenticated/patients/deleted'
     | '/_authenticated/settings/billing'
@@ -484,6 +497,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPatientsIdRouteImport
       parentRoute: typeof AuthenticatedPatientsRoute
     }
+    '/_authenticated/library/scales': {
+      id: '/_authenticated/library/scales'
+      path: '/scales'
+      fullPath: '/library/scales'
+      preLoaderRoute: typeof AuthenticatedLibraryScalesRouteImport
+      parentRoute: typeof AuthenticatedLibraryRoute
+    }
     '/_authenticated/dev/roadmap': {
       id: '/_authenticated/dev/roadmap'
       path: '/dev/roadmap'
@@ -500,6 +520,17 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedLibraryRouteChildren {
+  AuthenticatedLibraryScalesRoute: typeof AuthenticatedLibraryScalesRoute
+}
+
+const AuthenticatedLibraryRouteChildren: AuthenticatedLibraryRouteChildren = {
+  AuthenticatedLibraryScalesRoute: AuthenticatedLibraryScalesRoute,
+}
+
+const AuthenticatedLibraryRouteWithChildren =
+  AuthenticatedLibraryRoute._addFileChildren(AuthenticatedLibraryRouteChildren)
 
 interface AuthenticatedPatientsRouteChildren {
   AuthenticatedPatientsIdRoute: typeof AuthenticatedPatientsIdRoute
@@ -539,7 +570,7 @@ const AuthenticatedSettingsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRouteWithChildren
   AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
@@ -549,7 +580,7 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedLibraryRoute: AuthenticatedLibraryRouteWithChildren,
   AuthenticatedPatientsRoute: AuthenticatedPatientsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
