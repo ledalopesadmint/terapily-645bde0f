@@ -257,7 +257,7 @@ export function ActivityPlayer({
         {isLast ? (
           <button
             onClick={onSubmit}
-            disabled={submitDisabled ?? !allAnswered ?? submitting}
+            disabled={submitDisabled !== undefined ? submitDisabled : (!allAnswered || submitting)}
             className={cn(
               "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all",
               (submitDisabled ?? !allAnswered) || submitting
