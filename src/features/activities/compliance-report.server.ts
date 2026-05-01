@@ -299,7 +299,22 @@ function buildPatientPDF(
   patientLabel: string,
   rows: ReportRow[],
 ) {
-  const totalPages = 1;
+  let totalPages = 1;
+  let currentPage = 1;
+  const FOOTER_ZONE = PAGE_H - 22;
+  const CONTENT_GAP = 9;
+
+  function patientCheckPage(yPos: number, needed = 10): number {
+    if (yPos + needed > FOOTER_ZONE) {
+      drawFooter(doc, currentPage, totalPages, "patient");
+      doc.addPage();
+      currentPage++;
+      drawWatermark(doc);
+      return drawHeader(doc) + CONTENT_GAP;
+    }
+    return yPos;
+  }
+
   drawWatermark(doc);
   let y = drawHeader(doc) + 10;
 
@@ -346,27 +361,34 @@ function buildPatientPDF(
     doc.text("No completed activities in this period.", M, y);
   } else {
     const pThH = 10;
-    doc.setFillColor(...NAVY);
-    doc.roundedRect(M, y, CW, pThH, 1, 1, "F");
     const cols = [M + 4, M + 32, M + 102, M + 135];
-    doc.setTextColor(...WHITE);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    const thY = y + pThH / 2 + 1.5;
-    doc.text("DATE", cols[0], thY);
-    doc.text("ACTIVITY", cols[1], thY);
-    doc.text("MODE", cols[2], thY);
-    doc.text("SCORE", cols[3], thY);
-    y += pThH + 2;
+    const pHeaders = ["DATE", "ACTIVITY", "MODE", "SCORE"];
+
+    function drawPatientTableHeader(atY: number): number {
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(M, atY, CW, pThH, 1, 1, "F");
+      doc.setTextColor(...WHITE);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      const thY = atY + pThH / 2 + 1.5;
+      for (let h = 0; h < pHeaders.length; h++) {
+        doc.text(pHeaders[h], cols[h], thY);
+      }
+      return atY + pThH + 2;
+    }
+
+    y = drawPatientTableHeader(y);
 
     const P_ROW_H = 10;
     doc.setFont("helvetica", "normal");
     for (let i = 0; i < rows.length; i++) {
-      if (y + P_ROW_H > 260) {
-        drawFooter(doc, 1, totalPages, "patient");
+      if (y + P_ROW_H > FOOTER_ZONE) {
+        drawFooter(doc, currentPage, totalPages, "patient");
         doc.addPage();
+        currentPage++;
         drawWatermark(doc);
-        y = drawHeader(doc) + 6;
+        y = drawHeader(doc) + CONTENT_GAP;
+        y = drawPatientTableHeader(y);
       }
       const row = rows[i];
       if (i % 2 === 0) {
@@ -375,6 +397,7 @@ function buildPatientPDF(
       }
       const pTextY = y + P_ROW_H / 2 + 1;
       doc.setTextColor(...CHARCOAL);
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.text(formatDate(row.submittedAt), cols[0], pTextY);
       const title =
@@ -395,8 +418,11 @@ function buildPatientPDF(
   }
   y += 6;
 
-  doc.setFillColor(255, 248, 225);
+  // Important Notice — check page break first
   const noticeH = 32;
+  y = patientCheckPage(y, noticeH + 10);
+
+  doc.setFillColor(255, 248, 225);
   doc.roundedRect(M, y, CW, noticeH, 2, 2, "F");
   doc.setDrawColor(240, 208, 96);
   doc.setLineWidth(0.4);
@@ -427,7 +453,22 @@ function buildPatientPDF(
     ny += 4;
   }
 
-  drawFooter(doc, 1, totalPages, "patient");
+  drawFooter(doc, currentPage, totalPages, "patient");
+
+  // 2nd-pass: fix total page count on all pages
+  totalPages = currentPage;
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(PAGE_W / 2 - 15, PAGE_H - 16, 30, 6, "F");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...CHARCOAL);
+    const pg = `${p} / ${totalPages}`;
+    const pgW = doc.getTextWidth(pg);
+    doc.text(pg, (PAGE_W - pgW) / 2, PAGE_H - 12);
+  }
 }
 
 // ── Clinical Activity Report ──
