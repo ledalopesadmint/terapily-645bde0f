@@ -415,6 +415,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
     patientActivityId: string;
   } | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const [revokeReason, setRevokeReason] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
   const [scaleResultBusy, setScaleResultBusy] = useState<string | null>(null);
   const [inSessionTarget, setInSessionTarget] = useState<{
