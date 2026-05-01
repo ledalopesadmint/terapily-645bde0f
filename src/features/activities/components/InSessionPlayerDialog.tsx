@@ -109,7 +109,11 @@ export function InSessionPlayerDialog({
     return (
       <FullscreenShell title={activityTitle} onClose={onClose}>
         <div className="flex-1 flex flex-col items-center justify-center gap-4">
-          <p className="text-foreground">Não foi possível carregar a atividade.</p>
+          <p className="text-foreground">
+            {configQuery.error instanceof Error
+              ? configQuery.error.message
+              : "Não foi possível carregar a atividade."}
+          </p>
           <button
             onClick={onClose}
             className="px-6 py-2.5 rounded-lg bg-[var(--sage)] text-white text-sm font-medium"
