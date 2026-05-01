@@ -602,10 +602,10 @@ function buildClinicalPDF(
       if (entry.severity) line += ` (${entry.severity})`;
       if (entry.delta != null && entry.delta !== 0) {
         const sign = entry.delta > 0 ? "+" : "";
-        const arrow = entry.delta > 0 ? "↑" : "↓";
+        const arrow = entry.delta > 0 ? "(+)" : "(-)";
         line += ` · ${arrow} ${sign}${entry.delta} points`;
       } else if (entry.delta === 0) {
-        line += " · → 0";
+        line += " · (=) 0";
       }
       doc.text(line, M + 4, qy);
       qy += qrLineH;
@@ -736,7 +736,7 @@ function buildClinicalPDF(
       // Delta
       if (s.delta != null && s.delta !== 0) {
         const sign = s.delta > 0 ? "+" : "";
-        const arrow = s.delta > 0 ? "↑" : "↓";
+        const arrow = s.delta > 0 ? "(+)" : "(-)";
         const deltaText = `${arrow} ${sign}${s.delta} points`;
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
@@ -843,8 +843,8 @@ function buildClinicalPDF(
       const prev = c.points[c.points.length - 2].score;
       const curr = c.latest.score;
       const sign = c.delta! > 0 ? "+" : "";
-      const arrow = c.delta! > 0 ? "↑" : "↓";
-      const line = `${c.title}: ${prev} → ${curr} (${arrow} ${sign}${c.delta} points)`;
+      const arrow = c.delta! > 0 ? "(+)" : "(-)";
+      const line = `${c.title}: ${prev} > ${curr} (${arrow} ${sign}${c.delta} points)`;
       doc.text(line, M, y);
       y += 5;
     }
