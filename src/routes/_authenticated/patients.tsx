@@ -157,20 +157,36 @@ function PatientsContent() {
 
       <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <Tabs
-            value={status}
-            onValueChange={(v) => setStatus(v as PatientStatusFilter)}
-          >
-            <TabsList>
-              <TabsTrigger value="active">Ativos</TabsTrigger>
-              <TabsTrigger value="archived">Arquivados</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/patients/deleted">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setStatus("active")}
+              className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                status === "active"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "border border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+              }`}
+            >
+              Ativos
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatus("archived")}
+              className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
+                status === "archived"
+                  ? "bg-amber-500 text-white shadow-sm"
+                  : "border border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
+              }`}
+            >
+              Arquivados
+            </button>
+            <Link
+              to="/patients/deleted"
+              className="inline-flex items-center rounded-md border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-600 transition-all hover:bg-red-600 hover:text-white"
+            >
               <Trash className="mr-2 h-4 w-4" /> Excluídos
             </Link>
-          </Button>
+          </div>
         </div>
 
         <div className="relative w-full sm:max-w-xs">
