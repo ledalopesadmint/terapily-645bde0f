@@ -49,6 +49,18 @@ interface ReportRow {
   flagLabel?: string;   // clinical flag text (clinical only)
 }
 
+interface ClinicalFlagEntry {
+  status: string;    // ACTIVE, MONITORING, ACKNOWLEDGED
+  date: string;      // ISO
+  description: string;
+}
+
+interface AuditEntry {
+  action: string;
+  timestamp: string;
+  actorLabel: string;
+}
+
 type ReportVariant = "patient" | "clinical";
 
 // ── Shared layout helpers ──
