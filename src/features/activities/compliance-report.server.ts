@@ -487,7 +487,7 @@ function buildClinicalPDF(
     y = checkPage(y, rowH);
 
     // Re-draw table header if we just started a new page and this isn't the first row
-    if (y < 30 && i > 0) {
+    if (y < 18 + CONTENT_GAP + 5 && i > 0) {
       doc.setFillColor(...NAVY);
       doc.roundedRect(M, y, CW, thH, 1, 1, "F");
       doc.setTextColor(...WHITE);
