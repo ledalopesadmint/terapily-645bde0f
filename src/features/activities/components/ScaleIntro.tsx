@@ -33,9 +33,11 @@ export function ScaleIntro({ title, config, onStart }: ScaleIntroProps) {
               {title}
             </h1>
             {hasIntroduction && (
-              <p className="text-sm text-[var(--charcoal)]/70 leading-relaxed max-w-sm mx-auto">
-                {config.introduction}
-              </p>
+              <div className="text-sm text-[var(--charcoal)]/70 leading-relaxed max-w-sm mx-auto space-y-3 text-left">
+                {config.introduction!.split("\n\n").map((paragraph, i) => (
+                  <p key={i}>{paragraph}</p>
+                ))}
+              </div>
             )}
           </div>
 
