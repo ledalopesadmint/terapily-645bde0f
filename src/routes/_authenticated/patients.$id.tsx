@@ -655,13 +655,13 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         </span>
                       )}
                     </div>
-                    <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
                       {status === "revoked" && a.revocation_reason && (
-                        <span className="text-xs text-muted-foreground italic max-w-[200px] truncate" title={a.revocation_reason}>
+                        <span className="text-xs text-muted-foreground italic max-w-[280px] truncate" title={a.revocation_reason}>
                           {a.revocation_reason}
                         </span>
                       )}
