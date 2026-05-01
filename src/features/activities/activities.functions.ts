@@ -23,7 +23,7 @@ import {
   getActivePatientForWorkspace,
   getActivityFromCatalog,
 } from "./activities.server";
-import { encryptPHIServer } from "@/lib/crypto/encryption.server";
+import { encryptPHIServer, decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
 
 // ----------------------------------------------------------------
