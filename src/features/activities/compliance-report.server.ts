@@ -574,7 +574,9 @@ function buildClinicalPDF(
     y += 5;
   } else {
     for (const flag of flags) {
-      y = checkPage(y, 16);
+      const FLAG_BOX_H = 20; // generous height for balanced padding
+      y = checkPage(y, FLAG_BOX_H + 2);
+
       // Status color
       const statusColors: Record<string, readonly [number, number, number]> = {
         ACTIVE: [192, 57, 43],
@@ -596,39 +598,42 @@ function buildClinicalPDF(
       const border = borderColors[flag.status] ?? [200, 200, 200];
       const statusClr = statusColors[flag.status] ?? CHARCOAL;
 
+      // Box with balanced padding
       doc.setFillColor(...bg);
-      doc.roundedRect(M, y - 2, CW, 14, 1.5, 1.5, "F");
+      doc.roundedRect(M, y, CW, FLAG_BOX_H, 1.5, 1.5, "F");
       doc.setDrawColor(...border);
       doc.setLineWidth(0.3);
-      doc.roundedRect(M, y - 2, CW, 14, 1.5, 1.5, "S");
+      doc.roundedRect(M, y, CW, FLAG_BOX_H, 1.5, 1.5, "S");
 
-      // Status label
+      // Vertical center: 3 text lines occupy ~12mm, so padY = (20-12)/2 = 4
+      const flagTextTop = y + 5;
+
+      // Status label + date (first line)
       doc.setTextColor(...statusClr);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.text(flag.status, M + 3, y + 3);
+      doc.text(flag.status, M + 3, flagTextTop);
 
-      // Date
       doc.setTextColor(...CHARCOAL);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(7.5);
-      doc.text(formatDate(flag.date), M + 35, y + 3);
+      doc.text(formatDate(flag.date), M + 35, flagTextTop);
 
-      // Description
+      // Description (second line)
       doc.setFontSize(7);
-      doc.text(flag.description.slice(0, 80), M + 3, y + 8);
+      doc.text(flag.description.slice(0, 80), M + 3, flagTextTop + 5);
 
-      // Guidance note
+      // Guidance note (third line)
       doc.setTextColor(180, 155, 100);
       doc.setFontSize(5.5);
       doc.setFont("helvetica", "italic");
       doc.text(
         "This flag may require clinical follow-up. Consult your jurisdiction's applicable laws and your professional ethical guidelines.",
         M + 3,
-        y + 11.5,
+        flagTextTop + 10,
       );
 
-      y += 16;
+      y += FLAG_BOX_H + 3; // gap between flag boxes
     }
   }
 
