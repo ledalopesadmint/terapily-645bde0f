@@ -417,7 +417,7 @@ export const revealPatientContact = createServerFn({ method: "POST" })
 // getPatientContactAvailability
 // Retorna SOMENTE booleans (hasPhone, hasEmail) — NÃO decifra, NÃO audita.
 // Usado pelo modal "Link gerado" pra desabilitar botões cujo canal não tem
-// destinatário cadastrado, sem gastar audit `patient.phi_copied`.
+// destinatário cadastrado, sem gastar audit `patient.contact_revealed`.
 // =============================================================================
 
 const contactAvailabilitySchema = z.object({
