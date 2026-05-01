@@ -94,10 +94,10 @@ export function PatientList({
               </div>
               {p.clinical_flags && p.clinical_flags.total > 0 && (
                 <span
-                  className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-mauve/60 bg-mauve/15 px-2 py-1 text-xs font-semibold text-foreground"
+                  className="mr-2 inline-flex shrink-0 items-center gap-1 rounded-md border border-action-flag/60 bg-action-flag/15 px-2 py-1 text-xs font-semibold text-action-flag"
                   aria-label="Paciente com flag clínica"
                 >
-                  <AlertTriangle className="h-3.5 w-3.5 text-mauve" />
+                  <AlertTriangle className="h-3.5 w-3.5" />
                   Flag
                 </span>
               )}
