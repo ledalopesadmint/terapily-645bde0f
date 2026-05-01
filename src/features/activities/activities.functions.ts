@@ -320,6 +320,7 @@ export const listPatientActivities = createServerFn({ method: "GET" })
         id,
         delivery_mode,
         status,
+        revocation_reason,
         token_expires_at,
         token_first_opened_at,
         used_at,
