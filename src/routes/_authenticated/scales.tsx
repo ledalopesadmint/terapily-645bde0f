@@ -9,7 +9,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Play, Activity } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { listAvailableActivities } from "@/features/activities/activities.functions";
