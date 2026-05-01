@@ -256,50 +256,53 @@ function buildPatientPDF(
     doc.setTextColor(...CHARCOAL);
     doc.text("No completed activities in this period.", M, y);
   } else {
-    // Table header
+    // Table header — premium cell height
+    const pThH = 10;
     doc.setFillColor(...NAVY);
-    doc.roundedRect(M, y, CW, 7, 1, 1, "F");
-    const cols = [M + 3, M + 30, M + 100, M + 132];
+    doc.roundedRect(M, y, CW, pThH, 1, 1, "F");
+    const cols = [M + 4, M + 32, M + 102, M + 135];
     doc.setTextColor(...WHITE);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
-    const thY = y + 5;
+    const thY = y + pThH / 2 + 1.5;
     doc.text("DATE", cols[0], thY);
     doc.text("ACTIVITY", cols[1], thY);
     doc.text("MODE", cols[2], thY);
     doc.text("SCORE", cols[3], thY);
-    y += 10;
+    y += pThH + 2;
 
+    const P_ROW_H = 10;
     doc.setFont("helvetica", "normal");
     for (let i = 0; i < rows.length; i++) {
-      if (y > 260) {
+      if (y + P_ROW_H > 260) {
         drawFooter(doc, 1, totalPages, "patient");
         doc.addPage();
         drawWatermark(doc);
-        y = drawHeader(doc);
+        y = drawHeader(doc) + 6;
       }
       const row = rows[i];
       if (i % 2 === 0) {
         doc.setFillColor(249, 247, 243);
-        doc.rect(M, y - 4, CW, 7, "F");
+        doc.rect(M, y, CW, P_ROW_H, "F");
       }
+      const pTextY = y + P_ROW_H / 2 + 1;
       doc.setTextColor(...CHARCOAL);
       doc.setFontSize(8);
-      doc.text(formatDate(row.submittedAt), cols[0], y);
+      doc.text(formatDate(row.submittedAt), cols[0], pTextY);
       const title =
         row.activityTitle.length > 35
           ? row.activityTitle.slice(0, 32) + "…"
           : row.activityTitle;
-      doc.text(title, cols[1], y);
-      doc.text(row.deliveryMode.replace("_", " "), cols[2], y);
+      doc.text(title, cols[1], pTextY);
+      doc.text(row.deliveryMode.replace("_", " "), cols[2], pTextY);
       doc.setFont("helvetica", "bold");
       doc.text(
         row.score != null ? `${row.score}` : "—",
         cols[3],
-        y,
+        pTextY,
       );
       doc.setFont("helvetica", "normal");
-      y += 7;
+      y += P_ROW_H;
     }
   }
   y += 6;
