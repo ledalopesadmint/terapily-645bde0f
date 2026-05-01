@@ -81,6 +81,15 @@
   --color-terracotta: var(--terracotta);
   --color-cream-tan: var(--cream-tan);
   --color-rust: var(--rust);
+
+  /* Cores exclusivas de ações críticas na área de pacientes */
+  --color-action-flag: var(--action-flag);
+  --color-action-flag-fg: var(--action-flag-fg);
+  --color-action-flag-subtle: var(--action-flag-subtle);
+  --color-action-patient-report: var(--action-patient-report);
+  --color-action-patient-report-fg: var(--action-patient-report-fg);
+  --color-action-therapist-report: var(--action-therapist-report);
+  --color-action-therapist-report-fg: var(--action-therapist-report-fg);
 }
 
 /*
