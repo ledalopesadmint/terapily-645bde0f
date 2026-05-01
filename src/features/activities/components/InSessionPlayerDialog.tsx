@@ -80,8 +80,8 @@ export function InSessionPlayerDialog({
   // Error — show immediately, skip vinheta
   if (configQuery.isError) {
     return (
-      <FullscreenShell title={activityTitle} onClose={onClose}>
-        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+      <div className="fixed inset-0 z-50 bg-[var(--cream)] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4 text-center px-6">
           <p className="text-foreground">
             {configQuery.error instanceof Error
               ? configQuery.error.message
@@ -94,7 +94,7 @@ export function InSessionPlayerDialog({
             Fechar
           </button>
         </div>
-      </FullscreenShell>
+      </div>
     );
   }
 
