@@ -26,6 +26,7 @@ import {
 import { encryptPHIServer, decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
+
 // ----------------------------------------------------------------
 // Tier → janela de shared_link (em horas)
 // Ver mem://features/activity-modes-and-link-duration
