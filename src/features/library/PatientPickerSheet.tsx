@@ -1,0 +1,207 @@
+/**
+ * PatientPickerSheet — gaveta lateral para selecionar paciente no Acervo.
+ *
+ * Fluxo: terapeuta clica "Em sessão" em qualquer card → abre Sheet →
+ * busca/seleciona paciente ativo → dispara assignActivity(in_session) →
+ * navega pro perfil do paciente com o player aberto.
+ *
+ * Regras:
+ * - Lista apenas pacientes ativos (status=active, deleted_at IS NULL).
+ * - Busca por display_name (não-PHI).
+ * - Após selecionar, navega para /patients/$id (o in-session player
+ *   é aberto automaticamente via search param).
+ */
+
+import { useState } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, Play, Users } from "lucide-react";
+import { toast } from "sonner";
+
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+import { listPatients } from "@/features/patients/patients.functions";
+import {
+  assignActivity,
+  listAvailableActivities,
+} from "@/features/activities/activities.functions";
+import type { Activity } from "./catalog";
+
+interface PatientPickerSheetProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** Atividade selecionada no Acervo (seed/catalog shape). */
+  activity: Activity | null;
+  workspaceId: string | undefined;
+}
+
+export function PatientPickerSheet({
+  open,
+  onOpenChange,
+  activity,
+  workspaceId,
+}: PatientPickerSheetProps) {
+  const navigate = useNavigate();
+  const qc = useQueryClient();
+  const [search, setSearch] = useState("");
+
+  // Lista pacientes ativos
+  const patientsQuery = useQuery({
+    queryKey: ["patients", "active", search],
+    queryFn: () =>
+      listPatients({
+        data: { status: "active" as const, search: search || undefined, limit: 50 },
+      }),
+    enabled: open,
+    staleTime: 10_000,
+  });
+
+  // Precisamos do ID real da atividade no banco (não o seed id)
+  const catalogQuery = useQuery({
+    queryKey: ["activity-catalog", workspaceId],
+    queryFn: () => listAvailableActivities(),
+    enabled: open && !!activity,
+    staleTime: 30_000,
+  });
+
+  // Encontrar a atividade real no banco pelo code/slug
+  const findRealActivityId = (): string | null => {
+    if (!activity) return null;
+    const catalog = catalogQuery.data?.activities ?? [];
+    for (const a of catalog) {
+      const code = ((a as Record<string, unknown>).config as Record<string, unknown> | null)?.code as string | undefined;
+      if (code && code.toLowerCase() === activity.code.toLowerCase()) return a.id;
+      if (a.slug?.toLowerCase() === activity.id.toLowerCase()) return a.id;
+    }
+    return null;
+  };
+
+  const assignMutation = useMutation({
+    mutationFn: (patientId: string) => {
+      const realId = findRealActivityId();
+      if (!realId) throw new Error("Atividade não disponível no workspace.");
+      if (!workspaceId) throw new Error("Workspace não encontrado.");
+      return assignActivity({
+        data: {
+          patientId,
+          workspaceId,
+          activityId: realId,
+          deliveryMode: "in_session",
+          expiresInHours: 1, // in_session = 1h fixo
+        },
+      });
+    },
+    onSuccess: (res, patientId) => {
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
+      onOpenChange(false);
+      setSearch("");
+      toast.success(`${activity?.name ?? "Atividade"} pronta.`, {
+        description: "Abrindo sessão…",
+      });
+      // Navega pro perfil do paciente com param pra abrir o player
+      navigate({
+        to: "/patients/$id",
+        params: { id: patientId },
+        search: { startSession: res.id },
+      });
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Não foi possível iniciar.");
+    },
+  });
+
+  const patients = patientsQuery.data?.patients ?? [];
+  const isLoading = patientsQuery.isLoading || catalogQuery.isLoading;
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent className="flex w-full flex-col sm:max-w-md">
+        <SheetHeader className="space-y-1 text-left">
+          <SheetTitle className="font-display text-xl">
+            Selecionar paciente
+          </SheetTitle>
+          <SheetDescription>
+            {activity
+              ? `Aplicar ${activity.name} em sessão — escolha quem atender agora.`
+              : "Escolha um paciente para aplicar a atividade em sessão."}
+          </SheetDescription>
+        </SheetHeader>
+
+        {/* Busca */}
+        <div className="relative mt-4">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por apelido…"
+            className="pl-9"
+            autoFocus
+          />
+        </div>
+
+        {/* Lista */}
+        <ScrollArea className="mt-4 flex-1 -mx-6 px-6">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
+              Carregando…
+            </div>
+          ) : patients.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-12 text-center">
+              <Users className="h-8 w-8 text-muted-foreground/50" />
+              <p className="text-sm text-muted-foreground">
+                {search
+                  ? "Nenhum paciente encontrado."
+                  : "Nenhum paciente ativo."}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              {patients.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  disabled={assignMutation.isPending}
+                  onClick={() => assignMutation.mutate(p.id)}
+                  className="
+                    flex w-full items-center justify-between gap-3 rounded-lg
+                    px-3 py-3 text-left
+                    transition-colors hover:bg-sage/10
+                    focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                    disabled:opacity-50
+                  "
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {p.display_name}
+                    </p>
+                    {p.initials && (
+                      <p className="text-xs text-muted-foreground">
+                        {p.initials}
+                      </p>
+                    )}
+                  </div>
+                  <Play className="h-4 w-4 shrink-0 text-sage" />
+                </button>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
+
+        {/* Nota de segurança */}
+        <p className="mt-auto border-t border-border pt-3 text-[0.6875rem] text-muted-foreground">
+          A sessão dura 1 hora. O paciente responde no seu dispositivo — sem
+          criar conta.
+        </p>
+      </SheetContent>
+    </Sheet>
+  );
+}

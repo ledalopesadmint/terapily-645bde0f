@@ -10,8 +10,9 @@
  *  - Sem PHI em URL/log/audit metadata.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
+import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
@@ -83,7 +84,12 @@ import { InSessionPlayerDialog } from "@/features/activities/components/InSessio
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
 import { Progress } from "@/components/ui/progress";
 
+const patientSearchSchema = z.object({
+  startSession: z.string().uuid().optional(),
+});
+
 export const Route = createFileRoute("/_authenticated/patients/$id")({
+  validateSearch: patientSearchSchema,
   head: () => ({
     meta: [
       { title: "Paciente · Terapily" },
@@ -302,6 +308,7 @@ function formatClinicalFlagLabel(flag: string) {
 
 function PatientDetailPage() {
   const { id } = useParams({ from: "/_authenticated/patients/$id" });
+  const { startSession } = Route.useSearch();
 
   const patientQuery = useQuery({
     queryKey: ["patient", id],
@@ -348,6 +355,7 @@ function PatientDetailPage() {
       <PatientTabs
         patientId={patient.id}
         workspaceId={patient.workspace_id}
+        startSession={startSession}
       />
     </div>
   );
@@ -356,9 +364,11 @@ function PatientDetailPage() {
 function PatientTabs({
   patientId,
   workspaceId,
+  startSession,
 }: {
   patientId: string;
   workspaceId: string;
+  startSession?: string;
 }) {
   const roleQuery = useQuery({
     queryKey: ["my-workspace-role", workspaceId],
@@ -375,7 +385,7 @@ function PatientTabs({
       </TabsList>
 
       <TabsContent value="activities" className="mt-6">
-        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} />
+        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} startSession={startSession} />
       </TabsContent>
 
       {isOwner && (
@@ -394,9 +404,10 @@ function PatientTabs({
 interface ActivitiesTabProps {
   patientId: string;
   workspaceId: string;
+  startSession?: string;
 }
 
-function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
+function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabProps) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [revealedLink, setRevealedLink] = useState<{
@@ -411,6 +422,8 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
     activityTitle: string;
   } | null>(null);
   const [viewResponseId, setViewResponseId] = useState<string | null>(null);
+
+  const [startSessionConsumed, setStartSessionConsumed] = useState(false);
 
   const downloadScaleResult = async (
     responseId: string,
@@ -446,6 +459,21 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
 
   const activities = listQuery.data?.activities ?? [];
   const activityIds = activities.map((a) => a.id);
+
+  // Auto-open in-session player when navigated from Acervo with startSession param
+  useEffect(() => {
+    if (!startSession || startSessionConsumed) return;
+    if (!listQuery.data) return;
+    const match = activities.find((a) => a.id === startSession);
+    if (match) {
+      setInSessionTarget({
+        patientActivityId: startSession,
+        activityTitle: (match as { activity?: { title?: string } }).activity?.title ?? "Atividade",
+      });
+    }
+    setStartSessionConsumed(true);
+  }, [startSession, startSessionConsumed, listQuery.data, activities]);
+
   const clinicalFlagsWithLifecycle = useMemo(
     () => computeFlagLifecycle(activities as Array<{
       activity?: { slug?: string; title?: string } | null;

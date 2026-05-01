@@ -24,7 +24,7 @@
  *    quando o terapeuta clica "Gerar" no modal de envio.
  */
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
@@ -57,6 +57,7 @@ import { listAvailableActivities } from "@/features/activities/activities.functi
 import { getFeaturedActivity } from "@/server/admin.functions";
 import { getPatientNickname } from "@/features/patients/patients.functions";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { PatientPickerSheet } from "@/features/library/PatientPickerSheet";
 
 const librarySearchSchema = z.object({
   selectFor: z.string().uuid().optional(),
@@ -100,9 +101,13 @@ function LibraryPage() {
 function LibraryStandardMode() {
   const auth = useAuth();
   const navigate = useNavigate();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerActivity, setPickerActivity] = useState<Activity | null>(null);
+
   const handleStart = (activity: Activity, mode: "in_session" | "shared_link") => {
-    toast.info(`${activity.name} — selecione um paciente para ${mode === "in_session" ? "aplicar em sessão" : "enviar por link"}.`);
-    // TODO: navigate to patient picker or open assign modal
+    // Para in_session: abrir gaveta de seleção de paciente
+    setPickerActivity(activity);
+    setPickerOpen(true);
   };
 
   // Curadoria semanal: admin define no /admin via toggle "Destaque".
@@ -187,6 +192,14 @@ function LibraryStandardMode() {
       </div>
 
       {/* footer placeholder removed — player and magic link are live */}
+
+      {/* Gaveta de seleção de paciente (in_session) */}
+      <PatientPickerSheet
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        activity={pickerActivity}
+        workspaceId={auth.workspace?.id}
+      />
     </div>
   );
 }
