@@ -69,8 +69,10 @@ import {
   recordShareIntent,
   revokeActivity,
   listAvailableActivities,
+  generateInSessionLink,
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
+import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { Progress } from "@/components/ui/progress";
 
