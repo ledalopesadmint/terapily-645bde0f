@@ -192,6 +192,14 @@ function LibraryStandardMode() {
       </div>
 
       {/* footer placeholder removed — player and magic link are live */}
+
+      {/* Gaveta de seleção de paciente (in_session) */}
+      <PatientPickerSheet
+        open={pickerOpen}
+        onOpenChange={setPickerOpen}
+        activity={pickerActivity}
+        workspaceId={auth.workspace?.id}
+      />
     </div>
   );
 }
