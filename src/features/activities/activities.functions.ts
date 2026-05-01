@@ -9,6 +9,7 @@
  *  - Audit metadata NUNCA contém PHI (só UUIDs e enums).
  */
 
+
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -22,7 +23,7 @@ import {
   getActivePatientForWorkspace,
   getActivityFromCatalog,
 } from "./activities.server";
-import { encryptPHIServer } from "@/lib/crypto/encryption.server";
+import { encryptPHIServer, decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
 
 // ----------------------------------------------------------------
@@ -864,5 +865,153 @@ export const getTierLinkLimits = createServerFn({ method: "GET" })
       defaultHours,
       maxHours,
       allowedOptionsHours: allOptions.filter((h) => h <= maxHours),
+    };
+  });
+
+// ============================================================
+// getActivityResponseDetail — decifra respostas on-demand
+// pra o drawer "Ver respostas" no perfil do paciente.
+// Audit: patient.contact_revealed? Não — aqui é resposta
+// de atividade, não PHI de contato. Mas logamos igualmente.
+// ============================================================
+const ResponseDetailSchema = z.object({
+  responseId: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+});
+
+export const getActivityResponseDetail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ResponseDetailSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: resp, error } = await supabaseAdmin
+      .from("activity_responses")
+      .select(
+        "id, workspace_id, patient_id, activity_id, patient_activity_id, score, severity, scoring_metadata, raw_responses_encrypted, submitted_at, submitted_via",
+      )
+      .eq("id", data.responseId)
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+
+    if (error || !resp) throw new Error("Resposta não encontrada.");
+
+    // Permissão: workspace member + (assigned therapist OU owner)
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", resp.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!membership) throw new Error("Sem permissão.");
+
+    const isOwner = membership.role === "owner";
+    if (!isOwner) {
+      const { data: patient } = await supabaseAdmin
+        .from("patients")
+        .select("assigned_therapist_id")
+        .eq("id", resp.patient_id)
+        .eq("workspace_id", resp.workspace_id)
+        .maybeSingle();
+      if (patient?.assigned_therapist_id !== userId) {
+        throw new Error("Sem permissão para ver esta resposta.");
+      }
+    }
+
+    // Decifra
+    let decryptedResponses: { [x: string]: {} } = {};
+    if (resp.raw_responses_encrypted) {
+      try {
+        const plain = await decryptPHIServer(resp.raw_responses_encrypted);
+        decryptedResponses = JSON.parse(plain) as { [x: string]: {} };
+      } catch {
+        throw new Error("Não foi possível decifrar as respostas.");
+      }
+    }
+
+    // Busca config da atividade pra UI renderizar labels
+    const { data: activity } = await supabaseAdmin
+      .from("activity_catalog")
+      .select("title, config, archetype")
+      .eq("id", resp.activity_id)
+      .maybeSingle();
+
+    // Audit
+    await recordAudit({
+      actorId: userId,
+      workspaceId: resp.workspace_id,
+      action: "activity.response_viewed",
+      resourceType: "activity_response",
+      resourceId: resp.id,
+      metadata: {
+        patient_id: resp.patient_id,
+        patient_activity_id: resp.patient_activity_id,
+      },
+    });
+
+    return {
+      id: resp.id,
+      score: resp.score,
+      severity: resp.severity,
+      scoringMetadata: resp.scoring_metadata,
+      submittedAt: resp.submitted_at,
+      submittedVia: resp.submitted_via,
+      responses: decryptedResponses,
+      activity: activity
+        ? { title: activity.title, config: activity.config, archetype: activity.archetype }
+        : null,
+    };
+  });
+
+// ============================================================
+// getActivityConfig — terapeuta busca config de uma atividade
+// do catálogo pra renderizar o player in_session.
+// ============================================================
+const ActivityConfigSchema = z.object({
+  patientActivityId: z.string().uuid(),
+});
+
+export const getActivityConfig = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => ActivityConfigSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa, error } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, activity_id, assigned_by, used_at, status")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (error || !pa) throw new Error("Atividade não encontrada.");
+    if (pa.used_at) throw new Error("Esta atividade já foi respondida.");
+    if (pa.status === "revoked") throw new Error("Esta atividade foi revogada.");
+
+    // Permissão
+    const { data: membership } = await supabaseAdmin
+      .from("workspace_members")
+      .select("role")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    const isOwner = membership?.role === "owner";
+    if (!isOwner && pa.assigned_by !== userId) {
+      throw new Error("Sem permissão.");
+    }
+
+    const activity = await getActivityFromCatalog(pa.activity_id);
+    if (!activity) throw new Error("Atividade não encontrada no catálogo.");
+
+    return {
+      patientActivityId: pa.id,
+      activity: {
+        title: activity.title,
+        archetype: activity.archetype,
+        config: activity.config,
+      },
     };
   });

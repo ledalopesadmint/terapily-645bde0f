@@ -13,7 +13,7 @@
 import { useMemo, useState } from "react";
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Copy, Download, Mail, MessageCircle, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
+import { ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 
@@ -74,6 +74,8 @@ import {
 } from "@/features/activities/activities.functions";
 import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
+import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
+import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
@@ -231,6 +233,11 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
   } | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [reportBusy, setReportBusy] = useState(false);
+  const [inSessionTarget, setInSessionTarget] = useState<{
+    patientActivityId: string;
+    activityTitle: string;
+  } | null>(null);
+  const [viewResponseId, setViewResponseId] = useState<string | null>(null);
 
   const listQuery = useQuery({
     queryKey: ["patient-activities", patientId, workspaceId],
@@ -365,7 +372,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                         {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
                       </p>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
                       {response?.score != null && (
                         <span className="text-sm">
                           Score <strong>{response.score}</strong>
@@ -378,6 +385,33 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
+                      {/* Aplicar agora — in_session pendente */}
+                      {(status === "pending" || status === "in_progress") &&
+                        (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
+                        !a.used_at && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          onClick={() =>
+                            setInSessionTarget({
+                              patientActivityId: a.id,
+                              activityTitle: a.activity?.title ?? "Atividade",
+                            })
+                          }
+                        >
+                          <Play className="mr-1 h-3.5 w-3.5" /> Aplicar agora
+                        </Button>
+                      )}
+                      {/* Ver respostas — completa */}
+                      {status === "completed" && response?.id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setViewResponseId(response.id)}
+                        >
+                          <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
+                        </Button>
+                      )}
                       {canRegenLink && (
                         <Button
                           size="sm"
@@ -454,6 +488,24 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* In-session player */}
+      {inSessionTarget && (
+        <InSessionPlayerDialog
+          patientActivityId={inSessionTarget.patientActivityId}
+          patientId={patientId}
+          workspaceId={workspaceId}
+          activityTitle={inSessionTarget.activityTitle}
+          onClose={() => setInSessionTarget(null)}
+        />
+      )}
+
+      {/* Response detail drawer */}
+      <ResponseDetailDrawer
+        responseId={viewResponseId}
+        workspaceId={workspaceId}
+        onClose={() => setViewResponseId(null)}
+      />
     </div>
   );
 }
