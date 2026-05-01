@@ -599,7 +599,6 @@ function buildClinicalPDF(
       doc.setFontSize(8);
       doc.setTextColor(...CHARCOAL);
       let line = `${entry.title}: ${entry.score}`;
-      if (entry.severity) line += ` (${entry.severity})`;
       if (entry.delta != null && entry.delta !== 0) {
         const sign = entry.delta > 0 ? "+" : "";
         const arrow = entry.delta > 0 ? "(+)" : "(-)";
@@ -608,9 +607,28 @@ function buildClinicalPDF(
         line += " · (=) 0";
       }
       doc.text(line, M + 4, qy);
-      qy += qrLineH;
+      // Severity on secondary line (scale-defined label)
+      if (entry.severity) {
+        doc.setFontSize(6.5);
+        doc.setTextColor(130, 130, 130);
+        doc.text(`Severity: ${entry.severity} (scale-defined)`, M + 4, qy + 3.5);
+        doc.setTextColor(...CHARCOAL);
+        doc.setFontSize(8);
+      }
+      qy += entry.severity ? qrLineH + 3.5 : qrLineH;
     }
-    y += qrBoxH + 6;
+
+    // Delta disclaimer
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(5.5);
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      "Changes reflect score differences only and do not imply clinical improvement or worsening.",
+      M + 4,
+      qy + 1,
+    );
+
+    y = qy + 8;
   }
 
   // ── Section: Activity History ──
