@@ -103,19 +103,36 @@ export function InSessionPlayerDialog({
     );
   }
 
-  // Vinheta intro (plays before any content)
-  if (!vinhetaDone) {
-    return <VinhetaIntro onComplete={handleVinhetaComplete} />;
+  // Scale intro page (after vinheta, before questions)
+  if (vinhetaDone && !introStarted && !configQuery.isLoading) {
+    return (
+      <>
+        <ScaleIntro
+          title={activityTitle}
+          config={config}
+          onStart={() => setIntroStarted(true)}
+        />
+        {/* Cream overlay fades out after vinheta ends — prevents flash */}
+        {overlayVisible && (
+          <div
+            className={`fixed inset-0 z-[55] bg-[var(--cream)] pointer-events-none transition-opacity duration-500 ${vinhetaDone ? "opacity-0" : "opacity-100"}`}
+          />
+        )}
+        {!vinhetaDone && <VinhetaIntro onComplete={handleVinhetaComplete} />}
+      </>
+    );
   }
 
-  // Scale intro page (after vinheta, before questions)
-  if (!introStarted && !configQuery.isLoading) {
+  // Vinheta still playing (before anything renders underneath)
+  if (!vinhetaDone) {
     return (
-      <ScaleIntro
-        title={activityTitle}
-        config={config}
-        onStart={() => setIntroStarted(true)}
-      />
+      <>
+        <FullscreenShell title={activityTitle} onClose={onClose}>
+          <div className="flex-1" />
+        </FullscreenShell>
+        <div className="fixed inset-0 z-[55] bg-[var(--cream)]" />
+        <VinhetaIntro onComplete={handleVinhetaComplete} />
+      </>
     );
   }
 
