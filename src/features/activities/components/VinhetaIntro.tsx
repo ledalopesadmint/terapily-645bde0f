@@ -47,7 +47,7 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
   }, [onComplete]);
 
   return (
-    <div className="fixed inset-0 z-[60] bg-[var(--cream)] flex items-center justify-center">
+    <div className="absolute inset-0 bg-[var(--cream)] flex items-center justify-center">
       <video
         ref={videoRef}
         src="/brand/vinheta-creme.mp4"
