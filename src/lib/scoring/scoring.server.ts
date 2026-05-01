@@ -148,6 +148,26 @@ export function scoreActivity(
     }
   }
 
+  // Cluster subscores (e.g. PCL-5)
+  const clusterScores: Record<string, number> = {};
+  if (scoring.clusters && typeof scoring.clusters === "object") {
+    for (const [clusterName, itemIds] of Object.entries(scoring.clusters)) {
+      if (!Array.isArray(itemIds)) continue;
+      let clusterTotal = 0;
+      for (const itemId of itemIds) {
+        const raw = responses[itemId];
+        if (isFiniteNumber(raw)) {
+          let value = raw;
+          if (reverseSet.has(itemId) && maxPerItem !== null) {
+            value = maxPerItem - value;
+          }
+          clusterTotal += value;
+        }
+      }
+      clusterScores[clusterName] = clusterTotal;
+    }
+  }
+
   return {
     score: total,
     severity,
@@ -156,6 +176,7 @@ export function scoreActivity(
       answered,
       expected,
       completion_rate: Number(completionRate.toFixed(2)),
+      ...(Object.keys(clusterScores).length > 0 ? { clusters: clusterScores } : {}),
     },
   };
 }
