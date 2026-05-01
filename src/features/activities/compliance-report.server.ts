@@ -633,10 +633,11 @@ function buildClinicalPDF(
   }
 
   // ── Section: Activity History ──
+  y += CONTENT_GAP;
+  y = checkPage(y, 30);
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(12);
-  y += 4;
   doc.text("Activity History", M, y);
   y += 8;
 
