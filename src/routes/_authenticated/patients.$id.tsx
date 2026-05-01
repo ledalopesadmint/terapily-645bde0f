@@ -840,6 +840,10 @@ const AUDIT_LABEL: Record<string, string> = {
   "activity.submitted": "Atividade respondida",
   "activity.status_changed": "Status alterado",
   "activity.response_recorded": "Resposta registrada",
+  "activity.revoked": "Atividade revogada",
+  "compliance_report.generated": "Compliance Report gerado",
+  "patient.contact_revealed": "Contato revelado",
+  "clinical_flag.raised": "Flag clínica detectada",
 };
 
 function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: string }) {
