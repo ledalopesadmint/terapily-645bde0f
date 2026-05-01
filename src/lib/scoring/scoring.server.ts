@@ -69,6 +69,18 @@ const VALID_SEVERITIES: Severity[] = [
   "not_applicable",
 ];
 
+/** Map descriptive band labels to standard severity enum via keyword matching. */
+function mapLabelToSeverity(label: string): Severity {
+  const l = label.toLowerCase();
+  if (/\bextrem/.test(l) && /\bsevere\b/.test(l)) return "severe";
+  if (/\bmoderate(?:ly)?[\s_-]*severe\b/.test(l)) return "moderately_severe";
+  if (/\bsevere\b/.test(l) || /\bprobable\b/.test(l) || /\bhigh risk\b/.test(l) || /\bintensive\b/.test(l) || /\bclinical range\b/.test(l) || /\bclinically significant\b/.test(l)) return "severe";
+  if (/\bmoderate\b/.test(l) || /\bpossible\b/.test(l) || /\bsubstantial\b/.test(l) || /\bnear threshold\b/.test(l)) return "moderate";
+  if (/\bmild\b/.test(l) || /\blow[\s_-](?:to[\s_-])?moderate\b/.test(l) || /\bhazardous\b/.test(l) || /\bhigher normal\b/.test(l) || /\bpositive screen\b/.test(l)) return "mild";
+  if (/\bminimal\b/.test(l) || /\bnone\b/.test(l) || /\bnegative screen\b/.test(l) || /\bnormal\b/.test(l) || /\blow\b/.test(l) || /\bno\b/.test(l) || /\bgood\b/.test(l) || /\bsubclinical\b/.test(l) || /\bwell\b/.test(l) || /\badequate\b/.test(l)) return "minimal";
+  return "moderate"; // fallback for unrecognized labels
+}
+
 function isFiniteNumber(v: unknown): v is number {
   return typeof v === "number" && Number.isFinite(v);
 }
@@ -139,11 +151,19 @@ export function scoreActivity(
     };
   }
 
-  // Severidade
+  // Severidade — match raw band label, then map to standard enum
   let severity: Severity = "not_applicable";
+  let severityLabel: string | null = null;
   for (const band of bands) {
-    if (total >= band.min && total <= band.max && VALID_SEVERITIES.includes(band.label)) {
-      severity = band.label;
+    if (total >= band.min && total <= band.max) {
+      severityLabel = band.label;
+      // Try exact match first
+      if (VALID_SEVERITIES.includes(band.label as Severity)) {
+        severity = band.label as Severity;
+      } else {
+        // Best-effort mapping from descriptive labels to standard enum
+        severity = mapLabelToSeverity(band.label);
+      }
       break;
     }
   }
@@ -176,6 +196,7 @@ export function scoreActivity(
       answered,
       expected,
       completion_rate: Number(completionRate.toFixed(2)),
+      ...(severityLabel ? { severity_label: severityLabel } : {}),
       ...(Object.keys(clusterScores).length > 0 ? { clusters: clusterScores } : {}),
     },
   };

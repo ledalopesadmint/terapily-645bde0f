@@ -298,7 +298,8 @@ function computeFlagLifecycle(
   return results;
 }
 
-function formatClinicalFlagLabel(flag: string) {
+function formatClinicalFlagLabel(flag: unknown): string {
+  if (typeof flag !== "string") return "Sinal clínico detectado";
   if (flag === "suicidal_ideation") return "Ideação suicida";
   if (flag === "self_harm") return "Autolesão";
   if (flag === "homicidal_ideation") return "Ideação homicida";
@@ -883,7 +884,7 @@ function ClinicalFlagBanner({
                   </p>
                   <p className="text-xs text-muted-foreground">
                     Score {flag.score ?? "—"}{flag.severity ? ` · ${flag.severity}` : ""}
-                    {flag.item_id ? ` · item ${flag.item_id.replace(/^q/i, "")}` : ""}
+                    {flag.item_id ? ` · item ${typeof flag.item_id === "string" ? flag.item_id.replace(/^q/i, "") : flag.item_id}` : ""}
                   </p>
                 </div>
               </div>

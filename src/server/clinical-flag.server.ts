@@ -31,12 +31,17 @@ export function detectClinicalFlag(
     : [];
 
   for (const item of items) {
-    const it = item as { id?: string; clinical_flag?: string; flag_threshold?: number };
+    const it = item as { id?: string; clinical_flag?: string | boolean; flag_text?: string; flag_threshold?: number };
     if (!it?.clinical_flag || !it.id) continue;
     const threshold = typeof it.flag_threshold === "number" ? it.flag_threshold : 1;
     const raw = responses[it.id];
     if (typeof raw === "number" && raw >= threshold) {
-      return { raised: true, flag: it.clinical_flag, item_id: it.id };
+      // clinical_flag can be a descriptive string ("suicidal_ideation") or boolean true.
+      // When boolean, fall back to flag_text or a generic label.
+      const flagLabel = typeof it.clinical_flag === "string"
+        ? it.clinical_flag
+        : (it.flag_text ?? `clinical_risk_${it.id}`);
+      return { raised: true, flag: flagLabel, item_id: it.id };
     }
   }
 
