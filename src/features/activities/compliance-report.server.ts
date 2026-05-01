@@ -348,21 +348,17 @@ function buildClinicalPDF(
   patientLabel: string,
   rows: ReportRow[],
   hasPHI: boolean,
+  flags: ClinicalFlagEntry[],
+  auditEntries: AuditEntry[],
 ) {
-  const totalPages = 3; // estimate; jsPDF doesn't support dynamic page count easily
-  let currentPage = 1;
+  // Footer zone: content must not go below this Y
+  const FOOTER_ZONE = PAGE_H - 22;
 
-  function nextPage() {
-    drawFooter(doc, currentPage, totalPages, "clinical", integrityHash);
-    doc.addPage();
-    currentPage++;
-    drawWatermark(doc);
-    return drawHeader(doc);
-  }
+  let totalPages = 1; // will be corrected with a second pass
+  let currentPage = 1;
 
   // Compute integrity hash
   const hashInput = `${patientLabel}|${params.therapistName}|${params.from}|${params.to}|${rows.length}|${new Date().toISOString().slice(0, 10)}`;
-  // Simple hash for jsPDF (no crypto import needed — just a checksum)
   let hash = 0;
   for (let i = 0; i < hashInput.length; i++) {
     const chr = hashInput.charCodeAt(i);
@@ -370,10 +366,23 @@ function buildClinicalPDF(
   }
   const integrityHash = Math.abs(hash).toString(16).padStart(8, "0") + "…";
 
+  function checkPage(y: number, needed = 10): number {
+    if (y + needed > FOOTER_ZONE) {
+      drawFooter(doc, currentPage, totalPages, "clinical", integrityHash);
+      doc.addPage();
+      currentPage++;
+      drawWatermark(doc);
+      return drawHeader(doc);
+    }
+    return y;
+  }
+
   drawWatermark(doc);
   let y = drawHeader(doc);
 
-  // Clinician copy band
+  // ── Clinician copy band — balanced padding ──
+  const bandPadding = 5;
+  y += bandPadding;
   doc.setFillColor(253, 232, 232);
   doc.roundedRect(M, y, CW, 7, 1.5, 1.5, "F");
   doc.setTextColor(...RED);
@@ -382,9 +391,9 @@ function buildClinicalPDF(
   const bandLabel = "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION";
   const bandW = doc.getTextWidth(bandLabel);
   doc.text(bandLabel, M + (CW - bandW) / 2, y + 5);
-  y += 10;
+  y += 7 + bandPadding;
 
-  // Title
+  // ── Title (keep current padding) ──
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(20);
@@ -394,10 +403,11 @@ function buildClinicalPDF(
   doc.setFontSize(9);
   doc.setTextColor(...CHARCOAL);
   doc.text("Summary of recorded activities for your clinical records", M, y);
-  y += 8;
+  y += 5; // reduced gap before PHI warning
 
-  // PHI warning (only if decrypted name present)
+  // ── PHI warning — tighter, balanced padding ──
   if (hasPHI) {
+    y += 2;
     doc.setFillColor(255, 243, 224);
     doc.roundedRect(M, y, CW, 8, 1.5, 1.5, "F");
     doc.setTextColor(230, 81, 0);
@@ -410,10 +420,12 @@ function buildClinicalPDF(
       M + 28,
       y + 5,
     );
-    y += 12;
+    y += 10;
+  } else {
+    y += 3;
   }
 
-  // Info block
+  // ── Info block (keep current padding) ──
   doc.setFillColor(247, 245, 240);
   doc.roundedRect(M, y, CW, 24, 2, 2, "F");
   let iy = y + 6;
@@ -435,6 +447,13 @@ function buildClinicalPDF(
   }
   y += 30;
 
+  // ── Section: Activity History ──
+  doc.setTextColor(...NAVY);
+  doc.setFont("times", "bold");
+  doc.setFontSize(12);
+  doc.text("Activity History", M, y);
+  y += 5;
+
   // Table header
   doc.setFillColor(...NAVY);
   doc.roundedRect(M, y, CW, 7, 1, 1, "F");
@@ -446,13 +465,26 @@ function buildClinicalPDF(
   for (let i = 0; i < headers.length; i++) {
     doc.text(headers[i], cols[i], y + 5);
   }
-  y += 10;
+  y += 9;
 
-  // Table rows
+  // Table rows — flow to near footer, continue on next page
   for (let i = 0; i < rows.length; i++) {
-    if (y > 255) {
-      y = nextPage();
+    const rowH = rows[i].items ? 12 : 7;
+    y = checkPage(y, rowH);
+
+    // Re-draw table header if we just started a new page and this isn't the first row
+    if (y < 30 && i > 0) {
+      doc.setFillColor(...NAVY);
+      doc.roundedRect(M, y, CW, 7, 1, 1, "F");
+      doc.setTextColor(...WHITE);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      for (let h = 0; h < headers.length; h++) {
+        doc.text(headers[h], cols[h], y + 5);
+      }
+      y += 9;
     }
+
     const row = rows[i];
     if (i % 2 === 0) {
       doc.setFillColor(249, 247, 243);
@@ -470,7 +502,7 @@ function buildClinicalPDF(
     doc.text(row.deliveryMode.replace("_", " "), cols[2], y);
     doc.setFont("helvetica", "bold");
     doc.text(
-      row.score != null ? `${row.score}/${27}` : "—",
+      row.score != null ? `${row.score}` : "—",
       cols[3],
       y,
     );
@@ -484,7 +516,7 @@ function buildClinicalPDF(
     }
     y += 7;
 
-    // Item breakdown
+    // Item breakdown (tight)
     if (row.items) {
       doc.setTextColor(119, 119, 119);
       doc.setFont("helvetica", "normal");
@@ -497,18 +529,144 @@ function buildClinicalPDF(
         doc.setFont("helvetica", "bold");
         doc.text(row.flagLabel.slice(0, 30), M + 3, y);
       }
-      y += 5;
+      y += 4;
     }
   }
 
-  // ── Page 2: Notices & Disclaimers ──
-  y = nextPage();
+  if (rows.length === 0) {
+    doc.setFontSize(8);
+    doc.setTextColor(...CHARCOAL);
+    doc.text("No completed activities in this period.", M, y);
+    y += 6;
+  }
 
+  // ── Section: Clinical Flag Timeline (tight after activity table) ──
+  y += 3;
+  y = checkPage(y, 20);
+  doc.setTextColor(...NAVY);
+  doc.setFont("times", "bold");
+  doc.setFontSize(12);
+  doc.text("Clinical Flag Timeline", M, y);
+  y += 5;
+
+  if (flags.length === 0) {
+    doc.setFontSize(8);
+    doc.setTextColor(...CHARCOAL);
+    doc.setFont("helvetica", "normal");
+    doc.text("No clinical flags in this period.", M, y);
+    y += 5;
+  } else {
+    for (const flag of flags) {
+      y = checkPage(y, 16);
+      // Status color
+      const statusColors: Record<string, readonly [number, number, number]> = {
+        ACTIVE: [192, 57, 43],
+        MONITORING: [230, 126, 34],
+        ACKNOWLEDGED: SAGE,
+      };
+      const bgColors: Record<string, readonly [number, number, number]> = {
+        ACTIVE: [253, 232, 232],
+        MONITORING: [255, 248, 225],
+        ACKNOWLEDGED: [237, 245, 239],
+      };
+      const borderColors: Record<string, readonly [number, number, number]> = {
+        ACTIVE: [240, 180, 180],
+        MONITORING: [240, 208, 96],
+        ACKNOWLEDGED: [180, 210, 190],
+      };
+
+      const bg = bgColors[flag.status] ?? [249, 247, 243];
+      const border = borderColors[flag.status] ?? [200, 200, 200];
+      const statusClr = statusColors[flag.status] ?? CHARCOAL;
+
+      doc.setFillColor(...bg);
+      doc.roundedRect(M, y - 2, CW, 14, 1.5, 1.5, "F");
+      doc.setDrawColor(...border);
+      doc.setLineWidth(0.3);
+      doc.roundedRect(M, y - 2, CW, 14, 1.5, 1.5, "S");
+
+      // Status label
+      doc.setTextColor(...statusClr);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(8);
+      doc.text(flag.status, M + 3, y + 3);
+
+      // Date
+      doc.setTextColor(...CHARCOAL);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.text(formatDate(flag.date), M + 35, y + 3);
+
+      // Description
+      doc.setFontSize(7);
+      doc.text(flag.description.slice(0, 80), M + 3, y + 8);
+
+      // Guidance note
+      doc.setTextColor(180, 155, 100);
+      doc.setFontSize(5.5);
+      doc.setFont("helvetica", "italic");
+      doc.text(
+        "This flag may require clinical follow-up. Consult your jurisdiction's applicable laws and your professional ethical guidelines.",
+        M + 3,
+        y + 11.5,
+      );
+
+      y += 16;
+    }
+  }
+
+  // ── Section: Audit Trail (tight after flags) ──
+  y += 2;
+  y = checkPage(y, 15);
+  doc.setTextColor(...NAVY);
+  doc.setFont("times", "bold");
+  doc.setFontSize(12);
+  doc.text("Audit Trail", M, y);
+  y += 5;
+
+  if (auditEntries.length === 0) {
+    doc.setFontSize(8);
+    doc.setTextColor(...CHARCOAL);
+    doc.setFont("helvetica", "normal");
+    doc.text("No audit events in this period.", M, y);
+    y += 5;
+  } else {
+    // Audit table header
+    doc.setFillColor(...NAVY);
+    doc.roundedRect(M, y, CW, 6, 1, 1, "F");
+    doc.setTextColor(...WHITE);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(6.5);
+    doc.text("TIMESTAMP", M + 3, y + 4);
+    doc.text("ACTION", M + 45, y + 4);
+    doc.text("ACTOR", M + 120, y + 4);
+    y += 8;
+
+    for (let i = 0; i < auditEntries.length; i++) {
+      y = checkPage(y, 6);
+      const entry = auditEntries[i];
+      if (i % 2 === 0) {
+        doc.setFillColor(249, 247, 243);
+        doc.rect(M, y - 3.5, CW, 6, "F");
+      }
+      doc.setTextColor(...CHARCOAL);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6.5);
+      doc.text(formatDate(entry.timestamp), M + 3, y);
+      doc.text(entry.action.slice(0, 40), M + 45, y);
+      doc.text(entry.actorLabel.slice(0, 25), M + 120, y);
+      y += 6;
+    }
+  }
+
+  // ── Notices & Disclaimers (immediately after audit, NO page break) ──
+  y += 4;
+  y = checkPage(y, 20);
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(14);
   doc.text("Notices & Disclaimers", M, y);
-  y += 8;
+  y += 7;
 
   const notices: [string, string][] = [
     [
@@ -549,9 +707,7 @@ function buildClinicalPDF(
   ];
 
   for (const [title, body] of notices) {
-    if (y > 260) {
-      y = nextPage();
-    }
+    y = checkPage(y, 14);
     doc.setTextColor(...NAVY);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
@@ -562,16 +718,30 @@ function buildClinicalPDF(
     doc.setFontSize(7.5);
     const lines = doc.splitTextToSize(body, CW - 2);
     for (const line of lines) {
-      if (y > 270) {
-        y = nextPage();
-      }
+      y = checkPage(y, 5);
       doc.text(line, M, y);
       y += 4;
     }
-    y += 4;
+    y += 3;
   }
 
   drawFooter(doc, currentPage, totalPages, "clinical", integrityHash);
+
+  // ── Fix total page count on all pages ──
+  totalPages = currentPage;
+  const pageCount = (doc as any).internal.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    // Overwrite pagination area with white then redraw
+    doc.setFillColor(255, 255, 255);
+    doc.rect(PAGE_W / 2 - 15, PAGE_H - 16, 30, 6, "F");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...CHARCOAL);
+    const pg = `${p} / ${totalPages}`;
+    const pgW = doc.getTextWidth(pg);
+    doc.text(pg, (PAGE_W - pgW) / 2, PAGE_H - 12);
+  }
 }
 
 // ── Main entry point ──
