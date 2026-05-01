@@ -680,9 +680,7 @@ function buildClinicalPDF(
     const textY = y + ROW_H / 2 + 1;
     doc.setTextColor(...CHARCOAL);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    // Full datetime in activity history
-    doc.setFontSize(7.5);
+    doc.setFontSize(7);
     doc.text(formatFullDateTime(row.submittedAt), cols[0], textY);
     const title =
       row.activityTitle.length > 25
