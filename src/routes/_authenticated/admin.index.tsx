@@ -142,7 +142,7 @@ function AdminHomePage() {
             onClick={() =>
               toast.info("Disponível em breve", {
                 description:
-                  "O criador de atividades chega na Semana 3, junto com o Player. Por enquanto, esta tela é só de leitura.",
+                  "O criador de atividades chega em breve. Por enquanto, esta tela é só de leitura.",
               })
             }
             className="

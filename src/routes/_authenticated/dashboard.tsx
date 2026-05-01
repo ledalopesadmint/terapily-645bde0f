@@ -149,7 +149,7 @@ function DashboardPage() {
             </span>
             <span className="inline-flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-mauve" aria-hidden />
-              Cobrança chega na Semana 2
+              Cobrança
             </span>
           </div>
         </section>
