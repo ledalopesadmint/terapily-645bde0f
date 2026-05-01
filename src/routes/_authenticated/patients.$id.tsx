@@ -292,6 +292,16 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
 
   const activities = listQuery.data?.activities ?? [];
   const activityIds = activities.map((a) => a.id);
+  const clinicalFlags = activities
+    .map((a) => {
+      const response = Array.isArray(a.response) ? a.response[0] : a.response;
+      return getClinicalFlagFromResponse(
+        response,
+        a.activity?.title ?? "Atividade",
+        a.id,
+      );
+    })
+    .filter((flag): flag is ClinicalFlagInfo => Boolean(flag));
 
   const shareSummaryQuery = useQuery({
     queryKey: ["activity-share-summary", workspaceId, activityIds.join(",")],
@@ -382,6 +392,13 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
           </Button>
         </div>
       </div>
+
+      {clinicalFlags.length > 0 && (
+        <ClinicalFlagBanner
+          flags={clinicalFlags}
+          onViewResponse={(responseId) => setViewResponseId(responseId)}
+        />
+      )}
 
       {listQuery.isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
