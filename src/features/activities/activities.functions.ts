@@ -226,6 +226,7 @@ export const assignActivity = createServerFn({ method: "POST" })
 
 const RevokeSchema = z.object({
   patientActivityId: z.string().uuid(),
+  reason: z.string().trim().max(200).optional(),
 });
 
 export const revokeActivity = createServerFn({ method: "POST" })
