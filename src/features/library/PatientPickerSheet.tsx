@@ -70,7 +70,7 @@ export function PatientPickerSheet({
     queryKey: ["activity-catalog", workspaceId],
     queryFn: () =>
       listAvailableActivities(
-        workspaceId ? { data: { workspaceId } } : undefined,
+        workspaceId ? { data: { workspaceId } } : {},
       ),
     enabled: open && !!activity,
     staleTime: 30_000,
