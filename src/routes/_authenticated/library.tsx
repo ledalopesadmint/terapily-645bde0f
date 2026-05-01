@@ -57,6 +57,7 @@ import { listAvailableActivities } from "@/features/activities/activities.functi
 import { getFeaturedActivity } from "@/server/admin.functions";
 import { getPatientNickname } from "@/features/patients/patients.functions";
 import { useAuth } from "@/features/auth/AuthProvider";
+import { PatientPickerSheet } from "@/features/library/PatientPickerSheet";
 
 const librarySearchSchema = z.object({
   selectFor: z.string().uuid().optional(),
