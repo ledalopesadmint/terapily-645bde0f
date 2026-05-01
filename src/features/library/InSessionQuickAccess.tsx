@@ -43,7 +43,7 @@ export function InSessionQuickAccess({
     <section aria-labelledby="in-session-title" className="mx-auto max-w-6xl px-4 sm:px-8">
       <div className="rounded-2xl border border-border/60 bg-card/50 p-5 sm:p-7">
         <Link
-          to="/library/scales"
+          to="/scales"
           className="group mb-5 flex items-center justify-between"
         >
           <div className="flex items-center gap-2.5">
@@ -115,7 +115,7 @@ export function InSessionQuickAccess({
 
         {sorted.length > 6 && (
           <Link
-            to="/library/scales"
+            to="/scales"
             className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
           >
             + {sorted.length - 6} escalas
