@@ -476,8 +476,8 @@ function buildClinicalPDF(
   y += thH + 2;
 
   // Table rows — premium spacing, flow to near footer, continue on next page
-  const ROW_H = 10; // generous row height
-  const ROW_ITEM_H = 15; // row with item breakdown
+  const ROW_H = 12; // generous row height for 10pt text
+  const ROW_ITEM_H = 18; // row with item breakdown
   for (let i = 0; i < rows.length; i++) {
     const rowH = rows[i].items ? ROW_ITEM_H : ROW_H;
     y = checkPage(y, rowH);
