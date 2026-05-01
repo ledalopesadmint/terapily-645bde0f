@@ -844,7 +844,7 @@ function buildClinicalPDF(
     y += 6;
   }
 
-  // ── Section: Significant Changes ──
+  // ── Section: Score Changes ──
   const changesEntries = series.filter((s) => s.delta != null && s.delta !== 0);
   if (changesEntries.length > 0) {
     y += 4;
@@ -852,7 +852,7 @@ function buildClinicalPDF(
     doc.setTextColor(...NAVY);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text("Significant Changes", M, y);
+    doc.text("Score Changes", M, y);
     y += 6;
 
     for (const c of changesEntries) {
