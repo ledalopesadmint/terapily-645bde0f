@@ -70,6 +70,7 @@ import {
   revokeActivity,
   listAvailableActivities,
   generateInSessionLink,
+  acknowledgeClinicalFlag,
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
 import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
