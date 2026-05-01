@@ -488,6 +488,24 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* In-session player */}
+      {inSessionTarget && (
+        <InSessionPlayerDialog
+          patientActivityId={inSessionTarget.patientActivityId}
+          patientId={patientId}
+          workspaceId={workspaceId}
+          activityTitle={inSessionTarget.activityTitle}
+          onClose={() => setInSessionTarget(null)}
+        />
+      )}
+
+      {/* Response detail drawer */}
+      <ResponseDetailDrawer
+        responseId={viewResponseId}
+        workspaceId={workspaceId}
+        onClose={() => setViewResponseId(null)}
+      />
     </div>
   );
 }
