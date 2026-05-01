@@ -134,7 +134,7 @@ export function PatientList({
                         onClick={() => onCopyContact(p, "phone", "Telefone")}
                         aria-label="Copiar telefone"
                       >
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-4 w-4 text-sage" />
                       </Button>
                     </span>
                   </TooltipTrigger>
