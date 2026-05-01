@@ -935,7 +935,7 @@ function buildClinicalPDF(
       doc.setFontSize(5.5);
       doc.setFont("helvetica", "italic");
       doc.text(
-        "This flag may require clinical follow-up. Consult your jurisdiction's applicable laws and your professional ethical guidelines.",
+        "This flag indicates a response that may be clinically relevant. Consult your jurisdiction's applicable laws and your professional ethical guidelines.",
         M + 3,
         flagTextTop + 10,
       );
