@@ -589,6 +589,52 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
   );
 }
 
+function ClinicalFlagBanner({
+  flags,
+  onViewResponse,
+}: {
+  flags: ClinicalFlagInfo[];
+  onViewResponse: (responseId: string) => void;
+}) {
+  const primary = flags[0];
+  const submittedAt = primary.submittedAt
+    ? new Date(primary.submittedAt).toLocaleString("pt-BR")
+    : "agora";
+
+  return (
+    <div className="rounded-lg border-2 border-mauve bg-mauve/15 p-4 shadow-sm">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mauve/25 text-foreground">
+            <AlertTriangle className="h-5 w-5 text-mauve" />
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold text-foreground">
+              Flag clínica detectada · {formatClinicalFlagLabel(primary.flag)}
+            </p>
+            <p className="max-w-2xl text-sm text-foreground/80">
+              {primary.activityTitle} foi respondida em {submittedAt}. Revise a resposta antes de encerrar a revisão clínica.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Score {primary.score ?? "—"}{primary.severity ? ` · ${primary.severity}` : ""}
+              {primary.item_id ? ` · item ${primary.item_id.replace(/^q/i, "")}` : ""}
+              {flags.length > 1 ? ` · ${flags.length} flags no histórico` : ""}
+            </p>
+          </div>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          className="border-mauve/70 bg-card hover:bg-mauve/10"
+          onClick={() => onViewResponse(primary.responseId)}
+        >
+          <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // =============================================================================
 // Modal "Enviar atividade"
 // =============================================================================
