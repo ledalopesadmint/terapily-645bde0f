@@ -110,7 +110,7 @@ export function PatientList({
                     <span>
                       <Button
                         size="icon"
-                        className="h-8 w-8 rounded-md border border-white bg-navy text-white shadow-sm hover:bg-navy/85 hover:text-white"
+                        className="h-8 w-8 rounded-md border border-contact-email-border bg-contact-email text-contact-email-fg shadow-sm hover:bg-contact-email/85 hover:text-contact-email-fg"
                         disabled={!hasEmail || copying}
                         onClick={() => onCopyContact(p, "email", "Email")}
                         aria-label="Copiar email"
