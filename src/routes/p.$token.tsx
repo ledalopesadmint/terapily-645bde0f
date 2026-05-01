@@ -118,6 +118,7 @@ function ActivityRunner({
   const config = resolved.activity.config as QuizConfig;
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [started, setStarted] = useState(false);
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, number>;
