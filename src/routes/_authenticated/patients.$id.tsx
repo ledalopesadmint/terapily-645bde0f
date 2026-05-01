@@ -562,6 +562,7 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
             const flagInfo = getClinicalFlagFromResponse(
               response,
               a.activity?.title ?? "Atividade",
+              (a.activity as { slug?: string })?.slug ?? "unknown",
               a.id,
             );
             const hasDraft = a.has_draft && status !== "completed" && status !== "revoked" && status !== "expired";
