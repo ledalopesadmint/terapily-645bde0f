@@ -1,23 +1,12 @@
 /**
  * In-session player modal — terapeuta aplica atividade ao vivo.
- * Reutiliza ActivityPlayer + recordInSessionResponse.
+ * Fullscreen presentation mode com o ActivityPlayer slide-a-slide.
  */
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Play } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
+import { X } from "lucide-react";
 
 import {
   ActivityPlayer,
@@ -28,6 +17,7 @@ import {
   getActivityConfig,
   recordInSessionResponse,
 } from "@/features/activities/activities.functions";
+import { cn } from "@/lib/utils";
 
 interface InSessionPlayerProps {
   patientActivityId: string;
@@ -55,10 +45,7 @@ export function InSessionPlayerDialog({
   });
 
   const config = (configQuery.data?.activity?.config ?? {}) as QuizConfig;
-  const { total, answered, completion, allAnswered } = getCompletionStats(
-    config,
-    responses,
-  );
+  const { allAnswered } = getCompletionStats(config, responses);
 
   const submitMutation = useMutation({
     mutationFn: () =>
@@ -84,115 +71,116 @@ export function InSessionPlayerDialog({
     },
   });
 
+  // Loading
   if (configQuery.isLoading) {
     return (
-      <Dialog open onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <p className="text-muted-foreground py-8 text-center">
-            Carregando atividade…
-          </p>
-        </DialogContent>
-      </Dialog>
+      <FullscreenShell title={activityTitle} onClose={onClose}>
+        <div className="flex-1 flex items-center justify-center">
+          <p className="text-muted-foreground">Carregando atividade…</p>
+        </div>
+      </FullscreenShell>
     );
   }
 
+  // Error
   if (configQuery.isError) {
     return (
-      <Dialog open onOpenChange={(o) => !o && onClose()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Erro</DialogTitle>
-            <DialogDescription>
-              Não foi possível carregar a atividade.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={onClose}>Fechar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <FullscreenShell title={activityTitle} onClose={onClose}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4">
+          <p className="text-foreground">Não foi possível carregar a atividade.</p>
+          <button
+            onClick={onClose}
+            className="px-6 py-2.5 rounded-lg bg-[var(--sage)] text-white text-sm font-medium"
+          >
+            Fechar
+          </button>
+        </div>
+      </FullscreenShell>
     );
   }
 
+  // Submitted
   if (submitted) {
     const result = submitMutation.data;
     return (
-      <Dialog open onOpenChange={(o) => !o && onClose()}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Atividade registrada</DialogTitle>
-            <DialogDescription>
-              {result?.score != null && (
-                <span className="block mt-2 text-base">
-                  Score: <strong>{result.score}</strong>
-                  {result.severity && result.severity !== "not_applicable" && (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      · {result.severity}
-                    </span>
-                  )}
-                </span>
+      <FullscreenShell title={activityTitle} onClose={onClose}>
+        <div className="flex-1 flex flex-col items-center justify-center gap-4 px-6 text-center">
+          <div className="w-16 h-16 rounded-full bg-[var(--sage)]/15 flex items-center justify-center">
+            <svg className="w-8 h-8 text-[var(--sage)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="font-display text-2xl text-foreground">Atividade registrada</h2>
+          {result?.score != null && (
+            <p className="text-lg text-foreground">
+              Score: <strong>{result.score}</strong>
+              {result.severity && result.severity !== "not_applicable" && (
+                <span className="text-muted-foreground"> · {result.severity}</span>
               )}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button onClick={onClose}>Fechar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            </p>
+          )}
+          <button
+            onClick={onClose}
+            className="mt-4 px-6 py-2.5 rounded-lg bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-colors"
+          >
+            Fechar
+          </button>
+        </div>
+      </FullscreenShell>
     );
   }
 
   return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Play className="h-4 w-4" />
-            {activityTitle}
-          </DialogTitle>
-          <DialogDescription>
-            Aplicação em sessão. Passe o dispositivo ao paciente ou
-            registre as respostas junto com ele.
-          </DialogDescription>
-        </DialogHeader>
+    <FullscreenShell title={activityTitle} onClose={onClose} subtitle="Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.">
+      <ActivityPlayer
+        config={config}
+        responses={responses}
+        onResponse={(qId, val) =>
+          setResponses((prev) => ({ ...prev, [qId]: val }))
+        }
+        onSubmit={() => submitMutation.mutate()}
+        submitting={submitMutation.isPending}
+        submitLabel="Registrar respostas"
+      />
+    </FullscreenShell>
+  );
+}
 
-        {config?.introduction && (
-          <p className="text-sm text-muted-foreground">{config.introduction}</p>
-        )}
+/** Fullscreen overlay shell for the player */
+function FullscreenShell({
+  children,
+  title,
+  subtitle,
+  onClose,
+}: {
+  children: React.ReactNode;
+  title: string;
+  subtitle?: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-background flex flex-col animate-in fade-in duration-200">
+      {/* Top bar */}
+      <header className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+        <div className="min-w-0 flex-1">
+          <h1 className="font-display text-lg text-foreground truncate">{title}</h1>
+          {subtitle && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</p>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="ml-4 flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+          aria-label="Fechar"
+        >
+          <X className="w-5 h-5 text-foreground" />
+        </button>
+      </header>
 
-        {total > 0 && (
-          <div className="space-y-1">
-            <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>
-                {answered} de {total}
-              </span>
-              <span>{completion}%</span>
-            </div>
-            <Progress value={completion} className="h-1.5" />
-          </div>
-        )}
-
-        <ActivityPlayer
-          config={config}
-          responses={responses}
-          onResponse={(qId, val) =>
-            setResponses((prev) => ({ ...prev, [qId]: val }))
-          }
-        />
-
-        <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button
-            disabled={!allAnswered || submitMutation.isPending}
-            onClick={() => submitMutation.mutate()}
-          >
-            {submitMutation.isPending ? "Registrando…" : "Registrar respostas"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      {/* Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {children}
+      </div>
+    </div>
   );
 }
