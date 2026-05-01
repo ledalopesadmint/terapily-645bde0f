@@ -635,31 +635,35 @@ function buildClinicalPDF(
     doc.text("No audit events in this period.", M, y);
     y += 5;
   } else {
-    // Audit table header
+    // Audit table header — premium spacing
+    const auditThH = 9;
     doc.setFillColor(...NAVY);
-    doc.roundedRect(M, y, CW, 6, 1, 1, "F");
+    doc.roundedRect(M, y, CW, auditThH, 1, 1, "F");
     doc.setTextColor(...WHITE);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(6.5);
-    doc.text("TIMESTAMP", M + 3, y + 4);
-    doc.text("ACTION", M + 45, y + 4);
-    doc.text("ACTOR", M + 120, y + 4);
-    y += 8;
+    const auditThTextY = y + auditThH / 2 + 1.5;
+    doc.text("TIMESTAMP", M + 4, auditThTextY);
+    doc.text("ACTION", M + 45, auditThTextY);
+    doc.text("ACTOR", M + 120, auditThTextY);
+    y += auditThH + 2;
 
+    const AUDIT_ROW_H = 9;
     for (let i = 0; i < auditEntries.length; i++) {
-      y = checkPage(y, 6);
+      y = checkPage(y, AUDIT_ROW_H);
       const entry = auditEntries[i];
       if (i % 2 === 0) {
         doc.setFillColor(249, 247, 243);
-        doc.rect(M, y - 3.5, CW, 6, "F");
+        doc.rect(M, y, CW, AUDIT_ROW_H, "F");
       }
+      const auditTextY = y + AUDIT_ROW_H / 2 + 1;
       doc.setTextColor(...CHARCOAL);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(6.5);
-      doc.text(formatDate(entry.timestamp), M + 3, y);
-      doc.text(entry.action.slice(0, 40), M + 45, y);
-      doc.text(entry.actorLabel.slice(0, 25), M + 120, y);
-      y += 6;
+      doc.setFontSize(7);
+      doc.text(formatDate(entry.timestamp), M + 4, auditTextY);
+      doc.text(entry.action.slice(0, 40), M + 45, auditTextY);
+      doc.text(entry.actorLabel.slice(0, 25), M + 120, auditTextY);
+      y += AUDIT_ROW_H;
     }
   }
 
