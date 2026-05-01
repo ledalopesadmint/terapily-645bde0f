@@ -1266,6 +1266,8 @@ const AUDIT_LABEL: Record<string, string> = {
   "compliance_report.generated": "Compliance Report gerado",
   "patient.contact_revealed": "Contato revelado",
   "clinical_flag.raised": "Flag clínica detectada",
+  "clinical_flag.resolved": "Flag clínica resolvida",
+  "clinical_flag.acknowledged": "Flag clínica reconhecida",
 };
 
 function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: string }) {
