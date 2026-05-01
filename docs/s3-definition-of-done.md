@@ -118,13 +118,13 @@ Espelha `mem://features/s3-definition-of-done`.
 
 ## 8. Compliance Report (PDF)
 
-- [ ] Server function `generateComplianceReport(patient_id, { from, to })` retorna PDF
-- [ ] Cabeçalho: nome do paciente (decifrado server-side) + terapeuta + workspace + período
-- [ ] Lista cronológica DESC com nome da atividade + score + banda + indicador de modo
-- [ ] Apenas Practice gera (gating via `has_feature('compliance_report')`)
-- [ ] Audit log do download (sem PHI)
-- [ ] Wording PROIBIDO: "HIPAA-certified", "court-defensible", "legally binding"
-- [ ] Wording usado: "Audit-ready summary for your records"
+- [x] Server function `generateComplianceReport(patient_id, { from, to })` retorna PDF (base64)
+- [x] Cabeçalho: nome do paciente (decifrado server-side) + terapeuta + workspace + período
+- [x] Lista cronológica DESC com nome da atividade + score + banda + indicador de modo
+- [x] Apenas Practice gera (gating via `has_feature('compliance_report')`)
+- [x] Audit log do download (sem PHI) — `compliance_report.generated`
+- [x] Wording PROIBIDO: "HIPAA-certified", "court-defensible", "legally binding" ✓ (verificado)
+- [x] Wording usado: "Audit-ready summary for your records" ✓
 
 ---
 
