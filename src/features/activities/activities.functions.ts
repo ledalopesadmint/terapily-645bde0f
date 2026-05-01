@@ -226,6 +226,7 @@ export const assignActivity = createServerFn({ method: "POST" })
 
 const RevokeSchema = z.object({
   patientActivityId: z.string().uuid(),
+  reason: z.string().trim().max(200).optional(),
 });
 
 export const revokeActivity = createServerFn({ method: "POST" })
@@ -272,6 +273,7 @@ export const revokeActivity = createServerFn({ method: "POST" })
         status: "revoked",
         token_hash: null,
         token_expires_at: null,
+        revocation_reason: data.reason || null,
       })
       .eq("id", pa.id);
 
@@ -288,7 +290,10 @@ export const revokeActivity = createServerFn({ method: "POST" })
       action: "activity.revoked",
       resourceType: "patient_activity",
       resourceId: pa.id,
-      metadata: { previous_status: pa.status },
+      metadata: {
+        previous_status: pa.status,
+        ...(data.reason ? { reason: data.reason } : {}),
+      },
     });
 
     return { id: pa.id, status: "revoked" as const, alreadyRevoked: false };
@@ -315,6 +320,7 @@ export const listPatientActivities = createServerFn({ method: "GET" })
         id,
         delivery_mode,
         status,
+        revocation_reason,
         token_expires_at,
         token_first_opened_at,
         used_at,

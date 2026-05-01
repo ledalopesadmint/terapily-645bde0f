@@ -415,6 +415,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
     patientActivityId: string;
   } | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
+  const [revokeReason, setRevokeReason] = useState("");
   const [reportBusy, setReportBusy] = useState(false);
   const [scaleResultBusy, setScaleResultBusy] = useState<string | null>(null);
   const [inSessionTarget, setInSessionTarget] = useState<{
@@ -501,12 +502,13 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
 
   const revokeMutation = useMutation({
     mutationFn: (paId: string) =>
-      revokeActivity({ data: { patientActivityId: paId } }),
+      revokeActivity({ data: { patientActivityId: paId, reason: revokeReason.trim() || undefined } }),
     onSuccess: () => {
       toast.success("Link revogado. Histórico mantido.");
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
       qc.invalidateQueries({ queryKey: ["activity-share-summary", workspaceId] });
       setRevokeTarget(null);
+      setRevokeReason("");
     },
     onError: (e) => {
       toast.error(e instanceof Error ? e.message : "Não foi possível revogar.");
@@ -658,6 +660,11 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
+                      {status === "revoked" && a.revocation_reason && (
+                        <span className="text-xs text-muted-foreground italic max-w-[200px] truncate" title={a.revocation_reason}>
+                          {a.revocation_reason}
+                        </span>
+                      )}
                       {/* Aplicar agora — in_session pendente */}
                       {(status === "pending" || status === "in_progress") &&
                         (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
@@ -761,7 +768,12 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
 
       <AlertDialog
         open={!!revokeTarget}
-        onOpenChange={(o) => !o && setRevokeTarget(null)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setRevokeTarget(null);
+            setRevokeReason("");
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -771,6 +783,20 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
               Se o paciente já tiver respondido, a resposta permanece.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-2">
+            <label htmlFor="revoke-reason" className="text-sm font-medium text-foreground">
+              Observação <span className="text-muted-foreground font-normal">(opcional)</span>
+            </label>
+            <input
+              id="revoke-reason"
+              type="text"
+              maxLength={200}
+              placeholder="Ex: Link gerado por engano, paciente errado…"
+              value={revokeReason}
+              onChange={(e) => setRevokeReason(e.target.value)}
+              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--sage)]/40"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
