@@ -155,7 +155,7 @@ function drawFooter(
   doc.setTextColor(...CHARCOAL);
   const pg = `${pageNum} / ${totalPages}`;
   const pgW = doc.getTextWidth(pg);
-  doc.drawString(pg, (PAGE_W - pgW) / 2, fy + 2);
+  doc.text(pg, (PAGE_W - pgW) / 2, fy + 2);
 
   // Disclaimer (line below, not crowded)
   doc.setFontSize(5.5);
