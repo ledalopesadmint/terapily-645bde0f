@@ -921,11 +921,11 @@ export const getActivityResponseDetail = createServerFn({ method: "POST" })
     }
 
     // Decifra
-    let decryptedResponses: Record<string, Record<string, never> | string | number | boolean | null> = {};
+    let decryptedResponses: { [x: string]: {} } = {};
     if (resp.raw_responses_encrypted) {
       try {
         const plain = await decryptPHIServer(resp.raw_responses_encrypted);
-        decryptedResponses = JSON.parse(plain) as Record<string, unknown>;
+        decryptedResponses = JSON.parse(plain) as { [x: string]: {} };
       } catch {
         throw new Error("Não foi possível decifrar as respostas.");
       }
