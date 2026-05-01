@@ -131,10 +131,10 @@ function ScoreCard({ group }: { group: SeriesGroup }) {
     delta == null
       ? null
       : delta < 0
-      ? { label: `↓ ${Math.abs(delta)} pts`, tone: "text-primary" }
+      ? { label: `↓ -${Math.abs(delta)} pts`, tone: "text-primary" }
       : delta > 0
-      ? { label: `↑ ${delta} pts`, tone: "text-destructive" }
-      : { label: "= estável", tone: "text-muted-foreground" };
+      ? { label: `↑ +${delta} pts`, tone: "text-destructive" }
+      : { label: "→ 0", tone: "text-muted-foreground" };
 
   return (
     <Card>
