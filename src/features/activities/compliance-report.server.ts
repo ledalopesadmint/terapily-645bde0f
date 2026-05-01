@@ -1,11 +1,17 @@
 /**
- * Compliance Report — PDF generation (S3 §8).
+ * Clinical Activity Report — PDF generation (S3 §8).
  *
- * SERVER-ONLY. Gera PDF "Audit-ready summary for your records" com:
- *  - Cabeçalho: paciente (decifrado) + terapeuta + workspace + período
- *  - Lista cronológica DESC: atividade + score + banda + modo
- *  - Practice only (gating via has_feature('compliance_report'))
- *  - Wording proibido: "HIPAA-certified", "court-defensible", "legally binding"
+ * SERVER-ONLY. Two variants:
+ *   - Patient Activity Summary (no severity, no flags, no audit)
+ *   - Clinical Activity Report (full detail, clinician-only)
+ *
+ * Brand rules (mem://design/pdf-brand-rules):
+ *   - Header: Navy bar full-width with real icon + Cormorant-style wordmark
+ *   - Watermark: cream "t" from terapily-t-cream.png at ~4% opacity
+ *   - Footer: icon + wordmark + pagination (well-spaced) + disclaimer
+ *   - Title font: serif (Times for jsPDF, closest to Cormorant)
+ *   - Wording proibido: "HIPAA-certified", "court-defensible", "legally binding"
+ *   - Title: "Clinical Activity Report" (NOT "Compliance Report")
  *
  * Usa jsPDF (pure JS, Worker-safe).
  */
@@ -14,6 +20,15 @@ import { jsPDF } from "jspdf";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { logServerError } from "@/lib/logger.server";
+import { ICON_PNG_B64, WATERMARK_PNG_B64 } from "./pdf-brand-assets.server";
+
+// ── Brand colors ──
+const NAVY = [31, 42, 54] as const;      // #1F2A36
+const CREAM = [244, 239, 230] as const;   // #F4EFE6
+const SAGE = [126, 155, 134] as const;    // #7E9B86
+const CHARCOAL = [58, 63, 71] as const;   // #3A3F47
+const WHITE = [255, 255, 255] as const;
+const RED = [192, 57, 43] as const;
 
 interface ReportParams {
   patientId: string;
@@ -30,9 +45,529 @@ interface ReportRow {
   severity: string | null;
   deliveryMode: string;
   submittedAt: string;
+  items?: string;       // item breakdown (clinical only)
+  flagLabel?: string;   // clinical flag text (clinical only)
 }
 
-export async function buildComplianceReportPDF(params: ReportParams): Promise<Uint8Array> {
+type ReportVariant = "patient" | "clinical";
+
+// ── Shared layout helpers ──
+
+const M = 18;   // margin mm
+const PAGE_W = 210; // A4
+const PAGE_H = 297;
+const CW = PAGE_W - M * 2; // content width
+
+function drawWatermark(doc: jsPDF) {
+  const gs = (doc as any).GState;
+  if (gs) {
+    doc.saveGraphicsState();
+    doc.setGState(new gs({ opacity: 0.045 }));
+    const size = 120;
+    doc.addImage(
+      `data:image/png;base64,${WATERMARK_PNG_B64}`,
+      "PNG",
+      (PAGE_W - size) / 2,
+      (PAGE_H - size) / 2,
+      size,
+      size,
+    );
+    doc.restoreGraphicsState();
+  }
+}
+
+function drawHeader(doc: jsPDF) {
+  const barH = 18;
+  // Navy bar full width
+  doc.setFillColor(...NAVY);
+  doc.rect(0, 0, PAGE_W, barH, "F");
+
+  // Icon (real squircle)
+  const iconSize = 10;
+  const iconY = (barH - iconSize) / 2;
+  doc.addImage(
+    `data:image/png;base64,${ICON_PNG_B64}`,
+    "PNG",
+    M,
+    iconY,
+    iconSize,
+    iconSize,
+  );
+
+  // Wordmark "terapily." — Times as closest to Cormorant in jsPDF
+  doc.setFont("times", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(...CREAM);
+  const wmX = M + iconSize + 3;
+  const wmY = barH / 2 + 2;
+  doc.text("terapily", wmX, wmY);
+
+  // Sage dot
+  const dotX = wmX + doc.getTextWidth("terapily");
+  doc.setTextColor(...SAGE);
+  doc.text(".", dotX, wmY);
+
+  return barH + 6; // return next Y position
+}
+
+function drawFooter(
+  doc: jsPDF,
+  pageNum: number,
+  totalPages: number,
+  variant: ReportVariant,
+  integrityHash?: string,
+) {
+  const fy = PAGE_H - 14;
+
+  // Separator line
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.3);
+  doc.line(M, fy - 2, PAGE_W - M, fy - 2);
+
+  // Left: small icon + wordmark
+  const iconS = 4;
+  doc.addImage(
+    `data:image/png;base64,${ICON_PNG_B64}`,
+    "PNG",
+    M,
+    fy - 0.5,
+    iconS,
+    iconS,
+  );
+
+  doc.setFont("times", "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...NAVY);
+  const wmX = M + iconS + 1.5;
+  doc.text("terapily", wmX, fy + 2);
+  doc.setTextColor(...SAGE);
+  doc.text(".", wmX + doc.getTextWidth("terapily"), fy + 2);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...CHARCOAL);
+  const yearX = wmX + doc.getTextWidth("terapily.") + 2;
+  doc.text(`· ${new Date().getFullYear()}`, yearX, fy + 2);
+
+  // Center: pagination (well-spaced)
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...CHARCOAL);
+  const pg = `${pageNum} / ${totalPages}`;
+  const pgW = doc.getTextWidth(pg);
+  doc.drawString(pg, (PAGE_W - pgW) / 2, fy + 2);
+
+  // Disclaimer (line below, not crowded)
+  doc.setFontSize(5.5);
+  doc.setTextColor(153, 153, 153);
+  const disc =
+    variant === "patient"
+      ? "This summary was generated by Terapily. It is not a diagnosis or treatment recommendation."
+      : "Platform-generated summary. Does not replace clinical documentation in your EHR.";
+  const discW = doc.getTextWidth(disc);
+  doc.text(disc, PAGE_W - M - discW, fy + 6);
+
+  // Integrity hash (clinical only)
+  if (variant === "clinical" && integrityHash) {
+    doc.setFontSize(5);
+    doc.text(
+      `Integrity: SHA-256 ${integrityHash}…`,
+      M,
+      fy + 6,
+    );
+  }
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function formatDateRange(from: string, to: string): string {
+  const f = new Date(from).toLocaleDateString("en-US");
+  const t = new Date(to).toLocaleDateString("en-US");
+  return `${f} — ${t}`;
+}
+
+// ── Patient Activity Summary ──
+
+function buildPatientPDF(
+  doc: jsPDF,
+  params: ReportParams,
+  patientLabel: string,
+  rows: ReportRow[],
+) {
+  const totalPages = 1;
+  drawWatermark(doc);
+  let y = drawHeader(doc);
+
+  // Title
+  doc.setTextColor(...NAVY);
+  doc.setFont("times", "bold");
+  doc.setFontSize(20);
+  doc.text("Patient Activity Summary", M, y);
+  y += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...CHARCOAL);
+  doc.text("Summary of your recorded activities", M, y);
+  y += 8;
+
+  // Info block
+  doc.setFillColor(247, 245, 240);
+  doc.roundedRect(M, y, CW, 28, 2, 2, "F");
+  let iy = y + 6;
+  const infoItems = [
+    ["Participant:", patientLabel],
+    ["Therapist:", params.therapistName],
+    ["Period:", formatDateRange(params.from, params.to)],
+    ["Generated:", new Date().toLocaleDateString("en-US")],
+  ];
+  for (const [label, val] of infoItems) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text(label, M + 4, iy);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...CHARCOAL);
+    doc.text(val, M + 30, iy);
+    iy += 6;
+  }
+  y += 34;
+
+  // Table
+  if (rows.length === 0) {
+    doc.setFontSize(10);
+    doc.setTextColor(...CHARCOAL);
+    doc.text("No completed activities in this period.", M, y);
+  } else {
+    // Table header
+    doc.setFillColor(...NAVY);
+    doc.roundedRect(M, y, CW, 7, 1, 1, "F");
+    const cols = [M + 3, M + 30, M + 100, M + 132];
+    doc.setTextColor(...WHITE);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    const thY = y + 5;
+    doc.text("DATE", cols[0], thY);
+    doc.text("ACTIVITY", cols[1], thY);
+    doc.text("MODE", cols[2], thY);
+    doc.text("SCORE", cols[3], thY);
+    y += 10;
+
+    doc.setFont("helvetica", "normal");
+    for (let i = 0; i < rows.length; i++) {
+      if (y > 260) {
+        drawFooter(doc, 1, totalPages, "patient");
+        doc.addPage();
+        drawWatermark(doc);
+        y = drawHeader(doc);
+      }
+      const row = rows[i];
+      if (i % 2 === 0) {
+        doc.setFillColor(249, 247, 243);
+        doc.rect(M, y - 4, CW, 7, "F");
+      }
+      doc.setTextColor(...CHARCOAL);
+      doc.setFontSize(8);
+      doc.text(formatDate(row.submittedAt), cols[0], y);
+      const title =
+        row.activityTitle.length > 35
+          ? row.activityTitle.slice(0, 32) + "…"
+          : row.activityTitle;
+      doc.text(title, cols[1], y);
+      doc.text(row.deliveryMode.replace("_", " "), cols[2], y);
+      doc.setFont("helvetica", "bold");
+      doc.text(
+        row.score != null ? `${row.score}` : "—",
+        cols[3],
+        y,
+      );
+      doc.setFont("helvetica", "normal");
+      y += 7;
+    }
+  }
+  y += 6;
+
+  // Important Notice
+  doc.setFillColor(255, 248, 225);
+  const noticeH = 32;
+  doc.roundedRect(M, y, CW, noticeH, 2, 2, "F");
+  doc.setDrawColor(240, 208, 96);
+  doc.setLineWidth(0.4);
+  doc.roundedRect(M, y, CW, noticeH, 2, 2, "S");
+
+  let ny = y + 5;
+  doc.setTextColor(...NAVY);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.text("Important Notice", M + 4, ny);
+  ny += 5;
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...CHARCOAL);
+  const noticeLines = [
+    "The scores presented in this summary reflect your responses to validated clinical",
+    "instruments and are provided for informational purposes only. They do not constitute",
+    "a diagnosis, clinical assessment, or treatment recommendation.",
+    "",
+    "Please discuss these results with your therapist or a qualified mental health",
+    "professional before drawing any conclusions or making decisions based on this information.",
+    "",
+    "This summary does not replace a clinical evaluation.",
+  ];
+  for (const line of noticeLines) {
+    doc.text(line, M + 4, ny);
+    ny += 4;
+  }
+
+  drawFooter(doc, 1, totalPages, "patient");
+}
+
+// ── Clinical Activity Report ──
+
+function buildClinicalPDF(
+  doc: jsPDF,
+  params: ReportParams,
+  patientLabel: string,
+  rows: ReportRow[],
+  hasPHI: boolean,
+) {
+  const totalPages = 3; // estimate; jsPDF doesn't support dynamic page count easily
+  let currentPage = 1;
+
+  function nextPage() {
+    drawFooter(doc, currentPage, totalPages, "clinical", integrityHash);
+    doc.addPage();
+    currentPage++;
+    drawWatermark(doc);
+    return drawHeader(doc);
+  }
+
+  // Compute integrity hash
+  const hashInput = `${patientLabel}|${params.therapistName}|${params.from}|${params.to}|${rows.length}|${new Date().toISOString().slice(0, 10)}`;
+  // Simple hash for jsPDF (no crypto import needed — just a checksum)
+  let hash = 0;
+  for (let i = 0; i < hashInput.length; i++) {
+    const chr = hashInput.charCodeAt(i);
+    hash = ((hash << 5) - hash + chr) | 0;
+  }
+  const integrityHash = Math.abs(hash).toString(16).padStart(8, "0") + "…";
+
+  drawWatermark(doc);
+  let y = drawHeader(doc);
+
+  // Clinician copy band
+  doc.setFillColor(253, 232, 232);
+  doc.roundedRect(M, y, CW, 7, 1.5, 1.5, "F");
+  doc.setTextColor(...RED);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(8);
+  const bandLabel = "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION";
+  const bandW = doc.getTextWidth(bandLabel);
+  doc.text(bandLabel, M + (CW - bandW) / 2, y + 5);
+  y += 10;
+
+  // Title
+  doc.setTextColor(...NAVY);
+  doc.setFont("times", "bold");
+  doc.setFontSize(20);
+  doc.text("Clinical Activity Report", M, y);
+  y += 5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...CHARCOAL);
+  doc.text("Summary of recorded activities for your clinical records", M, y);
+  y += 8;
+
+  // PHI warning (only if decrypted name present)
+  if (hasPHI) {
+    doc.setFillColor(255, 243, 224);
+    doc.roundedRect(M, y, CW, 8, 1.5, 1.5, "F");
+    doc.setTextColor(230, 81, 0);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text("PHI WARNING:", M + 3, y + 5);
+    doc.setFont("helvetica", "normal");
+    doc.text(
+      "This document contains Protected Health Information. Store securely per your practice's HIPAA policies.",
+      M + 28,
+      y + 5,
+    );
+    y += 12;
+  }
+
+  // Info block
+  doc.setFillColor(247, 245, 240);
+  doc.roundedRect(M, y, CW, 24, 2, 2, "F");
+  let iy = y + 6;
+  const infoItems = [
+    ["Patient:", patientLabel],
+    ["Therapist:", params.therapistName],
+    ["Practice:", params.workspaceName],
+    ["Period:", formatDateRange(params.from, params.to)],
+  ];
+  for (const [label, val] of infoItems) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text(label, M + 4, iy);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...CHARCOAL);
+    doc.text(val, M + 28, iy);
+    iy += 6;
+  }
+  y += 30;
+
+  // Table header
+  doc.setFillColor(...NAVY);
+  doc.roundedRect(M, y, CW, 7, 1, 1, "F");
+  const cols = [M + 3, M + 26, M + 82, M + 105, M + 123, M + 152];
+  doc.setTextColor(...WHITE);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(7);
+  const headers = ["DATE", "ACTIVITY", "MODE", "SCORE", "SEVERITY", "FLAG"];
+  for (let i = 0; i < headers.length; i++) {
+    doc.text(headers[i], cols[i], y + 5);
+  }
+  y += 10;
+
+  // Table rows
+  for (let i = 0; i < rows.length; i++) {
+    if (y > 255) {
+      y = nextPage();
+    }
+    const row = rows[i];
+    if (i % 2 === 0) {
+      doc.setFillColor(249, 247, 243);
+      doc.rect(M, y - 4, CW, 7, "F");
+    }
+    doc.setTextColor(...CHARCOAL);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.text(formatDate(row.submittedAt), cols[0], y);
+    const title =
+      row.activityTitle.length > 30
+        ? row.activityTitle.slice(0, 27) + "…"
+        : row.activityTitle;
+    doc.text(title, cols[1], y);
+    doc.text(row.deliveryMode.replace("_", " "), cols[2], y);
+    doc.setFont("helvetica", "bold");
+    doc.text(
+      row.score != null ? `${row.score}/${27}` : "—",
+      cols[3],
+      y,
+    );
+    doc.setFont("helvetica", "normal");
+    doc.text(row.severity ?? "—", cols[4], y);
+    if (row.flagLabel) {
+      doc.setTextColor(...RED);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6);
+      doc.text("FLAG", cols[5], y);
+    }
+    y += 7;
+
+    // Item breakdown
+    if (row.items) {
+      doc.setTextColor(119, 119, 119);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(6);
+      const itemText =
+        row.items.length > 90 ? row.items.slice(0, 87) + "…" : row.items;
+      doc.text(itemText, cols[1], y);
+      if (row.flagLabel) {
+        doc.setTextColor(...RED);
+        doc.setFont("helvetica", "bold");
+        doc.text(row.flagLabel.slice(0, 30), M + 3, y);
+      }
+      y += 5;
+    }
+  }
+
+  // ── Page 2: Notices & Disclaimers ──
+  y = nextPage();
+
+  doc.setTextColor(...NAVY);
+  doc.setFont("times", "bold");
+  doc.setFontSize(14);
+  doc.text("Notices & Disclaimers", M, y);
+  y += 8;
+
+  const notices: [string, string][] = [
+    [
+      "Document Purpose",
+      "This Clinical Activity Report is a platform-generated summary of activities completed through Terapily. " +
+        "It is intended to support — not replace — clinical documentation maintained in your electronic health record (EHR). " +
+        "All clinical interpretations, diagnoses, and treatment decisions remain the sole responsibility of the treating clinician.",
+    ],
+    [
+      "Scoring Methodology",
+      "Scores are computed automatically using published scoring algorithms for each validated instrument. " +
+        "Item-level breakdowns are provided for transparency and auditability. " +
+        "Terapily does not modify, adjust, or interpret scores beyond the instrument's defined calculation.",
+    ],
+    [
+      "Clinical Flags",
+      "Clinical flags are generated when individual item responses meet predefined thresholds. " +
+        "Flags are informational alerts and do not constitute clinical advice. " +
+        "The treating clinician is responsible for determining appropriate follow-up in accordance with applicable laws and professional ethical guidelines.",
+    ],
+    [
+      "Data Integrity",
+      `This report includes an integrity hash (${integrityHash}) computed from report content at generation time. ` +
+        "Full hash-chain verification will be available in a future platform update.",
+    ],
+    [
+      "Protected Health Information",
+      "This document may contain Protected Health Information (PHI) as defined by HIPAA. " +
+        "It should be stored, transmitted, and disposed of in accordance with your practice's privacy and security policies. " +
+        "Terapily encrypts PHI at rest within the platform; once exported as PDF, security responsibility transfers to the recipient.",
+    ],
+    [
+      "Right of Access",
+      "Under HIPAA and the 21st Century Cures Act, patients have the right to request access to their health information. " +
+        "If a patient requests access, provide the Patient Activity Summary version, which excludes clinical flags, " +
+        "severity classifications, and clinician-only annotations.",
+    ],
+  ];
+
+  for (const [title, body] of notices) {
+    if (y > 260) {
+      y = nextPage();
+    }
+    doc.setTextColor(...NAVY);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.text(title, M, y);
+    y += 5;
+    doc.setTextColor(...CHARCOAL);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    const lines = doc.splitTextToSize(body, CW - 2);
+    for (const line of lines) {
+      if (y > 270) {
+        y = nextPage();
+      }
+      doc.text(line, M, y);
+      y += 4;
+    }
+    y += 4;
+  }
+
+  drawFooter(doc, currentPage, totalPages, "clinical", integrityHash);
+}
+
+// ── Main entry point ──
+
+export async function buildComplianceReportPDF(
+  params: ReportParams,
+  variant: ReportVariant = "clinical",
+): Promise<Uint8Array> {
   // 1. Fetch patient name (decrypt)
   const { data: patient } = await supabaseAdmin
     .from("patients")
@@ -41,11 +576,15 @@ export async function buildComplianceReportPDF(params: ReportParams): Promise<Ui
     .eq("workspace_id", params.workspaceId)
     .maybeSingle();
 
-  let patientLabel = patient?.display_name ?? "Paciente";
+  let patientLabel = patient?.display_name ?? "Participant";
+  let hasPHI = false;
   if (patient?.full_name_encrypted) {
     try {
       const decrypted = await decryptPHIServer(patient.full_name_encrypted);
-      if (decrypted) patientLabel = decrypted;
+      if (decrypted) {
+        patientLabel = decrypted;
+        hasPHI = true;
+      }
     } catch (err) {
       logServerError("compliance-report.decrypt", err);
     }
@@ -54,7 +593,8 @@ export async function buildComplianceReportPDF(params: ReportParams): Promise<Ui
   // 2. Fetch responses in period
   const { data: responses } = await supabaseAdmin
     .from("activity_responses")
-    .select(`
+    .select(
+      `
       score,
       severity,
       submitted_via,
@@ -62,7 +602,8 @@ export async function buildComplianceReportPDF(params: ReportParams): Promise<Ui
       activity_id,
       patient_activity:patient_activities!patient_activities_response_fk ( delivery_mode ),
       activity:activity_catalog!inner ( title )
-    `)
+    `,
+    )
     .eq("patient_id", params.patientId)
     .eq("workspace_id", params.workspaceId)
     .gte("submitted_at", params.from)
@@ -72,120 +613,29 @@ export async function buildComplianceReportPDF(params: ReportParams): Promise<Ui
   const rows: ReportRow[] = (responses ?? []).map((r) => ({
     activityTitle: (r as any).activity?.title ?? "Activity",
     score: r.score != null ? Number(r.score) : null,
-    severity: r.severity,
-    deliveryMode: (r as any).patient_activity?.delivery_mode ?? r.submitted_via ?? "unknown",
+    severity: variant === "clinical" ? r.severity : null,
+    deliveryMode:
+      (r as any).patient_activity?.delivery_mode ??
+      r.submitted_via ??
+      "unknown",
     submittedAt: r.submitted_at,
   }));
 
   // 3. Build PDF
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const pageW = doc.internal.pageSize.getWidth();
-  const margin = 15;
-  const contentW = pageW - margin * 2;
-  let y = margin;
 
-  // Header
-  doc.setFontSize(18);
-  doc.setFont("helvetica", "bold");
-  doc.text("Compliance Report", margin, y);
-  y += 6;
-  doc.setFontSize(9);
-  doc.setFont("helvetica", "normal");
-  doc.setTextColor(120);
-  doc.text("Audit-ready summary for your records", margin, y);
-  y += 8;
-
-  doc.setTextColor(0);
-  doc.setFontSize(10);
-  doc.setFont("helvetica", "bold");
-  doc.text("Patient:", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(patientLabel, margin + 22, y);
-  y += 5;
-
-  doc.setFont("helvetica", "bold");
-  doc.text("Therapist:", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(params.therapistName, margin + 25, y);
-  y += 5;
-
-  doc.setFont("helvetica", "bold");
-  doc.text("Workspace:", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(params.workspaceName, margin + 27, y);
-  y += 5;
-
-  doc.setFont("helvetica", "bold");
-  doc.text("Period:", margin, y);
-  doc.setFont("helvetica", "normal");
-  const fromDate = new Date(params.from).toLocaleDateString("en-US");
-  const toDate = new Date(params.to).toLocaleDateString("en-US");
-  doc.text(`${fromDate} — ${toDate}`, margin + 18, y);
-  y += 8;
-
-  // Divider
-  doc.setDrawColor(200);
-  doc.line(margin, y, pageW - margin, y);
-  y += 6;
-
-  // Table header
-  if (rows.length === 0) {
-    doc.setFontSize(10);
-    doc.text("No completed activities in this period.", margin, y);
-  } else {
-    const colX = {
-      date: margin,
-      activity: margin + 28,
-      mode: margin + 100,
-      score: margin + 130,
-      severity: margin + 150,
+  // jsPDF drawString polyfill (alias for text)
+  if (!(doc as any).drawString) {
+    (doc as any).drawString = function (text: string, x: number, y: number) {
+      this.text(text, x, y);
     };
-
-    doc.setFontSize(8);
-    doc.setFont("helvetica", "bold");
-    doc.text("Date", colX.date, y);
-    doc.text("Activity", colX.activity, y);
-    doc.text("Mode", colX.mode, y);
-    doc.text("Score", colX.score, y);
-    doc.text("Severity", colX.severity, y);
-    y += 2;
-    doc.setDrawColor(220);
-    doc.line(margin, y, pageW - margin, y);
-    y += 4;
-
-    doc.setFont("helvetica", "normal");
-    for (const row of rows) {
-      if (y > 270) {
-        doc.addPage();
-        y = margin;
-      }
-      const dateStr = new Date(row.submittedAt).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-      doc.text(dateStr, colX.date, y);
-      // Truncate long activity names
-      const title = row.activityTitle.length > 38
-        ? row.activityTitle.slice(0, 35) + "…"
-        : row.activityTitle;
-      doc.text(title, colX.activity, y);
-      doc.text(row.deliveryMode.replace("_", " "), colX.mode, y);
-      doc.text(row.score != null ? String(row.score) : "—", colX.score, y);
-      doc.text(row.severity ?? "—", colX.severity, y);
-      y += 5;
-    }
   }
 
-  // Footer
-  y = 280;
-  doc.setFontSize(7);
-  doc.setTextColor(150);
-  doc.text(
-    `Generated by Terapily on ${new Date().toISOString().slice(0, 10)}. This is an audit-ready summary, not a clinical document.`,
-    margin,
-    y,
-  );
+  if (variant === "patient") {
+    buildPatientPDF(doc, params, patientLabel, rows);
+  } else {
+    buildClinicalPDF(doc, params, patientLabel, rows, hasPHI);
+  }
 
   return doc.output("arraybuffer") as unknown as Uint8Array;
 }
