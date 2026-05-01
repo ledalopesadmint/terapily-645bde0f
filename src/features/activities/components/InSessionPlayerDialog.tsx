@@ -74,6 +74,11 @@ export function InSessionPlayerDialog({
     },
   });
 
+  // Vinheta intro (plays before any content)
+  if (!vinhetaDone) {
+    return <VinhetaIntro onComplete={handleVinhetaComplete} />;
+  }
+
   // Loading
   if (configQuery.isLoading) {
     return (
