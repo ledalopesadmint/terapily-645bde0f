@@ -19,7 +19,7 @@ import {
   getActivityConfig,
   recordInSessionResponse,
 } from "@/features/activities/activities.functions";
-import { cn } from "@/lib/utils";
+
 
 interface InSessionPlayerProps {
   patientActivityId: string;
