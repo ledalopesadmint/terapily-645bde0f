@@ -163,8 +163,8 @@ function PatientsContent() {
               onClick={() => setStatus("active")}
               className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
                 status === "active"
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "border border-emerald-500/40 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/20"
+                  ? "bg-status-active text-status-active-fg shadow-sm"
+                  : "border border-status-active/40 bg-status-active-subtle/40 text-status-active-muted hover:bg-status-active-subtle/70"
               }`}
             >
               Ativos
@@ -174,15 +174,15 @@ function PatientsContent() {
               onClick={() => setStatus("archived")}
               className={`inline-flex items-center rounded-md px-3 py-1.5 text-sm font-medium transition-all ${
                 status === "archived"
-                  ? "bg-amber-500 text-white shadow-sm"
-                  : "border border-amber-500/40 bg-amber-500/10 text-amber-700 hover:bg-amber-500/20"
+                  ? "bg-status-archived text-status-archived-fg shadow-sm"
+                  : "border border-status-archived/40 bg-status-archived-subtle/40 text-status-archived-muted hover:bg-status-archived-subtle/70"
               }`}
             >
               Arquivados
             </button>
             <Link
               to="/patients/deleted"
-              className="inline-flex items-center rounded-md border border-red-500/40 bg-red-500/10 px-3 py-1.5 text-sm font-medium text-red-600 transition-all hover:bg-red-600 hover:text-white"
+              className="inline-flex items-center rounded-md border border-status-deleted/40 bg-status-deleted-subtle/40 px-3 py-1.5 text-sm font-medium text-status-deleted-muted transition-all hover:bg-status-deleted hover:text-status-deleted-fg"
             >
               <Trash className="mr-2 h-4 w-4" /> Excluídos
             </Link>
