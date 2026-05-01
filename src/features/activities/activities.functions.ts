@@ -921,7 +921,7 @@ export const getActivityResponseDetail = createServerFn({ method: "POST" })
     }
 
     // Decifra
-    let decryptedResponses: Record<string, unknown> = {};
+    let decryptedResponses: Record<string, Record<string, never> | string | number | boolean | null> = {};
     if (resp.raw_responses_encrypted) {
       try {
         const plain = await decryptPHIServer(resp.raw_responses_encrypted);
