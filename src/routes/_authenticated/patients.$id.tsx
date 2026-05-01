@@ -74,6 +74,10 @@ import {
   type ShareSummaryRow,
 } from "@/features/activities/activities.functions";
 import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
+import {
+  generateScaleResultPatient,
+  generateScaleResultTherapist,
+} from "@/features/activities/scale-result-pdf.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
