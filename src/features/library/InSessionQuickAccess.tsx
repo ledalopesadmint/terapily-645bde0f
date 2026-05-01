@@ -50,13 +50,13 @@ export function InSessionQuickAccess({
             </div>
             <div>
               <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-mauve">
-                Acesso rápido
+                Acervo
               </p>
               <h2
                 id="in-session-title"
                 className="font-display text-xl text-foreground sm:text-2xl"
               >
-                Escalas para aplicar agora
+                Escalas validadas
               </h2>
             </div>
           </div>

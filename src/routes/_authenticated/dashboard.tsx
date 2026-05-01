@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Users, GamepadIcon, ListChecks, BookOpen, ArrowRight } from "lucide-react";
+import { Users, GamepadIcon, ListChecks, ClipboardCheck, ArrowRight } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
 import { EmptyState } from "@/components/feedback/EmptyState";
@@ -199,12 +199,26 @@ function DashboardPage() {
             description="Começando pela Anatomia da Ansiedade. Acessíveis pelo paciente via link."
             comingSoonWeek="Semana 3"
           />
-          <EmptyState
-            icon={BookOpen}
-            title="Notas de sessão"
-            description="Linha do tempo do paciente, com criptografia ponta-a-ponta."
-            comingSoonWeek="Semana 4"
-          />
+          <Link
+            to="/library"
+            className="group flex flex-col items-center justify-center rounded-lg border border-border bg-card px-6 py-12 text-center transition-colors hover:border-secondary/60 hover:bg-card/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            aria-label="Ir para Escalas Validadas"
+          >
+            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--navy)]/10">
+              <ClipboardCheck className="h-6 w-6 text-[var(--navy)]" />
+            </div>
+            <h3 className="font-display text-2xl text-foreground">Escalas validadas</h3>
+            <p className="mt-2 max-w-sm text-sm text-muted-foreground">
+              33 escalas clínicas com score automático. Aplique em sessão ou envie por link.
+            </p>
+            <Badge variant="outline" className="mt-4 border-secondary/40 text-secondary-foreground">
+              Disponível
+            </Badge>
+            <span className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-foreground">
+              Acesso rápido
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+            </span>
+          </Link>
         </div>
       </section>
 
