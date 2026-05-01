@@ -233,6 +233,11 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
   } | null>(null);
   const [revokeTarget, setRevokeTarget] = useState<string | null>(null);
   const [reportBusy, setReportBusy] = useState(false);
+  const [inSessionTarget, setInSessionTarget] = useState<{
+    patientActivityId: string;
+    activityTitle: string;
+  } | null>(null);
+  const [viewResponseId, setViewResponseId] = useState<string | null>(null);
 
   const listQuery = useQuery({
     queryKey: ["patient-activities", patientId, workspaceId],
