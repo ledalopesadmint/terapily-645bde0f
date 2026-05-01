@@ -8,6 +8,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 import { VinhetaIntro } from "./VinhetaIntro";
+import { ScaleIntro } from "./ScaleIntro";
 
 import {
   ActivityPlayer,
@@ -39,6 +40,7 @@ export function InSessionPlayerDialog({
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [vinhetaDone, setVinhetaDone] = useState(false);
+  const [introStarted, setIntroStarted] = useState(false);
   const handleVinhetaComplete = useCallback(() => setVinhetaDone(true), []);
 
   const configQuery = useQuery({
@@ -77,6 +79,17 @@ export function InSessionPlayerDialog({
   // Vinheta intro (plays before any content)
   if (!vinhetaDone) {
     return <VinhetaIntro onComplete={handleVinhetaComplete} />;
+  }
+
+  // Scale intro page (after vinheta, before questions)
+  if (!introStarted && !configQuery.isLoading && !configQuery.isError) {
+    return (
+      <ScaleIntro
+        title={activityTitle}
+        config={config}
+        onStart={() => setIntroStarted(true)}
+      />
+    );
   }
 
   // Loading

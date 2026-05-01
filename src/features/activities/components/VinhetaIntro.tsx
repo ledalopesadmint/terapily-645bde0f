@@ -2,6 +2,9 @@
  * Brand vinheta intro — plays before every activity/scale.
  * Lightweight 140KB video (960×540, 3s, h264 baseline + AAC 96k).
  * Volume controlled via volumePercent prop (15–100, never 0 per sonic branding rules).
+ *
+ * The video fills the fullscreen overlay with a matching cream background
+ * so it feels like a seamless brand moment, not a "small video in a box".
  */
 
 import { useRef, useCallback, useEffect, useState } from "react";
@@ -54,7 +57,8 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
         playsInline
         muted={false}
         preload="auto"
-        className={`max-w-[80vw] max-h-[60vh] w-auto h-auto transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
+        className={`w-full h-full object-contain transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
+        style={{ background: "var(--cream)" }}
       />
     </div>
   );
