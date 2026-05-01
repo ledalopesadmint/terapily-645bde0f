@@ -707,7 +707,6 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
                           <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
                         </Button>
                       )}
-                    </div>
                   </div>
                   {hasDraft && (
                     <div className="space-y-1">
