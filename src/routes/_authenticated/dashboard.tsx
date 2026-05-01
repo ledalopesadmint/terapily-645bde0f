@@ -200,8 +200,8 @@ function DashboardPage() {
             comingSoonWeek="Semana 3"
           />
           <Link
-            to="/library"
-            className="group flex flex-col items-center justify-center rounded-lg border border-border bg-card px-6 py-12 text-center transition-colors hover:border-secondary/60 hover:bg-card/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            to="/scales"
+            className="group flex flex-col items-center justify-center rounded-lg border border-border bg-card px-6 py-12 text-center transition-all duration-200 hover:border-secondary/60 hover:bg-card/80 hover:shadow-md hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             aria-label="Ir para Escalas Validadas"
           >
             <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--navy)]/10">

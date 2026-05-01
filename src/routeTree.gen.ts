@@ -19,6 +19,7 @@ import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedScalesRouteImport } from './routes/_authenticated/scales'
 import { Route as AuthenticatedPatientsRouteImport } from './routes/_authenticated/patients'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -81,6 +82,11 @@ const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedScalesRoute = AuthenticatedScalesRouteImport.update({
+  id: '/scales',
+  path: '/scales',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedPatientsRoute = AuthenticatedPatientsRouteImport.update({
@@ -170,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
+  '/scales': typeof AuthenticatedScalesRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -195,6 +202,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
+  '/scales': typeof AuthenticatedScalesRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/patients': typeof AuthenticatedPatientsRouteWithChildren
+  '/_authenticated/scales': typeof AuthenticatedScalesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -248,6 +257,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/library'
     | '/patients'
+    | '/scales'
     | '/settings'
     | '/welcome'
     | '/auth/callback'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/library'
     | '/patients'
+    | '/scales'
     | '/welcome'
     | '/auth/callback'
     | '/p/$token'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
     | '/_authenticated/patients'
+    | '/_authenticated/scales'
     | '/_authenticated/settings'
     | '/_authenticated/welcome'
     | '/auth/callback'
@@ -398,6 +410,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/scales': {
+      id: '/_authenticated/scales'
+      path: '/scales'
+      fullPath: '/scales'
+      preLoaderRoute: typeof AuthenticatedScalesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/patients': {
@@ -541,6 +560,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRouteWithChildren
+  AuthenticatedScalesRoute: typeof AuthenticatedScalesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedDevRoadmapRoute: typeof AuthenticatedDevRoadmapRoute
@@ -551,6 +571,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedPatientsRoute: AuthenticatedPatientsRouteWithChildren,
+  AuthenticatedScalesRoute: AuthenticatedScalesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedDevRoadmapRoute: AuthenticatedDevRoadmapRoute,

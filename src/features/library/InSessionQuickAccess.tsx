@@ -1,20 +1,18 @@
 /**
- * InSessionQuickAccess — seção destaque no topo do Acervo.
- * 
- * Mostra todas as escalas validadas (archetype quiz_scale) que suportam
- * in_session, com botão direto "Em sessão" que abre o PatientPickerSheet.
- * 
- * Prioriza escalas in_session-only (Grupo 1: PHQ-9, PCL-5, C-SSRS) no topo,
- * seguidas das demais escalas que também suportam in_session.
+ * InSessionQuickAccess — seção destaque no Acervo.
+ *
+ * Mostra preview das primeiras escalas do seed + link "Ver todas"
+ * que leva pra /library/scales com as 33 escalas do banco.
+ *
+ * O bloco inteiro é clicável (hover com elevação sutil).
  */
 
-import { Activity, Play } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Activity, ArrowRight, Play } from "lucide-react";
 import type { Activity as ActivityType } from "./library.types";
 
 interface InSessionQuickAccessProps {
-  /** All activities from the catalog */
   activities: ActivityType[];
-  /** Callback when "Em sessão" is clicked on a scale */
   onStartInSession: (activity: ActivityType) => void;
 }
 
@@ -22,7 +20,6 @@ export function InSessionQuickAccess({
   activities,
   onStartInSession,
 }: InSessionQuickAccessProps) {
-  // Filter scales that support in_session
   const inSessionScales = activities.filter(
     (a) =>
       a.archetype === "quiz_scale" &&
@@ -31,7 +28,6 @@ export function InSessionQuickAccess({
 
   if (inSessionScales.length === 0) return null;
 
-  // Sort: in_session-only first, then alphabetical
   const sorted = [...inSessionScales].sort((a, b) => {
     const aOnly = a.supportedModes.length === 1 && a.supportedModes[0] === "in_session";
     const bOnly = b.supportedModes.length === 1 && b.supportedModes[0] === "in_session";
@@ -40,10 +36,16 @@ export function InSessionQuickAccess({
     return a.code.localeCompare(b.code);
   });
 
+  // Show only first 6 as preview
+  const preview = sorted.slice(0, 6);
+
   return (
     <section aria-labelledby="in-session-title" className="mx-auto max-w-6xl px-4 sm:px-8">
       <div className="rounded-2xl border border-border/60 bg-card/50 p-5 sm:p-7">
-        <header className="mb-5">
+        <Link
+          to="/scales"
+          className="group mb-5 flex items-center justify-between"
+        >
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--navy)] text-cream">
               <Activity className="h-4 w-4" aria-hidden />
@@ -60,13 +62,17 @@ export function InSessionQuickAccess({
               </h2>
             </div>
           </div>
-          <p className="mt-2 text-sm text-muted-foreground max-w-xl">
-            Selecione, escolha o paciente e comece. Score automático ao final.
-          </p>
-        </header>
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors group-hover:text-foreground">
+            Ver todas
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden />
+          </span>
+        </Link>
+        <p className="mb-4 text-sm text-muted-foreground max-w-xl">
+          Selecione, escolha o paciente e comece. Score automático ao final.
+        </p>
 
         <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-          {sorted.map((scale) => {
+          {preview.map((scale) => {
             const isExclusive =
               scale.supportedModes.length === 1 &&
               scale.supportedModes[0] === "in_session";
@@ -75,13 +81,13 @@ export function InSessionQuickAccess({
                 key={scale.id}
                 onClick={() => onStartInSession(scale)}
                 className="
-                  group flex items-center gap-3.5 rounded-xl border border-border/50
+                  group/card flex items-center gap-3.5 rounded-xl border border-border/50
                   bg-background p-3.5 text-left
                   transition-all duration-200
                   hover:border-[var(--sage)]/60 hover:shadow-sm hover:-translate-y-px
                 "
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--navy)]/8 text-[var(--navy)] transition-colors group-hover:bg-[var(--sage)]/15 group-hover:text-[var(--sage)]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--navy)]/8 text-[var(--navy)] transition-colors group-hover/card:bg-[var(--sage)]/15 group-hover/card:text-[var(--sage)]">
                   <Play className="h-4 w-4" aria-hidden />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -106,6 +112,16 @@ export function InSessionQuickAccess({
             );
           })}
         </div>
+
+        {sorted.length > 6 && (
+          <Link
+            to="/scales"
+            className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          >
+            + {sorted.length - 6} escalas
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+          </Link>
+        )}
       </div>
     </section>
   );
