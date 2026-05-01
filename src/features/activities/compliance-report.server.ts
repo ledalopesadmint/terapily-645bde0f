@@ -214,7 +214,7 @@ function buildPatientPDF(
 ) {
   const totalPages = 1;
   drawWatermark(doc);
-  let y = drawHeader(doc);
+  let y = drawHeader(doc) + 10; // gap after header for patient variant
 
   // Title
   doc.setTextColor(...NAVY);
