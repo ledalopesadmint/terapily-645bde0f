@@ -137,14 +137,6 @@
   --action-therapist-report: oklch(0.62 0.13 75);  /* âmbar profundo — uso interno terapeuta */
   --action-therapist-report-fg: oklch(0.20 0.02 75);
 
-  --color-action-flag: var(--action-flag);
-  --color-action-flag-fg: var(--action-flag-fg);
-  --color-action-flag-subtle: var(--action-flag-subtle);
-  --color-action-patient-report: var(--action-patient-report);
-  --color-action-patient-report-fg: var(--action-patient-report-fg);
-  --color-action-therapist-report: var(--action-therapist-report);
-  --color-action-therapist-report-fg: var(--action-therapist-report-fg);
-
   /* Mapping semântico shadcn → paleta Terapily */
   --background: var(--cream);
   --foreground: var(--charcoal);
