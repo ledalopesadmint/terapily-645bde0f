@@ -74,6 +74,8 @@ import {
 } from "@/features/activities/activities.functions";
 import { generateComplianceReport } from "@/features/activities/compliance-report.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
+import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
+import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
 import { Progress } from "@/components/ui/progress";
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
