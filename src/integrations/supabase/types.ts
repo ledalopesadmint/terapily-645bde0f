@@ -322,6 +322,7 @@ export type Database = {
           id: string
           patient_id: string
           response_id: string | null
+          revocation_reason: string | null
           status: Database["public"]["Enums"]["patient_activity_status"]
           token_expires_at: string | null
           token_first_opened_at: string | null
@@ -341,6 +342,7 @@ export type Database = {
           id?: string
           patient_id: string
           response_id?: string | null
+          revocation_reason?: string | null
           status?: Database["public"]["Enums"]["patient_activity_status"]
           token_expires_at?: string | null
           token_first_opened_at?: string | null
@@ -360,6 +362,7 @@ export type Database = {
           id?: string
           patient_id?: string
           response_id?: string | null
+          revocation_reason?: string | null
           status?: Database["public"]["Enums"]["patient_activity_status"]
           token_expires_at?: string | null
           token_first_opened_at?: string | null

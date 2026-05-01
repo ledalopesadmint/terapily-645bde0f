@@ -1,0 +1,1 @@
+ALTER TABLE public.patient_activities ADD COLUMN revocation_reason TEXT;
