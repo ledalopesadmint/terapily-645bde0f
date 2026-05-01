@@ -502,12 +502,13 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
 
   const revokeMutation = useMutation({
     mutationFn: (paId: string) =>
-      revokeActivity({ data: { patientActivityId: paId } }),
+      revokeActivity({ data: { patientActivityId: paId, reason: revokeReason.trim() || undefined } }),
     onSuccess: () => {
       toast.success("Link revogado. Histórico mantido.");
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
       qc.invalidateQueries({ queryKey: ["activity-share-summary", workspaceId] });
       setRevokeTarget(null);
+      setRevokeReason("");
     },
     onError: (e) => {
       toast.error(e instanceof Error ? e.message : "Não foi possível revogar.");
