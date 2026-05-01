@@ -733,45 +733,149 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
 function ClinicalFlagBanner({
   flags,
   onViewResponse,
+  patientId,
+  workspaceId,
 }: {
-  flags: ClinicalFlagInfo[];
+  flags: ClinicalFlagWithLifecycle[];
   onViewResponse: (responseId: string) => void;
+  patientId: string;
+  workspaceId: string;
 }) {
-  const primary = flags[0];
-  const submittedAt = primary.submittedAt
-    ? new Date(primary.submittedAt).toLocaleString("pt-BR")
-    : "agora";
+  const qc = useQueryClient();
+  const [showGuidance, setShowGuidance] = useState(false);
+
+  const acknowledgeMutation = useMutation({
+    mutationFn: (responseId: string) =>
+      acknowledgeClinicalFlag({ data: { responseId, workspaceId } }),
+    onSuccess: () => {
+      toast.success("Flag reconhecida. Registrado na auditoria.");
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Erro ao reconhecer flag.");
+    },
+  });
+
+  const activeFlags = flags.filter((f) => f.lifecycleStatus === "active");
+  const monitoringFlags = flags.filter((f) => f.lifecycleStatus === "monitoring");
 
   return (
-    <div className="rounded-lg border-2 border-mauve bg-mauve/15 p-4 shadow-sm">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mauve/25 text-foreground">
-            <AlertTriangle className="h-5 w-5 text-mauve" />
+    <div className="space-y-3">
+      {/* ACTIVE flags — Mauve */}
+      {activeFlags.map((flag) => {
+        const submittedAt = flag.submittedAt
+          ? new Date(flag.submittedAt).toLocaleString("pt-BR")
+          : "agora";
+        return (
+          <div key={flag.responseId} className="rounded-lg border-2 border-mauve bg-mauve/15 p-4 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mauve/25 text-foreground">
+                  <AlertTriangle className="h-5 w-5 text-mauve" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      ⚠ Risco ativo · {formatClinicalFlagLabel(flag.flag)}
+                    </p>
+                    <Badge variant="destructive" className="text-xs">ATIVO</Badge>
+                  </div>
+                  <p className="max-w-2xl text-sm text-foreground/80">
+                    {flag.activityTitle} respondida em {submittedAt}. O sinal de risco persiste na aplicação mais recente desta escala.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Score {flag.score ?? "—"}{flag.severity ? ` · ${flag.severity}` : ""}
+                    {flag.item_id ? ` · item ${flag.item_id.replace(/^q/i, "")}` : ""}
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-mauve/70 bg-card hover:bg-mauve/10"
+                onClick={() => onViewResponse(flag.responseId)}
+              >
+                <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
+              </Button>
+            </div>
           </div>
-          <div className="space-y-1">
-            <p className="text-sm font-semibold text-foreground">
-              Flag clínica detectada · {formatClinicalFlagLabel(primary.flag)}
-            </p>
-            <p className="max-w-2xl text-sm text-foreground/80">
-              {primary.activityTitle} foi respondida em {submittedAt}. Revise a resposta antes de encerrar a revisão clínica.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Score {primary.score ?? "—"}{primary.severity ? ` · ${primary.severity}` : ""}
-              {primary.item_id ? ` · item ${primary.item_id.replace(/^q/i, "")}` : ""}
-              {flags.length > 1 ? ` · ${flags.length} flags no histórico` : ""}
-            </p>
+        );
+      })}
+
+      {/* MONITORING flags — Amber/Gold */}
+      {monitoringFlags.map((flag) => {
+        const submittedAt = flag.submittedAt
+          ? new Date(flag.submittedAt).toLocaleString("pt-BR")
+          : "—";
+        const resolvedAt = flag.resolvedAt
+          ? new Date(flag.resolvedAt).toLocaleString("pt-BR")
+          : "recentemente";
+        return (
+          <div key={flag.responseId} className="rounded-lg border-2 border-amber-400/60 bg-amber-50/40 dark:bg-amber-900/15 p-4 shadow-sm">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-foreground">
+                  <Eye className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-semibold text-foreground">
+                      👁 Em monitoramento · {formatClinicalFlagLabel(flag.flag)}
+                    </p>
+                    <Badge variant="outline" className="text-xs border-amber-400 text-amber-700 dark:text-amber-300">MONITORAMENTO</Badge>
+                  </div>
+                  <p className="max-w-2xl text-sm text-foreground/80">
+                    Flag anterior (detectada em {submittedAt}) não foi disparada na aplicação mais recente ({resolvedAt}). Monitoramento recomendado.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Score original {flag.score ?? "—"}{flag.severity ? ` · ${flag.severity}` : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-amber-400/70 bg-card hover:bg-amber-50"
+                  onClick={() => onViewResponse(flag.responseId)}
+                >
+                  <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
+                </Button>
+                <Button
+                  size="sm"
+                  variant="default"
+                  className="bg-sage hover:bg-sage/90 text-white"
+                  disabled={acknowledgeMutation.isPending}
+                  onClick={() => acknowledgeMutation.mutate(flag.responseId)}
+                >
+                  <ShieldCheck className="mr-1 h-3.5 w-3.5" /> Reconhecer
+                </Button>
+              </div>
+            </div>
+
+            {/* Collapsible US legal guidance */}
+            <div className="mt-3 border-t border-amber-200/60 dark:border-amber-800/40 pt-3">
+              <button
+                type="button"
+                className="text-xs font-medium text-amber-700 dark:text-amber-300 hover:underline"
+                onClick={() => setShowGuidance(!showGuidance)}
+              >
+                {showGuidance ? "▾ Ocultar orientações" : "▸ Orientações clínicas (EUA)"}
+              </button>
+              {showGuidance && (
+                <div className="mt-2 rounded-md bg-amber-50/60 dark:bg-amber-900/20 p-3 text-xs text-foreground/80 space-y-2">
+                  <p><strong>Tarasoff v. Regents (1976):</strong> Duty to warn/protect applies when a patient poses a serious threat of violence to an identifiable third party. Most US states have adopted some version of this duty.</p>
+                  <p><strong>Mandatory reporting:</strong> All 50 states require reporting suspected child abuse/neglect. Many states extend to elder/dependent adult abuse.</p>
+                  <p><strong>Suicide risk:</strong> No federal duty-to-warn for self-harm, but standard of care requires documented safety planning, risk assessment, and appropriate follow-up.</p>
+                  <p><strong>Documentation:</strong> Record the clinical reasoning behind your risk assessment, the interventions applied, and any referrals made. Terapily's audit trail captures flag detection and resolution timestamps automatically.</p>
+                  <p><strong>Consult your licensing board</strong> for jurisdiction-specific obligations.</p>
+                  <p className="italic text-muted-foreground mt-2">This information is for reference only and does not constitute legal advice. Consult a qualified attorney or your licensing board for jurisdiction-specific requirements.</p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-        <Button
-          size="sm"
-          variant="outline"
-          className="border-mauve/70 bg-card hover:bg-mauve/10"
-          onClick={() => onViewResponse(primary.responseId)}
-        >
-          <Eye className="mr-1 h-3.5 w-3.5" /> Ver resposta
-        </Button>
-      </div>
+        );
+      })}
     </div>
   );
 }
