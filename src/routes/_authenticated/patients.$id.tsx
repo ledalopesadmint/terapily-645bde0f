@@ -660,6 +660,11 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
+                      {status === "revoked" && a.revocation_reason && (
+                        <span className="text-xs text-muted-foreground italic max-w-[200px] truncate" title={a.revocation_reason}>
+                          {a.revocation_reason}
+                        </span>
+                      )}
                       {/* Aplicar agora — in_session pendente */}
                       {(status === "pending" || status === "in_progress") &&
                         (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
