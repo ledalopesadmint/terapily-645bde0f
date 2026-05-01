@@ -531,10 +531,12 @@ function ActivitiesTab({ patientId, workspaceId }: ActivitiesTabProps) {
         </div>
       </div>
 
-      {clinicalFlags.length > 0 && (
+      {visibleFlags.length > 0 && (
         <ClinicalFlagBanner
-          flags={clinicalFlags}
+          flags={visibleFlags}
           onViewResponse={(responseId) => setViewResponseId(responseId)}
+          patientId={patientId}
+          workspaceId={workspaceId}
         />
       )}
 
