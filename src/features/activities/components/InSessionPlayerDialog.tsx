@@ -40,8 +40,13 @@ export function InSessionPlayerDialog({
   const [responses, setResponses] = useState<Record<string, number>>({});
   const [submitted, setSubmitted] = useState(false);
   const [vinhetaDone, setVinhetaDone] = useState(false);
+  const [overlayVisible, setOverlayVisible] = useState(true);
   const [introStarted, setIntroStarted] = useState(false);
-  const handleVinhetaComplete = useCallback(() => setVinhetaDone(true), []);
+  const handleVinhetaComplete = useCallback(() => {
+    setVinhetaDone(true);
+    // Keep cream overlay for a smooth fade-out (no flash)
+    setTimeout(() => setOverlayVisible(false), 500);
+  }, []);
 
   const configQuery = useQuery({
     queryKey: ["activity-config", patientActivityId],
