@@ -44,9 +44,9 @@ export const generateComplianceReport = createServerFn({ method: "POST" })
       .maybeSingle();
     if (!membership) throw new Error("Sem permissão neste workspace.");
 
-    // 3. Get therapist + workspace names
+    // 3. Get therapist profile (name, license, NPI) + workspace name
     const [profileRes, wsRes] = await Promise.all([
-      supabase.from("profiles").select("full_name").eq("id", userId).maybeSingle(),
+      supabase.from("profiles").select("full_name, license_number, npi").eq("id", userId).maybeSingle(),
       supabase.from("workspaces").select("name").eq("id", data.workspaceId).maybeSingle(),
     ]);
 
@@ -61,6 +61,8 @@ export const generateComplianceReport = createServerFn({ method: "POST" })
       to: data.to,
       therapistName,
       workspaceName,
+      licenseNumber: profileRes.data?.license_number ?? undefined,
+      npi: profileRes.data?.npi ?? undefined,
     });
 
     // 5. Audit (no PHI)
