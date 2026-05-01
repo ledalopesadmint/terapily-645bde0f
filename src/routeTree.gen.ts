@@ -31,7 +31,7 @@ import { Route as AuthenticatedSettingsProfileRouteImport } from './routes/_auth
 import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_authenticated/settings.billing'
 import { Route as AuthenticatedPatientsDeletedRouteImport } from './routes/_authenticated/patients.deleted'
 import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
-import { Route as AuthenticatedLibraryScalesRouteImport } from './routes/_authenticated/library.scales'
+import { Route as AuthenticatedLibraryScalesRouteImport } from './routes/_authenticated/library_.scales'
 import { Route as AuthenticatedDevRoadmapRouteImport } from './routes/_authenticated/dev.roadmap'
 import { Route as ApiPublicHooksPurgePatientsRouteImport } from './routes/api/public/hooks/purge-patients'
 
@@ -152,9 +152,9 @@ const AuthenticatedPatientsIdRoute = AuthenticatedPatientsIdRouteImport.update({
 } as any)
 const AuthenticatedLibraryScalesRoute =
   AuthenticatedLibraryScalesRouteImport.update({
-    id: '/scales',
-    path: '/scales',
-    getParentRoute: () => AuthenticatedLibraryRoute,
+    id: '/library_/scales',
+    path: '/library/scales',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedDevRoadmapRoute = AuthenticatedDevRoadmapRouteImport.update({
   id: '/dev/roadmap',
@@ -175,7 +175,7 @@ export interface FileRoutesByFullPath {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/library': typeof AuthenticatedLibraryRouteWithChildren
+  '/library': typeof AuthenticatedLibraryRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
@@ -201,7 +201,7 @@ export interface FileRoutesByTo {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/library': typeof AuthenticatedLibraryRouteWithChildren
+  '/library': typeof AuthenticatedLibraryRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -228,14 +228,14 @@ export interface FileRoutesById {
   '/reset-password': typeof ResetPasswordRoute
   '/signup': typeof SignupRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/library': typeof AuthenticatedLibraryRouteWithChildren
+  '/_authenticated/library': typeof AuthenticatedLibraryRoute
   '/_authenticated/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
-  '/_authenticated/library/scales': typeof AuthenticatedLibraryScalesRoute
+  '/_authenticated/library_/scales': typeof AuthenticatedLibraryScalesRoute
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/_authenticated/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
   '/_authenticated/settings/billing': typeof AuthenticatedSettingsBillingRoute
@@ -315,7 +315,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/p/$token'
     | '/_authenticated/dev/roadmap'
-    | '/_authenticated/library/scales'
+    | '/_authenticated/library_/scales'
     | '/_authenticated/patients/$id'
     | '/_authenticated/patients/deleted'
     | '/_authenticated/settings/billing'
@@ -497,12 +497,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPatientsIdRouteImport
       parentRoute: typeof AuthenticatedPatientsRoute
     }
-    '/_authenticated/library/scales': {
-      id: '/_authenticated/library/scales'
-      path: '/scales'
+    '/_authenticated/library_/scales': {
+      id: '/_authenticated/library_/scales'
+      path: '/library/scales'
       fullPath: '/library/scales'
       preLoaderRoute: typeof AuthenticatedLibraryScalesRouteImport
-      parentRoute: typeof AuthenticatedLibraryRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/dev/roadmap': {
       id: '/_authenticated/dev/roadmap'
@@ -520,17 +520,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AuthenticatedLibraryRouteChildren {
-  AuthenticatedLibraryScalesRoute: typeof AuthenticatedLibraryScalesRoute
-}
-
-const AuthenticatedLibraryRouteChildren: AuthenticatedLibraryRouteChildren = {
-  AuthenticatedLibraryScalesRoute: AuthenticatedLibraryScalesRoute,
-}
-
-const AuthenticatedLibraryRouteWithChildren =
-  AuthenticatedLibraryRoute._addFileChildren(AuthenticatedLibraryRouteChildren)
 
 interface AuthenticatedPatientsRouteChildren {
   AuthenticatedPatientsIdRoute: typeof AuthenticatedPatientsIdRoute
@@ -570,21 +559,23 @@ const AuthenticatedSettingsRouteWithChildren =
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRouteWithChildren
+  AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
   AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRouteWithChildren
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedDevRoadmapRoute: typeof AuthenticatedDevRoadmapRoute
+  AuthenticatedLibraryScalesRoute: typeof AuthenticatedLibraryScalesRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedLibraryRoute: AuthenticatedLibraryRouteWithChildren,
+  AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
   AuthenticatedPatientsRoute: AuthenticatedPatientsRouteWithChildren,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedDevRoadmapRoute: AuthenticatedDevRoadmapRoute,
+  AuthenticatedLibraryScalesRoute: AuthenticatedLibraryScalesRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
