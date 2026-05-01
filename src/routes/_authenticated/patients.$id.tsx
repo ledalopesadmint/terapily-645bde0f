@@ -753,8 +753,8 @@ function ShareLinkDialog({
         <DialogHeader>
           <DialogTitle>Link gerado</DialogTitle>
           <DialogDescription>
-            Envie pelo seu canal — o que o paciente realmente abre. O link só
-            será exibido <strong>agora</strong>.
+            Envie pelo seu canal — o que o paciente realmente abre. Este link só
+            será exibido <strong>agora</strong> e não poderá ser recuperado depois.
           </DialogDescription>
         </DialogHeader>
 
