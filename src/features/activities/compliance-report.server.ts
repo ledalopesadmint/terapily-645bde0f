@@ -503,15 +503,17 @@ function buildClinicalPDF(
     const textY = y + ROW_H / 2 + 1; // vertically centered in cell
     doc.setTextColor(...CHARCOAL);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(10); // standard paragraph size
     doc.text(formatDate(row.submittedAt), cols[0], textY);
     const title =
-      row.activityTitle.length > 30
-        ? row.activityTitle.slice(0, 27) + "…"
+      row.activityTitle.length > 25
+        ? row.activityTitle.slice(0, 22) + "…"
         : row.activityTitle;
     doc.text(title, cols[1], textY);
+    doc.setFontSize(9);
     doc.text(row.deliveryMode.replace("_", " "), cols[2], textY);
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
     doc.text(
       row.score != null ? `${row.score}` : "—",
       cols[3],
@@ -522,7 +524,7 @@ function buildClinicalPDF(
     if (row.flagLabel) {
       doc.setTextColor(...RED);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
+      doc.setFontSize(8);
       doc.text("FLAG", cols[5], textY);
     }
     y += ROW_H;
