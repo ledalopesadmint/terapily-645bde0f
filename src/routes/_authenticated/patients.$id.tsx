@@ -763,7 +763,12 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
 
       <AlertDialog
         open={!!revokeTarget}
-        onOpenChange={(o) => !o && setRevokeTarget(null)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setRevokeTarget(null);
+            setRevokeReason("");
+          }
+        }}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -773,6 +778,20 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
               Se o paciente já tiver respondido, a resposta permanece.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="py-2">
+            <label htmlFor="revoke-reason" className="text-sm font-medium text-foreground">
+              Observação <span className="text-muted-foreground font-normal">(opcional)</span>
+            </label>
+            <input
+              id="revoke-reason"
+              type="text"
+              maxLength={200}
+              placeholder="Ex: Link gerado por engano, paciente errado…"
+              value={revokeReason}
+              onChange={(e) => setRevokeReason(e.target.value)}
+              className="mt-1.5 w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--sage)]/40"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
