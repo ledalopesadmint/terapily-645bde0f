@@ -18,7 +18,7 @@ export function ScaleIntro({ title, config, onStart }: ScaleIntroProps) {
   const hasIntroduction = !!config.introduction;
 
   return (
-    <div className="fixed inset-0 z-50 bg-[var(--cream)] flex flex-col animate-in fade-in duration-300">
+    <div className="absolute inset-0 bg-[var(--cream)] flex flex-col">
       {/* Content centered */}
       <div className="flex-1 flex items-center justify-center px-[10%] sm:px-[20%]">
         <div className="w-full text-center space-y-8">
