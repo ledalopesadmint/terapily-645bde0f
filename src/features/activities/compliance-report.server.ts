@@ -383,17 +383,17 @@ function buildClinicalPDF(
   drawWatermark(doc);
   let y = drawHeader(doc);
 
-  // ── Clinician copy band — flush below header (no gap) ──
-  const bandH = 8;
+  // ── Clinician copy band — flush below header, FULL WIDTH like header ──
+  const bandH = 10;
   doc.setFillColor(253, 232, 232);
-  doc.rect(M, y, CW, bandH, "F"); // no rounded corners — sits flush
+  doc.rect(0, y, PAGE_W, bandH, "F"); // full width, edge to edge
   doc.setTextColor(...RED);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
   const bandLabel = "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION";
   const bandW = doc.getTextWidth(bandLabel);
-  doc.text(bandLabel, M + (CW - bandW) / 2, y + bandH / 2 + 1.5);
-  y += bandH + 8; // breathing room before title
+  doc.text(bandLabel, (PAGE_W - bandW) / 2, y + bandH / 2 + 1.5);
+  y += bandH + 12; // 50% more space after band before title
 
   // ── Title (keep current padding) ──
   doc.setTextColor(...NAVY);
@@ -427,34 +427,38 @@ function buildClinicalPDF(
     y += 3;
   }
 
-  // ── Info block (keep current padding) ──
-  doc.setFillColor(247, 245, 240);
-  doc.roundedRect(M, y, CW, 24, 2, 2, "F");
-  let iy = y + 6;
+  // ── Info block — proper padding, centered content ──
   const infoItems = [
     ["Patient:", patientLabel],
     ["Therapist:", params.therapistName],
     ["Practice:", params.workspaceName],
     ["Period:", formatDateRange(params.from, params.to)],
   ];
+  const infoLineH = 6;
+  const infoPadY = 6; // padding top and bottom inside box
+  const infoBoxH = infoPadY * 2 + infoItems.length * infoLineH;
+  doc.setFillColor(247, 245, 240);
+  doc.roundedRect(M, y, CW, infoBoxH, 2, 2, "F");
+  let iy = y + infoPadY + 4; // baseline of first line
   for (const [label, val] of infoItems) {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setTextColor(...NAVY);
     doc.text(label, M + 4, iy);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(...CHARCOAL);
     doc.text(val, M + 28, iy);
-    iy += 6;
+    iy += infoLineH;
   }
-  y += 30;
+  y += infoBoxH + 8;
 
-  // ── Section: Activity History ──
+  // ── Section: Activity History — 50% more padding above and below title ──
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(12);
+  y += 4; // extra space above
   doc.text("Activity History", M, y);
-  y += 5;
+  y += 8; // 50% more space below title
 
   // Table header — premium cell height with centered text
   const thH = 10;
@@ -472,8 +476,8 @@ function buildClinicalPDF(
   y += thH + 2;
 
   // Table rows — premium spacing, flow to near footer, continue on next page
-  const ROW_H = 10; // generous row height
-  const ROW_ITEM_H = 15; // row with item breakdown
+  const ROW_H = 12; // generous row height for 10pt text
+  const ROW_ITEM_H = 18; // row with item breakdown
   for (let i = 0; i < rows.length; i++) {
     const rowH = rows[i].items ? ROW_ITEM_H : ROW_H;
     y = checkPage(y, rowH);
@@ -499,15 +503,17 @@ function buildClinicalPDF(
     const textY = y + ROW_H / 2 + 1; // vertically centered in cell
     doc.setTextColor(...CHARCOAL);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
+    doc.setFontSize(10); // standard paragraph size
     doc.text(formatDate(row.submittedAt), cols[0], textY);
     const title =
-      row.activityTitle.length > 30
-        ? row.activityTitle.slice(0, 27) + "…"
+      row.activityTitle.length > 25
+        ? row.activityTitle.slice(0, 22) + "…"
         : row.activityTitle;
     doc.text(title, cols[1], textY);
+    doc.setFontSize(9);
     doc.text(row.deliveryMode.replace("_", " "), cols[2], textY);
     doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
     doc.text(
       row.score != null ? `${row.score}` : "—",
       cols[3],
@@ -518,7 +524,7 @@ function buildClinicalPDF(
     if (row.flagLabel) {
       doc.setTextColor(...RED);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
+      doc.setFontSize(8);
       doc.text("FLAG", cols[5], textY);
     }
     y += ROW_H;
@@ -547,14 +553,14 @@ function buildClinicalPDF(
     y += 6;
   }
 
-  // ── Section: Clinical Flag Timeline (tight after activity table) ──
-  y += 3;
+  // ── Section: Clinical Flag Timeline — 50% more padding ──
+  y += 6;
   y = checkPage(y, 20);
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(12);
   doc.text("Clinical Flag Timeline", M, y);
-  y += 5;
+  y += 8;
 
   if (flags.length === 0) {
     doc.setFontSize(8);
@@ -622,36 +628,36 @@ function buildClinicalPDF(
     }
   }
 
-  // ── Section: Audit Trail (tight after flags) ──
-  y += 2;
+  // ── Section: Audit Trail — 50% more padding ──
+  y += 6;
   y = checkPage(y, 15);
   doc.setTextColor(...NAVY);
   doc.setFont("times", "bold");
   doc.setFontSize(12);
   doc.text("Audit Trail", M, y);
-  y += 5;
+  y += 8;
 
   if (auditEntries.length === 0) {
-    doc.setFontSize(8);
+    doc.setFontSize(10);
     doc.setTextColor(...CHARCOAL);
     doc.setFont("helvetica", "normal");
     doc.text("No audit events in this period.", M, y);
     y += 5;
   } else {
     // Audit table header — premium spacing
-    const auditThH = 9;
+    const auditThH = 10;
     doc.setFillColor(...NAVY);
     doc.roundedRect(M, y, CW, auditThH, 1, 1, "F");
     doc.setTextColor(...WHITE);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(6.5);
+    doc.setFontSize(8);
     const auditThTextY = y + auditThH / 2 + 1.5;
     doc.text("TIMESTAMP", M + 4, auditThTextY);
     doc.text("ACTION", M + 45, auditThTextY);
     doc.text("ACTOR", M + 120, auditThTextY);
     y += auditThH + 2;
 
-    const AUDIT_ROW_H = 9;
+    const AUDIT_ROW_H = 10;
     for (let i = 0; i < auditEntries.length; i++) {
       y = checkPage(y, AUDIT_ROW_H);
       const entry = auditEntries[i];
@@ -662,7 +668,7 @@ function buildClinicalPDF(
       const auditTextY = y + AUDIT_ROW_H / 2 + 1;
       doc.setTextColor(...CHARCOAL);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
+      doc.setFontSize(9);
       doc.text(formatDate(entry.timestamp), M + 4, auditTextY);
       doc.text(entry.action.slice(0, 40), M + 45, auditTextY);
       doc.text(entry.actorLabel.slice(0, 25), M + 120, auditTextY);
