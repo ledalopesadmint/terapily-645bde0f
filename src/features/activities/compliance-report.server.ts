@@ -1289,5 +1289,18 @@ export async function buildComplianceReportPDF(
     buildClinicalPDF(doc, params, patientLabel, rows, hasPHI, flags, auditEntries);
   }
 
-  return doc.output("arraybuffer") as unknown as Uint8Array;
+  const pdfBuffer = doc.output("arraybuffer");
+
+  // ── POST-GENERATION VALIDATION (mandatory) ──
+  const postCheck = validateGeneratedPDF(pdfBuffer);
+  if (!postCheck.valid) {
+    logServerError("compliance-report.post-validation", new Error(
+      `PDF validation failed: ${postCheck.errors.join("; ")}`,
+    ));
+    throw new Error(
+      `Compliance Report — PDF validation failed:\n${postCheck.errors.join("\n")}`,
+    );
+  }
+
+  return pdfBuffer as unknown as Uint8Array;
 }
