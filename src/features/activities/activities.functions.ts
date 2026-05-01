@@ -321,7 +321,7 @@ export const listPatientActivities = createServerFn({ method: "GET" })
         applied_at,
         created_at,
         activity:activity_catalog!inner ( id, slug, title, archetype ),
-        response:activity_responses!patient_activities_response_fk ( id, score, severity, scoring_metadata, submitted_via, submitted_at )
+        response:activity_responses!patient_activities_response_fk ( id, score, severity, scoring_metadata, submitted_via, submitted_at, acknowledged_at, acknowledged_by )
       `,
       )
       .eq("patient_id", data.patientId)
