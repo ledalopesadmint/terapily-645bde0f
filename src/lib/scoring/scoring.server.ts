@@ -139,11 +139,19 @@ export function scoreActivity(
     };
   }
 
-  // Severidade
+  // Severidade — match raw band label, then map to standard enum
   let severity: Severity = "not_applicable";
+  let severityLabel: string | null = null;
   for (const band of bands) {
-    if (total >= band.min && total <= band.max && VALID_SEVERITIES.includes(band.label)) {
-      severity = band.label;
+    if (total >= band.min && total <= band.max) {
+      severityLabel = band.label;
+      // Try exact match first
+      if (VALID_SEVERITIES.includes(band.label as Severity)) {
+        severity = band.label as Severity;
+      } else {
+        // Best-effort mapping from descriptive labels to standard enum
+        severity = mapLabelToSeverity(band.label);
+      }
       break;
     }
   }
