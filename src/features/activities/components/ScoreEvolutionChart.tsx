@@ -115,7 +115,7 @@ export function ScoreEvolutionChart({
 
   return (
     <div className="space-y-3">
-      <h2 className="font-display text-xl text-foreground">Evolução</h2>
+      <h2 className="font-display text-xl text-foreground">Histórico de Scores</h2>
       <div className="grid gap-3 md:grid-cols-2">
         {groups.map((g) => (
           <ScoreCard key={g.slug} group={g} />
