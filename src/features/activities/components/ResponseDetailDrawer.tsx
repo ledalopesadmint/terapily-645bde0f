@@ -97,7 +97,7 @@ export function ResponseDetailDrawer({
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-mauve" />
                   <div className="space-y-1">
                     <p className="text-sm font-semibold text-foreground">
-                      Flag clínica detectada · {clinicalFlag.flag.replace(/_/g, " ")}
+                      Flag clínica detectada · {typeof clinicalFlag.flag === "string" ? clinicalFlag.flag.replace(/_/g, " ") : "Sinal clínico detectado"}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       Item {clinicalFlag.item_id?.replace(/^q/i, "") ?? "—"}. Evento registrado na auditoria.

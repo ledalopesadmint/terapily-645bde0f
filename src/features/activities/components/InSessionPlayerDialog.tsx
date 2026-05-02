@@ -65,7 +65,7 @@ export function InSessionPlayerDialog({
       });
       if (res.clinicalFlag?.raised) {
         toast.warning(
-          `⚠️ Flag clínica detectada: ${res.clinicalFlag.flag}`,
+          `⚠️ Flag clínica detectada: ${typeof res.clinicalFlag.flag === "string" ? res.clinicalFlag.flag.replace(/_/g, " ") : "sinal clínico"}`,
           { duration: 10_000 },
         );
       }

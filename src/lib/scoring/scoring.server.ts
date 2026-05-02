@@ -46,7 +46,7 @@ interface QuestionSpec {
 
 interface ScoringConfig {
   scoring?: {
-    type?: "sum" | "weighted_sum";
+    type?: "sum" | "weighted_sum" | "mean";
     questions?: QuestionSpec[];
     reverse?: string[];
     max_per_item?: number;
@@ -151,11 +151,16 @@ export function scoreActivity(
     };
   }
 
+  // Mean scoring: divide total by number of answered items
+  const finalScore = type === "mean" && answered > 0
+    ? Number((total / answered).toFixed(2))
+    : total;
+
   // Severidade — match raw band label, then map to standard enum
   let severity: Severity = "not_applicable";
   let severityLabel: string | null = null;
   for (const band of bands) {
-    if (total >= band.min && total <= band.max) {
+    if (finalScore >= band.min && finalScore <= band.max) {
       severityLabel = band.label;
       // Try exact match first
       if (VALID_SEVERITIES.includes(band.label as Severity)) {
@@ -189,7 +194,7 @@ export function scoreActivity(
   }
 
   return {
-    score: total,
+    score: finalScore,
     severity,
     metadata: {
       type,

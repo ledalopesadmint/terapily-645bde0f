@@ -97,8 +97,14 @@ export function PatientPickerSheet({
     return null;
   };
 
+  const [assigningPatientId, setAssigningPatientId] = useState<string | null>(null);
+
   const assignMutation = useMutation({
-    mutationFn: (patientId: string) => {
+    mutationKey: ["assign-activity", activity?.id],
+    mutationFn: async (patientId: string) => {
+      // Prevent double-fire: if already assigning for this patient, bail
+      if (assigningPatientId) throw new Error("Já atribuindo…");
+      setAssigningPatientId(patientId);
       const realId = findRealActivityId();
       if (!realId) throw new Error("Atividade não disponível no workspace.");
       if (!workspaceId) throw new Error("Workspace não encontrado.");
@@ -112,6 +118,7 @@ export function PatientPickerSheet({
         },
       });
     },
+    onSettled: () => setAssigningPatientId(null),
     onSuccess: (res, patientId) => {
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
       onOpenChange(false);

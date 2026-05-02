@@ -169,3 +169,37 @@ describe("scoreActivity — PCL-5 cluster scores", () => {
     expect(clusters.hyperarousal).toBe(12); // 6 * 2
   });
 });
+
+describe("scoreActivity — mean scoring type", () => {
+  const MEAN_CONFIG = {
+    scoring: {
+      type: "mean" as const,
+      questions: [
+        { id: "q1", weight: 1 },
+        { id: "q2", weight: 1 },
+        { id: "q3", weight: 1 },
+        { id: "q4", weight: 1 },
+      ],
+      max_per_item: 4,
+    },
+    severity_bands: [
+      { min: 0, max: 1.5, label: "minimal" as const },
+      { min: 1.51, max: 3, label: "moderate" as const },
+      { min: 3.01, max: 4, label: "severe" as const },
+    ],
+  };
+
+  it("computes mean instead of sum", () => {
+    const responses = { q1: 2, q2: 4, q3: 2, q4: 4 }; // sum=12, mean=3
+    const result = scoreActivity("quiz_scale", MEAN_CONFIG, responses);
+    expect(result.score).toBe(3);
+    expect(result.severity).toBe("moderate");
+  });
+
+  it("handles fractional mean correctly", () => {
+    const responses = { q1: 1, q2: 0, q3: 0, q4: 0 }; // sum=1, mean=0.25
+    const result = scoreActivity("quiz_scale", MEAN_CONFIG, responses);
+    expect(result.score).toBe(0.25);
+    expect(result.severity).toBe("minimal");
+  });
+});
