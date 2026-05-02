@@ -141,8 +141,17 @@ export const createHabitLink = createServerFn({ method: "POST" })
       };
     }
 
-    // 6. Generate token
+    // 6. Check workspace limit on active habit links
     const tier = await getWorkspaceTier(data.workspaceId);
+    const maxLinks = TIER_MAX_HABIT_LINKS[tier] ?? 3;
+    const currentCount = await countActiveHabitLinks(data.workspaceId);
+    if (currentCount >= maxLinks) {
+      throw new Error(
+        `__HABIT_LIMIT__:${tier}:${maxLinks}`,
+      );
+    }
+
+    // 7. Generate token
     const expirationDays = TIER_HABIT_LINK_DAYS[tier] ?? 7;
     const rawToken = generateMagicLinkToken(activity.slug);
     const tokenHash = await hashMagicLinkToken(rawToken);
