@@ -13,7 +13,7 @@
  *  5. On completion → submitHabitEntry() → show history
  */
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -22,8 +22,7 @@ import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
 import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
 import { submitHabitEntry, getHabitHistory } from "@/features/habits/habits.functions";
-import { Check, BarChart3, Clock, Flame, ArrowLeft } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Check, BarChart3, Clock, Flame, ArrowLeft, Calendar, TrendingUp } from "lucide-react";
 
 // --- Server function: resolve token → activity data -----------------------
 
@@ -106,6 +105,10 @@ const resolveHabitToken = createServerFn({ method: "GET" })
 
 // --- Route -----------------------------------------------------------------
 
+function HabitRouteError({ error }: { error: Error }) {
+  return <HabitErrorPage error="not_found" />;
+}
+
 export const Route = createFileRoute("/h/$token")({
   head: () => ({
     meta: [
@@ -117,23 +120,25 @@ export const Route = createFileRoute("/h/$token")({
     return resolveHabitToken({ data: { token: params.token } });
   },
   component: HabitLinkPage,
+  errorComponent: HabitRouteError,
 });
 
 type ViewState = "exercise" | "completed" | "history";
 
+interface HistoryEntry {
+  id: string;
+  completedAt: string;
+  durationSeconds: number | null;
+  cyclesCompleted: number | null;
+}
+
 function HabitLinkPage() {
   const loaderData = Route.useLoaderData();
-  const { token } = Route.useParams();
   const [view, setView] = useState<ViewState>("exercise");
   const [submitting, setSubmitting] = useState(false);
   const [historyData, setHistoryData] = useState<{
     totalEntries: number;
-    entries: Array<{
-      id: string;
-      completedAt: string;
-      durationSeconds: number | null;
-      cyclesCompleted: number | null;
-    }>;
+    entries: HistoryEntry[];
   } | null>(null);
 
   // Error states
@@ -192,6 +197,7 @@ function HabitLinkPage() {
       <CompletedView
         activityTitle={activity.title}
         totalEntries={historyData?.totalEntries ?? link.totalEntries + 1}
+        entries={historyData?.entries ?? []}
         onViewHistory={handleViewHistory}
         onRepeat={() => setView("exercise")}
       />
@@ -204,6 +210,7 @@ function HabitLinkPage() {
         activityTitle={activity.title}
         entries={historyData?.entries ?? []}
         totalEntries={historyData?.totalEntries ?? 0}
+        expiresAt={link.expiresAt}
         onBack={() => setView("exercise")}
       />
     );
@@ -232,7 +239,7 @@ function HabitLinkPage() {
     );
   }
 
-  // Fallback for non-breathing activities (guided_script, etc.)
+  // Fallback for non-breathing activities
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(0.95_0.02_160)] to-[oklch(0.90_0.03_170)] px-6">
       <div className="max-w-sm text-center">
@@ -250,22 +257,29 @@ function HabitLinkPage() {
   );
 }
 
-// --- Sub-views -------------------------------------------------------------
+// --- Completed View --------------------------------------------------------
 
 function CompletedView({
   activityTitle,
   totalEntries,
+  entries,
   onViewHistory,
   onRepeat,
 }: {
   activityTitle: string;
   totalEntries: number;
+  entries: HistoryEntry[];
   onViewHistory: () => void;
   onRepeat: () => void;
 }) {
+  const streak = useMemo(() => {
+    const uniqueDays = [...new Set(entries.map((e) => new Date(e.completedAt).toISOString().slice(0, 10)))].sort().reverse();
+    return calculateStreak(uniqueDays);
+  }, [entries]);
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[oklch(0.95_0.02_160)] via-[oklch(0.93_0.03_170)] to-[oklch(0.90_0.04_180)] px-6">
-      <div className="flex flex-col items-center gap-6 max-w-sm text-center">
+      <div className="flex flex-col items-center gap-6 max-w-sm w-full text-center">
         <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[oklch(0.72_0.08_160)] shadow-lg">
           <Check className="w-10 h-10 text-white" />
         </div>
@@ -290,9 +304,11 @@ function CompletedView({
           </div>
           <div className="h-8 w-px bg-[oklch(0.72_0.08_160/0.2)]" />
           <div className="text-center">
-            <Flame className="w-6 h-6 mx-auto text-[oklch(0.65_0.10_50)]" />
+            <p className="text-3xl font-mono font-light text-[oklch(0.65_0.10_50)]">
+              {streak}
+            </p>
             <p className="text-xs text-[oklch(0.50_0.04_160)] mt-0.5">
-              Continue assim
+              {streak === 1 ? "dia seguido" : "dias seguidos"}
             </p>
           </div>
         </div>
@@ -317,39 +333,88 @@ function CompletedView({
   );
 }
 
+// --- History View ----------------------------------------------------------
+
+type PeriodFilter = "7d" | "30d" | "all";
+
 function HistoryView({
   activityTitle,
   entries,
   totalEntries,
+  expiresAt,
   onBack,
 }: {
   activityTitle: string;
-  entries: Array<{
-    id: string;
-    completedAt: string;
-    durationSeconds: number | null;
-    cyclesCompleted: number | null;
-  }>;
+  entries: HistoryEntry[];
   totalEntries: number;
+  expiresAt: string;
   onBack: () => void;
 }) {
-  // Group entries by date
-  const grouped = entries.reduce<Record<string, typeof entries>>((acc, entry) => {
-    const date = new Date(entry.completedAt).toLocaleDateString("pt-BR", {
-      weekday: "short",
-      day: "numeric",
-      month: "short",
-    });
-    if (!acc[date]) acc[date] = [];
-    acc[date].push(entry);
-    return acc;
-  }, {});
+  const [period, setPeriod] = useState<PeriodFilter>("30d");
 
-  // Calculate streaks
-  const uniqueDays = new Set(
-    entries.map((e) => new Date(e.completedAt).toISOString().slice(0, 10)),
+  const filteredEntries = useMemo(() => {
+    if (period === "all") return entries;
+    const days = period === "7d" ? 7 : 30;
+    const cutoff = new Date(Date.now() - days * 86400000);
+    return entries.filter((e) => new Date(e.completedAt) >= cutoff);
+  }, [entries, period]);
+
+  const uniqueDays = useMemo(() => {
+    const set = new Set(filteredEntries.map((e) => new Date(e.completedAt).toISOString().slice(0, 10)));
+    return Array.from(set).sort().reverse();
+  }, [filteredEntries]);
+
+  const streak = useMemo(() => {
+    const allDays = [...new Set(entries.map((e) => new Date(e.completedAt).toISOString().slice(0, 10)))].sort().reverse();
+    return calculateStreak(allDays);
+  }, [entries]);
+
+  const longestStreak = useMemo(() => {
+    const allDays = [...new Set(entries.map((e) => new Date(e.completedAt).toISOString().slice(0, 10)))].sort();
+    if (allDays.length === 0) return 0;
+    let longest = 1;
+    let current = 1;
+    for (let i = 1; i < allDays.length; i++) {
+      const diff = (new Date(allDays[i]).getTime() - new Date(allDays[i - 1]).getTime()) / 86400000;
+      if (Math.round(diff) === 1) {
+        current++;
+        if (current > longest) longest = current;
+      } else {
+        current = 1;
+      }
+    }
+    return longest;
+  }, [entries]);
+
+  const totalMinutes = useMemo(
+    () => Math.round(filteredEntries.reduce((s, e) => s + (e.durationSeconds ?? 0), 0) / 60),
+    [filteredEntries],
   );
-  const streak = calculateStreak(Array.from(uniqueDays).sort().reverse());
+
+  const adherencePercent = useMemo(() => {
+    const days = period === "7d" ? 7 : period === "30d" ? 30 : (() => {
+      if (entries.length === 0) return 1;
+      const first = new Date(entries[entries.length - 1].completedAt);
+      return Math.max(1, Math.ceil((Date.now() - first.getTime()) / 86400000));
+    })();
+    return Math.min(100, Math.round((uniqueDays.length / days) * 100));
+  }, [uniqueDays, entries, period]);
+
+  // Group entries by date for timeline
+  const grouped = useMemo(() => {
+    return filteredEntries.reduce<Record<string, HistoryEntry[]>>((acc, entry) => {
+      const date = new Date(entry.completedAt).toLocaleDateString("pt-BR", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      });
+      if (!acc[date]) acc[date] = [];
+      acc[date].push(entry);
+      return acc;
+    }, {});
+  }, [filteredEntries]);
+
+  const daysUntilExpiry = Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[oklch(0.95_0.02_160)] to-[oklch(0.92_0.03_170)]">
@@ -362,7 +427,7 @@ function HistoryView({
           <ArrowLeft className="w-4 h-4" />
           Voltar ao exercício
         </button>
-        <h1 className="font-display text-2xl text-[oklch(0.30_0.05_160)]">
+        <h1 className="font-display text-2xl sm:text-3xl text-[oklch(0.30_0.05_160)]">
           {activityTitle}
         </h1>
         <p className="text-sm text-[oklch(0.45_0.04_160)] mt-1">
@@ -370,29 +435,102 @@ function HistoryView({
         </p>
       </div>
 
-      {/* Stats */}
+      {/* Period filter */}
       <div className="px-4 sm:px-6 pb-4">
-        <div className="flex gap-3">
+        <div className="flex gap-2">
+          {(["7d", "30d", "all"] as PeriodFilter[]).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPeriod(p)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                period === p
+                  ? "bg-[oklch(0.72_0.08_160)] text-white shadow-sm"
+                  : "bg-white/40 text-[oklch(0.45_0.04_160)] hover:bg-white/60"
+              }`}
+            >
+              {p === "7d" ? "7 dias" : p === "30d" ? "30 dias" : "Tudo"}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div className="px-4 sm:px-6 pb-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <StatCard
             icon={<BarChart3 className="w-4 h-4" />}
-            value={totalEntries.toString()}
-            label="Total"
+            value={filteredEntries.length.toString()}
+            label="Práticas"
           />
           <StatCard
             icon={<Flame className="w-4 h-4" />}
-            value={`${streak}d`}
-            label="Sequência"
+            value={`${streak}`}
+            label="Sequência atual"
+            accent={streak >= 3}
+          />
+          <StatCard
+            icon={<TrendingUp className="w-4 h-4" />}
+            value={`${adherencePercent}%`}
+            label="Aderência"
+            accent={adherencePercent >= 70}
           />
           <StatCard
             icon={<Clock className="w-4 h-4" />}
-            value={formatTotalMinutes(entries)}
+            value={totalMinutes >= 60 ? `${(totalMinutes / 60).toFixed(1)}h` : `${totalMinutes}min`}
             label="Tempo total"
           />
         </div>
       </div>
 
+      {/* Streak + adherence details */}
+      <div className="px-4 sm:px-6 pb-4">
+        <div className="rounded-xl bg-white/50 backdrop-blur-sm p-4">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[oklch(0.50_0.04_160)]">
+              Progresso
+            </p>
+            <div className="flex items-center gap-1 text-[0.6rem] text-[oklch(0.55_0.04_160)]">
+              <Calendar className="w-3 h-3" />
+              {daysUntilExpiry > 0 ? `${daysUntilExpiry}d restantes` : "Expirando"}
+            </div>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <div>
+              <p className="text-xs text-[oklch(0.50_0.04_160)]">Sequência atual</p>
+              <p className="text-2xl font-mono font-light text-[oklch(0.30_0.05_160)]">
+                {streak} <span className="text-sm">dias</span>
+              </p>
+            </div>
+            <div className="h-10 w-px bg-[oklch(0.85_0.03_160)]" />
+            <div>
+              <p className="text-xs text-[oklch(0.50_0.04_160)]">Maior sequência</p>
+              <p className="text-2xl font-mono font-light text-[oklch(0.30_0.05_160)]">
+                {longestStreak} <span className="text-sm">dias</span>
+              </p>
+            </div>
+            <div className="h-10 w-px bg-[oklch(0.85_0.03_160)]" />
+            <div>
+              <p className="text-xs text-[oklch(0.50_0.04_160)]">Dias ativos</p>
+              <p className="text-2xl font-mono font-light text-[oklch(0.30_0.05_160)]">
+                {uniqueDays.length}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Heatmap (7 weeks) */}
+      {entries.length > 0 && (
+        <div className="px-4 sm:px-6 pb-4">
+          <HabitHeatmap entries={entries} />
+        </div>
+      )}
+
       {/* Timeline */}
       <div className="px-4 sm:px-6 pb-20">
+        <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[oklch(0.50_0.04_160)] mb-3">
+          Histórico
+        </p>
         {Object.entries(grouped).map(([date, dayEntries]) => (
           <div key={date} className="mb-4">
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-[oklch(0.50_0.04_160)] mb-2">
@@ -414,10 +552,10 @@ function HistoryView({
                     </span>
                   </div>
                   <div className="flex items-center gap-3 text-xs text-[oklch(0.50_0.04_160)]">
-                    {entry.cyclesCompleted && (
+                    {entry.cyclesCompleted != null && entry.cyclesCompleted > 0 && (
                       <span>{entry.cyclesCompleted} ciclos</span>
                     )}
-                    {entry.durationSeconds && (
+                    {entry.durationSeconds != null && entry.durationSeconds > 0 && (
                       <span>{Math.round(entry.durationSeconds / 60)}min</span>
                     )}
                   </div>
@@ -427,9 +565,9 @@ function HistoryView({
           </div>
         ))}
 
-        {entries.length === 0 && (
+        {filteredEntries.length === 0 && (
           <div className="text-center py-12 text-sm text-[oklch(0.50_0.04_160)]">
-            Nenhuma prática registrada ainda.
+            Nenhuma prática neste período.
           </div>
         )}
       </div>
@@ -437,21 +575,117 @@ function HistoryView({
   );
 }
 
+// --- Heatmap (7 weeks) -----------------------------------------------------
+
+function HabitHeatmap({ entries }: { entries: HistoryEntry[] }) {
+  const { weeks, weekDayLabels } = useMemo(() => {
+    const countByDay: Record<string, number> = {};
+    for (const e of entries) {
+      const d = new Date(e.completedAt).toISOString().slice(0, 10);
+      countByDay[d] = (countByDay[d] ?? 0) + 1;
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const dayOfWeek = today.getDay(); // 0=Sun
+    const totalDays = 7 * 7; // 7 weeks
+    const startDate = new Date(today);
+    startDate.setDate(startDate.getDate() - totalDays + (6 - dayOfWeek) + 1);
+
+    const weeksArr: Array<Array<{ date: string; count: number; isToday: boolean; isFuture: boolean }>> = [];
+    let currentWeek: typeof weeksArr[0] = [];
+
+    for (let i = 0; i < totalDays; i++) {
+      const d = new Date(startDate);
+      d.setDate(d.getDate() + i);
+      const key = d.toISOString().slice(0, 10);
+      const todayKey = today.toISOString().slice(0, 10);
+      currentWeek.push({
+        date: key,
+        count: countByDay[key] ?? 0,
+        isToday: key === todayKey,
+        isFuture: d > today,
+      });
+      if (currentWeek.length === 7) {
+        weeksArr.push(currentWeek);
+        currentWeek = [];
+      }
+    }
+    if (currentWeek.length > 0) weeksArr.push(currentWeek);
+
+    return {
+      weeks: weeksArr,
+      weekDayLabels: ["D", "S", "T", "Q", "Q", "S", "S"],
+    };
+  }, [entries]);
+
+  const getColor = (count: number, isFuture: boolean) => {
+    if (isFuture) return "bg-[oklch(0.92_0.01_160/0.3)]";
+    if (count === 0) return "bg-[oklch(0.92_0.02_160)]";
+    if (count === 1) return "bg-[oklch(0.78_0.06_160)]";
+    if (count === 2) return "bg-[oklch(0.65_0.08_160)]";
+    return "bg-[oklch(0.52_0.10_160)]";
+  };
+
+  return (
+    <div className="rounded-xl bg-white/50 backdrop-blur-sm p-4">
+      <p className="text-[0.65rem] font-bold uppercase tracking-[0.12em] text-[oklch(0.50_0.04_160)] mb-3">
+        Últimas 7 semanas
+      </p>
+      <div className="flex gap-1">
+        {/* Day labels */}
+        <div className="flex flex-col gap-1 mr-1">
+          {weekDayLabels.map((label, i) => (
+            <div key={i} className="h-3 w-3 sm:h-4 sm:w-4 flex items-center justify-center text-[0.5rem] text-[oklch(0.55_0.04_160)]">
+              {i % 2 === 1 ? label : ""}
+            </div>
+          ))}
+        </div>
+        {/* Weeks */}
+        {weeks.map((week, wi) => (
+          <div key={wi} className="flex flex-col gap-1">
+            {week.map((day) => (
+              <div
+                key={day.date}
+                className={`h-3 w-3 sm:h-4 sm:w-4 rounded-[3px] transition-colors ${getColor(day.count, day.isFuture)} ${day.isToday ? "ring-1 ring-[oklch(0.72_0.08_160)]" : ""}`}
+                title={`${day.date}: ${day.count} prática${day.count !== 1 ? "s" : ""}`}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      {/* Legend */}
+      <div className="flex items-center gap-1.5 mt-3 justify-end">
+        <span className="text-[0.5rem] text-[oklch(0.55_0.04_160)]">Menos</span>
+        <div className="h-2.5 w-2.5 rounded-[2px] bg-[oklch(0.92_0.02_160)]" />
+        <div className="h-2.5 w-2.5 rounded-[2px] bg-[oklch(0.78_0.06_160)]" />
+        <div className="h-2.5 w-2.5 rounded-[2px] bg-[oklch(0.65_0.08_160)]" />
+        <div className="h-2.5 w-2.5 rounded-[2px] bg-[oklch(0.52_0.10_160)]" />
+        <span className="text-[0.5rem] text-[oklch(0.55_0.04_160)]">Mais</span>
+      </div>
+    </div>
+  );
+}
+
+// --- Sub-components --------------------------------------------------------
+
 function StatCard({
   icon,
   value,
   label,
+  accent = false,
 }: {
   icon: React.ReactNode;
   value: string;
   label: string;
+  accent?: boolean;
 }) {
   return (
-    <div className="flex-1 rounded-xl bg-white/50 backdrop-blur-sm px-3 py-3 text-center">
-      <div className="flex items-center justify-center text-[oklch(0.55_0.06_160)] mb-1">
+    <div className="rounded-xl bg-white/50 backdrop-blur-sm px-3 py-3 text-center">
+      <div className={`flex items-center justify-center mb-1 ${accent ? "text-[oklch(0.65_0.10_50)]" : "text-[oklch(0.55_0.06_160)]"}`}>
         {icon}
       </div>
-      <p className="text-lg font-mono font-light text-[oklch(0.30_0.05_160)]">
+      <p className={`text-lg font-mono font-light ${accent ? "text-[oklch(0.50_0.10_50)]" : "text-[oklch(0.30_0.05_160)]"}`}>
         {value}
       </p>
       <p className="text-[0.6rem] text-[oklch(0.50_0.04_160)] uppercase tracking-wider">
@@ -497,7 +731,6 @@ function calculateStreak(sortedDatesDesc: string[]): number {
   if (sortedDatesDesc.length === 0) return 0;
   let streak = 1;
   const today = new Date().toISOString().slice(0, 10);
-  // If latest practice isn't today or yesterday, streak is 0
   if (sortedDatesDesc[0] !== today) {
     const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     if (sortedDatesDesc[0] !== yesterday) return 0;
@@ -513,15 +746,4 @@ function calculateStreak(sortedDatesDesc: string[]): number {
     }
   }
   return streak;
-}
-
-function formatTotalMinutes(
-  entries: Array<{ durationSeconds: number | null }>,
-): string {
-  const totalSec = entries.reduce((s, e) => s + (e.durationSeconds ?? 0), 0);
-  const mins = Math.round(totalSec / 60);
-  if (mins < 60) return `${mins}min`;
-  const hours = Math.floor(mins / 60);
-  const remainMins = mins % 60;
-  return remainMins > 0 ? `${hours}h${remainMins}` : `${hours}h`;
 }
