@@ -101,7 +101,7 @@ function MindfulnessPage() {
                 activity.supportedModes.includes("shared_link") ||
                 activity.supportedModes.includes("both")
               }
-              onStartInSession={() => handleStart(activity, "in_session")}
+              onClick={() => handleStart(activity, "in_session")}
               onSendLink={() => handleStart(activity, "shared_link")}
             />
           ))}
