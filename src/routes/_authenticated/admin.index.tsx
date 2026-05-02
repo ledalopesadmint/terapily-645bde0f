@@ -1,10 +1,24 @@
 /**
  * /admin — Aba "Acervo": stats do catálogo + atividades agrupadas por arquétipo.
+ *
+ * Inclui busca, ordenação, filtros por tipo e paginação.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star } from "lucide-react";
+import {
+  Plus,
+  Sparkles,
+  FileText,
+  Archive,
+  ShieldCheck,
+  RefreshCw,
+  Star,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  ArrowUpDown,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
@@ -19,13 +33,31 @@ export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminAcervoTab,
 });
 
+type SortField = "slug" | "title" | "status" | "archetype";
+type SortDir = "asc" | "desc";
+
+const PAGE_SIZE = 20;
+const STATUS_OPTIONS = [
+  { value: "", label: "Todos os status" },
+  { value: "published", label: "Publicadas" },
+  { value: "draft", label: "Rascunhos" },
+  { value: "archived", label: "Arquivadas" },
+];
+
 function AdminAcervoTab() {
   const { hasRole } = useAuth();
   const [data, setData] = useState<AdminCatalogPayload | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [featuringId, setFeaturingId] = useState<string | null>(null);
-  const [expandedArchetype, setExpandedArchetype] = useState<string | null>(null);
+
+  // Filters & search
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [archetypeFilter, setArchetypeFilter] = useState<string | null>(null);
+  const [sortField, setSortField] = useState<SortField>("title");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [page, setPage] = useState(0);
 
   const reload = () => {
     setLoading(true);
@@ -54,7 +86,7 @@ function AdminAcervoTab() {
       if (res.id) {
         toast.success("Destaque atualizado", { description: `${res.title} agora aparece no topo do acervo.` });
       } else {
-        toast.success("Destaque removido", { description: "O acervo vai exibir o fallback editorial." });
+        toast.success("Destaque removido");
       }
       await reload();
     } catch (err) {
@@ -64,10 +96,65 @@ function AdminAcervoTab() {
     }
   };
 
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(field);
+      setSortDir("asc");
+    }
+    setPage(0);
+  };
+
+  // Filter, search, sort, paginate
+  const { items, totalCount, totalPages } = useMemo(() => {
+    if (!data) return { items: [], totalCount: 0, totalPages: 0 };
+
+    let filtered = data.items;
+
+    // Archetype filter
+    if (archetypeFilter) {
+      filtered = filtered.filter((i) => i.archetype === archetypeFilter);
+    }
+
+    // Status filter
+    if (statusFilter) {
+      filtered = filtered.filter((i) => i.status === statusFilter);
+    }
+
+    // Search
+    if (search) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(
+        (i) =>
+          i.slug.toLowerCase().includes(q) ||
+          i.title.toLowerCase().includes(q) ||
+          i.status.toLowerCase().includes(q),
+      );
+    }
+
+    // Sort
+    filtered = [...filtered].sort((a, b) => {
+      const aVal = String(a[sortField] ?? "");
+      const bVal = String(b[sortField] ?? "");
+      const cmp = aVal.localeCompare(bVal);
+      return sortDir === "asc" ? cmp : -cmp;
+    });
+
+    const totalCount = filtered.length;
+    const totalPages = Math.ceil(totalCount / PAGE_SIZE);
+    const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+    return { items: paginated, totalCount, totalPages };
+  }, [data, archetypeFilter, statusFilter, search, sortField, sortDir, page]);
+
+  // Reset page on filter change
+  useEffect(() => { setPage(0); }, [search, statusFilter, archetypeFilter]);
+
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       {/* Actions */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <Eyebrow>Catálogo de atividades</Eyebrow>
         <div className="flex items-center gap-2">
           <button type="button" onClick={reload} disabled={loading}
@@ -76,10 +163,10 @@ function AdminAcervoTab() {
             Recarregar
           </button>
           <button type="button"
-            onClick={() => toast.info("Disponível em breve", { description: "O criador de atividades chega em breve." })}
+            onClick={() => toast.info("Disponível em breve")}
             className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90">
             <Plus className="h-4 w-4" />
-            Adicionar atividade
+            Adicionar
           </button>
         </div>
       </div>
@@ -102,20 +189,20 @@ function AdminAcervoTab() {
             <StatCard icon={ShieldCheck} label="Total" value={data.stats.total} accent="navy" />
           </div>
 
-          {/* Distribution by archetype — clickable cards */}
+          {/* Archetype cards */}
           <section>
             <Eyebrow>Por arquétipo</Eyebrow>
             <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-5">
               {ARCHETYPE_LIST.map((arch) => {
                 const count = data.stats.byArchetype[arch.id] ?? 0;
-                const isExpanded = expandedArchetype === arch.id;
+                const isActive = archetypeFilter === arch.id;
                 return (
                   <button
                     key={arch.id}
                     type="button"
-                    onClick={() => setExpandedArchetype(isExpanded ? null : arch.id)}
+                    onClick={() => setArchetypeFilter(isActive ? null : arch.id)}
                     className={`rounded-md border px-4 py-3 text-left transition-colors ${
-                      isExpanded
+                      isActive
                         ? "border-primary/50 bg-primary/5"
                         : "border-border/50 bg-card hover:border-primary/30"
                     }`}
@@ -130,58 +217,73 @@ function AdminAcervoTab() {
             </div>
           </section>
 
-          {/* Activities table — filtered by archetype if selected */}
+          {/* Search + Filters */}
           <section>
-            <div className="mb-4 flex items-baseline justify-between">
-              <Eyebrow>
-                {expandedArchetype
-                  ? `Atividades — ${ARCHETYPE_LIST.find((a) => a.id === expandedArchetype)?.shortLabel ?? expandedArchetype}`
-                  : "Todas as atividades"}
-              </Eyebrow>
-              {expandedArchetype && (
+            <div className="mb-4 flex flex-wrap items-center gap-3">
+              <div className="relative flex-1 min-w-[200px]">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Buscar por slug, título ou status..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-9 w-full rounded-md border border-input bg-background pl-8 pr-3 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                />
+              </div>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+              {archetypeFilter && (
                 <button
                   type="button"
-                  onClick={() => setExpandedArchetype(null)}
+                  onClick={() => setArchetypeFilter(null)}
                   className="text-xs text-primary hover:underline"
                 >
-                  Mostrar todas
+                  Limpar filtro de tipo
                 </button>
               )}
-              <span className="text-xs text-muted-foreground">
-                {filteredItems(data, expandedArchetype).length} item{filteredItems(data, expandedArchetype).length !== 1 ? "s" : ""}
+              <span className="text-xs text-muted-foreground ml-auto">
+                {totalCount} item{totalCount !== 1 ? "s" : ""}
               </span>
             </div>
 
-            {filteredItems(data, expandedArchetype).length === 0 ? (
+            {/* Table */}
+            {items.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border/60 bg-card/60 px-6 py-14 text-center">
                 <h3 className="font-display text-2xl text-foreground">
-                  {expandedArchetype ? "Nenhuma atividade neste arquétipo" : "O acervo ainda está vazio"}
+                  {search || statusFilter || archetypeFilter ? "Nenhum resultado" : "O acervo está vazio"}
                 </h3>
                 <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-                  {expandedArchetype
-                    ? "Adicione atividades deste tipo pelo botão acima."
-                    : "A tabela está pronta no banco e protegida — só você consegue gravar aqui."}
+                  {search || statusFilter || archetypeFilter
+                    ? "Tente ajustar os filtros."
+                    : "A tabela está pronta no banco — só você consegue gravar aqui."}
                 </p>
               </div>
             ) : (
               <>
                 <p className="mb-3 text-xs text-muted-foreground">
-                  Toque na estrela pra trocar a atividade em destaque no acervo.
+                  Toque na estrela pra trocar a atividade em destaque. Clique nas colunas pra ordenar.
                 </p>
                 <div className="overflow-hidden rounded-xl border border-border/50">
                   <table className="w-full text-left">
                     <thead className="bg-muted/40">
                       <tr>
                         <Th>Destaque</Th>
-                        <Th>Slug</Th>
-                        <Th>Título</Th>
-                        <Th>Arquétipo</Th>
+                        <SortableTh field="slug" current={sortField} dir={sortDir} onToggle={toggleSort}>Slug</SortableTh>
+                        <SortableTh field="title" current={sortField} dir={sortDir} onToggle={toggleSort}>Título</SortableTh>
+                        <SortableTh field="archetype" current={sortField} dir={sortDir} onToggle={toggleSort}>Arquétipo</SortableTh>
                         <Th>Tema</Th>
-                        <Th>Status</Th>
+                        <SortableTh field="status" current={sortField} dir={sortDir} onToggle={toggleSort}>Status</SortableTh>
                       </tr>
                     </thead>
                     <tbody>
-                      {filteredItems(data, expandedArchetype).map((item) => {
+                      {items.map((item) => {
                         const busy = featuringId === item.id;
                         return (
                           <tr key={item.id} className="border-t border-border/50 hover:bg-muted/30">
@@ -210,6 +312,33 @@ function AdminAcervoTab() {
                     </tbody>
                   </table>
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-4 flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      Página {page + 1} de {totalPages}
+                    </p>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.max(0, p - 1))}
+                        disabled={page === 0}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input hover:bg-accent disabled:opacity-30"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                        disabled={page >= totalPages - 1}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-input hover:bg-accent disabled:opacity-30"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                )}
               </>
             )}
           </section>
@@ -217,11 +346,6 @@ function AdminAcervoTab() {
       )}
     </div>
   );
-}
-
-function filteredItems(data: AdminCatalogPayload, archetype: string | null) {
-  if (!archetype) return data.items;
-  return data.items.filter((i) => i.archetype === archetype);
 }
 
 // ── Subcomponents ──
@@ -261,6 +385,35 @@ function StatusPill({ status }: { status: string }) {
 
 function Th({ children }: { children: React.ReactNode }) {
   return <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">{children}</th>;
+}
+
+function SortableTh({
+  children,
+  field,
+  current,
+  dir,
+  onToggle,
+}: {
+  children: React.ReactNode;
+  field: SortField;
+  current: SortField;
+  dir: SortDir;
+  onToggle: (f: SortField) => void;
+}) {
+  const isActive = current === field;
+  return (
+    <th className="px-4 py-3 text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+      <button
+        type="button"
+        onClick={() => onToggle(field)}
+        className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
+      >
+        {children}
+        <ArrowUpDown className={`h-3 w-3 ${isActive ? "text-foreground" : "text-muted-foreground/50"}`} />
+        {isActive && <span className="text-[0.5rem]">{dir === "asc" ? "↑" : "↓"}</span>}
+      </button>
+    </th>
+  );
 }
 
 function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
