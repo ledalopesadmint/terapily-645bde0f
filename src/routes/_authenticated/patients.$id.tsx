@@ -684,7 +684,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                     </span>
                   ) : null}
                   {/* Ações: wrap livre no mobile */}
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-full">
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
