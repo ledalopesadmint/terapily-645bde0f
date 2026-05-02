@@ -10,7 +10,7 @@
  *  - In-session modal no /patients/$id
  */
 
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 
