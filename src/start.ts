@@ -27,6 +27,23 @@ const securityHeadersMiddleware = createMiddleware().server(
       for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
         result.headers.set(key, value);
       }
+
+      // Prevent stale HTML/API responses after deploy
+      const ct = result.headers.get("content-type") || "";
+      const isAsset = ct.startsWith("application/javascript") ||
+        ct.startsWith("text/css") ||
+        ct.startsWith("image/") ||
+        ct.startsWith("font/");
+
+      if (!isAsset) {
+        // HTML pages & API responses: always revalidate
+        result.headers.set(
+          "Cache-Control",
+          "no-cache, no-store, must-revalidate",
+        );
+        result.headers.set("Pragma", "no-cache");
+        result.headers.set("Expires", "0");
+      }
     }
 
     return result;
