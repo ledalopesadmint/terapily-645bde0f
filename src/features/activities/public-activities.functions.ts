@@ -103,14 +103,16 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
 
     // OK: marca primeira abertura + bump open count + status in_progress
     const now = new Date().toISOString();
-    await supabaseAdmin
-      .from("patient_activities")
-      .update({
-        token_first_opened_at: pa.token_first_opened_at ?? now,
-        token_open_count: (pa.token_open_count ?? 0) + 1,
-        status: pa.status === "pending" ? "in_progress" : pa.status,
-      })
-      .eq("id", pa.id);
+    await withRetry(() =>
+      supabaseAdmin
+        .from("patient_activities")
+        .update({
+          token_first_opened_at: pa.token_first_opened_at ?? now,
+          token_open_count: (pa.token_open_count ?? 0) + 1,
+          status: pa.status === "pending" ? "in_progress" : pa.status,
+        })
+        .eq("id", pa.id),
+    );
 
     const activity = await getActivityFromCatalog(pa.activity_id);
     if (!activity || activity.status !== "published") {
