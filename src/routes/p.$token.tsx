@@ -408,16 +408,29 @@ function ActivityRunner({
 
       {/* Player */}
       <div className="flex-1 flex flex-col">
-        <ActivityPlayer
-          config={config}
-          responses={responses}
-          onResponse={(qId, val) =>
-            setResponses((prev) => ({ ...prev, [qId]: val }))
-          }
-          onSubmit={() => submitMutation.mutate()}
-          submitting={submitMutation.isPending}
-          submitLabel="Enviar respostas"
-        />
+        {isForm ? (
+          <FormRunner
+            config={config}
+            responses={responses}
+            onResponse={(fId, val) =>
+              setResponses((prev) => ({ ...prev, [fId]: val }))
+            }
+            onSubmit={() => submitMutation.mutate()}
+            submitting={submitMutation.isPending}
+            submitLabel="Enviar respostas"
+          />
+        ) : (
+          <ActivityPlayer
+            config={config}
+            responses={responses as Record<string, number>}
+            onResponse={(qId, val) =>
+              setResponses((prev) => ({ ...prev, [qId]: val }))
+            }
+            onSubmit={() => submitMutation.mutate()}
+            submitting={submitMutation.isPending}
+            submitLabel="Enviar respostas"
+          />
+        )}
       </div>
 
       {submitMutation.isError && (
