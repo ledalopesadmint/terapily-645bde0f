@@ -925,6 +925,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
         onOpenChange={setOpen}
         patientId={patientId}
         workspaceId={workspaceId}
+        defaultActivityId={openAssign}
         onLinkGenerated={(payload) => setRevealedLink(payload)}
       />
 
