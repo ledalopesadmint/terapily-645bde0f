@@ -101,13 +101,15 @@ async function rowToDTO(row: PatientRow): Promise<PatientDTO> {
 async function attachClinicalFlags(patients: PatientDTO[]): Promise<PatientDTO[]> {
   if (patients.length === 0) return patients;
   const patientIds = patients.map((p) => p.id);
-  const { data, error } = await supabaseAdmin
-    .from("activity_responses")
-    .select("patient_id, scoring_metadata, submitted_at")
-    .in("patient_id", patientIds)
-    .not("scoring_metadata->clinical_flag", "is", null)
-    .order("submitted_at", { ascending: false })
-    .limit(1000);
+  const { data, error } = await withRetry(() =>
+    supabaseAdmin
+      .from("activity_responses")
+      .select("patient_id, scoring_metadata, submitted_at")
+      .in("patient_id", patientIds)
+      .not("scoring_metadata->clinical_flag", "is", null)
+      .order("submitted_at", { ascending: false })
+      .limit(1000),
+  );
 
   if (error) {
     logServerError("patients.attachClinicalFlags", error);
