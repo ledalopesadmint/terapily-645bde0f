@@ -166,8 +166,13 @@ interface HistoryEntry {
 
 function HabitLinkPage() {
   const loaderData = Route.useLoaderData();
-  const [view, setView] = useState<ViewState>("exercise");
+  const [view, setView] = useState<ViewState>(() => {
+    // CRITICAL: If consent not accepted, ALWAYS start at consent screen
+    if (loaderData.link && !loaderData.link.consentAccepted) return "consent";
+    return "exercise";
+  });
   const [submitting, setSubmitting] = useState(false);
+  const [acceptingConsent, setAcceptingConsent] = useState(false);
   const [historyData, setHistoryData] = useState<{
     totalEntries: number;
     entries: HistoryEntry[];
@@ -181,6 +186,37 @@ function HabitLinkPage() {
   const { activity, tokenHash, link } = loaderData;
   if (!activity || !tokenHash || !link) {
     return <HabitErrorPage error="not_found" />;
+  }
+
+  // CRITICAL SECURITY GATE: Block exercise if consent not accepted
+  const consentGiven = link.consentAccepted || view !== "consent";
+
+  const handleAcceptConsent = async () => {
+    setAcceptingConsent(true);
+    try {
+      await acceptHabitConsent({ data: { tokenHash } });
+      setView("exercise");
+    } catch (e) {
+      console.error("[HabitLink] consent accept failed", e);
+    } finally {
+      setAcceptingConsent(false);
+    }
+  };
+
+  const handleDeclineConsent = () => {
+    // Declined → show blocked page, cannot proceed
+    setView("consent");
+  };
+
+  // Consent screen — MUST show before any exercise
+  if (view === "consent") {
+    return (
+      <ConsentScreen
+        activityTitle={activity.title}
+        onAccept={handleAcceptConsent}
+        accepting={acceptingConsent}
+      />
+    );
   }
 
   const config = activity.config as Record<string, unknown>;
