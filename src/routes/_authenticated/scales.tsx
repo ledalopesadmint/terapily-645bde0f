@@ -105,13 +105,13 @@ function ScalesPage() {
 
   const handleStartInSession = (scale: ScaleRow) => {
     setPickerActivity(toActivityType(scale));
+    setPickerMode("in_session");
     setPickerOpen(true);
   };
 
   const handleSendLink = (scale: ScaleRow) => {
-    // TODO S3: abrir fluxo de magic link (prescrição + seleção de paciente + expiração)
-    // Por agora, reutiliza o PatientPickerSheet com delivery_mode = shared_link
     setPickerActivity(toActivityType(scale));
+    setPickerMode("shared_link");
     setPickerOpen(true);
   };
 
