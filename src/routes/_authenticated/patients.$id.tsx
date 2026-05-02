@@ -686,7 +686,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         </span>
                       )}
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
@@ -698,6 +698,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         <Button
                           size="sm"
                           variant="default"
+                          className="text-xs px-2 sm:px-3"
                           onClick={() =>
                             setInSessionTarget({
                               patientActivityId: a.id,
@@ -705,36 +706,37 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                             })
                           }
                         >
-                          <Play className="mr-1 h-3.5 w-3.5" /> Aplicar agora
+                          <Play className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Aplicar
                         </Button>
                       )}
                       {/* Ver respostas — completa */}
                       {status === "completed" && response?.id && (
                         <>
-                          <Button
+                           <Button
                             size="sm"
                             variant="outline"
                             onClick={() => setViewResponseId(response.id)}
+                            className="text-xs px-2 sm:px-3"
                           >
-                            <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
+                            <Eye className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Ver
                           </Button>
                           <Button
                             size="sm"
-                            className="border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
+                            className="text-xs px-2 sm:px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
                             disabled={scaleResultBusy === `${response.id}-patient`}
                             onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
                           >
-                            <Download className="mr-1 h-3.5 w-3.5" />
-                            {scaleResultBusy === `${response.id}-patient` ? "Gerando…" : "Relatório Paciente"}
+                            <Download className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            {scaleResultBusy === `${response.id}-patient` ? "…" : "Paciente"}
                           </Button>
                           <Button
                             size="sm"
-                            className="border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
+                            className="text-xs px-2 sm:px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
                             disabled={scaleResultBusy === `${response.id}-therapist`}
                             onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
                           >
-                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                            {scaleResultBusy === `${response.id}-therapist` ? "Gerando…" : "Relatório Terapeuta"}
+                            <ShieldCheck className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            {scaleResultBusy === `${response.id}-therapist` ? "…" : "Terapeuta"}
                           </Button>
                         </>
                       )}
@@ -744,8 +746,9 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                           variant="outline"
                           disabled={regenLinkMutation.isPending}
                           onClick={() => regenLinkMutation.mutate(a.id)}
+                          className="text-xs px-2 sm:px-3"
                         >
-                          <RefreshCw className="mr-1 h-3.5 w-3.5" /> Gerar novo link
+                          <RefreshCw className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Novo link
                         </Button>
                       )}
                       {canRevoke && (
@@ -753,8 +756,9 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                           size="sm"
                           variant="outline"
                           onClick={() => setRevokeTarget(a.id)}
+                          className="text-xs px-2 sm:px-3"
                         >
-                          <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
+                          <Slash className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Revogar
                         </Button>
                       )}
                     </div>

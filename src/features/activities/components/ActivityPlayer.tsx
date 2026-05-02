@@ -10,7 +10,7 @@
  *  - In-session modal no /patients/$id
  */
 
-import { useCallback, useMemo, useState, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { ChevronLeft, ChevronRight, Check } from "lucide-react";
 
@@ -60,6 +60,20 @@ export function ActivityPlayer({
   const [currentIdx, setCurrentIdx] = useState(0);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [animating, setAnimating] = useState(false);
+
+  // When responses change externally (e.g. draft restore), jump to the right question
+  const prevResponseCountRef = useRef(Object.keys(responses).length);
+  useEffect(() => {
+    const prevCount = prevResponseCountRef.current;
+    const currentCount = Object.keys(responses).length;
+    prevResponseCountRef.current = currentCount;
+    // Only jump when going from 0 responses to many (draft restore)
+    if (prevCount === 0 && currentCount > 0 && questions.length > 0) {
+      const firstUnanswered = questions.findIndex((q) => responses[q.id] === undefined);
+      const targetIdx = firstUnanswered === -1 ? questions.length - 1 : firstUnanswered;
+      setCurrentIdx(targetIdx);
+    }
+  }, [responses, questions]);
 
   const total = questions.length;
   const question = questions[currentIdx];
