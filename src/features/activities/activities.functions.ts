@@ -165,21 +165,23 @@ export const assignActivity = createServerFn({ method: "POST" })
 
     // 5. Insert via service role (consistência sem depender da policy de insert,
     //    mas mantendo o vínculo obrigatório explícito).
-    const { data: created, error } = await supabaseAdmin
-      .from("patient_activities")
-      .insert({
-        workspace_id: data.workspaceId,
-        patient_id: data.patientId,
-        assigned_by: userId,
-        activity_id: data.activityId,
-        delivery_mode: data.deliveryMode,
-        status: "pending",
-        token_hash: tokenHash,
-        token_expires_at: tokenExpiresAt,
-        token_sent_at: needsLink ? new Date().toISOString() : null,
-      })
-      .select("id, status, delivery_mode, token_expires_at, created_at")
-      .single();
+    const { data: created, error } = await withRetry(() =>
+      supabaseAdmin
+        .from("patient_activities")
+        .insert({
+          workspace_id: data.workspaceId,
+          patient_id: data.patientId,
+          assigned_by: userId,
+          activity_id: data.activityId,
+          delivery_mode: data.deliveryMode,
+          status: "pending",
+          token_hash: tokenHash,
+          token_expires_at: tokenExpiresAt,
+          token_sent_at: needsLink ? new Date().toISOString() : null,
+        })
+        .select("id, status, delivery_mode, token_expires_at, created_at")
+        .single(),
+    );
 
     if (error || !created) {
       // Não logamos PHI nem token. Erro é genérico pra UI.
