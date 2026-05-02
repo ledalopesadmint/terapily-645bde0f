@@ -8,10 +8,10 @@
  *  - Confirmation dialog ao fechar com progresso não enviado.
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { X, Save } from "lucide-react";
+import { X, Save, LogOut } from "lucide-react";
 import { VinhetaIntro } from "./VinhetaIntro";
 import { ScaleIntro } from "./ScaleIntro";
 
@@ -167,11 +167,20 @@ export function InSessionPlayerDialog({
   }, [saveDraftNow, onClose]);
 
   const handleDiscardClose = useCallback(() => {
-    // Discard draft and close
     deleteInSessionDraft({ data: { patientActivityId } }).catch(() => {});
     setShowCloseConfirm(false);
     onClose();
   }, [patientActivityId, onClose]);
+
+  const [savingAndExiting, setSavingAndExiting] = useState(false);
+  const handleSaveAndExit = useCallback(async (e?: MouseEvent) => {
+    e?.stopPropagation();
+    setSavingAndExiting(true);
+    await saveDraftNow();
+    setSavingAndExiting(false);
+    toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+    onClose();
+  }, [saveDraftNow, onClose]);
 
   // ── Submit ──────────────────────────────────────────────────────
   const submitMutation = useMutation({
@@ -227,29 +236,43 @@ export function InSessionPlayerDialog({
         {/* Phase: Activity Player */}
         {introStarted && !submitted && (
           <div className="absolute inset-0 bg-background flex flex-col animate-in fade-in duration-300">
-            <header className="flex items-center justify-between px-6 py-4 border-b border-border/50">
+            <header className="flex items-center justify-between px-6 py-3 border-b border-border/50">
               <div className="min-w-0 flex-1">
                 <h1 className="font-display text-lg text-foreground truncate">{activityTitle}</h1>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate flex items-center gap-2">
-                  <span>Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.</span>
-                  {lastSaved && (
-                    <span className="inline-flex items-center gap-1 text-[var(--sage)]">
-                      <Save className="w-3 h-3" />
-                      <span>Salvo</span>
-                    </span>
-                  )}
-                  {draftSaving && (
-                    <span className="text-muted-foreground">Salvando…</span>
-                  )}
+                <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                  Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.
                 </p>
               </div>
-              <button
-                onClick={handleCloseAttempt}
-                className="ml-4 flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
-                aria-label="Fechar"
-              >
-                <X className="w-5 h-5 text-foreground" />
-              </button>
+              <div className="ml-4 flex items-center gap-2 flex-shrink-0">
+                {/* Save & exit — prominent Navy button */}
+                {hasAnyResponse && (
+                  <button
+                    onClick={handleSaveAndExit}
+                    disabled={savingAndExiting}
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--navy)] text-white text-sm font-medium hover:bg-[var(--navy)]/90 transition-colors shadow-sm disabled:opacity-60"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    {savingAndExiting ? "Salvando…" : "Salvar e sair"}
+                  </button>
+                )}
+                {/* Auto-save indicator */}
+                {lastSaved && !savingAndExiting && (
+                  <span className="hidden sm:inline-flex items-center gap-1 text-xs text-[var(--sage)]">
+                    <Save className="w-3 h-3" />
+                    Salvo
+                  </span>
+                )}
+                {draftSaving && !savingAndExiting && (
+                  <span className="hidden sm:inline-flex text-xs text-muted-foreground">Salvando…</span>
+                )}
+                <button
+                  onClick={handleCloseAttempt}
+                  className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+                  aria-label="Fechar"
+                >
+                  <X className="w-5 h-5 text-foreground" />
+                </button>
+              </div>
             </header>
 
             {/* Draft restored banner */}
