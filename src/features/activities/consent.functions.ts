@@ -130,13 +130,14 @@ export const recordActivityConsent = createServerFn({ method: "POST" })
         consent_version: CONSENT_VERSION,
         consent_text_hash: hashHex,
         accepted: data.accepted,
-        ip,
+        ip: getClientIpForDb(),
         user_agent: ua,
       });
 
     if (insertErr) {
       console.error("[recordActivityConsent] insert failed", {
         code: insertErr.code,
+        message: insertErr.message,
       });
       throw new PublicLinkError();
     }
