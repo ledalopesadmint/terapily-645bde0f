@@ -86,7 +86,7 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
         playsInline
         muted
         preload="auto"
-        className={`relative z-10 h-full w-full object-contain transition-opacity duration-300 ${videoVisible ? "opacity-100" : "opacity-0"}`}
+        className={`relative z-10 h-full w-full object-cover transition-opacity duration-300 ${videoVisible ? "opacity-100" : "opacity-0"}`}
         style={{ background: "var(--cream)" }}
       />
     </div>
