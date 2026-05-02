@@ -8,7 +8,7 @@
  *  - Confirmation dialog ao fechar com progresso não enviado.
  */
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, type MouseEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { X, Save } from "lucide-react";
