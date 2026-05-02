@@ -105,6 +105,10 @@ const resolveHabitToken = createServerFn({ method: "GET" })
 
 // --- Route -----------------------------------------------------------------
 
+function HabitRouteError({ error }: { error: Error }) {
+  return <HabitErrorPage error="not_found" />;
+}
+
 export const Route = createFileRoute("/h/$token")({
   head: () => ({
     meta: [
@@ -116,6 +120,7 @@ export const Route = createFileRoute("/h/$token")({
     return resolveHabitToken({ data: { token: params.token } });
   },
   component: HabitLinkPage,
+  errorComponent: HabitRouteError,
 });
 
 type ViewState = "exercise" | "completed" | "history";
