@@ -205,8 +205,9 @@ export function ActivityPlayer({
                       onClick={() => handleSelect(question.id, opt.value)}
                       className={cn(
                         "w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200",
-                        "flex items-center gap-4 group",
+                        "flex items-center gap-4 group touch-manipulation",
                         "hover:shadow-md hover:border-[var(--sage)]/60",
+                        "active:scale-[0.98]",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sage)]",
                         isSelected
                           ? "border-[var(--sage)] bg-[var(--sage)]/10 shadow-sm"
