@@ -1,0 +1,185 @@
+================================================================================
+TERAPILY — HABIT TRACKER: DIFERENCIAL COMPETITIVO E ARGUMENTO DE MERCADO
+================================================================================
+Documento interno · Maio 2026
+
+--------------------------------------------------------------------------------
+1. O QUE É
+--------------------------------------------------------------------------------
+
+O Habit Tracker da Terapily é um sistema de links reutilizáveis para exercícios
+de mindfulness. Diferente dos magic links (single-use para escalas e worksheets),
+o habit link permite que o paciente pratique quantas vezes quiser, gerando um
+histórico de aderência com:
+
+  • Data e horário de cada execução
+  • Duração e ciclos completados
+  • Streak (sequência de dias consecutivos)
+  • Heatmap visual de 7 semanas
+  • Tempo total investido na prática
+
+Tudo isso sem o paciente criar conta, sem app pra baixar, e sem dados sensíveis
+expostos — porque os registros são apenas timestamps + duração, não respostas
+clínicas.
+
+--------------------------------------------------------------------------------
+2. POR QUE ISSO NOS DIFERENCIA
+--------------------------------------------------------------------------------
+
+2.1 Nenhum concorrente direto faz isso
+
+  • Therapist Aid: Vende PDFs e worksheets estáticos. Zero acompanhamento de
+    aderência. O terapeuta imprime a folha e "torce" pro paciente fazer.
+
+  • Quenza: Oferece "Pathways" (sequências de atividades), mas são formulários
+    step-by-step — não exercícios de respiração/mindfulness guiados com registro
+    automático de execução. Não há heatmap, streak, nem dados de aderência
+    por prática repetida.
+
+  • NovoPsych: Focado exclusivamente em escalas psicométricas. Não tem nenhum
+    tipo de atividade de mindfulness, muito menos rastreamento de hábito.
+
+  • PsychPoint: Biblioteca gratuita de worksheets e infográficos. Sem qualquer
+    funcionalidade interativa ou tracking.
+
+  • Headspace/Calm (apps de mindfulness): Têm tracking de meditação, mas são
+    voltados pro consumidor final — não pro terapeuta. O terapeuta não vê os
+    dados, não prescreve, e não integra com o prontuário.
+
+Terapily é a ÚNICA plataforma que conecta:
+  Prescrição do terapeuta → Prática guiada → Registro automático → Dashboard do terapeuta
+
+2.2 Preenche o gap "homework compliance"
+
+O problema #1 de homework terapêutico é aderência. Estudos mostram que:
+
+  • 20-50% dos pacientes NÃO completam homework (Kazantzis et al., 2016)
+  • Homework compliance correlaciona com melhores outcomes (Mausbach et al., 2010)
+  • Terapeutas raramente têm dados concretos de aderência — dependem do
+    auto-relato do paciente na sessão seguinte
+
+O Habit Tracker resolve isso dando ao terapeuta EVIDÊNCIA OBJETIVA de aderência:
+"O João praticou respiração 4-7-8 em 18 dos últimos 30 dias, com streak máximo
+de 7 dias consecutivos e tempo total de 2.3 horas."
+
+Isso muda a conversa clínica de "você fez o exercício?" para "vejo que você
+praticou bastante na primeira semana mas parou — o que aconteceu?"
+
+2.3 Valor percebido vs. custo marginal
+
+  • Custo de implementação: praticamente zero — os exercícios de mindfulness já
+    existem no Acervo, o link reutilizável é uma variante do magic link existente,
+    e o armazenamento é minimal (poucos bytes por entrada).
+
+  • Valor percebido: alto — "meu paciente pode praticar quando quiser e eu
+    acompanho o progresso" é um argumento de venda forte, especialmente para
+    terapeutas que trabalham com ansiedade, insônia e estresse (GAD-7, ISI,
+    PSS = as condições mais comuns em prática privada).
+
+  • Stickiness: quanto mais o paciente pratica, mais dados o terapeuta acumula,
+    e mais valioso o sistema se torna. É um loop de retenção natural.
+
+--------------------------------------------------------------------------------
+3. COMO ISSO ATRAI O PÚBLICO-ALVO
+--------------------------------------------------------------------------------
+
+3.1 Terapeuta cognitivo-comportamental (TCC)
+
+  • Prescrever homework é parte central da TCC
+  • Registros de aderência são evidência para supervisão clínica
+  • "Meus pacientes praticam mais porque é fácil e eu acompanho" = word-of-mouth
+
+3.2 Terapeuta especializado em ansiedade/estresse
+
+  • Respiração diafragmática e exercícios de grounding são prescritos em 80%+
+    dos casos de ansiedade
+  • Hoje: "pratique em casa" → nenhum dado
+  • Com Terapily: link no WhatsApp → paciente pratica → terapeuta vê o streak
+
+3.3 Terapeuta que valoriza evidência
+
+  • O Compliance Report já exporta escalas e respostas pro EHR
+  • Adicionar dados de aderência a mindfulness AMPLIA a documentação clínica
+  • "Paciente completou 22 sessões de Respiração 4-7-8 no período" = dado
+    concreto para relatório de progresso
+
+3.4 Early adopters e influenciadores clínicos
+
+  • Terapeutas jovens (25-40 anos) que usam tecnologia
+  • Buscam ferramentas que "fazem sentido" — não querem um EHR pesado nem uma
+    planilha caseira
+  • O heatmap visual + streak gamificado é visualmente atrativo pra stories e
+    posts ("olha o progresso do meu paciente!")
+
+--------------------------------------------------------------------------------
+4. ARGUMENTOS PARA LANDING PAGE E MARKETING
+--------------------------------------------------------------------------------
+
+4.1 Headlines sugeridas
+
+  • "Prescreva mindfulness. Acompanhe o progresso."
+  • "From 'did you practice?' to 'I see you practiced.'"
+  • "Homework that actually gets done — and you can prove it."
+  • "Every breath counted. Every session documented."
+
+4.2 Pilares de copy
+
+  PILAR 1 — Prescrição → Aderência
+  "Send a reusable practice link through WhatsApp. Your client breathes,
+  you see the data. No app download, no account creation."
+
+  PILAR 2 — Evidência objetiva
+  "Streaks, heatmaps, total practice time — real adherence data for your
+  clinical notes and supervision."
+
+  PILAR 3 — Zero fricção
+  "One link. Unlimited practices. The client just taps and breathes.
+  Every session is recorded automatically."
+
+  PILAR 4 — Integração com fluxo existente
+  "Habit data lives in the patient profile, alongside scale scores and
+  worksheet responses. One place for everything."
+
+4.3 Comparativos implícitos (sem citar nomes)
+
+  • "Unlike static worksheets, Terapily tracks whether the homework was done."
+  • "Unlike meditation apps, Terapily puts the therapist in the loop."
+  • "Unlike EHRs, Terapily makes prescribing a breathing exercise as easy as
+    sharing a link."
+
+--------------------------------------------------------------------------------
+5. LIMITES POR PLANO (PENDENTE — DECISÃO PÓS-S6)
+--------------------------------------------------------------------------------
+
+Sugestões iniciais para discussão:
+
+  Basic ($69/mês):
+  • Habit links com expiração de 30 dias
+  • Até 3 habit links ativos por paciente
+  • Heatmap e streak no dashboard
+  • Sem export de relatório de aderência (apenas visual)
+
+  Practice ($159/mês):
+  • Habit links com expiração de 90 dias
+  • Habit links ilimitados por paciente
+  • Heatmap + streak + relatório exportável de aderência
+  • Dados de aderência incluídos no Compliance Report
+
+  NOTA: Estes limites NÃO estão implementados — são sugestões para a semana
+  de precificação. A decisão final é da Leda.
+
+--------------------------------------------------------------------------------
+6. TODO — PESQUISA DE MARKETING
+--------------------------------------------------------------------------------
+
+Antes de publicar copy com argumentos de habit tracking:
+
+  □ Pesquisar dados de homework compliance em TCC (meta-análises)
+  □ Pesquisar posicionamento de apps de meditação (Headspace, Calm) vs.
+    ferramentas clínicas — confirmar que nenhum oferece o loop terapeuta↔paciente
+  □ Validar que "streak/heatmap" é linguagem familiar pro público (Duolingo effect)
+  □ Definir limites Basic vs Practice com a Leda
+  □ Criar 3-5 posts orgânicos sobre homework compliance + habit tracking
+  □ Testar headlines A/B na landing antes de tráfego pago
+
+================================================================================
