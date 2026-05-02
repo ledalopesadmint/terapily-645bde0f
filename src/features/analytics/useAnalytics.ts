@@ -183,7 +183,7 @@ async function fetchTherapistAnalytics(workspaceId: string): Promise<TherapistAn
   const scaleCounts = new Map<string, { title: string; count: number }>();
   for (const pa of scaleOnly) {
     const aid = pa.activity_id;
-    const title = (pa as any).activity?.title ?? "Sem título";
+    const title = pa.title;
     const existing = scaleCounts.get(aid);
     if (existing) {
       existing.count++;
