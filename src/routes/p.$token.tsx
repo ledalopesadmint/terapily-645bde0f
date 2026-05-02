@@ -352,46 +352,100 @@ function ActivityRunner({
     );
   }
 
-  // === PHASE: INTRO ===
+  // === PHASE: INTRO (branded social card) ===
   if (phase === "intro" || phase === "consent") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4">
-        <div className="w-full max-w-lg text-center space-y-6">
-          <p className="text-xs font-medium tracking-widest uppercase text-[var(--sage)]">
-            Atividade
-          </p>
-          <h1 className="font-display text-3xl md:text-4xl text-foreground leading-tight">
-            {resolved.activity.title}
-          </h1>
-          {config?.introduction && (
-            <div className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-md mx-auto space-y-3">
-              {(config.introduction as string).split("\n\n").map((p, i) => (
-                <p key={i}>{p}</p>
-              ))}
+      <div className="flex min-h-screen items-center justify-center bg-[var(--cream)] px-4 py-8">
+        <div className="w-full max-w-md">
+          {/* --- Premium branded card --- */}
+          <div className="overflow-hidden rounded-2xl border border-[var(--sage)]/20 bg-white shadow-[0_8px_40px_-12px_rgba(31,42,54,0.12)]">
+            {/* Card header — sage accent bar + wordmark */}
+            <div className="relative bg-[var(--navy)] px-6 py-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--sage)]/20">
+                  <svg className="h-5 w-5 text-[var(--sage)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                  </svg>
+                </div>
+                <div>
+                  <span className="font-display text-lg text-white tracking-wide">terapily</span>
+                  <p className="text-xs text-white/50 mt-0.5">Secure therapeutic activity</p>
+                </div>
+              </div>
+              {/* Subtle gradient overlay */}
+              <div className="absolute inset-0 bg-gradient-to-br from-[var(--sage)]/5 to-transparent pointer-events-none" />
             </div>
-          )}
 
-          {expires && (
-            <p
-              className={`text-xs ${
-                expires.urgent ? "text-destructive" : "text-muted-foreground"
-              }`}
-            >
-              {expires.label}
-            </p>
-          )}
+            {/* Card body */}
+            <div className="px-6 py-6 space-y-5">
+              {/* Eyebrow */}
+              <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--sage)]">
+                Sua terapeuta enviou
+              </p>
 
-          <div className="pt-2">
-            <button
-              onClick={() => setPhase("consent")}
-              className="px-8 py-3 rounded-xl bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-all shadow-sm hover:shadow-md"
-            >
-              Começar
-            </button>
+              {/* Activity title */}
+              <h1 className="font-display text-2xl md:text-3xl text-[var(--navy)] leading-tight">
+                {resolved.activity.title}
+              </h1>
+
+              {/* Introduction text (collapsible for long intros) */}
+              {config?.introduction && (
+                <div className="text-[var(--charcoal)]/80 text-sm leading-relaxed space-y-2.5 border-l-2 border-[var(--sage)]/30 pl-4">
+                  {(config.introduction as string).split("\n\n").slice(0, 2).map((p, i) => (
+                    <p key={i}>{p}</p>
+                  ))}
+                </div>
+              )}
+
+              {/* Expiry notice */}
+              {expires && (
+                <div className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs ${
+                  expires.urgent
+                    ? "bg-red-50 text-red-700 border border-red-100"
+                    : "bg-[var(--cream)] text-[var(--charcoal)]/70 border border-[var(--sage)]/10"
+                }`}>
+                  <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {expires.label}
+                </div>
+              )}
+
+              {/* CTA button */}
+              <button
+                onClick={() => setPhase("consent")}
+                className="w-full py-3.5 rounded-xl bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-all shadow-sm hover:shadow-md active:scale-[0.98]"
+              >
+                Começar atividade
+              </button>
+            </div>
+
+            {/* Card footer — trust signals */}
+            <div className="border-t border-[var(--sage)]/10 bg-[var(--cream)]/50 px-6 py-3.5">
+              <div className="flex items-center justify-center gap-4 text-[10px] text-[var(--charcoal)]/50">
+                <span className="flex items-center gap-1">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                  </svg>
+                  Criptografado
+                </span>
+                <span className="h-2.5 w-px bg-[var(--charcoal)]/15" />
+                <span className="flex items-center gap-1">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Só sua terapeuta vê
+                </span>
+                <span className="h-2.5 w-px bg-[var(--charcoal)]/15" />
+                <span>terapily.com</span>
+              </div>
+            </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            Suas respostas são criptografadas e enviadas apenas à sua terapeuta.
+          {/* Subtle brand reinforcement below card */}
+          <p className="mt-4 text-center text-[10px] text-[var(--charcoal)]/30">
+            Powered by Terapily — therapeutic tools your clients actually finish.
           </p>
         </div>
 
