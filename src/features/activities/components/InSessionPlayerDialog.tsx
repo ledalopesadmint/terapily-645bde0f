@@ -146,8 +146,8 @@ export function InSessionPlayerDialog({
         });
         setLastSaved(new Date());
       } catch (e) {
+        // Silently handle — common case: activity already submitted or revoked.
         console.warn("[draft] save failed", e);
-        throw e;
       } finally {
         setDraftSaving(false);
       }
