@@ -51,6 +51,7 @@ export function PatientPickerSheet({
   onOpenChange,
   activity,
   workspaceId,
+  mode = "in_session",
 }: PatientPickerSheetProps) {
   const navigate = useNavigate();
   const qc = useQueryClient();
