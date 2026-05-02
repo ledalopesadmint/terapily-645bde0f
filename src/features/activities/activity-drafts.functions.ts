@@ -102,19 +102,21 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
     const encrypted = await encryptPHIServer(JSON.stringify(data.draft));
 
     // Upsert por patient_activity_id (UNIQUE).
-    const { error } = await supabaseAdmin
-      .from("activity_drafts")
-      .upsert(
-        {
-          patient_activity_id: pa.id,
-          workspace_id: pa.workspace_id,
-          patient_id: pa.patient_id,
-          draft_encrypted: encrypted,
-          completion_percent: data.completionPercent,
-          expires_at: pa.token_expires_at!,
-        },
-        { onConflict: "patient_activity_id" },
-      );
+    const { error } = await withRetry(() =>
+      supabaseAdmin
+        .from("activity_drafts")
+        .upsert(
+          {
+            patient_activity_id: pa.id,
+            workspace_id: pa.workspace_id,
+            patient_id: pa.patient_id,
+            draft_encrypted: encrypted,
+            completion_percent: data.completionPercent,
+            expires_at: pa.token_expires_at!,
+          },
+          { onConflict: "patient_activity_id" },
+        ),
+    );
 
     if (error) {
       console.error("[saveActivityDraft] upsert failed", { code: error.code });
