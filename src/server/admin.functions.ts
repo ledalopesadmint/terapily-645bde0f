@@ -202,7 +202,7 @@ export const getFeaturedActivity = createServerFn({ method: "GET" })
       .eq("is_featured", true)
       .maybeSingle();
 
-    if (error) {
+    if (error && error.code !== "PGRST116") {
       console.error("[getFeaturedActivity] query failed", { code: error.code });
       return null;
     }
