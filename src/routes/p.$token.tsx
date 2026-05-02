@@ -514,7 +514,14 @@ function ActivityRunner({
 
       {/* Player */}
       <div className="flex-1 flex flex-col">
-        {isScript ? (
+        {isBreathing ? (
+          <BreathingRunner
+            config={config}
+            onSubmit={() => submitMutation.mutate()}
+            submitting={submitMutation.isPending}
+            submitLabel="Concluir exercício"
+          />
+        ) : isScript ? (
           <GuidedScriptRunner
             config={config}
             responses={responses}
