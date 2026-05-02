@@ -829,9 +829,17 @@ export const recordInSessionResponse = createServerFn({ method: "POST" })
       .single();
 
     if (respErr || !response) {
-      console.error("[recordInSessionResponse] insert failed", { code: respErr?.code });
+      activityLog(pa.id).error("in_session.insert_failed", { code: respErr?.code });
       throw new Error("Não foi possível salvar a resposta.");
     }
+
+    const log = activityLog(pa.id);
+    log.info("in_session.response_created", {
+      responseId: response.id,
+      score: result.score,
+      severity: result.severity,
+      flagRaised: flag.raised,
+    });
 
     // Marca patient_activity como aplicado + queima token se houver
     const nowIso = new Date().toISOString();
@@ -847,8 +855,14 @@ export const recordInSessionResponse = createServerFn({ method: "POST" })
       })
       .eq("id", pa.id);
 
+    logStatusTransition(pa.id, pa.status, "completed", {
+      trigger: "in_session_submit",
+      responseId: response.id,
+    });
+
     // Audit nominal de Mauve flag (PHI-safe: só UUIDs e enum).
     if (flag.raised) {
+      log.info("in_session.clinical_flag_raised", { flag: flag.flag, itemId: flag.item_id });
       await recordAudit({
         actorId: userId,
         workspaceId: pa.workspace_id,
