@@ -135,9 +135,9 @@ function AdminAcervoTab() {
 
     // Sort
     filtered = [...filtered].sort((a, b) => {
-      const aVal = (a as Record<string, unknown>)[sortField] as string;
-      const bVal = (b as Record<string, unknown>)[sortField] as string;
-      const cmp = (aVal ?? "").localeCompare(bVal ?? "");
+      const aVal = String(a[sortField] ?? "");
+      const bVal = String(b[sortField] ?? "");
+      const cmp = aVal.localeCompare(bVal);
       return sortDir === "asc" ? cmp : -cmp;
     });
 
