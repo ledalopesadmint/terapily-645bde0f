@@ -315,7 +315,7 @@ export const ACTIVITIES: Activity[] = [
 
   // ── Mindfulness ──
   {
-    id: "478-breathing",
+    id: "respiracao-4-7-8",
     code: "MIN-01",
     name: "Respiração 4-7-8",
     approach: "Mindfulness",
@@ -328,7 +328,7 @@ export const ACTIVITIES: Activity[] = [
     supportedModes: ["in_session", "shared_link", "both"],
   },
   {
-    id: "grounding-54321",
+    id: "ancoragem-5-4-3-2-1",
     code: "TRA-02",
     name: "Ancoragem 5-4-3-2-1",
     approach: "Grounding",
@@ -341,7 +341,7 @@ export const ACTIVITIES: Activity[] = [
     supportedModes: ["in_session", "shared_link", "both"],
   },
   {
-    id: "box-breathing",
+    id: "respiracao-quadrada",
     code: "MIN-02",
     name: "Respiração quadrada",
     approach: "Mindfulness",
