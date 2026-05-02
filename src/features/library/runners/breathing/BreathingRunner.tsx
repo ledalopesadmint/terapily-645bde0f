@@ -198,7 +198,10 @@ export function BreathingRunner({
 
   return (
     <div
-      className="fixed inset-0 flex flex-col select-none overflow-hidden"
+      className={cn(
+        "flex flex-col select-none overflow-hidden",
+        embedded ? "relative h-full min-h-[500px]" : "fixed inset-0",
+      )}
       style={{ touchAction: "none" }}
     >
       {/* Animated gradient background — fills entire viewport */}
