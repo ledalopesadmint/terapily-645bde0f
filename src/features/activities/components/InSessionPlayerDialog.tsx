@@ -199,10 +199,16 @@ export function InSessionPlayerDialog({
     async (e?: MouseEvent) => {
       e?.stopPropagation();
       setSavingAndExiting(true);
-      await saveDraftNow();
-      qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
-      setSavingAndExiting(false);
-      toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+      try {
+        await saveDraftNow();
+        qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
+        toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+      } catch (err) {
+        console.error("[handleSaveAndExit] failed", err);
+        toast.error("Não foi possível salvar o rascunho. Tente novamente.", { duration: 5000 });
+      } finally {
+        setSavingAndExiting(false);
+      }
       onClose();
     },
     [saveDraftNow, qc, patientId, workspaceId, onClose],
