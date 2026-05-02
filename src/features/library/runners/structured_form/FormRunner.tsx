@@ -373,6 +373,8 @@ interface FormRunnerProps {
   config: StructuredFormConfig;
   responses: Record<string, unknown>;
   onResponse: (fieldId: string, value: unknown) => void;
+  currentStepIndex?: number;
+  onStepChange?: (stepIndex: number) => void;
   onSubmit?: () => void;
   submitting?: boolean;
   submitLabel?: string;
@@ -382,12 +384,14 @@ export function FormRunner({
   config,
   responses,
   onResponse,
+  currentStepIndex,
+  onStepChange,
   onSubmit,
   submitting,
   submitLabel = "Enviar respostas",
 }: FormRunnerProps) {
   const steps = useMemo(() => config?.steps ?? [], [config]);
-  const [currentIdx, setCurrentIdx] = useState(0);
+  const [currentIdx, setCurrentIdx] = useState(currentStepIndex ?? 0);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [animating, setAnimating] = useState(false);
 
@@ -398,18 +402,31 @@ export function FormRunner({
   const stepComplete = step ? isStepComplete(step, responses) : false;
   const { answered, completion, allAnswered } = getFormCompletion(config, responses);
 
+  useEffect(() => {
+    if (currentStepIndex === undefined) return;
+    const safeIndex = Math.min(Math.max(currentStepIndex, 0), Math.max(total - 1, 0));
+    setCurrentIdx(safeIndex);
+  }, [currentStepIndex, total]);
+
+  const commitStepIndex = useCallback(
+    (nextIndex: number) => {
+      const safeIndex = Math.min(Math.max(nextIndex, 0), Math.max(total - 1, 0));
+      setCurrentIdx(safeIndex);
+      onStepChange?.(safeIndex);
+    },
+    [onStepChange, total],
+  );
+
   const goTo = useCallback(
     (dir: "prev" | "next") => {
       setDirection(dir);
       setAnimating(true);
       setTimeout(() => {
-        setCurrentIdx((i) =>
-          dir === "next" ? Math.min(i + 1, total - 1) : Math.max(i - 1, 0),
-        );
+        commitStepIndex(dir === "next" ? currentIdx + 1 : currentIdx - 1);
         setAnimating(false);
       }, 200);
     },
-    [total],
+    [commitStepIndex, currentIdx],
   );
 
   // Keyboard nav
