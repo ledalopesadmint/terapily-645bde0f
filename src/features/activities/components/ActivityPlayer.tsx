@@ -307,9 +307,12 @@ export function getCompletionStats(
   config: QuizConfig,
   responses: Record<string, number>,
 ) {
-  const total = Array.isArray(config?.questions) ? config.questions.length : 0;
-  const answered = Object.keys(responses).length;
+  const questions = Array.isArray(config?.questions) ? config.questions : [];
+  const total = questions.length;
+  // Count only responses that match actual question IDs to avoid draft-restore
+  // artefacts or stale keys inflating the count and breaking the === check.
+  const answered = questions.filter((q) => responses[q.id] !== undefined).length;
   const completion = total === 0 ? 0 : Math.round((answered / total) * 100);
-  const allAnswered = total > 0 && answered === total;
+  const allAnswered = total > 0 && answered >= total;
   return { total, answered, completion, allAnswered };
 }
