@@ -157,7 +157,7 @@ export const assignActivity = createServerFn({ method: "POST" })
       const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
       const clampedHours = Math.min(data.expiresInHours, maxHours);
 
-      rawToken = generateMagicLinkToken();
+      rawToken = generateMagicLinkToken(activity.slug);
       tokenHash = await hashMagicLinkToken(rawToken);
       tokenExpiresAt = new Date(Date.now() + clampedHours * 60 * 60 * 1000).toISOString();
     }
@@ -668,7 +668,7 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
 
     const { data: pa, error } = await supabaseAdmin
       .from("patient_activities")
-      .select("id, workspace_id, assigned_by, status, used_at")
+      .select("id, workspace_id, assigned_by, activity_id, status, used_at")
       .eq("id", data.patientActivityId)
       .maybeSingle();
 
@@ -692,7 +692,9 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
       throw new Error("Sem permissão para gerar link desta atividade.");
     }
 
-    const rawToken = generateMagicLinkToken();
+    // Busca slug da atividade pra URL amigável
+    const catalogEntry = await getActivityFromCatalog(pa.activity_id);
+    const rawToken = generateMagicLinkToken(catalogEntry?.slug);
     const tokenHash = await hashMagicLinkToken(rawToken);
     const expiresAt = new Date(Date.now() + IN_SESSION_LINK_HOURS * 3600 * 1000).toISOString();
 
