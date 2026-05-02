@@ -37,7 +37,8 @@ export type CategoryId =
   | "dbt"
   | "act"
   | "sleep"
-  | "crisis";
+  | "crisis"
+  | "worksheets";
 
 export interface Category {
   id: CategoryId;
