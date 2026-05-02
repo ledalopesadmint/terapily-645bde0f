@@ -205,8 +205,9 @@ export function ActivityPlayer({
                       onClick={() => handleSelect(question.id, opt.value)}
                       className={cn(
                         "w-full text-left px-5 py-4 rounded-xl border-2 transition-all duration-200",
-                        "flex items-center gap-4 group",
+                        "flex items-center gap-4 group touch-manipulation",
                         "hover:shadow-md hover:border-[var(--sage)]/60",
+                        "active:scale-[0.98]",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--sage)]",
                         isSelected
                           ? "border-[var(--sage)] bg-[var(--sage)]/10 shadow-sm"
@@ -247,16 +248,16 @@ export function ActivityPlayer({
         </div>
       </div>
 
-      {/* Navigation bar */}
-      <div className="flex items-center justify-between px-6 py-5 border-t border-border/50 bg-card/50 backdrop-blur-sm">
+      {/* Navigation bar — safe area padding for mobile bottom bar */}
+      <div className="flex items-center justify-between px-3 sm:px-6 py-4 sm:py-5 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-border/50 bg-card/50 backdrop-blur-sm">
         <button
           onClick={() => goTo("prev")}
           disabled={isFirst}
           className={cn(
-            "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+            "flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all touch-manipulation",
             isFirst
               ? "text-muted-foreground/40 cursor-not-allowed"
-              : "text-foreground hover:bg-[var(--sage)]/10",
+              : "text-foreground hover:bg-[var(--sage)]/10 active:bg-[var(--sage)]/20",
           )}
         >
           <ChevronLeft className="w-4 h-4" />
@@ -264,8 +265,8 @@ export function ActivityPlayer({
         </button>
 
         {/* Mini progress text */}
-        <span className="text-xs text-muted-foreground">
-          {answered} de {total} respondidas
+        <span className="text-[11px] sm:text-xs text-muted-foreground text-center">
+          {answered} de {total}{"\n"}respondidas
         </span>
 
         {isLast ? (
@@ -273,10 +274,10 @@ export function ActivityPlayer({
             onClick={onSubmit}
             disabled={submitDisabled !== undefined ? submitDisabled : (!allAnswered || submitting)}
             className={cn(
-              "flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-lg text-sm font-medium transition-all touch-manipulation min-h-[44px]",
               (submitDisabled ?? !allAnswered) || submitting
                 ? "bg-muted text-muted-foreground cursor-not-allowed"
-                : "bg-[var(--sage)] text-white hover:bg-[var(--sage)]/90 shadow-sm",
+                : "bg-[var(--sage)] text-white hover:bg-[var(--sage)]/90 active:bg-[var(--sage)]/80 shadow-sm",
             )}
           >
             {submitting ? "Enviando…" : submitLabel}
@@ -286,10 +287,10 @@ export function ActivityPlayer({
             onClick={() => goTo("next")}
             disabled={selectedValue === undefined}
             className={cn(
-              "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all",
+              "flex items-center gap-1.5 px-3 py-2.5 rounded-lg text-sm font-medium transition-all touch-manipulation",
               selectedValue === undefined
                 ? "text-muted-foreground/40 cursor-not-allowed"
-                : "text-foreground hover:bg-[var(--sage)]/10",
+                : "text-foreground hover:bg-[var(--sage)]/10 active:bg-[var(--sage)]/20",
             )}
           >
             Próxima

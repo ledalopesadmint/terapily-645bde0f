@@ -74,6 +74,7 @@ export const Route = createFileRoute("/p/$token")({
         { property: "og:title", content: ogTitle },
         { property: "og:description", content: ogDesc },
         { property: "og:image", content: ogImage },
+        { property: "og:image:type", content: "image/jpeg" },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
         { property: "og:image:alt", content: `terapily — ${title}` },
@@ -474,13 +475,13 @@ function ActivityRunner({
   // === PHASE: ACTIVITY ===
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Top bar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-border/40">
-        <span className="font-display text-sm text-foreground truncate">
+      {/* Top bar — mobile-optimized: stack title + save on narrow screens */}
+      <header className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-6 py-3 border-b border-border/40">
+        <span className="font-display text-sm text-foreground truncate min-w-0 flex-1">
           {resolved.activity.title}
         </span>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground">
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[11px] text-muted-foreground whitespace-nowrap">
             {saving
               ? "Salvando…"
               : savedAt
@@ -492,7 +493,7 @@ function ActivityRunner({
             size="sm"
             onClick={manualSave}
             disabled={saving || Object.keys(responses).length === 0}
-            className="text-xs"
+            className="text-[11px] px-2.5 py-1.5 h-auto whitespace-nowrap touch-manipulation"
           >
             {saving ? "Salvando…" : "Salvar e continuar depois"}
           </Button>
