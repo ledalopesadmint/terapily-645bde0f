@@ -311,7 +311,7 @@ export function ResponseDetailDrawer({
             {/* Structured form → step-by-step with labels */}
             {isStructuredForm && steps.length > 0 ? (
               <StructuredFormResponses
-                config={config as StructuredFormConfig}
+                config={config as unknown as StructuredFormConfig}
                 responses={detail.responses as Record<string, unknown>}
               />
             ) : questions.length > 0 ? (
