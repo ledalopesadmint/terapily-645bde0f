@@ -670,23 +670,21 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                   <p className="text-xs text-muted-foreground">
                     {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
                   </p>
-                  {/* Linha 3: Justificativa/score à esquerda + ações alinhadas à direita */}
-                  <div className="flex items-center gap-3">
-                    <div className="min-w-0 flex-1">
-                      {status === "revoked" && a.revocation_reason ? (
-                        <p className="truncate text-xs text-muted-foreground italic" title={a.revocation_reason}>
-                          {a.revocation_reason}
-                        </p>
-                      ) : response?.score != null && (
-                        <span className="text-sm">
-                          Score <strong>{response.score}</strong>
-                          {response.severity && (
-                            <span className="text-muted-foreground"> · {response.severity}</span>
-                          )}
-                        </span>
+                  {/* Linha 3: Justificativa/score */}
+                  {(status === "revoked" && a.revocation_reason) ? (
+                    <p className="truncate text-xs text-muted-foreground italic" title={a.revocation_reason}>
+                      {a.revocation_reason}
+                    </p>
+                  ) : response?.score != null ? (
+                    <span className="text-sm">
+                      Score <strong>{response.score}</strong>
+                      {response.severity && (
+                        <span className="text-muted-foreground"> · {response.severity}</span>
                       )}
-                    </div>
-                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+                    </span>
+                  ) : null}
+                  {/* Ações: wrap livre no mobile */}
+                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
@@ -761,7 +759,6 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                           <Slash className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Revogar
                         </Button>
                       )}
-                    </div>
                   </div>
                   {(hasDraft || displayStatus === "in_progress") && (
                     <div className="space-y-1">
