@@ -678,6 +678,9 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
       throw new Error("Esta atividade não está disponível.");
     }
 
+    // Determine correct status after regen
+    const newStatus = pa.status === "expired" ? "pending" : pa.status;
+
     // Permissão: assigned_by OU owner
     const { data: membership } = await supabaseAdmin
       .from("workspace_members")
