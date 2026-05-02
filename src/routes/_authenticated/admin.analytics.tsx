@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   BarChart,
   Bar,
@@ -30,7 +30,6 @@ import {
   Minus,
   Download,
   RefreshCw,
-  ArrowLeft,
   AlertTriangle,
   Activity,
   BarChart3,
@@ -80,8 +79,7 @@ const PERIOD_OPTIONS = [
 ];
 
 function AdminAnalyticsPage() {
-  const { hasRole, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { hasRole } = useAuth();
   const [data, setData] = useState<AnalyticsDashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [aggregating, setAggregating] = useState(false);
@@ -89,11 +87,7 @@ function AdminAnalyticsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>("commercial");
   const [days, setDays] = useState(30);
 
-  useEffect(() => {
-    if (!authLoading && !hasRole("admin")) {
-      void navigate({ to: "/dashboard", replace: true });
-    }
-  }, [authLoading, hasRole, navigate]);
+  // Auth guard is in admin.tsx layout
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -149,26 +143,13 @@ function AdminAnalyticsPage() {
     }
   };
 
-  if (authLoading || !hasRole("admin")) return null;
-
   return (
-    <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 sm:px-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Link
-            to="/admin"
-            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Admin
-          </Link>
-          <div>
-            <Eyebrow className="text-mauve">Analytics de Plataforma</Eyebrow>
-            <h1 className="font-display text-2xl font-semibold text-foreground">
-              Dados Desidentificados
-            </h1>
-          </div>
+        <div>
+          <Eyebrow className="text-mauve">Analytics de Plataforma</Eyebrow>
+          <p className="text-sm text-muted-foreground">Dados desidentificados de uso</p>
         </div>
 
         <div className="flex items-center gap-2">
