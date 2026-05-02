@@ -28,6 +28,11 @@ import {
   getCompletionStats,
   type QuizConfig,
 } from "@/features/activities/components/ActivityPlayer";
+import {
+  FormRunner,
+  getFormCompletion,
+} from "@/features/library/runners/structured_form/FormRunner";
+import type { StructuredFormConfig } from "@/features/library/runners/structured_form/form-types";
 import { ConsentGate } from "@/features/activities/components/ConsentGate";
 import { VinhetaIntro } from "@/features/activities/components/VinhetaIntro";
 import { Button } from "@/components/ui/button";
@@ -124,12 +129,14 @@ function ActivityRunner({
   token: string;
   resolved: ResolvedActivity;
 }) {
-  const config = resolved.activity.config as QuizConfig;
-  const [responses, setResponses] = useState<Record<string, number>>({});
+  const archetype = resolved.activity.archetype;
+  const isForm = archetype === "structured_form";
+  const config = resolved.activity.config as QuizConfig & StructuredFormConfig;
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [phase, setPhase] = useState<PagePhase>("vinheta");
   const [draftPrompt, setDraftPrompt] = useState<{
-    draft: Record<string, number>;
+    draft: Record<string, unknown>;
     completionPercent: number;
   } | null>(null);
 
@@ -192,7 +199,7 @@ function ActivityRunner({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveMutation = useMutation({
-    mutationFn: (payload: { draft: Record<string, number>; completionPercent: number }) =>
+    mutationFn: (payload: { draft: Record<string, unknown>; completionPercent: number }) =>
       saveActivityDraft({
         data: {
           token,
@@ -203,7 +210,9 @@ function ActivityRunner({
     onSuccess: () => setSavedAt(Date.now()),
   });
 
-  const { completion } = getCompletionStats(config, responses);
+  const completion = isForm
+    ? getFormCompletion(config, responses).completion
+    : getCompletionStats(config, responses as Record<string, number>).completion;
 
   useEffect(() => {
     if (phase !== "activity" || draftPrompt) return;
@@ -399,16 +408,29 @@ function ActivityRunner({
 
       {/* Player */}
       <div className="flex-1 flex flex-col">
-        <ActivityPlayer
-          config={config}
-          responses={responses}
-          onResponse={(qId, val) =>
-            setResponses((prev) => ({ ...prev, [qId]: val }))
-          }
-          onSubmit={() => submitMutation.mutate()}
-          submitting={submitMutation.isPending}
-          submitLabel="Enviar respostas"
-        />
+        {isForm ? (
+          <FormRunner
+            config={config}
+            responses={responses}
+            onResponse={(fId, val) =>
+              setResponses((prev) => ({ ...prev, [fId]: val }))
+            }
+            onSubmit={() => submitMutation.mutate()}
+            submitting={submitMutation.isPending}
+            submitLabel="Enviar respostas"
+          />
+        ) : (
+          <ActivityPlayer
+            config={config}
+            responses={responses as Record<string, number>}
+            onResponse={(qId, val) =>
+              setResponses((prev) => ({ ...prev, [qId]: val }))
+            }
+            onSubmit={() => submitMutation.mutate()}
+            submitting={submitMutation.isPending}
+            submitLabel="Enviar respostas"
+          />
+        )}
       </div>
 
       {submitMutation.isError && (

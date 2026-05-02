@@ -1,6 +1,6 @@
 /**
  * In-session player modal — terapeuta aplica atividade ao vivo.
- * Fullscreen presentation mode com o ActivityPlayer slide-a-slide.
+ * Fullscreen presentation mode com ActivityPlayer (quiz_scale) ou FormRunner (structured_form).
  */
 
 import { useState, useCallback } from "react";
@@ -15,6 +15,11 @@ import {
   getCompletionStats,
   type QuizConfig,
 } from "./ActivityPlayer";
+import {
+  FormRunner,
+  getFormCompletion,
+} from "@/features/library/runners/structured_form/FormRunner";
+import type { StructuredFormConfig } from "@/features/library/runners/structured_form/form-types";
 import {
   getActivityConfig,
   recordInSessionResponse,
@@ -37,7 +42,7 @@ export function InSessionPlayerDialog({
   onClose,
 }: InSessionPlayerProps) {
   const qc = useQueryClient();
-  const [responses, setResponses] = useState<Record<string, number>>({});
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [submitted, setSubmitted] = useState(false);
   const [vinhetaDone, setVinhetaDone] = useState(false);
   const [introStarted, setIntroStarted] = useState(false);
@@ -50,8 +55,12 @@ export function InSessionPlayerDialog({
     retry: false,
   });
 
-  const config = (configQuery.data?.activity?.config ?? {}) as QuizConfig;
-  const { allAnswered } = getCompletionStats(config, responses);
+  const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
+  const isForm = archetype === "structured_form";
+  const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig & StructuredFormConfig;
+  const allAnswered = isForm
+    ? getFormCompletion(config, responses).allAnswered
+    : getCompletionStats(config, responses as Record<string, number>).allAnswered;
 
   const submitMutation = useMutation({
     mutationFn: () =>
@@ -122,16 +131,29 @@ export function InSessionPlayerDialog({
             </button>
           </header>
           <div className="flex-1 flex flex-col overflow-hidden">
-            <ActivityPlayer
-              config={config}
-              responses={responses}
-              onResponse={(qId, val) =>
-                setResponses((prev) => ({ ...prev, [qId]: val }))
-              }
-              onSubmit={() => submitMutation.mutate()}
-              submitting={submitMutation.isPending}
-              submitLabel="Registrar respostas"
-            />
+            {isForm ? (
+              <FormRunner
+                config={config}
+                responses={responses}
+                onResponse={(fId, val) =>
+                  setResponses((prev) => ({ ...prev, [fId]: val }))
+                }
+                onSubmit={() => submitMutation.mutate()}
+                submitting={submitMutation.isPending}
+                submitLabel="Registrar respostas"
+              />
+            ) : (
+              <ActivityPlayer
+                config={config}
+                responses={responses as Record<string, number>}
+                onResponse={(qId, val) =>
+                  setResponses((prev) => ({ ...prev, [qId]: val }))
+                }
+                onSubmit={() => submitMutation.mutate()}
+                submitting={submitMutation.isPending}
+                submitLabel="Registrar respostas"
+              />
+            )}
           </div>
         </div>
       )}
