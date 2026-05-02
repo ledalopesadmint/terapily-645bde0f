@@ -287,16 +287,28 @@ function HabitLinkCard({
             </div>
             <div className="flex items-center gap-1">
               {link.total_entries > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs gap-1"
-                  onClick={handleGeneratePdf}
-                  disabled={generatingPdf}
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  {generatingPdf ? "Gerando…" : "Relatório"}
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-[oklch(0.55_0.12_180)] hover:text-[oklch(0.45_0.12_180)]"
+                    onClick={handlePatientReport}
+                    disabled={generatingPatientPdf}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {generatingPatientPdf ? "Gerando…" : "Paciente"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-[oklch(0.55_0.10_15)] hover:text-[oklch(0.45_0.10_15)]"
+                    onClick={handleTherapistReport}
+                    disabled={generatingTherapistPdf}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {generatingTherapistPdf ? "Gerando…" : "Terapeuta"}
+                  </Button>
+                </>
               )}
               {isActive && (
                 <Button
