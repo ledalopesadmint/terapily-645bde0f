@@ -36,13 +36,6 @@ import {
   ShoppingBag,
   Zap,
 } from "lucide-react";
-  RefreshCw,
-  AlertTriangle,
-  Activity,
-  BarChart3,
-  ShoppingBag,
-  Zap,
-} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
