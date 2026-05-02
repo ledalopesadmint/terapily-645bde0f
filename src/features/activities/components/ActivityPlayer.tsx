@@ -57,7 +57,16 @@ export function ActivityPlayer({
     [config],
   );
 
-  const [currentIdx, setCurrentIdx] = useState(0);
+  // When resuming from a draft, jump to the first unanswered question
+  // or the last question (so user can submit) if all are answered.
+  const initialIdx = useMemo(() => {
+    if (Object.keys(responses).length === 0) return 0;
+    const firstUnanswered = questions.findIndex((q) => responses[q.id] === undefined);
+    if (firstUnanswered === -1) return Math.max(0, questions.length - 1); // all answered → last
+    return firstUnanswered;
+  }, []); // intentionally empty — only compute once on mount
+
+  const [currentIdx, setCurrentIdx] = useState(initialIdx);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [animating, setAnimating] = useState(false);
 
