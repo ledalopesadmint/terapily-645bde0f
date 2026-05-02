@@ -68,7 +68,7 @@ function formatExpires(iso: string): { label: string; urgent: boolean } {
   return { label: `Este link expira em ${days} dia${days > 1 ? "s" : ""}.`, urgent: false };
 }
 
-type PagePhase = "vinheta" | "intro" | "consent" | "activity" | "declined" | "submitted";
+type PagePhase = "intro" | "consent" | "activity" | "declined" | "submitted";
 
 function PublicActivityPage() {
   const { token } = useParams({ from: "/p/$token" });
