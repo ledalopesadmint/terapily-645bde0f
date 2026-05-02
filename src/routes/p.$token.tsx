@@ -1,12 +1,16 @@
 /**
  * Rota PÚBLICA do magic link.
  *
+ * Fluxo completo:
+ *  1. Vinheta (3s brand intro)
+ *  2. Tela de introdução (título + texto acolhedor + botão "Começar")
+ *  3. Botão "Começar" abre modal de consentimento
+ *  4. Aceito → atividade com autosave + "Salvar e continuar depois"
+ *  5. Não aceito → confirmação → link encerrado → notifica terapeuta
+ *
  * Constraints (magic-link-rules-locked):
- *  - Sem layout autenticado.
- *  - Sem sessão.
- *  - Sem login.
- *  - Sem PHI na URL além do token opaco (single-use, hashed no DB).
- *  - Mensagem neutra para qualquer falha.
+ *  - Sem layout autenticado. Sem sessão. Sem login.
+ *  - Sem PHI na URL. Mensagem neutra para falha.
  */
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
@@ -18,11 +22,14 @@ import {
   getActivityDraft,
   discardActivityDraft,
 } from "@/features/activities/activity-drafts.functions";
+import { recordActivityConsent } from "@/features/activities/consent.functions";
 import {
   ActivityPlayer,
   getCompletionStats,
   type QuizConfig,
 } from "@/features/activities/components/ActivityPlayer";
+import { ConsentGate } from "@/features/activities/components/ConsentGate";
+import { VinhetaIntro } from "@/features/activities/components/VinhetaIntro";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,6 +62,8 @@ function formatExpires(iso: string): { label: string; urgent: boolean } {
   const days = Math.ceil(hours / 24);
   return { label: `Este link expira em ${days} dia${days > 1 ? "s" : ""}.`, urgent: false };
 }
+
+type PagePhase = "vinheta" | "intro" | "consent" | "activity" | "declined" | "submitted";
 
 function PublicActivityPage() {
   const { token } = useParams({ from: "/p/$token" });
@@ -117,15 +126,14 @@ function ActivityRunner({
 }) {
   const config = resolved.activity.config as QuizConfig;
   const [responses, setResponses] = useState<Record<string, number>>({});
-  const [submitted, setSubmitted] = useState(false);
   const [resultPdf, setResultPdf] = useState<string | null>(null);
-  const [started, setStarted] = useState(false);
+  const [phase, setPhase] = useState<PagePhase>("vinheta");
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, number>;
     completionPercent: number;
   } | null>(null);
 
-  // 1. Try to load draft once on mount.
+  // --- Draft load on mount ---
   const loadedRef = useRef(false);
   useEffect(() => {
     if (loadedRef.current) return;
@@ -148,13 +156,13 @@ function ActivityRunner({
   const acceptDraft = useCallback(() => {
     if (draftPrompt) setResponses(draftPrompt.draft);
     setDraftPrompt(null);
-    setStarted(true);
+    setPhase("activity");
   }, [draftPrompt]);
 
   const restartDraft = useCallback(async () => {
     setDraftPrompt(null);
     setResponses({});
-    setStarted(true);
+    setPhase("activity");
     try {
       await discardActivityDraft({ data: { token } });
     } catch {
@@ -162,7 +170,25 @@ function ActivityRunner({
     }
   }, [token]);
 
-  // 2. Autosave debounced.
+  // --- Consent ---
+  const consentMutation = useMutation({
+    mutationFn: (accepted: boolean) =>
+      recordActivityConsent({ data: { token, accepted } }),
+    onSuccess: (result) => {
+      if (result.accepted) {
+        // If draft exists, show draft prompt; otherwise start activity
+        if (draftPrompt) {
+          setPhase("activity"); // draft dialog will show over activity
+        } else {
+          setPhase("activity");
+        }
+      } else {
+        setPhase("declined");
+      }
+    },
+  });
+
+  // --- Autosave ---
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveMutation = useMutation({
@@ -177,10 +203,10 @@ function ActivityRunner({
     onSuccess: () => setSavedAt(Date.now()),
   });
 
-  const { total, answered, completion, allAnswered } = getCompletionStats(config, responses);
+  const { completion } = getCompletionStats(config, responses);
 
   useEffect(() => {
-    if (submitted || draftPrompt || !started) return;
+    if (phase !== "activity" || draftPrompt) return;
     if (Object.keys(responses).length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
@@ -189,22 +215,67 @@ function ActivityRunner({
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [responses, completion, saveMutation, submitted, draftPrompt, started]);
+  }, [responses, completion, saveMutation, phase, draftPrompt]);
 
-  // 3. Submit
+  // --- Manual save ("Salvar e continuar depois") ---
+  const manualSave = useCallback(() => {
+    if (Object.keys(responses).length === 0) return;
+    saveMutation.mutate(
+      { draft: responses, completionPercent: completion },
+      {
+        onSuccess: () => {
+          setSavedAt(Date.now());
+        },
+      },
+    );
+  }, [responses, completion, saveMutation]);
+
+  // --- Submit ---
   const submitMutation = useMutation({
     mutationFn: () =>
       submitActivityResponse({ data: { token, responses } }),
     onSuccess: (data) => {
-      setSubmitted(true);
+      setPhase("submitted");
       if (data.pdf) setResultPdf(data.pdf);
     },
   });
 
   const expires = resolved.expiresAt ? formatExpires(resolved.expiresAt) : null;
 
-  // Thank you screen
-  if (submitted) {
+  // === PHASE: VINHETA ===
+  if (phase === "vinheta") {
+    return (
+      <div className="relative min-h-screen bg-[var(--cream)]">
+        <VinhetaIntro onComplete={() => setPhase("intro")} volumePercent={60} />
+      </div>
+    );
+  }
+
+  // === PHASE: DECLINED ===
+  if (phase === "declined") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-md text-center space-y-4">
+          <div className="mx-auto w-16 h-16 rounded-full bg-muted flex items-center justify-center">
+            <svg className="w-8 h-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4.5c-.77-.833-2.694-.833-3.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h1 className="font-display text-2xl text-foreground">Consentimento recusado</h1>
+          <p className="text-muted-foreground text-sm">
+            Este link foi encerrado. O(a) terapeuta foi notificado(a) da sua decisão.
+            Nenhuma resposta foi coletada.
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Você pode fechar esta página.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // === PHASE: SUBMITTED (Thank you) ===
+  if (phase === "submitted") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-md text-center space-y-4">
@@ -244,8 +315,8 @@ function ActivityRunner({
     );
   }
 
-  // Welcome / intro screen before starting
-  if (!started && !draftPrompt) {
+  // === PHASE: INTRO ===
+  if (phase === "intro" || phase === "consent") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-lg text-center space-y-6">
@@ -256,9 +327,11 @@ function ActivityRunner({
             {resolved.activity.title}
           </h1>
           {config?.introduction && (
-            <p className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-md mx-auto">
-              {config.introduction}
-            </p>
+            <div className="text-muted-foreground text-sm md:text-base leading-relaxed max-w-md mx-auto space-y-3">
+              {(config.introduction as string).split("\n\n").map((p, i) => (
+                <p key={i}>{p}</p>
+              ))}
+            </div>
           )}
 
           {expires && (
@@ -273,7 +346,7 @@ function ActivityRunner({
 
           <div className="pt-2">
             <button
-              onClick={() => setStarted(true)}
+              onClick={() => setPhase("consent")}
               className="px-8 py-3 rounded-xl bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-all shadow-sm hover:shadow-md"
             >
               Começar
@@ -284,28 +357,47 @@ function ActivityRunner({
             Suas respostas são criptografadas e enviadas apenas à sua terapeuta.
           </p>
         </div>
+
+        {/* Consent modal opens when phase === "consent" */}
+        <ConsentGate
+          open={phase === "consent"}
+          loading={consentMutation.isPending}
+          onAccept={() => consentMutation.mutate(true)}
+          onDecline={() => consentMutation.mutate(false)}
+        />
       </div>
     );
   }
 
-  // Player
+  // === PHASE: ACTIVITY ===
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Minimal top bar */}
+      {/* Top bar */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-border/40">
         <span className="font-display text-sm text-foreground truncate">
           {resolved.activity.title}
         </span>
-        <span className="text-xs text-muted-foreground">
-          {saveMutation.isPending
-            ? "Salvando…"
-            : savedAt
-              ? "Progresso salvo."
-              : ""}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-muted-foreground">
+            {saveMutation.isPending
+              ? "Salvando…"
+              : savedAt
+                ? "Progresso salvo."
+                : ""}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={manualSave}
+            disabled={saveMutation.isPending || Object.keys(responses).length === 0}
+            className="text-xs"
+          >
+            {saveMutation.isPending ? "Salvando…" : "Salvar e continuar depois"}
+          </Button>
+        </div>
       </header>
 
-      {/* Player fills remaining space */}
+      {/* Player */}
       <div className="flex-1 flex flex-col">
         <ActivityPlayer
           config={config}
@@ -326,7 +418,7 @@ function ActivityRunner({
       )}
 
       {/* Resume draft modal */}
-      <Dialog open={!!draftPrompt} onOpenChange={(open) => !open && setDraftPrompt(null)}>
+      <Dialog open={!!draftPrompt && phase === "activity"} onOpenChange={(open) => !open && setDraftPrompt(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Encontramos um progresso salvo</DialogTitle>
