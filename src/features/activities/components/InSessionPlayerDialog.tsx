@@ -1,6 +1,6 @@
 /**
  * In-session player modal — terapeuta aplica atividade ao vivo.
- * Fullscreen presentation mode com o ActivityPlayer slide-a-slide.
+ * Fullscreen presentation mode com ActivityPlayer (quiz_scale) ou FormRunner (structured_form).
  */
 
 import { useState, useCallback } from "react";
@@ -15,6 +15,11 @@ import {
   getCompletionStats,
   type QuizConfig,
 } from "./ActivityPlayer";
+import {
+  FormRunner,
+  getFormCompletion,
+} from "@/features/library/runners/structured_form/FormRunner";
+import type { StructuredFormConfig } from "@/features/library/runners/structured_form/form-types";
 import {
   getActivityConfig,
   recordInSessionResponse,
