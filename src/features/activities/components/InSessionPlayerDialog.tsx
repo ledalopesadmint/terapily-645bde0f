@@ -182,10 +182,14 @@ export function InSessionPlayerDialog({
   }, [submitted, hasAnyResponse, onClose]);
 
   const handleConfirmClose = useCallback(async () => {
-    // Save draft before closing
-    await saveDraftNow();
-    qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
-    toast.success("Rascunho salvo.", { duration: 2000 });
+    try {
+      await saveDraftNow();
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
+      toast.success("Rascunho salvo.", { duration: 2000 });
+    } catch (err) {
+      console.error("[handleConfirmClose] save failed", err);
+      toast.error("Não foi possível salvar o rascunho.", { duration: 5000 });
+    }
     setShowCloseConfirm(false);
     onClose();
   }, [saveDraftNow, qc, patientId, workspaceId, onClose]);
