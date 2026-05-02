@@ -15,7 +15,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Play, Users } from "lucide-react";
+import { Search, Play, Users, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import {
