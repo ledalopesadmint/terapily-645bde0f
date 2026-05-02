@@ -340,6 +340,7 @@ export const ACTIVITIES: Activity[] = [
     shortDescription: "Cinco coisas que vê, quatro que sente, três que ouve. Volta ao presente em minutos.",
     illustration: "anchor",
     supportedModes: ["in_session", "shared_link", "both"],
+    subcategory: "grounding",
   },
   {
     id: "respiracao-quadrada",
