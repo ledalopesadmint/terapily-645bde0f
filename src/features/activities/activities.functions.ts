@@ -668,7 +668,7 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
 
     const { data: pa, error } = await supabaseAdmin
       .from("patient_activities")
-      .select("id, workspace_id, assigned_by, status, used_at")
+      .select("id, workspace_id, assigned_by, activity_id, status, used_at")
       .eq("id", data.patientActivityId)
       .maybeSingle();
 
