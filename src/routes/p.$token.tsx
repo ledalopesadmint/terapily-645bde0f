@@ -74,6 +74,7 @@ export const Route = createFileRoute("/p/$token")({
         { property: "og:title", content: ogTitle },
         { property: "og:description", content: ogDesc },
         { property: "og:image", content: ogImage },
+        { property: "og:image:type", content: "image/jpeg" },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
         { property: "og:image:alt", content: `terapily — ${title}` },
