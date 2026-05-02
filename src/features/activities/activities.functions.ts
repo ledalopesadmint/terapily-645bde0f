@@ -1140,23 +1140,36 @@ export const saveInSessionDraft = createServerFn({ method: "POST" })
 
     const encrypted = await encryptPHIServer(JSON.stringify(data.draft));
 
-    const { error } = await supabaseAdmin
-      .from("activity_drafts")
-      .upsert(
-        {
-          patient_activity_id: pa.id,
-          workspace_id: pa.workspace_id,
-          patient_id: pa.patient_id,
-          draft_encrypted: encrypted,
-          completion_percent: data.completionPercent,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        },
-        { onConflict: "patient_activity_id" },
-      );
+    const draftPayload = {
+      workspace_id: pa.workspace_id,
+      patient_id: pa.patient_id,
+      draft_encrypted: encrypted,
+      completion_percent: data.completionPercent,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
 
-    if (error) {
-      console.error("[saveInSessionDraft] upsert failed", { code: error.code });
+    const { data: updatedDraft, error: updateError } = await supabaseAdmin
+      .from("activity_drafts")
+      .update(draftPayload)
+      .eq("patient_activity_id", pa.id)
+      .select("id")
+      .maybeSingle();
+
+    if (updateError) {
+      console.error("[saveInSessionDraft] update failed", { code: updateError.code });
       throw new Error("Não foi possível salvar rascunho.");
+    }
+
+    if (!updatedDraft) {
+      const { error: insertError } = await supabaseAdmin.from("activity_drafts").insert({
+        patient_activity_id: pa.id,
+        ...draftPayload,
+      });
+
+      if (insertError) {
+        console.error("[saveInSessionDraft] insert failed", { code: insertError.code });
+        throw new Error("Não foi possível salvar rascunho.");
+      }
     }
 
     // Transition status to in_progress if still pending
