@@ -30,7 +30,16 @@ class PublicLinkError extends Error {
   }
 }
 
-function getClientIp(): string | null {
+function getClientIp(): string {
+  try {
+    return getRequestIP({ xForwardedFor: true }) ?? "0.0.0.0";
+  } catch {
+    return "0.0.0.0";
+  }
+}
+
+/** Returns a valid inet value or null for DB storage */
+function getClientIpForDb(): string | null {
   try {
     return getRequestIP({ xForwardedFor: true }) ?? null;
   } catch {
