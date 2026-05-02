@@ -22,6 +22,7 @@ import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
 import { recordAudit } from "@/features/audit/audit.server";
 import { buildScaleResultPDF } from "./scale-result-pdf.server";
+import { buildWorksheetResultPDF } from "./worksheet-result-pdf.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
 import {
@@ -281,8 +282,11 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     // Generate patient PDF (auto-download after submit)
     let pdfBase64: string | null = null;
     try {
-      if (activity.archetype === "quiz_scale") {
-        const pdfBuffer = await buildScaleResultPDF({
+      if (activity.archetype === "quiz_scale" || activity.archetype === "structured_form") {
+        const buildFn = activity.archetype === "structured_form"
+          ? buildWorksheetResultPDF
+          : buildScaleResultPDF;
+        const pdfBuffer = await buildFn({
           activityResponseId: response.id,
           workspaceId: pa.workspace_id,
           variant: "patient",

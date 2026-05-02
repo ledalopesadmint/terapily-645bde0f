@@ -79,6 +79,10 @@ import {
   generateScaleResultPatient,
   generateScaleResultTherapist,
 } from "@/features/activities/scale-result-pdf.functions";
+import {
+  generateWorksheetResultPatient,
+  generateWorksheetResultTherapist,
+} from "@/features/activities/worksheet-result-pdf.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
@@ -430,10 +434,14 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
   const downloadScaleResult = async (
     responseId: string,
     variant: "patient" | "therapist",
+    archetype?: string,
   ) => {
     setScaleResultBusy(`${responseId}-${variant}`);
     try {
-      const fn = variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist;
+      const isWorksheet = archetype === "structured_form";
+      const fn = isWorksheet
+        ? (variant === "patient" ? generateWorksheetResultPatient : generateWorksheetResultTherapist)
+        : (variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist);
       const res = await fn({ data: { activityResponseId: responseId, workspaceId } });
       const binary = atob(res.pdf);
       const bytes = new Uint8Array(binary.length);
@@ -696,7 +704,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                             size="sm"
                             className="border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
                             disabled={scaleResultBusy === `${response.id}-patient`}
-                            onClick={() => downloadScaleResult(response.id, "patient")}
+                            onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
                           >
                             <Download className="mr-1 h-3.5 w-3.5" />
                             {scaleResultBusy === `${response.id}-patient` ? "Gerando…" : "Relatório Paciente"}
@@ -705,7 +713,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                             size="sm"
                             className="border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
                             disabled={scaleResultBusy === `${response.id}-therapist`}
-                            onClick={() => downloadScaleResult(response.id, "therapist")}
+                            onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
                           >
                             <ShieldCheck className="mr-1 h-3.5 w-3.5" />
                             {scaleResultBusy === `${response.id}-therapist` ? "Gerando…" : "Relatório Terapeuta"}
