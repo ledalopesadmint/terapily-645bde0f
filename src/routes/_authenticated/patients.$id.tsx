@@ -332,7 +332,7 @@ function formatClinicalFlagLabel(flag: unknown): string {
 
 function PatientDetailPage() {
   const { id } = useParams({ from: "/_authenticated/patients/$id" });
-  const { startSession } = Route.useSearch();
+  const { startSession, openAssign } = Route.useSearch();
 
   const patientQuery = useQuery({
     queryKey: ["patient", id],
