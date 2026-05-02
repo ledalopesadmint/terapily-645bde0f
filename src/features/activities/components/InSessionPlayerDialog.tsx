@@ -26,6 +26,8 @@ import {
   getScriptCompletion,
 } from "@/features/library/runners/guided_script/GuidedScriptRunner";
 import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
+import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
+import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
 import {
   getActivityConfig,
   recordInSessionResponse,
@@ -84,10 +86,12 @@ export function InSessionPlayerDialog({
   });
 
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
+  const rawConfig = (configQuery.data?.activity?.config ?? {}) as Record<string, unknown>;
+  const isBreathing = rawConfig.runner === "breathing";
   const isForm = archetype === "structured_form";
-  const isScript = archetype === "guided_script" || archetype === "guided_timer";
-  const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig &
-    StructuredFormConfig & GuidedScriptConfig;
+  const isScript = !isBreathing && (archetype === "guided_script" || archetype === "guided_timer");
+  const config = rawConfig as unknown as QuizConfig &
+    StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
 
   const getCompletion = useCallback(() => {
     if (configQuery.isLoading) return { allAnswered: false, completion: 0 };
@@ -337,7 +341,14 @@ export function InSessionPlayerDialog({
             )}
 
             <div className="flex-1 flex flex-col overflow-hidden">
-              {isScript ? (
+              {isBreathing ? (
+                <BreathingRunner
+                  config={config}
+                  onSubmit={() => submitMutation.mutate()}
+                  submitting={submitMutation.isPending}
+                  submitLabel="Registrar exercício"
+                />
+              ) : isScript ? (
                 <GuidedScriptRunner
                   config={config}
                   responses={responses}
