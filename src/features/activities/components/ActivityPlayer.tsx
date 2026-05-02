@@ -57,18 +57,23 @@ export function ActivityPlayer({
     [config],
   );
 
-  // When resuming from a draft, jump to the first unanswered question
-  // or the last question (so user can submit) if all are answered.
-  const initialIdx = useMemo(() => {
-    if (Object.keys(responses).length === 0) return 0;
-    const firstUnanswered = questions.findIndex((q) => responses[q.id] === undefined);
-    if (firstUnanswered === -1) return Math.max(0, questions.length - 1); // all answered → last
-    return firstUnanswered;
-  }, []); // intentionally empty — only compute once on mount
-
-  const [currentIdx, setCurrentIdx] = useState(initialIdx);
+  const [currentIdx, setCurrentIdx] = useState(0);
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [animating, setAnimating] = useState(false);
+
+  // When responses change externally (e.g. draft restore), jump to the right question
+  const prevResponseCountRef = useRef(Object.keys(responses).length);
+  useEffect(() => {
+    const prevCount = prevResponseCountRef.current;
+    const currentCount = Object.keys(responses).length;
+    prevResponseCountRef.current = currentCount;
+    // Only jump when going from 0 responses to many (draft restore)
+    if (prevCount === 0 && currentCount > 0 && questions.length > 0) {
+      const firstUnanswered = questions.findIndex((q) => responses[q.id] === undefined);
+      const targetIdx = firstUnanswered === -1 ? questions.length - 1 : firstUnanswered;
+      setCurrentIdx(targetIdx);
+    }
+  }, [responses, questions]);
 
   const total = questions.length;
   const question = questions[currentIdx];
