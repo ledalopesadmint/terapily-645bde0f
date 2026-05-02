@@ -237,34 +237,49 @@ function ActivityRunner({
 
   // --- Autosave ---
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [saving, setSaving] = useState(false);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const saveMutation = useMutation({
-    mutationFn: (payload: { draft: Record<string, unknown>; completionPercent: number }) =>
-      saveActivityDraft({
-        data: {
-          token,
-          draft: payload.draft,
-          completionPercent: payload.completionPercent,
-        },
-      }),
-    onSuccess: () => setSavedAt(Date.now()),
-  });
+  const responsesRef = useRef(responses);
+  responsesRef.current = responses;
 
   const completion = isForm
     ? getFormCompletion(config, responses).completion
     : getCompletionStats(config, responses as Record<string, number>).completion;
+  const completionRef = useRef(completion);
+  completionRef.current = completion;
 
+  const saveDraftNow = useCallback(async () => {
+    const current = responsesRef.current;
+    if (Object.keys(current).length === 0) return;
+    try {
+      setSaving(true);
+      await saveActivityDraft({
+        data: {
+          token,
+          draft: current,
+          completionPercent: completionRef.current,
+        },
+      });
+      setSavedAt(Date.now());
+    } catch (e) {
+      console.warn("[autosave] failed", e);
+    } finally {
+      setSaving(false);
+    }
+  }, [token]);
+
+  // Auto-save debounced 1s after each response change
   useEffect(() => {
     if (phase !== "activity" || draftPrompt) return;
     if (Object.keys(responses).length === 0) return;
     if (saveTimer.current) clearTimeout(saveTimer.current);
     saveTimer.current = setTimeout(() => {
-      saveMutation.mutate({ draft: responses, completionPercent: completion });
-    }, 2000);
+      saveDraftNow();
+    }, 1000);
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
-  }, [responses, completion, saveMutation, phase, draftPrompt]);
+  }, [responses, phase, draftPrompt, saveDraftNow]);
 
   // --- Manual save ("Salvar e continuar depois") ---
   const manualSave = useCallback(() => {
