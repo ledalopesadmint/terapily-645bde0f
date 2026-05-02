@@ -35,7 +35,7 @@ export async function aggregatePlatformAnalytics(
   // --- Fetch audit_logs for the day ---
   const { data: logs, error: logsErr } = await supabaseAdmin
     .from("audit_logs")
-    .select("action, created_at, metadata, workspace_id")
+    .select("action, created_at, metadata, workspace_id, resource_id")
     .gte("created_at", dayStart)
     .lte("created_at", dayEnd)
     .order("created_at", { ascending: true });
@@ -48,7 +48,7 @@ export async function aggregatePlatformAnalytics(
   // --- Fetch habit_entries for the day ---
   const { data: habits, error: habitsErr } = await supabaseAdmin
     .from("habit_entries")
-    .select("completed_at, patient_id")
+    .select("completed_at, patient_id, habit_link_id")
     .gte("completed_at", dayStart)
     .lte("completed_at", dayEnd);
 
@@ -64,10 +64,11 @@ export async function aggregatePlatformAnalytics(
   }
 
   // --- Process audit_logs ---
-  const workspacesByHour = new Map<number, Set<string>>();
   const workspacesDay = new Set<string>();
-  const linksOpened = new Set<string>(); // by resource_id for completion_rate
-  const submitted = new Set<string>();
+
+  // Track by resource_id (patient_activity_id) for accurate completion_rate
+  const activitiesOpened = new Set<string>();   // patient_activity_ids that were opened
+  const activitiesSubmitted = new Set<string>(); // patient_activity_ids that were submitted
 
   for (const log of logs ?? []) {
     const hour = new Date(log.created_at).getUTCHours();
@@ -77,8 +78,6 @@ export async function aggregatePlatformAnalytics(
       case "auth.signin":
         inc("therapist.logins", "total", hour);
         if (log.workspace_id) {
-          if (!workspacesByHour.has(hour)) workspacesByHour.set(hour, new Set());
-          workspacesByHour.get(hour)!.add(log.workspace_id);
           workspacesDay.add(log.workspace_id);
         }
         break;
@@ -100,12 +99,14 @@ export async function aggregatePlatformAnalytics(
 
       case "activity.link_opened":
         inc("patient.links_opened", "total", hour);
-        linksOpened.add(String(meta.patient_id ?? ""));
+        // resource_id = patient_activity_id
+        if (log.resource_id) activitiesOpened.add(log.resource_id);
         break;
 
       case "activity.submitted":
         inc("patient.activities_completed", "total", hour);
-        submitted.add(String(meta.patient_id ?? ""));
+        // resource_id = patient_activity_id
+        if (log.resource_id) activitiesSubmitted.add(log.resource_id);
         break;
 
       case "activity.consent_declined":
@@ -116,47 +117,72 @@ export async function aggregatePlatformAnalytics(
 
   // --- Process habit_entries ---
   const habitPatients = new Set<string>();
+  const habitLinkPatients = new Map<string, Set<string>>(); // link_id → set of patient_ids (for return rate)
+
   for (const h of habits ?? []) {
     const hour = new Date(h.completed_at).getUTCHours();
     inc("patient.habit_entries", "total", hour);
     habitPatients.add(h.patient_id);
+
+    // Track per habit_link to calculate return rate
+    if (!habitLinkPatients.has(h.habit_link_id)) {
+      habitLinkPatients.set(h.habit_link_id, new Set());
+    }
+    habitLinkPatients.get(h.habit_link_id)!.add(h.patient_id);
   }
 
   // --- Derived daily metrics ---
 
   // DAU (workspaces with login)
   rows.push({
-    date: targetDate,
-    hour_bucket: 0, // daily aggregate stored at hour 0
-    day_of_week: dow,
-    metric: "therapist.dau",
-    dimension: "total",
-    value: workspacesDay.size,
+    date: targetDate, hour_bucket: 0, day_of_week: dow,
+    metric: "therapist.dau", dimension: "total", value: workspacesDay.size,
   });
 
-  // Completion rate (% of opened that were submitted)
-  if (linksOpened.size > 0) {
-    const rate = Math.round((submitted.size / linksOpened.size) * 100);
+  // Completion rate — based on distinct patient_activity_ids opened vs submitted
+  // This is accurate: counts individual activities, not patients
+  if (activitiesOpened.size > 0) {
+    const rate = Math.round((activitiesSubmitted.size / activitiesOpened.size) * 100);
     rows.push({
-      date: targetDate,
-      hour_bucket: 0,
-      day_of_week: dow,
-      metric: "patient.completion_rate",
-      dimension: "total",
-      value: rate,
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "patient.completion_rate", dimension: "total",
+      value: Math.min(rate, 100), // cap at 100% (submit without open same day is possible)
     });
   }
 
-  // Habit return rate (patients with 3+ entries — computed across all entries for the link, not just today)
-  // For daily simplicity, we track unique habit patients today
+  // Habit unique patients today
   rows.push({
-    date: targetDate,
-    hour_bucket: 0,
-    day_of_week: dow,
-    metric: "patient.habit_unique_patients",
-    dimension: "total",
+    date: targetDate, hour_bucket: 0, day_of_week: dow,
+    metric: "patient.habit_unique_patients", dimension: "total",
     value: habitPatients.size,
   });
+
+  // Habit return rate — % of active habit links that had ≥2 entries today
+  // (proxy for "patients actually returning to practice")
+  if (habitLinkPatients.size > 0) {
+    const linksWithReturn = Array.from(habitLinkPatients.values())
+      .filter((patients) => patients.size >= 1).length; // at least used
+    // Query how many habit_links had entries in the previous 7 days too
+    const { data: recentLinks } = await supabaseAdmin
+      .from("habit_entries")
+      .select("habit_link_id")
+      .gte("completed_at", new Date(new Date(dayStart).getTime() - 7 * 86400000).toISOString())
+      .lt("completed_at", dayStart);
+
+    const previousLinkIds = new Set((recentLinks ?? []).map((r) => r.habit_link_id));
+    const returningLinks = Array.from(habitLinkPatients.keys())
+      .filter((linkId) => previousLinkIds.has(linkId)).length;
+
+    const returnRate = linksWithReturn > 0
+      ? Math.round((returningLinks / linksWithReturn) * 100)
+      : 0;
+
+    rows.push({
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "patient.habit_return_rate", dimension: "total",
+      value: returnRate,
+    });
+  }
 
   // --- Convert hour buckets to rows ---
   for (const [key, value] of hourBuckets) {
