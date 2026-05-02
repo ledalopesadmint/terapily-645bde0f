@@ -185,6 +185,7 @@ function ActivityRunner({
   const config = rawConfig as unknown as QuizConfig & StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
+  const [submitMeta, setSubmitMeta] = useState<{ responseId: string; workspaceId: string; archetype: string } | null>(null);
   const [phase, setPhase] = useState<PagePhase>("intro");
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, unknown>;
