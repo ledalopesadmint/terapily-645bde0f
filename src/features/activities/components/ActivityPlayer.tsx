@@ -53,17 +53,32 @@ export function ActivityPlayer({
   submitting,
   submitDisabled,
   submitLabel = "Enviar respostas",
+  initialQuestionIndex,
 }: ActivityPlayerProps) {
   const questions = useMemo<QuizQuestion[]>(
     () => (Array.isArray(config?.questions) ? config.questions : []),
     [config],
   );
 
-  const [currentIdx, setCurrentIdx] = useState(0);
+  const [currentIdx, setCurrentIdx] = useState(() => {
+    // If an explicit initial index is provided (draft restore), use it
+    if (typeof initialQuestionIndex === "number" && initialQuestionIndex >= 0) {
+      return initialQuestionIndex;
+    }
+    // Otherwise, if responses already have answers (draft loaded before mount),
+    // jump to the first unanswered question
+    const qs = Array.isArray(config?.questions) ? config.questions : [];
+    const answered = Object.keys(responses).length;
+    if (answered > 0 && qs.length > 0) {
+      const firstUnanswered = qs.findIndex((q) => responses[q.id] === undefined);
+      return firstUnanswered === -1 ? qs.length - 1 : firstUnanswered;
+    }
+    return 0;
+  });
   const [direction, setDirection] = useState<"next" | "prev">("next");
   const [animating, setAnimating] = useState(false);
 
-  // When responses change externally (e.g. draft restore), jump to the right question
+  // When responses change externally (e.g. draft restore after mount), jump to the right question
   const prevResponseCountRef = useRef(Object.keys(responses).length);
   useEffect(() => {
     const prevCount = prevResponseCountRef.current;
