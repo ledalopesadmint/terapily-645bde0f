@@ -20,7 +20,7 @@
  * - Sensitive activities mostram badge discreto pra avisar terapeuta
  */
 
-import { Play } from "lucide-react";
+import { Play, Send } from "lucide-react";
 import { ActivityIllustration } from "./illustrations";
 import type { Activity } from "./library.types";
 
@@ -97,19 +97,36 @@ export function ActivityCard({ activity, onStart }: ActivityCardProps) {
           group-hover:opacity-100 group-hover:translate-y-0
           group-focus-within:opacity-100 group-focus-within:translate-y-0
         ">
-          <button
-            type="button"
-            onClick={() => onStart?.(activity, "in_session")}
-            className="
-              inline-flex flex-1 items-center justify-center gap-1.5 rounded-md
-              bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground
-              transition-colors hover:bg-primary/90
-              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
-            "
-          >
-            <Play className="h-3 w-3" aria-hidden />
-            Em sessão
-          </button>
+          {activity.supportedModes?.includes("in_session") && (
+            <button
+              type="button"
+              onClick={() => onStart?.(activity, "in_session")}
+              className="
+                inline-flex flex-1 items-center justify-center gap-1.5 rounded-md
+                bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground
+                transition-colors hover:bg-primary/90
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+              "
+            >
+              <Play className="h-3 w-3" aria-hidden />
+              Em sessão
+            </button>
+          )}
+          {activity.supportedModes?.includes("shared_link") && (
+            <button
+              type="button"
+              onClick={() => onStart?.(activity, "shared_link")}
+              className="
+                inline-flex flex-1 items-center justify-center gap-1.5 rounded-md
+                border border-primary/30 bg-card px-3 py-1.5 text-xs font-medium text-primary
+                transition-colors hover:bg-primary/10
+                focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2
+              "
+            >
+              <Send className="h-3 w-3" aria-hidden />
+              Enviar link
+            </button>
+          )}
         </div>
       </div>
     </article>
