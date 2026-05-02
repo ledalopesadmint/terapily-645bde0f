@@ -40,6 +40,8 @@ interface ActivityPlayerProps {
   submitDisabled?: boolean;
   /** Custom submit label */
   submitLabel?: string;
+  /** Initial question index (used for draft restore — jump to first unanswered) */
+  initialQuestionIndex?: number;
 }
 
 export function ActivityPlayer({
