@@ -166,6 +166,7 @@ export const getActivityDraft = createServerFn({ method: "POST" })
     });
 
     const pa = await loadActiveActivityByToken(data.token);
+    const log = activityLog(pa.id);
 
     const { data: draft, error } = await withRetry(() =>
       supabaseAdmin
@@ -176,10 +177,11 @@ export const getActivityDraft = createServerFn({ method: "POST" })
     );
 
     if (error) {
-      console.error("[getActivityDraft] select failed", { code: error.code });
+      log.error("draft.load_failed", { code: error.code });
       throw new PublicLinkError();
     }
     if (!draft) {
+      log.info("draft.load_empty");
       return { hasDraft: false as const };
     }
 
@@ -188,11 +190,13 @@ export const getActivityDraft = createServerFn({ method: "POST" })
       const plain = await decryptPHIServer(draft.draft_encrypted);
       decoded = JSON.parse(plain) as Record<string, unknown>;
     } catch {
-      // Conteúdo corrompido / chave incorreta — descarta silenciosamente
-      // pra não bloquear o paciente. Audit cobre o load attempt.
-      logDraftFailure("decrypt_failed");
+      log.warn("draft.decrypt_failed");
       return { hasDraft: false as const };
     }
+
+    log.info("draft.loaded", {
+      completionPercent: draft.completion_percent,
+    });
 
     // Audit explícito de load (trigger só cobre INSERT/UPDATE/DELETE).
     await supabaseAdmin.from("audit_logs").insert({
@@ -209,7 +213,6 @@ export const getActivityDraft = createServerFn({ method: "POST" })
 
     return {
       hasDraft: true as const,
-      // Serializado como JSON pelo TanStack RPC; o cliente faz JSON.parse de novo.
       draftJson: JSON.stringify(decoded),
       completionPercent: draft.completion_percent,
       updatedAt: draft.updated_at,
