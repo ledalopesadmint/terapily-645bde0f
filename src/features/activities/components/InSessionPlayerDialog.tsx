@@ -22,6 +22,11 @@ import {
 } from "@/features/library/runners/structured_form/FormRunner";
 import type { StructuredFormConfig } from "@/features/library/runners/structured_form/form-types";
 import {
+  GuidedScriptRunner,
+  getScriptCompletion,
+} from "@/features/library/runners/guided_script/GuidedScriptRunner";
+import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
+import {
   getActivityConfig,
   recordInSessionResponse,
   saveInSessionDraft,
@@ -80,11 +85,13 @@ export function InSessionPlayerDialog({
 
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
   const isForm = archetype === "structured_form";
+  const isScript = archetype === "guided_script" || archetype === "guided_timer";
   const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig &
-    StructuredFormConfig;
+    StructuredFormConfig & GuidedScriptConfig;
 
   const getCompletion = useCallback(() => {
     if (configQuery.isLoading) return { allAnswered: false, completion: 0 };
+    if (isScript) return getScriptCompletion(config, responses);
     if (isForm) return getFormCompletion(config, responses);
     const stats = getCompletionStats(config, responses as Record<string, number>);
     return { allAnswered: stats.allAnswered, completion: stats.completion };
@@ -330,7 +337,16 @@ export function InSessionPlayerDialog({
             )}
 
             <div className="flex-1 flex flex-col overflow-hidden">
-              {isForm ? (
+              {isScript ? (
+                <GuidedScriptRunner
+                  config={config}
+                  responses={responses}
+                  onResponse={(sId, val) => setResponses((prev) => ({ ...prev, [sId]: val }))}
+                  onSubmit={() => submitMutation.mutate()}
+                  submitting={submitMutation.isPending}
+                  submitLabel="Registrar exercício"
+                />
+              ) : isForm ? (
                 <FormRunner
                   config={config}
                   responses={responses}

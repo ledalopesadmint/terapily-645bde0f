@@ -34,6 +34,11 @@ import {
   getFormCompletion,
 } from "@/features/library/runners/structured_form/FormRunner";
 import type { StructuredFormConfig } from "@/features/library/runners/structured_form/form-types";
+import {
+  GuidedScriptRunner,
+  getScriptCompletion,
+} from "@/features/library/runners/guided_script/GuidedScriptRunner";
+import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
 import { ConsentGate } from "@/features/activities/components/ConsentGate";
 import { VinhetaIntro } from "@/features/activities/components/VinhetaIntro";
 import { Button } from "@/components/ui/button";
@@ -172,7 +177,8 @@ function ActivityRunner({
 }) {
   const archetype = resolved.activity.archetype;
   const isForm = archetype === "structured_form";
-  const config = resolved.activity.config as QuizConfig & StructuredFormConfig;
+  const isScript = archetype === "guided_script" || archetype === "guided_timer";
+  const config = resolved.activity.config as QuizConfig & StructuredFormConfig & GuidedScriptConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [phase, setPhase] = useState<PagePhase>("intro");
@@ -243,9 +249,11 @@ function ActivityRunner({
   const responsesRef = useRef(responses);
   responsesRef.current = responses;
 
-  const completion = isForm
-    ? getFormCompletion(config, responses).completion
-    : getCompletionStats(config, responses as Record<string, number>).completion;
+  const completion = isScript
+    ? getScriptCompletion(config, responses).completion
+    : isForm
+      ? getFormCompletion(config, responses).completion
+      : getCompletionStats(config, responses as Record<string, number>).completion;
   const completionRef = useRef(completion);
   completionRef.current = completion;
 
@@ -502,7 +510,18 @@ function ActivityRunner({
 
       {/* Player */}
       <div className="flex-1 flex flex-col">
-        {isForm ? (
+        {isScript ? (
+          <GuidedScriptRunner
+            config={config}
+            responses={responses}
+            onResponse={(sId, val) =>
+              setResponses((prev) => ({ ...prev, [sId]: val }))
+            }
+            onSubmit={() => submitMutation.mutate()}
+            submitting={submitMutation.isPending}
+            submitLabel="Concluir exercício"
+          />
+        ) : isForm ? (
           <FormRunner
             config={config}
             responses={responses}
