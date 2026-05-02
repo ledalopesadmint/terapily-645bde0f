@@ -177,7 +177,8 @@ function ActivityRunner({
 }) {
   const archetype = resolved.activity.archetype;
   const isForm = archetype === "structured_form";
-  const config = resolved.activity.config as QuizConfig & StructuredFormConfig;
+  const isScript = archetype === "guided_script" || archetype === "guided_timer";
+  const config = resolved.activity.config as QuizConfig & StructuredFormConfig & GuidedScriptConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [phase, setPhase] = useState<PagePhase>("intro");
