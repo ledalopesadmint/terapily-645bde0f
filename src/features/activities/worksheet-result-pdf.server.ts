@@ -404,17 +404,17 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
 
       // ── emotion_picker: visual emotion bars ──
       // Data shape from FormRunner: { emotions: [{ name, intensity }] } OR flat array
-      if (field.type === "emotion_picker" && responseValue != null && typeof responseValue === "object") {
-        const rawEmotions = Array.isArray(responseValue)
-          ? responseValue
-          : Array.isArray((responseValue as any).emotions)
-            ? (responseValue as any).emotions
-            : [];
-        const emotions = rawEmotions as Array<{ name?: string; emotion?: string; label?: string; intensity?: number; value?: number }>;
-        if (emotions.length === 0) {
-          // Fall through to default text box below
-        } else {
-        const emotionH = emotions.length * 10 + 8;
+      const isEmotionPicker = field.type === "emotion_picker";
+      const emotionList = isEmotionPicker && responseValue != null && typeof responseValue === "object"
+        ? (Array.isArray(responseValue)
+            ? responseValue
+            : Array.isArray((responseValue as any).emotions)
+              ? (responseValue as any).emotions
+              : []) as Array<{ name?: string; emotion?: string; label?: string; intensity?: number; value?: number }>
+        : [];
+
+      if (isEmotionPicker && emotionList.length > 0) {
+        const emotionH = emotionList.length * 10 + 8;
         y = checkPage(y, emotionH + 2);
 
         doc.setFillColor(252, 251, 248);
@@ -425,7 +425,7 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
         let ey = y + 5;
         const barX = M + 40;
         const barW = CW - 48;
-        for (const emo of emotions) {
+        for (const emo of emotionList) {
           const name = emo.name ?? emo.emotion ?? emo.label ?? "—";
           const intensity = emo.intensity ?? emo.value ?? 0;
           const pct = Math.max(0, Math.min(100, Number(intensity)));
