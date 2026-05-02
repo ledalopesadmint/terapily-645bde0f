@@ -39,6 +39,8 @@ import {
   getScriptCompletion,
 } from "@/features/library/runners/guided_script/GuidedScriptRunner";
 import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
+import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
+import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
 import { ConsentGate } from "@/features/activities/components/ConsentGate";
 import { VinhetaIntro } from "@/features/activities/components/VinhetaIntro";
 import { Button } from "@/components/ui/button";
@@ -176,9 +178,11 @@ function ActivityRunner({
   resolved: ResolvedActivity;
 }) {
   const archetype = resolved.activity.archetype;
+  const rawConfig = resolved.activity.config as Record<string, unknown>;
+  const isBreathing = rawConfig?.runner === "breathing";
   const isForm = archetype === "structured_form";
-  const isScript = archetype === "guided_script" || archetype === "guided_timer";
-  const config = resolved.activity.config as QuizConfig & StructuredFormConfig & GuidedScriptConfig;
+  const isScript = !isBreathing && (archetype === "guided_script" || archetype === "guided_timer");
+  const config = rawConfig as unknown as QuizConfig & StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [phase, setPhase] = useState<PagePhase>("intro");
