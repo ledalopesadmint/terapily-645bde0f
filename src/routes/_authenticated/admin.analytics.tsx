@@ -8,7 +8,7 @@
  */
 
 import { useEffect, useState, useCallback } from "react";
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import {
   BarChart,
   Bar,
@@ -25,12 +25,8 @@ import {
   Legend,
 } from "recharts";
 import {
-  TrendingUp,
-  TrendingDown,
-  Minus,
   Download,
   RefreshCw,
-  ArrowLeft,
   AlertTriangle,
   Activity,
   BarChart3,
