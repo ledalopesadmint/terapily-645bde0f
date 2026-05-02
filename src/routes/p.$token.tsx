@@ -50,9 +50,9 @@ export const Route = createFileRoute("/p/$token")({
   loader: async ({ params }) => {
     try {
       const meta = await getOGMeta({ data: { token: params.token } });
-      return { meta };
+      return { meta, token: params.token };
     } catch {
-      return { meta: null };
+      return { meta: null, token: params.token };
     }
   },
   head: ({ loaderData }) => {
