@@ -140,7 +140,7 @@ function ActivityRunner({
   const config = resolved.activity.config as QuizConfig & StructuredFormConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
-  const [phase, setPhase] = useState<PagePhase>("vinheta");
+  const [phase, setPhase] = useState<PagePhase>("intro");
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, unknown>;
     completionPercent: number;
