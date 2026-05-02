@@ -1157,6 +1157,7 @@ interface AssignDialogProps {
   onOpenChange: (open: boolean) => void;
   patientId: string;
   workspaceId: string;
+  defaultActivityId?: string;
   onLinkGenerated: (payload: { url: string; patientActivityId: string }) => void;
 }
 
@@ -1165,10 +1166,11 @@ function AssignActivityDialog({
   onOpenChange,
   patientId,
   workspaceId,
+  defaultActivityId,
   onLinkGenerated,
 }: AssignDialogProps) {
   const qc = useQueryClient();
-  const [activityId, setActivityId] = useState<string>("");
+  const [activityId, setActivityId] = useState<string>(defaultActivityId ?? "");
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("shared_link");
   const [expiresInDays, setExpiresInDays] = useState<number>(7);
 
