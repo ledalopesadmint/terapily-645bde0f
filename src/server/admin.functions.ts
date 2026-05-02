@@ -202,8 +202,11 @@ export const getFeaturedActivity = createServerFn({ method: "GET" })
       .eq("is_featured", true)
       .maybeSingle();
 
-    if (error && error.code !== "PGRST116") {
-      console.error("[getFeaturedActivity] query failed", { code: error.code });
+    if (error) {
+      // PGRST116 = no rows (expected when nothing is featured). Silence it.
+      if (error.code !== "PGRST116") {
+        console.error("[getFeaturedActivity] query failed", { code: error.code });
+      }
       return null;
     }
     if (!row) return null;

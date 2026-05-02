@@ -68,7 +68,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "en_US" },
-      { property: "og:image", content: "/og-image.png" },
+      { property: "og:image", content: "https://www.terapily.com/og-image.png" },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:alt", content: "Terapily — therapeutic tools your clients actually finish" },
@@ -83,7 +83,7 @@ export const Route = createRootRouteWithContext<RouterContext>()({
         content:
           "CBT activities and validated scales — auto-scored, sent by magic link, exportable to your EHR. HIPAA-aligned, BAA on request.",
       },
-      { name: "twitter:image", content: "/og-image.png" },
+      { name: "twitter:image", content: "https://www.terapily.com/og-image.png" },
       { name: "twitter:image:alt", content: "Terapily — therapeutic tools your clients actually finish" },
     ],
     links: [
