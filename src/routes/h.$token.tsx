@@ -31,7 +31,24 @@ const resolveHabitToken = createServerFn({ method: "GET" })
   .inputValidator((input: unknown) =>
     z.object({ token: z.string().min(1).max(200) }).parse(input),
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data }): Promise<{
+    error: string | null;
+    activity: {
+      id: string;
+      slug: string;
+      title: string;
+      archetype: string;
+      config: Record<string, unknown>;
+      shortDescription: string;
+    } | null;
+    tokenHash: string | null;
+    link: {
+      id: string;
+      totalEntries: number;
+      lastEntryAt: string | null;
+      expiresAt: string;
+    } | null;
+  }> => {
     const tokenHash = await hashMagicLinkToken(data.token);
 
     const { data: link, error } = await supabaseAdmin
@@ -41,11 +58,11 @@ const resolveHabitToken = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (error || !link) {
-      return { error: "not_found" as const, activity: null, tokenHash: null, link: null };
+      return { error: "not_found", activity: null, tokenHash: null, link: null };
     }
 
     if (link.status === "revoked") {
-      return { error: "revoked" as const, activity: null, tokenHash: null, link: null };
+      return { error: "revoked", activity: null, tokenHash: null, link: null };
     }
 
     if (new Date(link.expires_at) < new Date()) {
@@ -53,7 +70,7 @@ const resolveHabitToken = createServerFn({ method: "GET" })
         .from("habit_links")
         .update({ status: "expired" })
         .eq("id", link.id);
-      return { error: "expired" as const, activity: null, tokenHash: null, link: null };
+      return { error: "expired", activity: null, tokenHash: null, link: null };
     }
 
     // Load activity
@@ -64,7 +81,7 @@ const resolveHabitToken = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (!activity) {
-      return { error: "not_found" as const, activity: null, tokenHash: null, link: null };
+      return { error: "not_found", activity: null, tokenHash: null, link: null };
     }
 
     return {
@@ -73,7 +90,7 @@ const resolveHabitToken = createServerFn({ method: "GET" })
         id: activity.id,
         slug: activity.slug,
         title: activity.title,
-        archetype: activity.archetype,
+        archetype: activity.archetype as string,
         config: activity.config as Record<string, unknown>,
         shortDescription: activity.short_description,
       },

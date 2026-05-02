@@ -16,6 +16,7 @@ import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PTokenRouteImport } from './routes/p.$token'
+import { Route as HTokenRouteImport } from './routes/h.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedWorksheetsRouteImport } from './routes/_authenticated/worksheets'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
@@ -69,6 +70,11 @@ const IndexRoute = IndexRouteImport.update({
 const PTokenRoute = PTokenRouteImport.update({
   id: '/p/$token',
   path: '/p/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HTokenRoute = HTokenRouteImport.update({
+  id: '/h/$token',
+  path: '/h/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
@@ -252,6 +260,7 @@ export interface FileRoutesById {
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/_authenticated/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
@@ -282,6 +291,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/worksheets'
     | '/auth/callback'
+    | '/h/$token'
     | '/p/$token'
     | '/dev/roadmap'
     | '/patients/$id'
@@ -309,6 +319,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/worksheets'
     | '/auth/callback'
+    | '/h/$token'
     | '/p/$token'
     | '/dev/roadmap'
     | '/patients/$id'
@@ -338,6 +349,7 @@ export interface FileRouteTypes {
     | '/_authenticated/welcome'
     | '/_authenticated/worksheets'
     | '/auth/callback'
+    | '/h/$token'
     | '/p/$token'
     | '/_authenticated/dev/roadmap'
     | '/_authenticated/patients/$id'
@@ -360,6 +372,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  HTokenRoute: typeof HTokenRoute
   PTokenRoute: typeof PTokenRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
   ApiPublicHooksPurgePatientsRoute: typeof ApiPublicHooksPurgePatientsRoute
@@ -414,6 +427,13 @@ declare module '@tanstack/react-router' {
       path: '/p/$token'
       fullPath: '/p/$token'
       preLoaderRoute: typeof PTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/h/$token': {
+      id: '/h/$token'
+      path: '/h/$token'
+      fullPath: '/h/$token'
+      preLoaderRoute: typeof HTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -633,6 +653,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  HTokenRoute: HTokenRoute,
   PTokenRoute: PTokenRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
   ApiPublicHooksPurgePatientsRoute: ApiPublicHooksPurgePatientsRoute,
