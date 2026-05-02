@@ -146,8 +146,6 @@ function LibraryStandardMode() {
     };
   }, [featuredQuery.data, fallback]);
 
-  const liveCategoryIds = CATEGORIES.map((c) => c.id);
-
   return (
     <div className="pb-20">
       <header className="mx-auto max-w-6xl px-4 pb-8 pt-10 sm:px-8 sm:pt-12">
@@ -167,6 +165,7 @@ function LibraryStandardMode() {
         <LibraryHero activity={featured} onStart={handleStart} />
       </div>
 
+      {/* ── Resource boxes ── */}
       <div className="mt-10">
         <InSessionQuickAccess
           activities={ACTIVITIES}
@@ -174,28 +173,41 @@ function LibraryStandardMode() {
         />
       </div>
 
-      <div className="mt-14 space-y-12">
-        {CATEGORIES.map((category) => {
-          const items = getActivitiesByCategory(category.id);
-          if (items.length === 0) return null;
-          return (
-            <CategoryRow
-              key={category.id}
-              category={category}
-              activities={items}
-              onStart={handleStart}
-            />
-          );
-        })}
+      <div className="mt-6">
+        <ResourceBox
+          icon={FileText}
+          title="Worksheets"
+          subtitle="Registros guiados que transformam o espaço entre sessões em progresso real. Aplique em sessão ou envie como atividade entre sessões."
+          href="/worksheets"
+          count={16}
+          countLabel="worksheets"
+        />
       </div>
 
-      <div className="mt-16">
-        <CategoryBrowser liveCategoryIds={liveCategoryIds} />
+      {/* ── Recomendados (S3 — ativo quando houver histórico de uso) ── */}
+      <div className="mt-10 mx-auto max-w-6xl px-4 sm:px-8">
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-5 sm:p-7">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-sage/15 text-sage">
+              <Sparkles className="h-5 w-5" aria-hidden />
+            </div>
+            <div>
+              <p className="text-[0.6875rem] font-bold uppercase tracking-[0.14em] text-terracotta">
+                Recomendado pra você
+              </p>
+              <h2 className="font-display text-xl text-foreground sm:text-2xl">
+                Baseado nas suas sessões recentes
+              </h2>
+            </div>
+          </div>
+          <p className="mt-3 max-w-xl text-sm text-muted-foreground">
+            Assim que você começar a aplicar ferramentas com pacientes, o
+            Terapily sugere o que faz sentido pra cada perfil.
+          </p>
+        </div>
       </div>
 
-      <div className="mt-16">
-        <RecommendedEmpty />
-      </div>
+      {/* CategoryBrowser placeholder — espaço reservado para navegação futura por categoria clínica */}
 
       {/* footer placeholder removed — player and magic link are live */}
 
