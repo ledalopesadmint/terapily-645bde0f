@@ -105,6 +105,24 @@ export const Route = createFileRoute("/_authenticated/patients/$id")({
 
 type DeliveryMode = "in_session" | "shared_link" | "both";
 
+/**
+ * Returns the public-facing origin for magic links.
+ * Magic links MUST point to the published site, never the preview/editor URL,
+ * because the preview goes through Lovable's auth bridge which confuses patients.
+ */
+function getPublicOrigin(): string {
+  if (typeof window === "undefined") return "";
+  const { origin, hostname } = window.location;
+  // Custom domain → use as-is
+  if (hostname === "www.terapily.com" || hostname === "terapily.com") return origin;
+  // Published lovable.app → use as-is
+  if (hostname === "mvp-guardian-ai.lovable.app") return origin;
+  // Stable published URL
+  if (hostname.endsWith(".lovable.app") && !hostname.includes("-preview")) return origin;
+  // Preview/editor → redirect to the stable published URL
+  return "https://www.terapily.com";
+}
+
 type ActivityStatus =
   | "pending"
   | "in_progress"
@@ -529,7 +547,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
       generateInSessionLink({ data: { patientActivityId: paId } }),
     onSuccess: (res, paId) => {
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const origin = getPublicOrigin();
       setRevealedLink({
         url: `${origin}${res.linkPath}`,
         patientActivityId: paId,
@@ -1037,7 +1055,7 @@ function AssignActivityDialog({
       setDeliveryMode("shared_link");
       setExpiresInDays(7);
       if (res.rawToken) {
-        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        const origin = getPublicOrigin();
         onLinkGenerated({
           url: `${origin}/p/${res.rawToken}`,
           patientActivityId: res.id,
