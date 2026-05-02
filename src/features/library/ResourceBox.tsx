@@ -85,6 +85,7 @@ export function ResourceBox({
                 durationMin={item.durationMin}
                 shortDescription={item.shortDescription}
                 illustration={item.illustration ?? getScaleIllustration(item.category)}
+                chipLabel={chipLabel}
               />
             ))}
           </div>
