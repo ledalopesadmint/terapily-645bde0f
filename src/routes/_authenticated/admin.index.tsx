@@ -17,8 +17,8 @@
  */
 
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star, Flame, CheckCircle2, Clock, Hourglass } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star, Flame, CheckCircle2, Clock, Hourglass, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
@@ -136,7 +136,14 @@ function AdminHomePage() {
           </p>
         </div>
 
-        <div className="shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
+          <Link
+            to="/admin/analytics"
+            className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Analytics
+          </Link>
           <button
             type="button"
             onClick={() =>

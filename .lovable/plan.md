@@ -1,90 +1,162 @@
 
-# Habit Progress Report — Redesign com 2 variantes
+# Platform Analytics — Engajamento + Erros + Insights Estratégicos
 
-## Problema atual
+## 1. Migração: tabela `platform_analytics`
 
-O relatório atual é um PDF único, genérico, com visual básico (barras Sage monocromáticas, heatmap pequeno, footer simplificado). Não segue o template travado dos outros PDFs (Navy header 18mm com icon+wordmark, watermark 4.5%, footer completo com paginação dinâmica, clinician copy band, etc.). Não diferencia paciente de terapeuta.
+```sql
+CREATE TABLE public.platform_analytics (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  date date NOT NULL,
+  hour_bucket smallint,
+  day_of_week smallint,
+  metric text NOT NULL,
+  dimension text DEFAULT 'total',
+  value integer NOT NULL DEFAULT 0,
+  created_at timestamptz DEFAULT now(),
+  UNIQUE(date, hour_bucket, metric, dimension)
+);
 
----
+ALTER TABLE public.platform_analytics ENABLE ROW LEVEL SECURITY;
 
-## Proposta: 2 variantes
+-- Somente admin lê
+CREATE POLICY "platform_analytics: admin read"
+  ON public.platform_analytics FOR SELECT TO authenticated
+  USING (has_role(auth.uid(), 'admin'::app_role));
 
-### Variante PACIENTE — "Mindfulness Practice Summary"
+-- Ninguém insere via client
+CREATE POLICY "platform_analytics: deny client insert"
+  ON public.platform_analytics FOR INSERT TO authenticated
+  WITH CHECK (false);
 
-**Objetivo**: Motivar, reforçar consistência, celebrar progresso.
+CREATE POLICY "platform_analytics: deny update"
+  ON public.platform_analytics FOR UPDATE TO authenticated
+  USING (false);
 
-| Seção | Conteúdo |
-|-------|----------|
-| Header | Navy bar 18mm + icon + wordmark `terapily.` (padrão travado) |
-| Título | "Mindfulness Practice Summary" + subtítulo "Your practice journey at a glance" |
-| Info box | Participant (display_name), Activity, Period (first–last entry), Total sessions, Generated |
-| Streak hero | Box grande com streak atual em destaque (número grande Navy) + "longest streak" ao lado, + % aderência com mini barra circular |
-| Stats cards | 5 cards coloridos (backgrounds Sage, Mauve, Cream, soft-blue, soft-amber): Total sessions, Active days, Total time, Avg duration, Avg sessions/day |
-| Heatmap (8 semanas) | Grid maior (5mm cells), 5 intensidades de cor (Cream vazio → Sage escuro cheio), labels de dia da semana à esquerda, meses no topo |
-| Gráfico de frequência (30d) | Barras com gradiente Sage→Navy, grid de referência pontilhada, labels de data legíveis, valor sobre a barra nos dias com atividade |
-| Timeline (últimas 10) | Dots Sage com linha vertical, data + hora + duração + ciclos, layout limpo |
-| "About This Report" notice | Box amarelo padrão: "This report shows your practice frequency..." (sem diagnóstico, sem recomendação) |
-| Footer | Padrão travado (icon + wordmark + ano, paginação central, disclaimer direita) |
-| Watermark | Padrão travado (4.5% opacity, toda página) |
+CREATE POLICY "platform_analytics: deny delete"
+  ON public.platform_analytics FOR DELETE TO authenticated
+  USING (false);
+```
 
-### Variante TERAPEUTA — "Mindfulness Adherence Report"
+Zero UUIDs, zero PHI, contagens puras.
 
-Tudo do paciente MAIS:
+## 2. Métricas por Categoria Estratégica
 
-| Seção extra | Conteúdo |
-|-------------|----------|
-| Clinician copy band | Red band 10mm: "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION" |
-| Info box expandido | + Therapist name, Practice name, License, NPI |
-| Análise de padrões | Tabela de frequência por dia da semana (seg–dom), horário preferido (manhã/tarde/noite), sessão mais longa / mais curta |
-| Gráfico semanal comparativo | Barras agrupadas por semana (últimas 8 semanas) mostrando evolução da frequência semana a semana |
-| Gaps de inatividade | Lista de períodos sem prática > 3 dias, com duração do gap — dado clínico relevante para o terapeuta |
-| Tabela completa de entries | Todas as entradas (paginada), não só as últimas 10: data, hora, duração, ciclos |
-| Notices | "Platform-generated adherence summary. Does not replace clinical documentation in your EHR." |
-| Footer | Disclaimer terapeuta padrão |
+Apenas métricas com valor real para valuation, vendas e produto. Organizadas em 4 categorias no dashboard:
 
----
+### Categoria A — Validação Comercial (força de venda)
+Métricas que comprovam claims da landing e pitch.
 
-## Diferenças-chave entre os relatórios
+| Métrica | Fonte | Claim que valida |
+|---------|-------|------------------|
+| `patient.completion_rate` | audit_logs (opened vs submitted) | "Activities your clients actually finish" |
+| `patient.habit_return_rate` | habit_entries (pacientes com 3+ entries) | "Patients build real habits" |
+| `therapist.weekly_active` | audit_logs auth.signin (workspaces distintos/semana) | "Therapists use it daily" |
+| `therapist.activities_per_week` | audit_logs activity.assigned | "X activities per therapist per week" |
 
-| Dado | Paciente | Terapeuta |
-|------|----------|-----------|
-| Streak + aderência | Sim (motivacional) | Sim (analítico) |
-| Padrões por dia da semana/horário | Não | Sim |
-| Gaps de inatividade | Não | Sim |
-| Todas as entries | Últimas 10 | Todas (paginado) |
-| Clinician copy band | Não | Sim |
-| Info clínico (license, NPI) | Não | Sim |
-| Evolução semanal comparativa | Não | Sim |
+### Categoria B — Engajamento de Produto (valuation / growth)
+Métricas que investidor/advisor quer ver.
 
----
+| Métrica | Fonte |
+|---------|-------|
+| `therapist.dau` | workspaces distintos com login/dia |
+| `therapist.wau` | workspaces distintos com login/semana |
+| `therapist.mau` | workspaces distintos com login/mês |
+| `patient.activities_completed` | count diário |
+| `patient.habit_entries` | count diário |
+| `therapist.links_shared` | activity.share_intent/dia |
 
-## Paleta de cores nos gráficos
+### Categoria C — Inteligência de Produto (decisões)
+Métricas que guiam roadmap e priorização.
 
-Em vez de tudo Sage monocromático:
-- **Stats cards**: cada card com cor de fundo diferente (variações suaves de Sage, Mauve, Cream, soft-teal, soft-amber)
-- **Heatmap**: 5 níveis — `#F4EFE6` (vazio) → `#C8DCC9` → `#7E9B86` → `#5A7C63` → `#3A5C43`
-- **Barras do gráfico**: gradiente Sage→Navy nos dias mais ativos
-- **Streak**: número em Navy grande, aro circular Sage
-- **Gaps (terapeuta)**: highlight em Mauve suave para chamar atenção
+| Métrica | Fonte |
+|---------|-------|
+| `therapist.delivery_mode.in_session` | activity.assigned metadata |
+| `therapist.delivery_mode.shared_link` | activity.assigned metadata |
+| `patient.peak_hour` | hora com mais completions |
+| `therapist.peak_hour` | hora com mais logins |
+| `patient.avg_completion_minutes` | diff link_opened → submitted |
 
----
+### Categoria D — Saúde do App (erros e UX)
+Métricas de erro agregadas para priorizar fixes.
 
-## Implementação técnica
+| Métrica | Fonte |
+|---------|-------|
+| `error.server.{operation}` | console.error em server functions (contagem por operação) |
+| `error.magic_link` | falhas de resolve/submit (token inválido, expirado, rate limited) |
+| `error.client.{route}` | error boundary reporter (rota + error name, sem stack) |
 
-1. **Refatorar** `habit-report.server.ts` → criar `buildHabitReportPDF(params, variant: 'patient' | 'therapist')`
-2. **Criar** `habit-report.functions.ts` → 2 server functions: `generateHabitReportPatient` e `generateHabitReportTherapist`
-3. **Seguir 100%** as regras do template travado: header 18mm com icon real, watermark 4.5%, footer completo com paginação dinâmica 2-pass, checkPage antes de todo bloco fixo, font reset após page break
-4. **Integrar** na aba de Habit Tracking do perfil do paciente: 2 botões (Relatório Paciente / Relatório Terapeuta) nos padrões de cor existentes (teal / rosa queimado)
-5. **Audit log**: `habit_report.patient_generated` / `habit_report.therapist_generated`
-6. **Salvar template** em memory como design travado
+## 3. Arquivos a criar/editar
 
----
+### Novos
+- **`src/features/analytics/aggregate-analytics.server.ts`** — Lógica de agregação: lê audit_logs do dia anterior, agrupa por hora/métrica, faz upsert em platform_analytics. Inclui cálculo de completion_rate e habit_return_rate.
+- **`src/features/analytics/analytics.functions.ts`** — Server functions admin-only: `getAnalyticsDashboard` (dados para gráficos), `getWeeklyInsights` (resumo textual semanal), `exportAnalyticsCSV`, `triggerAggregation` (botão manual).
+- **`src/features/analytics/weekly-insights.server.ts`** — Gerador de insights semanais automáticos: compara semana atual vs anterior, identifica tendências (ex: "completion rate subiu 12%", "logins caíram 8%"), retorna lista de bullet points factuais.
+- **`src/features/analytics/error-tracker.server.ts`** — Interceptor leve: função `trackServerError(operation, errorCode)` que faz INSERT direto na platform_analytics (contagem por hora/operação). Chamada nos catch blocks existentes das server functions.
+- **`src/routes/api/public/hooks/aggregate-analytics.ts`** — Cron endpoint com verificação de secret (`ANALYTICS_HOOK_SECRET`). Chama aggregatePlatformAnalytics para o dia anterior.
+- **`src/routes/_authenticated/admin.analytics.tsx`** — Dashboard admin com 4 abas (Comercial, Engajamento, Produto, Erros). Gráficos com recharts. Botão "Agregar agora" + "Exportar CSV". Seção "Insights da Semana" no topo.
 
-## O que NÃO muda
+### Editados
+- **`src/server/admin.functions.ts`** — Adicionar import do analytics para navegação.
+- **`src/routes/_authenticated/admin.index.tsx`** — Adicionar link/card para "Analytics" no painel admin.
+- **Server functions com console.error**  — Adicionar chamada a `trackServerError` nos catch blocks de: `activities.functions.ts`, `habits.functions.ts`, `public-activities.functions.ts`. Leve: 1 linha por catch.
 
-- Fluxo de magic link existente (escalas/worksheets)
-- PatientPickerSheet e geração de habit links
-- Tabelas no banco (habit_links, habit_entries)
-- Nenhum outro PDF existente é alterado
+## 4. Dashboard Admin — Layout
 
-Leda, aprova essa estrutura? Quer ajustar alguma seção, adicionar/remover dados, ou mudar a hierarquia visual?
+```text
+┌──────────────────────────────────────────────┐
+│  ANALYTICS DE PLATAFORMA          [Agregar] [CSV] │
+├──────────────────────────────────────────────┤
+│  📊 INSIGHTS DA SEMANA                        │
+│  • Completion rate: 78% (+12% vs semana ant.) │
+│  • DAU: 3 workspaces ativos/dia              │
+│  • Pico pacientes: 8h-9h (32% das completions)│
+│  • 2 erros em /p/$token (rate limit)         │
+├──────────────────────────────────────────────┤
+│  [Comercial] [Engajamento] [Produto] [Erros]  │
+│                                               │
+│  (gráficos da aba selecionada)               │
+└──────────────────────────────────────────────┘
+```
+
+- Recharts (já instalado? senão bun add). Gráficos leves, brand colors.
+- Período selecionável: 7d, 30d, 90d.
+- Exportar CSV: download direto com todas as métricas do período.
+
+## 5. Insights Semanais Automáticos
+
+A função `getWeeklyInsights` compara a semana corrente (até hoje) com a anterior e gera bullets factuais:
+
+- Variações >10% são destacadas (positivas em Sage, negativas em Mauve)
+- Formato: "{métrica}: {valor} ({variação}% vs semana anterior)"
+- Sem interpretação clínica, sem linguagem inflada
+- Exemplos: "Completion rate: 78% (+12%)", "Habit entries: 34 (-5%)", "Server errors: 2 (new: submitActivity)"
+
+## 6. Error Tracking (leve e desidentificado)
+
+Não é um Sentry. É contagem agregada por operação + hora.
+
+- `trackServerError("submitActivity", "PGRST301")` → incrementa `error.server.submitActivity` na platform_analytics
+- `trackServerError("resolveToken", "EXPIRED")` → incrementa `error.magic_link`  
+- Client error boundary: POST para server function com `{ route, errorName }` → incrementa `error.client./patients`
+- Zero stack trace, zero PHI, zero user_id
+
+## 7. Privacy Policy
+
+Parágrafo a adicionar (EN-US, landing/terms):
+
+> "We collect anonymized, aggregate usage data — such as day of week, time of day, and feature usage counts — to improve our platform and measure engagement. No individual or identifiable data is collected, stored, or shared. These metrics cannot be linked back to any specific person, workspace, or clinical record."
+
+## 8. Cron (configuração posterior)
+
+pg_cron chamando `/api/public/hooks/aggregate-analytics` diariamente às 3h UTC. Inicialmente Leda pode rodar manualmente via botão "Agregar agora" no dashboard.
+
+## 9. Secret necessário
+
+`ANALYTICS_HOOK_SECRET` — para o cron endpoint. Será solicitado via add_secret.
+
+## O que NÃO será feito
+- Nenhum dado per-workspace ou per-user
+- Nenhum cruzamento com PHI
+- Nenhum PostHog, GA, Sentry, ou tracking externo
+- Nenhum tracking em rotas públicas do paciente (/p/$token, /h/$token)
+- Nenhum stack trace ou payload de erro
