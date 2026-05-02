@@ -90,6 +90,7 @@ import { Progress } from "@/components/ui/progress";
 
 const patientSearchSchema = z.object({
   startSession: z.string().uuid().optional(),
+  openAssign: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
@@ -331,7 +332,7 @@ function formatClinicalFlagLabel(flag: unknown): string {
 
 function PatientDetailPage() {
   const { id } = useParams({ from: "/_authenticated/patients/$id" });
-  const { startSession } = Route.useSearch();
+  const { startSession, openAssign } = Route.useSearch();
 
   const patientQuery = useQuery({
     queryKey: ["patient", id],
@@ -379,6 +380,7 @@ function PatientDetailPage() {
         patientId={patient.id}
         workspaceId={patient.workspace_id}
         startSession={startSession}
+        openAssign={openAssign}
       />
     </div>
   );
@@ -388,10 +390,12 @@ function PatientTabs({
   patientId,
   workspaceId,
   startSession,
+  openAssign,
 }: {
   patientId: string;
   workspaceId: string;
   startSession?: string;
+  openAssign?: string;
 }) {
   const roleQuery = useQuery({
     queryKey: ["my-workspace-role", workspaceId],
@@ -408,7 +412,7 @@ function PatientTabs({
       </TabsList>
 
       <TabsContent value="activities" className="mt-6">
-        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} startSession={startSession} />
+        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} startSession={startSession} openAssign={openAssign} />
       </TabsContent>
 
       {isOwner && (
@@ -428,9 +432,10 @@ interface ActivitiesTabProps {
   patientId: string;
   workspaceId: string;
   startSession?: string;
+  openAssign?: string;
 }
 
-function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabProps) {
+function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: ActivitiesTabProps) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [revealedLink, setRevealedLink] = useState<{
@@ -448,6 +453,14 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
   const [viewResponseId, setViewResponseId] = useState<string | null>(null);
 
   const [startSessionConsumed, setStartSessionConsumed] = useState(false);
+  const [openAssignConsumed, setOpenAssignConsumed] = useState(false);
+
+  // Auto-open assign dialog when navigated from Acervo with openAssign param
+  useEffect(() => {
+    if (!openAssign || openAssignConsumed) return;
+    setOpen(true);
+    setOpenAssignConsumed(true);
+  }, [openAssign, openAssignConsumed]);
 
   const downloadScaleResult = async (
     responseId: string,
@@ -912,6 +925,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
         onOpenChange={setOpen}
         patientId={patientId}
         workspaceId={workspaceId}
+        defaultActivityId={openAssign}
         onLinkGenerated={(payload) => setRevealedLink(payload)}
       />
 
@@ -1143,6 +1157,7 @@ interface AssignDialogProps {
   onOpenChange: (open: boolean) => void;
   patientId: string;
   workspaceId: string;
+  defaultActivityId?: string;
   onLinkGenerated: (payload: { url: string; patientActivityId: string }) => void;
 }
 
@@ -1151,12 +1166,18 @@ function AssignActivityDialog({
   onOpenChange,
   patientId,
   workspaceId,
+  defaultActivityId,
   onLinkGenerated,
 }: AssignDialogProps) {
   const qc = useQueryClient();
-  const [activityId, setActivityId] = useState<string>("");
+  const [activityId, setActivityId] = useState<string>(defaultActivityId ?? "");
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("shared_link");
   const [expiresInDays, setExpiresInDays] = useState<number>(7);
+
+  // Sync pre-selected activity from Acervo navigation
+  useEffect(() => {
+    if (defaultActivityId && open) setActivityId(defaultActivityId);
+  }, [defaultActivityId, open]);
 
   const catalogQuery = useQuery({
     queryKey: ["activity-catalog"],

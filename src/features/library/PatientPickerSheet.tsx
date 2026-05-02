@@ -15,7 +15,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Play, Users } from "lucide-react";
+import { Search, Play, Users, Send } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -42,6 +42,8 @@ interface PatientPickerSheetProps {
   /** Atividade selecionada no Acervo (seed/catalog shape). */
   activity: Activity | null;
   workspaceId: string | undefined;
+  /** Modo de entrega — in_session abre player, shared_link navega pro modal de envio. */
+  mode?: "in_session" | "shared_link";
 }
 
 export function PatientPickerSheet({
@@ -49,6 +51,7 @@ export function PatientPickerSheet({
   onOpenChange,
   activity,
   workspaceId,
+  mode = "in_session",
 }: PatientPickerSheetProps) {
   const navigate = useNavigate();
   const qc = useQueryClient();
@@ -146,6 +149,27 @@ export function PatientPickerSheet({
     },
   });
 
+  const handlePatientSelect = (patientId: string) => {
+    if (mode === "shared_link") {
+      // Navigate to patient page with assign dialog pre-opened
+      const realId = findRealActivityId();
+      if (!realId) {
+        toast.error("Atividade não disponível no workspace.");
+        return;
+      }
+      onOpenChange(false);
+      setSearch("");
+      navigate({
+        to: "/patients/$id",
+        params: { id: patientId },
+        search: { openAssign: realId },
+      });
+    } else {
+      assignMutation.mutate(patientId);
+    }
+  };
+
+  const isSharedLink = mode === "shared_link";
   const patients = patientsQuery.data?.patients ?? [];
   const isLoading = patientsQuery.isLoading || catalogQuery.isLoading;
 
@@ -158,8 +182,10 @@ export function PatientPickerSheet({
           </SheetTitle>
           <SheetDescription>
             {activity
-              ? `Aplicar ${activity.name} em sessão — escolha quem atender agora.`
-              : "Escolha um paciente para aplicar a atividade em sessão."}
+              ? isSharedLink
+                ? `Enviar ${activity.name} por link — escolha o paciente.`
+                : `Aplicar ${activity.name} em sessão — escolha quem atender agora.`
+              : "Escolha um paciente."}
           </SheetDescription>
         </SheetHeader>
 
@@ -197,7 +223,7 @@ export function PatientPickerSheet({
                   key={p.id}
                   type="button"
                   disabled={assignMutation.isPending}
-                  onClick={() => assignMutation.mutate(p.id)}
+                  onClick={() => handlePatientSelect(p.id)}
                   className="
                     flex w-full items-center justify-between gap-3 rounded-lg
                     px-3 py-3 text-left
@@ -216,7 +242,11 @@ export function PatientPickerSheet({
                       </p>
                     )}
                   </div>
-                  <Play className="h-4 w-4 shrink-0 text-sage" />
+                  {isSharedLink ? (
+                    <Send className="h-4 w-4 shrink-0 text-sage" />
+                  ) : (
+                    <Play className="h-4 w-4 shrink-0 text-sage" />
+                  )}
                 </button>
               ))}
             </div>
@@ -225,8 +255,9 @@ export function PatientPickerSheet({
 
         {/* Nota de segurança */}
         <p className="mt-auto border-t border-border pt-3 text-[0.6875rem] text-muted-foreground">
-          A sessão dura 1 hora. O paciente responde no seu dispositivo — sem
-          criar conta.
+          {isSharedLink
+            ? "Você enviará o link pelo seu canal preferido — WhatsApp, SMS ou email."
+            : "A sessão dura 1 hora. O paciente responde no seu dispositivo — sem criar conta."}
         </p>
       </SheetContent>
     </Sheet>
