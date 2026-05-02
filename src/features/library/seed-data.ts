@@ -1,4 +1,3 @@
-/** @updated 2026-05-02 */
 /**
  * Seed data do Acervo — dados estáticos de fallback (TEMPORÁRIO).
  *
