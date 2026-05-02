@@ -2,8 +2,15 @@
  * Habit Progress Report — server-only PDF generation.
  *
  * Two variants:
- *  - PATIENT ("Mindfulness Practice Summary"): motivational, streak-focused, last 10 entries
- *  - THERAPIST ("Mindfulness Adherence Report"): analytical, patterns, gaps, all entries
+ *  - PATIENT ("Mindfulness Practice Summary"): motivational, streak-focused, practice highlights
+ *  - THERAPIST ("Mindfulness Adherence Report"): analytical, patterns, gaps, trend, all entries
+ *
+ * Level 1 enhancements (approved):
+ *  - Practice Highlights (patient): factual phrases celebrating consistency
+ *  - Best Pattern: text below heatmap identifying best day/time
+ *  - Timeline with events: milestone icons, gap markers, longest sessions
+ *  - Numeric Trend (therapist): week-over-week % comparison
+ *  - Consistency Index (both): 0-100 score with disclaimer
  *
  * Brand rules: identical to Scale Result / Compliance Report template (Navy header 18mm,
  * watermark 4.5%, footer with dynamic pagination, checkPage before fixed blocks).
@@ -47,6 +54,9 @@ const CW = PAGE_W - M * 2;
 const FOOTER_ZONE = PAGE_H - 22;
 const BAR_H = 18; // header bar height
 const CONTENT_GAP = 9;
+
+// Milestone thresholds
+const MILESTONES = [7, 14, 21, 30, 60];
 
 type Variant = "patient" | "therapist";
 
@@ -136,6 +146,84 @@ export async function buildHabitReportPDF(
     countByDay[d] = (countByDay[d] ?? 0) + 1;
   }
 
+  // Day of week and period analysis (used by both variants now)
+  const dowCounts = [0, 0, 0, 0, 0, 0, 0];
+  const periodCounts = { morning: 0, afternoon: 0, evening: 0 };
+  let minDur = Infinity, maxDur = 0;
+  for (const e of entries) {
+    const d = new Date(e.completed_at);
+    dowCounts[d.getDay()]++;
+    const hour = d.getHours();
+    if (hour < 12) periodCounts.morning++;
+    else if (hour < 18) periodCounts.afternoon++;
+    else periodCounts.evening++;
+    if (e.duration_seconds != null) {
+      if (e.duration_seconds < minDur) minDur = e.duration_seconds;
+      if (e.duration_seconds > maxDur) maxDur = e.duration_seconds;
+    }
+  }
+
+  // Best day & best period
+  const dowLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const bestDowIdx = dowCounts.indexOf(Math.max(...dowCounts));
+  const bestDow = dowLabels[bestDowIdx];
+  const periodLabelsMap = { morning: "Morning", afternoon: "Afternoon", evening: "Evening" };
+  const bestPeriod = Object.entries(periodCounts).sort((a, b) => b[1] - a[1])[0];
+
+  // Consistency Index (0-100)
+  const consistencyIndex = calcConsistencyIndex(uniqueDays, entries.length);
+
+  // Weekly trend (last 2 weeks comparison)
+  const thisWeekCount = countEntriesInRange(entries, 0, 7, today);
+  const lastWeekCount = countEntriesInRange(entries, 7, 14, today);
+  const trendPercent = lastWeekCount === 0 ? (thisWeekCount > 0 ? 100 : 0) : Math.round(((thisWeekCount - lastWeekCount) / lastWeekCount) * 100);
+  const trendArrow = trendPercent > 0 ? "↑" : trendPercent < 0 ? "↓" : "→";
+
+  // Gaps calculation (reused in both variants)
+  const gaps: { start: string; end: string; days: number }[] = [];
+  for (let i = 1; i < uniqueDays.length; i++) {
+    const prev = new Date(uniqueDays[i - 1]);
+    const curr = new Date(uniqueDays[i]);
+    const diff = Math.round((curr.getTime() - prev.getTime()) / 86400000);
+    if (diff > 3) {
+      gaps.push({ start: uniqueDays[i - 1], end: uniqueDays[i], days: diff });
+    }
+  }
+
+  // Milestones reached
+  const milestonesReached = MILESTONES.filter(m => uniqueDays.length >= m);
+
+  // Longest session
+  let longestSessionEntry: HabitEntry | null = null;
+  for (const e of entries) {
+    if (e.duration_seconds != null && (!longestSessionEntry || (e.duration_seconds > (longestSessionEntry.duration_seconds ?? 0)))) {
+      longestSessionEntry = e;
+    }
+  }
+
+  // Practice highlights (patient only — factual phrases)
+  const highlights: string[] = [];
+  if (currentStreak >= 3) {
+    highlights.push(`You've practiced ${currentStreak} days in a row.`);
+  }
+  if (longestStreak >= 7) {
+    highlights.push(`Your longest streak reached ${longestStreak} consecutive days.`);
+  }
+  if (entries.length >= 10) {
+    highlights.push(`You've completed ${entries.length} sessions so far.`);
+  }
+  if (adherencePercent >= 70) {
+    highlights.push(`Your adherence rate is ${adherencePercent}% — above average.`);
+  }
+  if (uniqueDays.length >= 21) {
+    highlights.push(`You've been active on ${uniqueDays.length} different days.`);
+  }
+  if (bestPeriod[1] > 0 && entries.length >= 5) {
+    highlights.push(`${periodLabelsMap[bestPeriod[0] as keyof typeof periodLabelsMap]}s on ${bestDow}s seem to work best for you.`);
+  }
+  // Cap at 4
+  const finalHighlights = highlights.slice(0, 4);
+
   // ── PDF ──
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   let y = 0;
@@ -173,7 +261,6 @@ export async function buildHabitReportPDF(
     doc.setLineWidth(0.3);
     doc.line(M, fy - 2, PAGE_W - M, fy - 2);
 
-    // Left: icon + wordmark
     try {
       doc.addImage(`data:image/png;base64,${ICON_PNG_B64}`, "PNG", M, fy - 1, 4, 4);
     } catch { /* ignore */ }
@@ -189,13 +276,11 @@ export async function buildHabitReportPDF(
     doc.setTextColor(...CHARCOAL);
     doc.text(`· ${new Date().getFullYear()}`, M + 5 + tw2 + 2, fy + 2);
 
-    // Center: pagination
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...CHARCOAL);
     doc.text(`${page} / ${total}`, PAGE_W / 2, fy + 2, { align: "center" });
 
-    // Right: disclaimer
     doc.setFontSize(5.5);
     doc.setTextColor(153, 153, 153);
     const disclaimer = variant === "therapist"
@@ -215,6 +300,15 @@ export async function buildHabitReportPDF(
     return currentY;
   }
 
+  // ── Section header helper ──
+  function sectionTitle(text: string, atY: number): number {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...NAVY);
+    doc.text(text, M, atY);
+    return atY + 5;
+  }
+
   // ── Page 1 ──
   drawWatermark();
   y = drawHeader();
@@ -226,8 +320,7 @@ export async function buildHabitReportPDF(
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.setTextColor(...RED);
-    const bandText = "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION";
-    doc.text(bandText, PAGE_W / 2, y + 6, { align: "center" });
+    doc.text("CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION", PAGE_W / 2, y + 6, { align: "center" });
     y += 12;
   } else {
     y += 5;
@@ -282,7 +375,29 @@ export async function buildHabitReportPDF(
   }
   y += infoBoxH + 8;
 
-  // ── Streak Hero ──
+  // ── Practice Highlights (patient only) ──
+  if (variant === "patient" && finalHighlights.length > 0) {
+    y = checkPage(y, 10 + finalHighlights.length * 6);
+    doc.setFillColor(237, 245, 239); // sage bg
+    doc.roundedRect(M, y, CW, 8 + finalHighlights.length * 5.5, 2, 2, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...SAGE);
+    doc.text("PRACTICE HIGHLIGHTS", M + 4, y + 6);
+
+    let hy = y + 11;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...CHARCOAL);
+    for (const h of finalHighlights) {
+      doc.text(`•  ${h}`, M + 6, hy);
+      hy += 5.5;
+    }
+    y += 10 + finalHighlights.length * 5.5 + 4;
+  }
+
+  // ── Streak Hero + Consistency Index ──
   y = checkPage(y, 36);
   doc.setFillColor(...CARD_COLORS.sage.bg);
   doc.roundedRect(M, y, CW, 30, 3, 3, "F");
@@ -335,9 +450,66 @@ export async function buildHabitReportPDF(
   }
   y += 36;
 
+  // ── Consistency Index ──
+  y = checkPage(y, 22);
+  doc.setFillColor(247, 245, 240); // cream bg
+  doc.roundedRect(M, y, CW, 16, 2, 2, "F");
+
+  // Score circle
+  const ciX = M + 14;
+  const ciY = y + 8;
+  const ciRadius = 5.5;
+  // Background circle
+  doc.setDrawColor(220, 218, 210);
+  doc.setLineWidth(1.8);
+  doc.circle(ciX, ciY, ciRadius, "S");
+  // Filled arc (approximate with color)
+  if (consistencyIndex > 0) {
+    const ciColor = consistencyIndex >= 70 ? SAGE : consistencyIndex >= 40 ? CARD_COLORS.amber.accent : MAUVE;
+    doc.setDrawColor(...ciColor);
+    doc.setLineWidth(1.8);
+    // Draw partial arc as a visual indicator
+    const arcAngle = (consistencyIndex / 100) * 360;
+    const steps = Math.max(1, Math.round(arcAngle / 10));
+    for (let s = 0; s < steps; s++) {
+      const a1 = -90 + (s / steps) * arcAngle;
+      const a2 = -90 + ((s + 1) / steps) * arcAngle;
+      const x1 = ciX + ciRadius * Math.cos((a1 * Math.PI) / 180);
+      const y1c = ciY + ciRadius * Math.sin((a1 * Math.PI) / 180);
+      const x2 = ciX + ciRadius * Math.cos((a2 * Math.PI) / 180);
+      const y2c = ciY + ciRadius * Math.sin((a2 * Math.PI) / 180);
+      doc.line(x1, y1c, x2, y2c);
+    }
+  }
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...NAVY);
+  doc.text(`${consistencyIndex}`, ciX, ciY + 2, { align: "center" });
+
+  // Label
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...NAVY);
+  doc.text("Consistency Index", M + 26, y + 6);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...CHARCOAL);
+  const ciDesc = consistencyIndex >= 70
+    ? "High regularity in practice frequency and timing."
+    : consistencyIndex >= 40
+    ? "Moderate regularity — practice occurs but with some variability."
+    : "Building a routine — frequency and timing are still variable.";
+  doc.text(ciDesc, M + 26, y + 11);
+
+  // Disclaimer
+  doc.setFontSize(5);
+  doc.setTextColor(153, 153, 153);
+  doc.text("This index measures practice regularity, not clinical outcomes. It is not a health metric.", M + 26, y + 15);
+
+  y += 20;
+
   // ── Stats Cards ──
   y = checkPage(y, 24);
-  const cardKeys = Object.keys(CARD_COLORS) as (keyof typeof CARD_COLORS)[];
   const statsData = [
     { label: "TOTAL SESSIONS", value: `${entries.length}`, colorKey: "sage" as const },
     { label: "ACTIVE DAYS", value: `${uniqueDays.length}`, colorKey: "mauve" as const },
@@ -346,7 +518,7 @@ export async function buildHabitReportPDF(
     { label: "AVG/DAY", value: uniqueDays.length > 0 ? `${(entries.length / uniqueDays.length).toFixed(1)}` : "—", colorKey: "amber" as const },
   ];
 
-  const cardW = (CW - 4 * 3) / 5; // 5 cards with 3mm gaps
+  const cardW = (CW - 4 * 3) / 5;
   for (let i = 0; i < statsData.length; i++) {
     const cx = M + i * (cardW + 3);
     const colors = CARD_COLORS[statsData[i].colorKey];
@@ -365,13 +537,39 @@ export async function buildHabitReportPDF(
   }
   y += 24;
 
+  // ── Milestones (if any reached) ──
+  if (milestonesReached.length > 0) {
+    y = checkPage(y, 14);
+    y = sectionTitle("MILESTONES REACHED", y);
+    const msW = CW / MILESTONES.length;
+    for (let i = 0; i < MILESTONES.length; i++) {
+      const mx = M + i * msW + msW / 2;
+      const reached = milestonesReached.includes(MILESTONES[i]);
+      // Circle
+      if (reached) {
+        doc.setFillColor(...SAGE);
+        doc.circle(mx, y + 3, 3.5, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6);
+        doc.setTextColor(...WHITE);
+        doc.text("✓", mx, y + 4.5, { align: "center" });
+      } else {
+        doc.setDrawColor(220, 218, 210);
+        doc.setLineWidth(0.5);
+        doc.circle(mx, y + 3, 3.5, "S");
+      }
+      // Label
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(5);
+      doc.setTextColor(reached ? NAVY[0] : 180, reached ? NAVY[1] : 180, reached ? NAVY[2] : 180);
+      doc.text(`${MILESTONES[i]}d`, mx, y + 9, { align: "center" });
+    }
+    y += 14;
+  }
+
   // ── Heatmap (8 weeks = 56 days) ──
-  y = checkPage(y, 50);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(...NAVY);
-  doc.text("ACTIVITY HEATMAP — 8 WEEKS", M, y);
-  y += 5;
+  y = checkPage(y, 55);
+  y = sectionTitle("ACTIVITY HEATMAP — 8 WEEKS", y);
 
   const cellSize = 5;
   const cellGap = 1.2;
@@ -385,14 +583,14 @@ export async function buildHabitReportPDF(
   const hmMax = Math.max(1, ...heatmapDays.map((d) => d.count));
 
   // Day labels
-  const dayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const dayLabelsShort = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const labelOffset = 10;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(5);
   doc.setTextColor(150, 150, 150);
   for (let r = 0; r < 7; r++) {
     if (r % 2 === 1) {
-      doc.text(dayLabels[r], M, y + r * (cellSize + cellGap) + cellSize / 2 + 1);
+      doc.text(dayLabelsShort[r], M, y + r * (cellSize + cellGap) + cellSize / 2 + 1);
     }
   }
 
@@ -441,15 +639,22 @@ export async function buildHabitReportPDF(
   }
   doc.text("More", legendX + 8 + 5 * (cellSize + 0.8) + 1, legendY + 3);
 
-  y += 7 * (cellSize + cellGap) + 8;
+  y += 7 * (cellSize + cellGap) + 4;
+
+  // ── Best Pattern (below heatmap) ──
+  if (entries.length >= 3) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...SAGE);
+    doc.text(`Best pattern: ${bestDow}s, ${periodLabelsMap[bestPeriod[0] as keyof typeof periodLabelsMap]} (${bestPeriod[1]} of ${entries.length} sessions)`, M, y + 2);
+    y += 7;
+  } else {
+    y += 3;
+  }
 
   // ── Daily Frequency Chart (30 days) ──
   y = checkPage(y, 50);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.setTextColor(...NAVY);
-  doc.text("DAILY FREQUENCY — LAST 30 DAYS", M, y);
-  y += 5;
+  y = sectionTitle("DAILY FREQUENCY — LAST 30 DAYS", y);
 
   const chartH = 35;
   const last30: { date: string; count: number }[] = [];
@@ -486,7 +691,6 @@ export async function buildHabitReportPDF(
     const bw = barW * 0.7;
 
     if (barHeight > 0) {
-      // Gradient effect: darker bars for higher counts
       const ratio = last30[i].count / maxCount;
       const r = Math.round(126 - ratio * 95);
       const g = Math.round(155 - ratio * 113);
@@ -494,7 +698,6 @@ export async function buildHabitReportPDF(
       doc.setFillColor(r, g, b);
       doc.roundedRect(bx, y + chartH - barHeight, bw, barHeight, 0.8, 0.8, "F");
 
-      // Value label on top
       if (last30[i].count > 0) {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(4.5);
@@ -514,23 +717,41 @@ export async function buildHabitReportPDF(
   }
   y += chartH + 10;
 
+  // ── THERAPIST-ONLY: Numeric Trend ──
+  if (variant === "therapist") {
+    y = checkPage(y, 18);
+    doc.setFillColor(237, 245, 239); // sage bg
+    doc.roundedRect(M, y, CW, 12, 2, 2, "F");
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...NAVY);
+    doc.text("WEEKLY TREND", M + 4, y + 5);
+
+    const trendColor = trendPercent > 0 ? SAGE : trendPercent < 0 ? RED : CHARCOAL;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...trendColor);
+    doc.text(`${trendArrow} ${Math.abs(trendPercent)}%`, M + 50, y + 7);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7);
+    doc.setTextColor(...CHARCOAL);
+    doc.text(`This week: ${thisWeekCount} sessions  |  Last week: ${lastWeekCount} sessions`, M + 80, y + 7);
+
+    y += 16;
+  }
+
   // ── THERAPIST-ONLY: Weekly Comparison ──
   if (variant === "therapist") {
     y = checkPage(y, 50);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...NAVY);
-    doc.text("WEEKLY COMPARISON — LAST 8 WEEKS", M, y);
-    y += 5;
+    y = sectionTitle("WEEKLY COMPARISON — LAST 8 WEEKS", y);
 
     const weeklyCounts: { label: string; count: number }[] = [];
     for (let w = 7; w >= 0; w--) {
       const weekStart = new Date(today);
       weekStart.setDate(weekStart.getDate() - w * 7);
-      const weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
       let wCount = 0;
-      const wsKey = weekStart.toISOString().slice(0, 10);
       for (let d = 0; d < 7; d++) {
         const dd = new Date(weekStart);
         dd.setDate(dd.getDate() + d);
@@ -570,33 +791,10 @@ export async function buildHabitReportPDF(
 
   // ── THERAPIST-ONLY: Day-of-week patterns ──
   if (variant === "therapist") {
-    y = checkPage(y, 40);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...NAVY);
-    doc.text("PRACTICE PATTERNS", M, y);
-    y += 6;
+    y = checkPage(y, 55);
+    y = sectionTitle("PRACTICE PATTERNS", y);
+    y += 1;
 
-    // Day of week frequency
-    const dowCounts = [0, 0, 0, 0, 0, 0, 0];
-    const periodCounts = { morning: 0, afternoon: 0, evening: 0 };
-    let minDur = Infinity, maxDur = 0;
-
-    for (const e of entries) {
-      const d = new Date(e.completed_at);
-      dowCounts[d.getDay()]++;
-      const hour = d.getHours();
-      if (hour < 12) periodCounts.morning++;
-      else if (hour < 18) periodCounts.afternoon++;
-      else periodCounts.evening++;
-      if (e.duration_seconds != null) {
-        if (e.duration_seconds < minDur) minDur = e.duration_seconds;
-        if (e.duration_seconds > maxDur) maxDur = e.duration_seconds;
-      }
-    }
-
-    // Table
-    const dowLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const dowMax = Math.max(1, ...dowCounts);
 
     // Header
@@ -607,9 +805,9 @@ export async function buildHabitReportPDF(
     doc.setTextColor(...WHITE);
     doc.text("DAY", M + 3, y + 4.5);
     doc.text("SESSIONS", M + 25, y + 4.5);
-    doc.text("", M + 45, y + 4.5);
     y += 8;
 
+    const dowLabelsShortFull = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     for (let d = 0; d < 7; d++) {
       if (d % 2 === 0) {
         doc.setFillColor(249, 247, 243);
@@ -618,10 +816,9 @@ export async function buildHabitReportPDF(
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(...CHARCOAL);
-      doc.text(dowLabels[d], M + 3, y + 3.8);
+      doc.text(dowLabelsShortFull[d], M + 3, y + 3.8);
       doc.text(`${dowCounts[d]}`, M + 28, y + 3.8);
 
-      // Mini bar
       const barLen = dowCounts[d] === 0 ? 0 : (dowCounts[d] / dowMax) * 40;
       if (barLen > 0) {
         doc.setFillColor(...SAGE);
@@ -630,14 +827,13 @@ export async function buildHabitReportPDF(
       y += 5.5;
     }
 
-    // Preferred time
     y += 3;
-    const periodLabels = { morning: "Morning (6am–12pm)", afternoon: "Afternoon (12pm–6pm)", evening: "Evening (6pm–12am)" };
+    const periodLabelsDetailed = { morning: "Morning (6am-12pm)", afternoon: "Afternoon (12pm-6pm)", evening: "Evening (6pm-12am)" };
     const preferred = Object.entries(periodCounts).sort((a, b) => b[1] - a[1])[0];
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7);
     doc.setTextColor(...CHARCOAL);
-    doc.text(`Preferred time: ${periodLabels[preferred[0] as keyof typeof periodLabels]} (${preferred[1]} sessions)`, M, y);
+    doc.text(`Preferred time: ${periodLabelsDetailed[preferred[0] as keyof typeof periodLabelsDetailed]} (${preferred[1]} sessions)`, M, y);
     y += 5;
 
     if (minDur < Infinity) {
@@ -652,103 +848,23 @@ export async function buildHabitReportPDF(
   }
 
   // ── THERAPIST-ONLY: Inactivity Gaps ──
-  if (variant === "therapist" && uniqueDays.length >= 2) {
-    const gaps: { start: string; end: string; days: number }[] = [];
-    for (let i = 1; i < uniqueDays.length; i++) {
-      const prev = new Date(uniqueDays[i - 1]);
-      const curr = new Date(uniqueDays[i]);
-      const diff = Math.round((curr.getTime() - prev.getTime()) / 86400000);
-      if (diff > 3) {
-        gaps.push({ start: uniqueDays[i - 1], end: uniqueDays[i], days: diff });
-      }
-    }
+  if (variant === "therapist" && gaps.length > 0) {
+    y = checkPage(y, 12 + Math.min(gaps.length, 10) * 7);
+    y = sectionTitle("INACTIVITY GAPS (> 3 DAYS)", y);
+    y += 1;
 
-    if (gaps.length > 0) {
-      y = checkPage(y, 12 + gaps.length * 7);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(8);
-      doc.setTextColor(...NAVY);
-      doc.text("INACTIVITY GAPS (> 3 DAYS)", M, y);
-      y += 6;
-
-      for (const gap of gaps.slice(0, 10)) {
-        y = checkPage(y, 8);
-        doc.setFillColor(...CARD_COLORS.mauve.bg);
-        doc.roundedRect(M, y, CW, 6, 1, 1, "F");
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(6.5);
-        doc.setTextColor(...CHARCOAL);
-        doc.text(`${formatDate(gap.start)} → ${formatDate(gap.end)}`, M + 3, y + 4);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(...MAUVE);
-        doc.text(`${gap.days} days`, M + CW - 3, y + 4, { align: "right" });
-        y += 7;
-      }
-      y += 4;
-    }
-  }
-
-  // ── Timeline ──
-  const maxEntries = variant === "patient" ? 10 : entries.length;
-  const timelineEntries = entries.slice(0, Math.min(maxEntries, 50));
-
-  if (timelineEntries.length > 0) {
-    y = checkPage(y, 18);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.setTextColor(...NAVY);
-    doc.text(variant === "patient" ? "RECENT SESSIONS" : "SESSION LOG", M, y);
-    y += 2;
-
-    // Table header
-    function drawTimelineHeader(startY: number): number {
-      doc.setFillColor(...NAVY);
-      doc.roundedRect(M, startY, CW, 7, 1, 1, "F");
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(6.5);
-      doc.setTextColor(...WHITE);
-      doc.text("DATE", M + 4, startY + 4.5);
-      doc.text("TIME", M + 40, startY + 4.5);
-      doc.text("DURATION", M + 70, startY + 4.5);
-      doc.text("CYCLES", M + 105, startY + 4.5);
-      return startY + 9;
-    }
-
-    y = drawTimelineHeader(y);
-    let prevTimelinePage = currentPage;
-
-    for (let i = 0; i < timelineEntries.length; i++) {
-      y = checkPage(y, 6);
-      if (currentPage !== prevTimelinePage) {
-        y = drawTimelineHeader(y);
-        prevTimelinePage = currentPage;
-      }
-
-      const e = timelineEntries[i];
-      if (i % 2 === 0) {
-        doc.setFillColor(249, 247, 243);
-        doc.rect(M, y, CW, 5.5, "F");
-      }
-
+    for (const gap of gaps.slice(0, 10)) {
+      y = checkPage(y, 8);
+      doc.setFillColor(...CARD_COLORS.mauve.bg);
+      doc.roundedRect(M, y, CW, 6, 1, 1, "F");
       doc.setFont("helvetica", "normal");
       doc.setFontSize(6.5);
       doc.setTextColor(...CHARCOAL);
-
-      const d = new Date(e.completed_at);
-      doc.text(d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), M + 4, y + 3.8);
-      doc.text(d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }), M + 40, y + 3.8);
-      doc.text(e.duration_seconds != null ? `${Math.round(e.duration_seconds / 60)} min` : "—", M + 70, y + 3.8);
-      doc.text(e.cycles_completed != null ? `${e.cycles_completed}` : "—", M + 105, y + 3.8);
-
-      y += 5.5;
-    }
-
-    if (variant === "patient" && entries.length > 10) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(6);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`+ ${entries.length - 10} earlier sessions`, M + 4, y + 3);
-      y += 6;
+      doc.text(`${formatDate(gap.start)} → ${formatDate(gap.end)}`, M + 3, y + 4);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(...MAUVE);
+      doc.text(`${gap.days} days`, M + CW - 3, y + 4, { align: "right" });
+      y += 7;
     }
     y += 4;
   }
@@ -756,7 +872,140 @@ export async function buildHabitReportPDF(
   // ── Notice ──
   y = checkPage(y, 36);
   if (variant === "patient") {
-    // Yellow notice box
+    const maxEntries = 10;
+    const timelineEntries = entries.slice(0, Math.min(maxEntries, entries.length));
+
+    if (timelineEntries.length > 0) {
+      y = checkPage(y, 18 + timelineEntries.length * 10);
+      y = sectionTitle("RECENT SESSIONS", y);
+      y += 2;
+
+      for (let i = 0; i < timelineEntries.length; i++) {
+        y = checkPage(y, 10);
+        const e = timelineEntries[i];
+        const d = new Date(e.completed_at);
+        const dur = e.duration_seconds != null ? Math.round(e.duration_seconds / 60) : null;
+
+        // Dot + connector line
+        const dotX = M + 4;
+        const dotY = y + 3;
+        const isLongest = longestSessionEntry && e.id === longestSessionEntry.id;
+        const dotR = isLongest ? 2.5 : 1.8;
+
+        doc.setFillColor(isLongest ? SAGE[0] : NAVY[0], isLongest ? SAGE[1] : NAVY[1], isLongest ? SAGE[2] : NAVY[2]);
+        doc.circle(dotX, dotY, dotR, "F");
+
+        // Connector to next
+        if (i < timelineEntries.length - 1) {
+          doc.setDrawColor(220, 218, 210);
+          doc.setLineWidth(0.3);
+          doc.line(dotX, dotY + dotR + 0.5, dotX, y + 9);
+        }
+
+        // Date & time
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7);
+        doc.setTextColor(...NAVY);
+        doc.text(d.toLocaleDateString("en-US", { month: "short", day: "numeric" }), M + 10, y + 3);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...CHARCOAL);
+        doc.text(d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }), M + 35, y + 3);
+
+        if (dur != null) {
+          doc.text(`${dur} min`, M + 55, y + 3);
+        }
+        if (e.cycles_completed != null) {
+          doc.text(`${e.cycles_completed} cycles`, M + 73, y + 3);
+        }
+
+        // Longest session marker
+        if (isLongest) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(5);
+          doc.setTextColor(...SAGE);
+          doc.text("LONGEST", M + CW - 3, y + 3, { align: "right" });
+        }
+
+        // Check if milestone day
+        const entryDate = d.toISOString().slice(0, 10);
+        const dayIndex = uniqueDays.indexOf(entryDate);
+        if (dayIndex >= 0 && MILESTONES.includes(dayIndex + 1)) {
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(5);
+          doc.setTextColor(...CARD_COLORS.amber.accent);
+          doc.text(`DAY ${dayIndex + 1}`, M + CW - 18, y + 3, { align: "right" });
+        }
+
+        y += 9;
+      }
+
+      if (entries.length > maxEntries) {
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        doc.setTextColor(150, 150, 150);
+        doc.text(`+ ${entries.length - maxEntries} earlier sessions`, M + 10, y + 1);
+        y += 5;
+      }
+      y += 4;
+    }
+  } else {
+    // Therapist: full session log table
+    const timelineEntries = entries.slice(0, 50);
+    if (timelineEntries.length > 0) {
+      y = checkPage(y, 18);
+      y = sectionTitle("SESSION LOG", y);
+      y += 2;
+
+      function drawTimelineHeader(startY: number): number {
+        doc.setFillColor(...NAVY);
+        doc.roundedRect(M, startY, CW, 7, 1, 1, "F");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...WHITE);
+        doc.text("DATE", M + 4, startY + 4.5);
+        doc.text("TIME", M + 40, startY + 4.5);
+        doc.text("DURATION", M + 70, startY + 4.5);
+        doc.text("CYCLES", M + 105, startY + 4.5);
+        return startY + 9;
+      }
+
+      y = drawTimelineHeader(y);
+      let prevTimelinePage = currentPage;
+
+      for (let i = 0; i < timelineEntries.length; i++) {
+        y = checkPage(y, 6);
+        if (currentPage !== prevTimelinePage) {
+          y = drawTimelineHeader(y);
+          prevTimelinePage = currentPage;
+        }
+
+        const e = timelineEntries[i];
+        if (i % 2 === 0) {
+          doc.setFillColor(249, 247, 243);
+          doc.rect(M, y, CW, 5.5, "F");
+        }
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6.5);
+        doc.setTextColor(...CHARCOAL);
+
+        const d = new Date(e.completed_at);
+        doc.text(d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), M + 4, y + 3.8);
+        doc.text(d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }), M + 40, y + 3.8);
+        doc.text(e.duration_seconds != null ? `${Math.round(e.duration_seconds / 60)} min` : "—", M + 70, y + 3.8);
+        doc.text(e.cycles_completed != null ? `${e.cycles_completed}` : "—", M + 105, y + 3.8);
+
+        y += 5.5;
+      }
+      y += 4;
+    }
+  }
+
+  // ── Notice ──
+  y = checkPage(y, 36);
+  if (variant === "patient") {
     doc.setFillColor(255, 248, 225);
     doc.setDrawColor(240, 208, 96);
     doc.setLineWidth(0.4);
@@ -773,7 +1022,7 @@ export async function buildHabitReportPDF(
     const noticeLines = [
       "This report shows your mindfulness practice frequency and consistency over time.",
       "It is provided for informational purposes and does not constitute a clinical assessment.",
-      "Your practice data is tracked automatically each time you complete a session.",
+      "The Consistency Index measures regularity of practice, not health outcomes.",
       "Please discuss your practice patterns with your therapist for personalized guidance.",
     ];
     let ny = y + 12;
@@ -782,7 +1031,6 @@ export async function buildHabitReportPDF(
       ny += 4;
     }
   } else {
-    // Therapist notices
     doc.setFont("times", "bold");
     doc.setFontSize(12);
     doc.setTextColor(...NAVY);
@@ -791,6 +1039,7 @@ export async function buildHabitReportPDF(
 
     const notices = [
       "This report is a platform-generated summary of mindfulness practice adherence data. It reproduces session timestamps, durations, and cycle counts exactly as recorded by the patient.",
+      "The Consistency Index (0-100) measures regularity of practice based on frequency, timing regularity, and gap penalization. It is not a clinical metric and should not be used to evaluate treatment efficacy.",
       "Clinical interpretation of adherence patterns, including the significance of gaps and frequency changes, remains the sole responsibility of the treating clinician.",
       "Practice data is recorded via reusable habit links and is not considered Protected Health Information (PHI) in isolation. However, when linked to patient identity, handle according to your practice's privacy policies.",
     ];
@@ -869,6 +1118,53 @@ function calcLongestStreak(sortedDatesAsc: string[]): number {
     }
   }
   return longest;
+}
+
+/**
+ * Consistency Index (0-100)
+ * - Frequency weight (40%): active days / total period
+ * - Regularity weight (30%): inverse of std dev of gaps between sessions
+ * - Gap penalty (30%): penalizes gaps > 3 days
+ */
+function calcConsistencyIndex(sortedDatesAsc: string[], totalEntries: number): number {
+  if (sortedDatesAsc.length < 2) return sortedDatesAsc.length === 1 ? 50 : 0;
+
+  const first = new Date(sortedDatesAsc[0]);
+  const last = new Date(sortedDatesAsc[sortedDatesAsc.length - 1]);
+  const totalDays = Math.max(1, Math.round((last.getTime() - first.getTime()) / 86400000) + 1);
+
+  // Frequency (40%)
+  const freqScore = Math.min(1, sortedDatesAsc.length / totalDays) * 40;
+
+  // Regularity (30%) — inverse of coefficient of variation of gaps
+  const gapsBetween: number[] = [];
+  for (let i = 1; i < sortedDatesAsc.length; i++) {
+    const diff = Math.round((new Date(sortedDatesAsc[i]).getTime() - new Date(sortedDatesAsc[i - 1]).getTime()) / 86400000);
+    gapsBetween.push(diff);
+  }
+  const avgGap = gapsBetween.reduce((s, g) => s + g, 0) / gapsBetween.length;
+  const variance = gapsBetween.reduce((s, g) => s + Math.pow(g - avgGap, 2), 0) / gapsBetween.length;
+  const stdDev = Math.sqrt(variance);
+  const cv = avgGap > 0 ? stdDev / avgGap : 0;
+  const regScore = Math.max(0, (1 - Math.min(cv, 2) / 2)) * 30;
+
+  // Gap penalty (30%) — penalize gaps > 3 days
+  const bigGaps = gapsBetween.filter(g => g > 3).length;
+  const gapRatio = gapsBetween.length > 0 ? bigGaps / gapsBetween.length : 0;
+  const gapScore = Math.max(0, (1 - gapRatio)) * 30;
+
+  return Math.round(freqScore + regScore + gapScore);
+}
+
+function countEntriesInRange(entries: HabitEntry[], daysAgo: number, daysAgoEnd: number, today: Date): number {
+  const start = new Date(today);
+  start.setDate(start.getDate() - daysAgoEnd);
+  const end = new Date(today);
+  end.setDate(end.getDate() - daysAgo);
+  return entries.filter(e => {
+    const d = new Date(e.completed_at);
+    return d >= start && d < end;
+  }).length;
 }
 
 function formatDate(iso: string): string {
