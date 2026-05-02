@@ -1101,3 +1101,150 @@ export const acknowledgeClinicalFlag = createServerFn({ method: "POST" })
 
     return { acknowledged: true };
   });
+
+// ── Authenticated draft save/load (in-session) ─────────────────────────
+
+const SaveDraftAuthSchema = z.object({
+  patientActivityId: z.string().uuid(),
+  draft: z.record(z.string().min(1).max(64), z.unknown()),
+  completionPercent: z.number().int().min(0).max(100),
+});
+
+export const saveInSessionDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => SaveDraftAuthSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    // Verify ownership
+    const { data: pa, error: paErr } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, patient_id, status, used_at, delivery_mode")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (paErr || !pa) throw new Error("Atividade não encontrada.");
+    if (pa.used_at) throw new Error("Atividade já foi respondida.");
+    if (pa.status === "revoked") throw new Error("Atividade revogada.");
+
+    // Check workspace membership
+    const { data: member } = await supabaseAdmin
+      .from("workspace_members")
+      .select("id")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!member) throw new Error("Sem permissão.");
+
+    const encrypted = await encryptPHIServer(JSON.stringify(data.draft));
+
+    const { error } = await supabaseAdmin
+      .from("activity_drafts")
+      .upsert(
+        {
+          patient_activity_id: pa.id,
+          workspace_id: pa.workspace_id,
+          patient_id: pa.patient_id,
+          draft_encrypted: encrypted,
+          completion_percent: data.completionPercent,
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        },
+        { onConflict: "patient_activity_id" },
+      );
+
+    if (error) {
+      console.error("[saveInSessionDraft] upsert failed", { code: error.code });
+      throw new Error("Não foi possível salvar rascunho.");
+    }
+
+    return { ok: true };
+  });
+
+const LoadDraftAuthSchema = z.object({
+  patientActivityId: z.string().uuid(),
+});
+
+export const loadInSessionDraft = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => LoadDraftAuthSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id, used_at, status")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (!pa) return { hasDraft: false as const };
+    if (pa.used_at || pa.status === "revoked") return { hasDraft: false as const };
+
+    const { data: member } = await supabaseAdmin
+      .from("workspace_members")
+      .select("id")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!member) return { hasDraft: false as const };
+
+    const { data: draft } = await supabaseAdmin
+      .from("activity_drafts")
+      .select("draft_encrypted, completion_percent, updated_at")
+      .eq("patient_activity_id", pa.id)
+      .maybeSingle();
+
+    if (!draft) return { hasDraft: false as const };
+
+    try {
+      const plain = await decryptPHIServer(draft.draft_encrypted);
+      const decoded = JSON.parse(plain) as Record<string, unknown>;
+      return {
+        hasDraft: true as const,
+        draft: decoded,
+        completionPercent: draft.completion_percent,
+        updatedAt: draft.updated_at,
+      };
+    } catch {
+      return { hasDraft: false as const };
+    }
+  });
+
+const DeleteDraftAuthSchema = z.object({
+  patientActivityId: z.string().uuid(),
+});
+
+export const deleteInSessionDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => DeleteDraftAuthSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId } = context;
+
+    const { data: pa } = await supabaseAdmin
+      .from("patient_activities")
+      .select("id, workspace_id")
+      .eq("id", data.patientActivityId)
+      .maybeSingle();
+
+    if (!pa) return { ok: true };
+
+    const { data: member } = await supabaseAdmin
+      .from("workspace_members")
+      .select("id")
+      .eq("workspace_id", pa.workspace_id)
+      .eq("user_id", userId)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (!member) return { ok: true };
+
+    await supabaseAdmin
+      .from("activity_drafts")
+      .delete()
+      .eq("patient_activity_id", pa.id);
+
+    return { ok: true };
+  });
