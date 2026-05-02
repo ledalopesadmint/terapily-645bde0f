@@ -223,7 +223,7 @@ export function PatientPickerSheet({
                   key={p.id}
                   type="button"
                   disabled={assignMutation.isPending}
-                  onClick={() => assignMutation.mutate(p.id)}
+                  onClick={() => handlePatientSelect(p.id)}
                   className="
                     flex w-full items-center justify-between gap-3 rounded-lg
                     px-3 py-3 text-left
