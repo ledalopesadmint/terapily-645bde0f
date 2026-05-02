@@ -326,6 +326,7 @@ export const ACTIVITIES: Activity[] = [
     shortDescription: "Quatro ciclos guiados pra acalmar o sistema nervoso simpático.",
     illustration: "spiral",
     supportedModes: ["in_session", "shared_link", "both"],
+    subcategory: "breathing",
   },
   {
     id: "ancoragem-5-4-3-2-1",
