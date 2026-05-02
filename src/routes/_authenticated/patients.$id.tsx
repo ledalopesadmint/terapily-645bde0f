@@ -1055,7 +1055,7 @@ function AssignActivityDialog({
       setDeliveryMode("shared_link");
       setExpiresInDays(7);
       if (res.rawToken) {
-        const origin = typeof window !== "undefined" ? window.location.origin : "";
+        const origin = getPublicOrigin();
         onLinkGenerated({
           url: `${origin}/p/${res.rawToken}`,
           patientActivityId: res.id,
