@@ -409,11 +409,16 @@ function PatientTabs({
     <Tabs defaultValue="activities" className="w-full">
       <TabsList>
         <TabsTrigger value="activities">Atividades</TabsTrigger>
+        <TabsTrigger value="habits">Práticas</TabsTrigger>
         {isOwner && <TabsTrigger value="audit">Auditoria</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="activities" className="mt-6">
         <ActivitiesTab patientId={patientId} workspaceId={workspaceId} startSession={startSession} openAssign={openAssign} />
+      </TabsContent>
+
+      <TabsContent value="habits" className="mt-6">
+        <HabitTrackingTab patientId={patientId} workspaceId={workspaceId} />
       </TabsContent>
 
       {isOwner && (
