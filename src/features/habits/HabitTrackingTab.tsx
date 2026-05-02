@@ -157,6 +157,7 @@ function HabitLinkCard({
 }) {
   const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
+  const [revokeOpen, setRevokeOpen] = useState(false);
   const [generatingPatientPdf, setGeneratingPatientPdf] = useState(false);
   const [generatingTherapistPdf, setGeneratingTherapistPdf] = useState(false);
 
