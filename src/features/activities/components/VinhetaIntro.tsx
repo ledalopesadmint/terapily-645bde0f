@@ -18,8 +18,9 @@ interface VinhetaIntroProps {
 
 export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [ready, setReady] = useState(false);
+  const [videoVisible, setVideoVisible] = useState(false);
   const completedRef = useRef(false);
+  const playRequestedRef = useRef(false);
 
   // Clamp volume: min 15%, max 100%
   const clampedVolume = Math.max(15, Math.min(100, volumePercent)) / 100;
@@ -30,27 +31,33 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
     onComplete();
   }, [onComplete]);
 
-  const handleCanPlay = useCallback(() => {
-    setReady(true);
+  const startPlayback = useCallback(() => {
+    if (playRequestedRef.current) return;
+    playRequestedRef.current = true;
     const v = videoRef.current;
     if (!v) return;
 
     // Start muted (autoplay always allowed when muted)
     v.muted = true;
+    v.volume = clampedVolume;
     v.play()
       .then(() => {
         // Try to unmute after play starts
         v.muted = false;
-        v.volume = clampedVolume;
       })
       .catch(() => {
-        // Even muted autoplay failed (very rare) — still show visual, skip after timeout
+        // Even muted autoplay failed — keep the branded visual visible until fallback completes.
       });
   }, [clampedVolume]);
 
   const handleEnded = useCallback(() => {
     finish();
   }, [finish]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const v = videoRef.current;
+    if (v && v.currentTime > 0.12) setVideoVisible(true);
+  }, []);
 
   // Fallback: if video stalls or errors, skip after 5s max
   useEffect(() => {
@@ -61,17 +68,25 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
   }, [finish]);
 
   return (
-    <div className="absolute inset-0 bg-[var(--cream)] flex items-center justify-center">
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden bg-[var(--cream)]">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[var(--cream)] text-[var(--navy)]">
+        <div className="font-display text-5xl font-light leading-none md:text-7xl">terapily</div>
+        <div className="mt-4 h-px w-24 bg-[var(--sage)]/60" />
+      </div>
       <video
         ref={videoRef}
         src="/brand/vinheta-creme.mp4"
-        onCanPlayThrough={handleCanPlay}
+        poster="/brand/vinheta-creme-poster.jpg"
+        onLoadedData={startPlayback}
+        onCanPlay={startPlayback}
+        onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         onError={finish}
+        autoPlay
         playsInline
         muted
         preload="auto"
-        className={`w-full h-full object-contain transition-opacity duration-300 ${ready ? "opacity-100" : "opacity-0"}`}
+        className={`relative z-10 h-full w-full object-contain transition-opacity duration-300 ${videoVisible ? "opacity-100" : "opacity-0"}`}
         style={{ background: "var(--cream)" }}
       />
     </div>
