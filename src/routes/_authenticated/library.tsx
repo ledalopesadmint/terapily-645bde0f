@@ -206,6 +206,39 @@ function LibraryStandardMode() {
         })()}
       </div>
 
+      <div className="mt-6">
+        {(() => {
+          const mindfulness = ACTIVITIES.filter((a) => a.category === "mindfulness");
+          const preview = mindfulness.slice(0, 3);
+          return (
+            <ResourceBox
+              icon={Wind}
+              title="Mindfulness & Grounding"
+              subtitle="Exercícios guiados de respiração, ancoragem e relaxamento. Aplique ao vivo em sessão ou envie como prática entre sessões."
+              href="/mindfulness"
+              chipLabel="Mindfulness"
+              previewItems={preview.map((m) => ({
+                code: m.code,
+                name: m.name,
+                category: m.category,
+                durationMin: m.durationMin,
+                shortDescription: m.shortDescription,
+                illustration: m.illustration,
+                supportsMagicLink: m.supportedModes.includes("shared_link") || m.supportedModes.includes("both"),
+              }))}
+              onStartInSession={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "in_session");
+              }}
+              onSendLink={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "shared_link");
+              }}
+            />
+          );
+        })()}
+      </div>
+
       {/* ── Recomendados (S3 — ativo quando houver histórico de uso) ── */}
       <div className="mt-10 mx-auto max-w-6xl px-4 sm:px-8">
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-5 sm:p-7">
