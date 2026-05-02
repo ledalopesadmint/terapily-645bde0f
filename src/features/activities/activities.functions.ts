@@ -159,7 +159,7 @@ export const assignActivity = createServerFn({ method: "POST" })
 
       rawToken = generateMagicLinkToken();
       tokenHash = await hashMagicLinkToken(rawToken);
-      tokenExpiresAt = new Date(Date.now() + data.expiresInHours * 60 * 60 * 1000).toISOString();
+      tokenExpiresAt = new Date(Date.now() + clampedHours * 60 * 60 * 1000).toISOString();
     }
 
     // 5. Insert via service role (consistência sem depender da policy de insert,
