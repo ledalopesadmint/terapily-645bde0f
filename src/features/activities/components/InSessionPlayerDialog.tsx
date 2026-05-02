@@ -85,11 +85,13 @@ export function InSessionPlayerDialog({
 
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
   const isForm = archetype === "structured_form";
+  const isScript = archetype === "guided_script" || archetype === "guided_timer";
   const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig &
-    StructuredFormConfig;
+    StructuredFormConfig & GuidedScriptConfig;
 
   const getCompletion = useCallback(() => {
     if (configQuery.isLoading) return { allAnswered: false, completion: 0 };
+    if (isScript) return getScriptCompletion(config, responses);
     if (isForm) return getFormCompletion(config, responses);
     const stats = getCompletionStats(config, responses as Record<string, number>);
     return { allAnswered: stats.allAnswered, completion: stats.completion };
