@@ -1175,7 +1175,7 @@ function ShareLinkDialog({
 }) {
   const url = payload?.url ?? "";
   const [message, setMessage] = useState(
-    "Oi! Aqui está a atividade pra antes da nossa próxima sessão. Leva poucos minutos. Qualquer dúvida me chama.",
+    "Seu terapeuta lhe enviou uma atividade. Abra este link seguro para começar. Suas respostas são criptografadas e enviadas somente ao seu terapeuta.",
   );
   const [busy, setBusy] = useState<null | "whatsapp" | "sms" | "mailto" | "copy">(null);
 
