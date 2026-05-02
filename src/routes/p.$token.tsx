@@ -199,7 +199,7 @@ function ActivityRunner({
   const [savedAt, setSavedAt] = useState<number | null>(null);
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveMutation = useMutation({
-    mutationFn: (payload: { draft: Record<string, number>; completionPercent: number }) =>
+    mutationFn: (payload: { draft: Record<string, unknown>; completionPercent: number }) =>
       saveActivityDraft({
         data: {
           token,
