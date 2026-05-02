@@ -163,7 +163,9 @@ export function InSessionPlayerDialog({
     if (submitted || Object.keys(responses).length === 0) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      saveDraftNow();
+      saveDraftNow().catch((err) => {
+        console.error("[autosave] failed", err);
+      });
     }, 3000);
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
