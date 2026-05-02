@@ -85,9 +85,9 @@ function ScalesPage() {
     scales: allScales.filter((s) => s.category === cat),
   })).filter((g) => g.scales.length > 0);
 
-  const handleStartInSession = (scale: ScaleRow) => {
+  const toActivityType = (scale: ScaleRow): ActivityType => {
     const cfg = scale.config ?? {};
-    const activity: ActivityType = {
+    return {
       id: scale.id,
       code: (cfg.code as string) ?? scale.slug.toUpperCase(),
       name: scale.title,
@@ -100,7 +100,17 @@ function ScalesPage() {
       illustration: getScaleIllustration(scale.category),
       supportedModes: (cfg.supported_modes as ActivityType["supportedModes"]) ?? ["in_session"],
     };
-    setPickerActivity(activity);
+  };
+
+  const handleStartInSession = (scale: ScaleRow) => {
+    setPickerActivity(toActivityType(scale));
+    setPickerOpen(true);
+  };
+
+  const handleSendLink = (scale: ScaleRow) => {
+    // TODO S3: abrir fluxo de magic link (prescrição + seleção de paciente + expiração)
+    // Por agora, reutiliza o PatientPickerSheet com delivery_mode = shared_link
+    setPickerActivity(toActivityType(scale));
     setPickerOpen(true);
   };
 
@@ -152,6 +162,10 @@ function ScalesPage() {
                 const duration = (cfg.estimated_minutes as number) ?? 5;
                 const code = (cfg.code as string) ?? scale.slug.toUpperCase();
 
+                const supportsMagicLink =
+                  Array.isArray(cfg.supported_modes) &&
+                  (cfg.supported_modes as string[]).includes("shared_link");
+
                 return (
                   <ScaleCard
                     key={scale.id}
@@ -162,7 +176,9 @@ function ScalesPage() {
                     shortDescription={scale.short_description}
                     illustration={getScaleIllustration(scale.category)}
                     isExclusive={isExclusive}
+                    supportsMagicLink={supportsMagicLink}
                     onClick={() => handleStartInSession(scale)}
+                    onSendLink={() => handleSendLink(scale)}
                   />
                 );
               })}
