@@ -481,7 +481,7 @@ function ActivityRunner({
         </span>
         <div className="flex items-center gap-3">
           <span className="text-xs text-muted-foreground">
-            {saveMutation.isPending
+            {saving
               ? "Salvando…"
               : savedAt
                 ? "Progresso salvo."
@@ -491,10 +491,10 @@ function ActivityRunner({
             variant="outline"
             size="sm"
             onClick={manualSave}
-            disabled={saveMutation.isPending || Object.keys(responses).length === 0}
+            disabled={saving || Object.keys(responses).length === 0}
             className="text-xs"
           >
-            {saveMutation.isPending ? "Salvando…" : "Salvar e continuar depois"}
+            {saving ? "Salvando…" : "Salvar e continuar depois"}
           </Button>
         </div>
       </header>
