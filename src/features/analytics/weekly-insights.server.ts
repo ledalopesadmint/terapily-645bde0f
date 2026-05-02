@@ -64,6 +64,7 @@ const TRACKED_METRICS: Array<{
   { metric: "patient.completion_rate", label: "Taxa de conclusão", category: "commercial" },
   { metric: "patient.activities_completed", label: "Atividades completadas", category: "commercial" },
   { metric: "patient.habit_entries", label: "Práticas de hábito", category: "commercial" },
+  { metric: "patient.habit_return_rate", label: "Taxa retorno hábito (%)", category: "commercial" },
   { metric: "therapist.dau", label: "Terapeutas ativos/dia", category: "engagement" },
   { metric: "therapist.logins", label: "Logins", category: "engagement" },
   { metric: "therapist.activities_assigned", label: "Atividades atribuídas", category: "engagement" },

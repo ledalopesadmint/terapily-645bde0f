@@ -15,8 +15,7 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /**
  * Fire-and-forget error counter.
- * Upserts into platform_analytics with metric = `error.server.{operation}`
- * or `error.magic_link` for token-related errors.
+ * Uses the DB function `increment_platform_analytics` for atomic upsert.
  */
 export function trackAnalyticsError(
   operation: string,
@@ -25,7 +24,6 @@ export function trackAnalyticsError(
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
   const hour = now.getUTCHours();
-  const dow = now.getUTCDay();
 
   const metric = operation.startsWith("error.")
     ? operation
@@ -33,27 +31,15 @@ export function trackAnalyticsError(
 
   // Fire and forget — never block the caller
   void supabaseAdmin
-    .from("platform_analytics")
-    .upsert(
-      {
-        date,
-        hour_bucket: hour,
-        day_of_week: dow,
-        metric,
-        dimension: "total",
-        value: 1,
-      },
-      { onConflict: "date,hour_bucket,metric,dimension" },
-    )
+    .rpc("increment_platform_analytics" as any, {
+      p_date: date,
+      p_hour: hour,
+      p_metric: metric,
+      p_dimension: "total",
+    })
     .then(({ error }) => {
       if (error) {
-        // Try incrementing existing row instead
-        void supabaseAdmin.rpc("increment_platform_analytics" as any, {
-          p_date: date,
-          p_hour: hour,
-          p_metric: metric,
-          p_dimension: "total",
-        });
+        console.error("[analytics-error-tracker] increment failed:", error.message);
       }
     });
 }
