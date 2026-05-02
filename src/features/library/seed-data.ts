@@ -88,7 +88,7 @@ export const ACTIVITIES: Activity[] = [
   {
     id: "thought-record-7col",
     code: "CBT-01",
-    name: "Thought Record · 7 colunas",
+    name: "Thought Record · 7 passos",
     approach: "TCC",
     category: "cbt",
     archetype: "structured_form",
