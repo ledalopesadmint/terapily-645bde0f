@@ -79,6 +79,10 @@ import {
   generateScaleResultPatient,
   generateScaleResultTherapist,
 } from "@/features/activities/scale-result-pdf.functions";
+import {
+  generateWorksheetResultPatient,
+  generateWorksheetResultTherapist,
+} from "@/features/activities/worksheet-result-pdf.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
