@@ -167,11 +167,20 @@ export function InSessionPlayerDialog({
   }, [saveDraftNow, onClose]);
 
   const handleDiscardClose = useCallback(() => {
-    // Discard draft and close
     deleteInSessionDraft({ data: { patientActivityId } }).catch(() => {});
     setShowCloseConfirm(false);
     onClose();
   }, [patientActivityId, onClose]);
+
+  const [savingAndExiting, setSavingAndExiting] = useState(false);
+  const handleSaveAndExit = useCallback(async (e?: MouseEvent) => {
+    e?.stopPropagation();
+    setSavingAndExiting(true);
+    await saveDraftNow();
+    setSavingAndExiting(false);
+    toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+    onClose();
+  }, [saveDraftNow, onClose]);
 
   // ── Submit ──────────────────────────────────────────────────────
   const submitMutation = useMutation({
