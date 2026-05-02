@@ -403,6 +403,9 @@ export type Database = {
         Row: {
           activity_id: string
           assigned_by: string
+          consent_accepted_at: string | null
+          consent_ip: unknown
+          consent_user_agent: string | null
           created_at: string
           expires_at: string
           id: string
@@ -418,6 +421,9 @@ export type Database = {
         Insert: {
           activity_id: string
           assigned_by: string
+          consent_accepted_at?: string | null
+          consent_ip?: unknown
+          consent_user_agent?: string | null
           created_at?: string
           expires_at: string
           id?: string
@@ -433,6 +439,9 @@ export type Database = {
         Update: {
           activity_id?: string
           assigned_by?: string
+          consent_accepted_at?: string | null
+          consent_ip?: unknown
+          consent_user_agent?: string | null
           created_at?: string
           expires_at?: string
           id?: string
