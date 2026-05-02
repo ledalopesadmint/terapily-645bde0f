@@ -17,7 +17,7 @@ import { createFileRoute, useParams } from "@tanstack/react-router";
 import { getOGMeta } from "@/features/activities/og-meta.functions";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { resolvePublicToken, submitActivityResponse } from "@/features/activities/public-activities.functions";
+import { resolvePublicToken, submitActivityResponse, generatePatientResultOnDemand } from "@/features/activities/public-activities.functions";
 import {
   saveActivityDraft,
   getActivityDraft,
@@ -112,6 +112,75 @@ function formatExpires(iso: string): { label: string; urgent: boolean } {
 
 type PagePhase = "intro" | "consent" | "activity" | "declined" | "submitted";
 
+function downloadPdfBase64(base64: string) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  const blob = new Blob([bytes], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `activity-result-${new Date().toISOString().slice(0, 10)}.pdf`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function DownloadResultButton({
+  resultPdf,
+  submitMeta,
+}: {
+  resultPdf: string | null;
+  submitMeta: { responseId: string; workspaceId: string; archetype: string } | null;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [generatedPdf, setGeneratedPdf] = useState<string | null>(null);
+
+  const pdfToUse = resultPdf ?? generatedPdf;
+
+  const handleClick = async () => {
+    if (pdfToUse) {
+      downloadPdfBase64(pdfToUse);
+      return;
+    }
+    // On-demand generation
+    if (!submitMeta || (submitMeta.archetype !== "quiz_scale" && submitMeta.archetype !== "structured_form")) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await generatePatientResultOnDemand({
+        data: {
+          responseId: submitMeta.responseId,
+          workspaceId: submitMeta.workspaceId,
+          archetype: submitMeta.archetype as "quiz_scale" | "structured_form",
+        },
+      });
+      setGeneratedPdf(res.pdf);
+      downloadPdfBase64(res.pdf);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Não foi possível gerar o relatório.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="space-y-2">
+      <button
+        onClick={handleClick}
+        disabled={loading}
+        className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-all shadow-sm hover:shadow-md disabled:opacity-50"
+      >
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+        {loading ? "Gerando relatório…" : "Baixar seus resultados"}
+      </button>
+      {error && <p className="text-xs text-red-500">{error}</p>}
+    </div>
+  );
+}
+
 function PublicActivityPage() {
   const { token } = useParams({ from: "/p/$token" });
   const [vinhetaDone, setVinhetaDone] = useState(false);
@@ -185,6 +254,7 @@ function ActivityRunner({
   const config = rawConfig as unknown as QuizConfig & StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
+  const [submitMeta, setSubmitMeta] = useState<{ responseId: string; workspaceId: string; archetype: string } | null>(null);
   const [phase, setPhase] = useState<PagePhase>("intro");
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, unknown>;
@@ -306,6 +376,9 @@ function ActivityRunner({
     onSuccess: (data) => {
       setPhase("submitted");
       if (data.pdf) setResultPdf(data.pdf);
+      if (data.responseId && data.workspaceId && data.archetype) {
+        setSubmitMeta({ responseId: data.responseId, workspaceId: data.workspaceId, archetype: data.archetype });
+      }
     },
   });
 
@@ -336,6 +409,7 @@ function ActivityRunner({
 
   // === PHASE: SUBMITTED (Thank you) ===
   if (phase === "submitted") {
+    const canDownload = archetype === "quiz_scale" || archetype === "structured_form";
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-md text-center space-y-4">
@@ -348,27 +422,11 @@ function ActivityRunner({
           <p className="text-muted-foreground">
             Se precisar, fale com sua terapeuta. Você pode fechar esta página.
           </p>
-          {resultPdf && (
-            <button
-              onClick={() => {
-                const binary = atob(resultPdf);
-                const bytes = new Uint8Array(binary.length);
-                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-                const blob = new Blob([bytes], { type: "application/pdf" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `activity-result-${new Date().toISOString().slice(0, 10)}.pdf`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[var(--sage)] text-white text-sm font-medium hover:bg-[var(--sage)]/90 transition-all shadow-sm hover:shadow-md"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
-              Download your results
-            </button>
+          {canDownload && (
+            <DownloadResultButton
+              resultPdf={resultPdf}
+              submitMeta={submitMeta}
+            />
           )}
         </div>
       </div>

@@ -328,22 +328,26 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
         const buildFn = activity.archetype === "structured_form"
           ? buildWorksheetResultPDF
           : buildScaleResultPDF;
+        log.info("submit.pdf_starting", { archetype: activity.archetype });
         const pdfBuffer = await buildFn({
           activityResponseId: response.id,
           workspaceId: pa.workspace_id,
           variant: "patient",
         });
-        const bytes = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer);
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
+        // Convert buffer to base64 using chunked approach (avoids stack overflow on large PDFs)
+        const bytes = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer as ArrayBuffer);
+        const chunks: string[] = [];
+        const CHUNK = 8192;
+        for (let offset = 0; offset < bytes.length; offset += CHUNK) {
+          chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + CHUNK)));
         }
-        pdfBase64 = btoa(binary);
-        log.info("submit.pdf_generated", { variant: "patient" });
+        pdfBase64 = btoa(chunks.join(""));
+        log.info("submit.pdf_generated", { variant: "patient", sizeKB: Math.round(bytes.length / 1024) });
       }
     } catch (err) {
-      log.warn("submit.pdf_failed", {
+      log.error("submit.pdf_failed", {
         error: err instanceof Error ? err.message : "unknown",
+        stack: err instanceof Error ? err.stack?.slice(0, 500) : undefined,
       });
     }
 
@@ -352,5 +356,61 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       hasPdf: !!pdfBase64,
     });
 
-    return { ok: true, pdf: pdfBase64 };
+    return {
+      ok: true,
+      pdf: pdfBase64,
+      responseId: response.id,
+      workspaceId: pa.workspace_id,
+      archetype: activity.archetype as string,
+      submittedAt: response.submitted_at,
+    };
+  });
+
+// --- generatePatientResultOnDemand -----------------------------------------
+// Public (no auth), time-gated: only works within 30 min of submission.
+
+const OnDemandPdfSchema = z.object({
+  responseId: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+  archetype: z.enum(["quiz_scale", "structured_form"]),
+});
+
+export const generatePatientResultOnDemand = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) => OnDemandPdfSchema.parse(input))
+  .handler(async ({ data }) => {
+    // Verify response exists and was submitted recently (30 min window)
+    const { data: resp, error } = await supabaseAdmin
+      .from("activity_responses")
+      .select("id, submitted_at")
+      .eq("id", data.responseId)
+      .eq("workspace_id", data.workspaceId)
+      .maybeSingle();
+
+    if (error || !resp) {
+      throw new Error("Relatório não disponível.");
+    }
+
+    const submittedAt = new Date(resp.submitted_at).getTime();
+    const thirtyMin = 30 * 60 * 1000;
+    if (Date.now() - submittedAt > thirtyMin) {
+      throw new Error("O período para download expirou. Solicite o relatório ao seu terapeuta.");
+    }
+
+    const buildFn = data.archetype === "structured_form"
+      ? buildWorksheetResultPDF
+      : buildScaleResultPDF;
+
+    const pdfBuffer = await buildFn({
+      activityResponseId: data.responseId,
+      workspaceId: data.workspaceId,
+      variant: "patient",
+    });
+
+    const bytes = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer as ArrayBuffer);
+    const chunks: string[] = [];
+    const CHUNK = 8192;
+    for (let offset = 0; offset < bytes.length; offset += CHUNK) {
+      chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + CHUNK)));
+    }
+    return { pdf: btoa(chunks.join("")) };
   });
