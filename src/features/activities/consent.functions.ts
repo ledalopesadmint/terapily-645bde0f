@@ -30,11 +30,11 @@ class PublicLinkError extends Error {
   }
 }
 
-function getClientIp(): string {
+function getClientIp(): string | null {
   try {
-    return getRequestIP({ xForwardedFor: true }) ?? "unknown";
+    return getRequestIP({ xForwardedFor: true }) ?? null;
   } catch {
-    return "unknown";
+    return null;
   }
 }
 
