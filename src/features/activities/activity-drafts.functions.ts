@@ -160,11 +160,13 @@ export const getActivityDraft = createServerFn({ method: "POST" })
 
     const pa = await loadActiveActivityByToken(data.token);
 
-    const { data: draft, error } = await supabaseAdmin
-      .from("activity_drafts")
-      .select("draft_encrypted, completion_percent, updated_at")
-      .eq("patient_activity_id", pa.id)
-      .maybeSingle();
+    const { data: draft, error } = await withRetry(() =>
+      supabaseAdmin
+        .from("activity_drafts")
+        .select("draft_encrypted, completion_percent, updated_at")
+        .eq("patient_activity_id", pa.id)
+        .maybeSingle(),
+    );
 
     if (error) {
       console.error("[getActivityDraft] select failed", { code: error.code });
