@@ -14,6 +14,7 @@
  */
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { getOGMeta } from "@/features/activities/og-meta.functions";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { resolvePublicToken, submitActivityResponse } from "@/features/activities/public-activities.functions";
