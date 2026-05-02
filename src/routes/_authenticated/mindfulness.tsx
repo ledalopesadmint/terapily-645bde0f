@@ -1,6 +1,6 @@
 /**
  * /mindfulness — All mindfulness & grounding activities.
- * Same visual pattern as /scales and /worksheets: header + grouped cards.
+ * Organized by subcategory: Respiração, Ancoragem, Relaxamento, Atenção.
  */
 
 import { useState } from "react";
@@ -29,13 +29,32 @@ export const Route = createFileRoute("/_authenticated/mindfulness")({
   component: MindfulnessPage,
 });
 
-const CATEGORY_LABELS: Record<string, string> = {
-  breathing: "Breathing",
-  grounding: "Grounding",
-  relaxation: "Relaxation",
-  meditation: "Meditation",
-  mindfulness: "Mindfulness",
-};
+const SUBCATEGORY_CONFIG: Array<{
+  key: string;
+  label: string;
+  description: string;
+}> = [
+  {
+    key: "breathing",
+    label: "Respiração",
+    description: "Técnicas de respiração controlada para ativar o sistema parassimpático.",
+  },
+  {
+    key: "grounding",
+    label: "Ancoragem & Regulação",
+    description: "Exercícios sensoriais e de regulação emocional para voltar ao presente.",
+  },
+  {
+    key: "relaxation",
+    label: "Relaxamento",
+    description: "Relaxamento muscular progressivo e body scan baseados em MBSR.",
+  },
+  {
+    key: "attention",
+    label: "Atenção Plena",
+    description: "Práticas de atenção focada para treinar a concentração gentil.",
+  },
+];
 
 function MindfulnessPage() {
   const auth = useAuth();
@@ -43,7 +62,6 @@ function MindfulnessPage() {
   const [pickerActivity, setPickerActivity] = useState<ActivityType | null>(null);
   const [pickerMode, setPickerMode] = useState<"in_session" | "shared_link">("in_session");
 
-  // Filter mindfulness activities from seed data
   const mindfulnessActivities = ACTIVITIES.filter(
     (a) => a.category === "mindfulness",
   );
@@ -53,6 +71,15 @@ function MindfulnessPage() {
     setPickerMode(mode);
     setPickerOpen(true);
   };
+
+  // Group by subcategory
+  const grouped = SUBCATEGORY_CONFIG.map((sub) => ({
+    ...sub,
+    activities: mindfulnessActivities.filter((a) => a.subcategory === sub.key),
+  })).filter((g) => g.activities.length > 0);
+
+  // Activities without subcategory go into a catch-all
+  const uncategorized = mindfulnessActivities.filter((a) => !a.subcategory);
 
   return (
     <div className="pb-20">
@@ -84,28 +111,69 @@ function MindfulnessPage() {
         </p>
       </header>
 
-      {/* Cards */}
-      <div className="mx-auto max-w-6xl px-4 sm:px-8">
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {mindfulnessActivities.map((activity) => (
-            <ScaleCard
-              key={activity.id}
-              code={activity.code}
-              name={activity.name}
-              category={activity.category}
-              durationMin={activity.durationMin}
-              shortDescription={activity.shortDescription}
-              illustration={getScaleIllustration(activity.illustration)}
-              chipLabel="Mindfulness"
-              supportsMagicLink={
-                activity.supportedModes.includes("shared_link") ||
-                activity.supportedModes.includes("both")
-              }
-              onClick={() => handleStart(activity, "in_session")}
-              onSendLink={() => handleStart(activity, "shared_link")}
-            />
-          ))}
-        </div>
+      {/* Grouped sections */}
+      <div className="mx-auto max-w-6xl space-y-10 px-4 sm:px-8">
+        {grouped.map((group) => (
+          <section key={group.key}>
+            <div className="mb-4">
+              <h2 className="font-display text-xl text-foreground sm:text-2xl">
+                {group.label}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {group.description}
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {group.activities.map((activity) => (
+                <ScaleCard
+                  key={activity.id}
+                  code={activity.code}
+                  name={activity.name}
+                  category={activity.category}
+                  durationMin={activity.durationMin}
+                  shortDescription={activity.shortDescription}
+                  illustration={getScaleIllustration(activity.illustration)}
+                  chipLabel={group.label}
+                  supportsMagicLink={
+                    activity.supportedModes.includes("shared_link") ||
+                    activity.supportedModes.includes("both")
+                  }
+                  onClick={() => handleStart(activity, "in_session")}
+                  onSendLink={() => handleStart(activity, "shared_link")}
+                />
+              ))}
+            </div>
+          </section>
+        ))}
+
+        {/* Uncategorized fallback */}
+        {uncategorized.length > 0 && (
+          <section>
+            <h2 className="mb-4 font-display text-xl text-foreground sm:text-2xl">
+              Outras práticas
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {uncategorized.map((activity) => (
+                <ScaleCard
+                  key={activity.id}
+                  code={activity.code}
+                  name={activity.name}
+                  category={activity.category}
+                  durationMin={activity.durationMin}
+                  shortDescription={activity.shortDescription}
+                  illustration={getScaleIllustration(activity.illustration)}
+                  chipLabel="Mindfulness"
+                  supportsMagicLink={
+                    activity.supportedModes.includes("shared_link") ||
+                    activity.supportedModes.includes("both")
+                  }
+                  onClick={() => handleStart(activity, "in_session")}
+                  onSendLink={() => handleStart(activity, "shared_link")}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {mindfulnessActivities.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border bg-card/50 p-10 text-center">
