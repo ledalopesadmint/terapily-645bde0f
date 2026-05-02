@@ -9,20 +9,13 @@
  *  - Audit metadata NUNCA contém PHI (só UUIDs e enums).
  */
 
-
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { recordAudit } from "@/features/audit/audit.server";
-import {
-  generateMagicLinkToken,
-  hashMagicLinkToken,
-} from "@/lib/tokens/magic-link.server";
-import {
-  getActivePatientForWorkspace,
-  getActivityFromCatalog,
-} from "./activities.server";
+import { generateMagicLinkToken, hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
+import { getActivePatientForWorkspace, getActivityFromCatalog } from "./activities.server";
 import { encryptPHIServer, decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
@@ -67,7 +60,12 @@ const AssignSchema = z.object({
   activityId: z.string().uuid(),
   deliveryMode: z.enum(["in_session", "shared_link", "both"]),
   // Expiração do link (em horas). Default 7d. Só usado se delivery envolve link.
-  expiresInHours: z.number().int().min(1).max(24 * 30).default(24 * 7),
+  expiresInHours: z
+    .number()
+    .int()
+    .min(1)
+    .max(24 * 30)
+    .default(24 * 7),
 });
 
 export const assignActivity = createServerFn({ method: "POST" })
@@ -77,10 +75,7 @@ export const assignActivity = createServerFn({ method: "POST" })
     const { userId } = context;
 
     // 1. Confirma membership + paciente vivo no workspace
-    const patient = await getActivePatientForWorkspace(
-      data.patientId,
-      data.workspaceId,
-    );
+    const patient = await getActivePatientForWorkspace(data.patientId, data.workspaceId);
     if (!patient) {
       throw new Error("Paciente não encontrado neste workspace.");
     }
@@ -123,7 +118,7 @@ export const assignActivity = createServerFn({ method: "POST" })
     const supportedModes: string[] = Array.isArray(
       (activity.config as { supported_modes?: unknown })?.supported_modes,
     )
-      ? ((activity.config as { supported_modes: string[] }).supported_modes)
+      ? (activity.config as { supported_modes: string[] }).supported_modes
       : ["in_session", "shared_link", "both"];
 
     const requiredModes: string[] =
@@ -154,24 +149,19 @@ export const assignActivity = createServerFn({ method: "POST" })
     let rawToken: string | null = null;
     let tokenHash: string | null = null;
     let tokenExpiresAt: string | null = null;
-    const needsLink =
-      data.deliveryMode === "shared_link" || data.deliveryMode === "both";
+    const needsLink = data.deliveryMode === "shared_link" || data.deliveryMode === "both";
 
     if (needsLink) {
       // Gating de tier: clamp da janela de expiração ao máximo do plano.
       const tier = await getWorkspaceTier(data.workspaceId);
       const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
       if (data.expiresInHours > maxHours) {
-        throw new Error(
-          `Seu plano permite no máximo ${maxHours}h de duração para o link.`,
-        );
+        throw new Error(`Seu plano permite no máximo ${maxHours}h de duração para o link.`);
       }
 
       rawToken = generateMagicLinkToken();
       tokenHash = await hashMagicLinkToken(rawToken);
-      tokenExpiresAt = new Date(
-        Date.now() + data.expiresInHours * 60 * 60 * 1000,
-      ).toISOString();
+      tokenExpiresAt = new Date(Date.now() + data.expiresInHours * 60 * 60 * 1000).toISOString();
     }
 
     // 5. Insert via service role (consistência sem depender da policy de insert,
@@ -383,7 +373,9 @@ export const listAvailableActivities = createServerFn({ method: "GET" })
       includeDrafts = Boolean(flagOn);
     }
 
-    const statuses: ("draft" | "published")[] = includeDrafts ? ["published", "draft"] : ["published"];
+    const statuses: ("draft" | "published")[] = includeDrafts
+      ? ["published", "draft"]
+      : ["published"];
     const { data: rows, error } = await supabase
       .from("activity_catalog")
       .select("id, slug, title, archetype, short_description, category, status, theme, config")
@@ -562,7 +554,7 @@ export interface AuditLogRow {
   resource_type: string | null;
   resource_id: string | null;
   // Casamos com o tipo inferido pelo Supabase Generated (jsonb).
-  metadata: { [x: string]: {} };
+  metadata: { [x: string]: NonNullable<unknown> };
   created_at: string;
   actor_id: string | null;
 }
@@ -704,9 +696,7 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
 
     const rawToken = generateMagicLinkToken();
     const tokenHash = await hashMagicLinkToken(rawToken);
-    const expiresAt = new Date(
-      Date.now() + IN_SESSION_LINK_HOURS * 3600 * 1000,
-    ).toISOString();
+    const expiresAt = new Date(Date.now() + IN_SESSION_LINK_HOURS * 3600 * 1000).toISOString();
 
     const { error: updErr } = await supabaseAdmin
       .from("patient_activities")
@@ -805,9 +795,7 @@ export const recordInSessionResponse = createServerFn({ method: "POST" })
         severity: result.severity === "not_applicable" ? null : result.severity,
         scoring_metadata: {
           ...result.metadata,
-          clinical_flag: flag.raised
-            ? { flag: flag.flag, item_id: flag.item_id }
-            : null,
+          clinical_flag: flag.raised ? { flag: flag.flag, item_id: flag.item_id } : null,
         },
         raw_responses_encrypted: encrypted,
         submitted_via: "in_session",
@@ -935,11 +923,11 @@ export const getActivityResponseDetail = createServerFn({ method: "POST" })
     }
 
     // Decifra
-    let decryptedResponses: { [x: string]: {} } = {};
+    let decryptedResponses: { [x: string]: NonNullable<unknown> } = {};
     if (resp.raw_responses_encrypted) {
       try {
         const plain = await decryptPHIServer(resp.raw_responses_encrypted);
-        decryptedResponses = JSON.parse(plain) as { [x: string]: {} };
+        decryptedResponses = JSON.parse(plain) as { [x: string]: NonNullable<unknown> };
       } catch {
         throw new Error("Não foi possível decifrar as respostas.");
       }
@@ -1140,23 +1128,36 @@ export const saveInSessionDraft = createServerFn({ method: "POST" })
 
     const encrypted = await encryptPHIServer(JSON.stringify(data.draft));
 
-    const { error } = await supabaseAdmin
-      .from("activity_drafts")
-      .upsert(
-        {
-          patient_activity_id: pa.id,
-          workspace_id: pa.workspace_id,
-          patient_id: pa.patient_id,
-          draft_encrypted: encrypted,
-          completion_percent: data.completionPercent,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        },
-        { onConflict: "patient_activity_id" },
-      );
+    const draftPayload = {
+      workspace_id: pa.workspace_id,
+      patient_id: pa.patient_id,
+      draft_encrypted: encrypted,
+      completion_percent: data.completionPercent,
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    };
 
-    if (error) {
-      console.error("[saveInSessionDraft] upsert failed", { code: error.code });
+    const { data: updatedDraft, error: updateError } = await supabaseAdmin
+      .from("activity_drafts")
+      .update(draftPayload)
+      .eq("patient_activity_id", pa.id)
+      .select("id")
+      .maybeSingle();
+
+    if (updateError) {
+      console.error("[saveInSessionDraft] update failed", { code: updateError.code });
       throw new Error("Não foi possível salvar rascunho.");
+    }
+
+    if (!updatedDraft) {
+      const { error: insertError } = await supabaseAdmin.from("activity_drafts").insert({
+        patient_activity_id: pa.id,
+        ...draftPayload,
+      });
+
+      if (insertError) {
+        console.error("[saveInSessionDraft] insert failed", { code: insertError.code });
+        throw new Error("Não foi possível salvar rascunho.");
+      }
     }
 
     // Transition status to in_progress if still pending
@@ -1249,10 +1250,7 @@ export const deleteInSessionDraft = createServerFn({ method: "POST" })
 
     if (!member) return { ok: true };
 
-    await supabaseAdmin
-      .from("activity_drafts")
-      .delete()
-      .eq("patient_activity_id", pa.id);
+    await supabaseAdmin.from("activity_drafts").delete().eq("patient_activity_id", pa.id);
 
     return { ok: true };
   });

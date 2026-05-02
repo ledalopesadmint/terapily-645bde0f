@@ -15,11 +15,7 @@ import { X, Save, LogOut } from "lucide-react";
 import { VinhetaIntro } from "./VinhetaIntro";
 import { ScaleIntro } from "./ScaleIntro";
 
-import {
-  ActivityPlayer,
-  getCompletionStats,
-  type QuizConfig,
-} from "./ActivityPlayer";
+import { ActivityPlayer, getCompletionStats, type QuizConfig } from "./ActivityPlayer";
 import {
   FormRunner,
   getFormCompletion,
@@ -43,7 +39,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-
 interface InSessionPlayerProps {
   patientActivityId: string;
   patientId: string;
@@ -61,6 +56,7 @@ export function InSessionPlayerDialog({
 }: InSessionPlayerProps) {
   const qc = useQueryClient();
   const [responses, setResponses] = useState<Record<string, unknown>>({});
+  const [formStepIndex, setFormStepIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [vinhetaDone, setVinhetaDone] = useState(false);
   const [introStarted, setIntroStarted] = useState(false);
@@ -70,19 +66,22 @@ export function InSessionPlayerDialog({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const handleVinhetaComplete = useCallback(() => setVinhetaDone(true), []);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const responsesRef = useRef(responses);
   responsesRef.current = responses;
+  const formStepIndexRef = useRef(formStepIndex);
+  formStepIndexRef.current = formStepIndex;
 
   const configQuery = useQuery({
     queryKey: ["activity-config", patientActivityId],
-    queryFn: () =>
-      getActivityConfig({ data: { patientActivityId } }),
+    queryFn: () => getActivityConfig({ data: { patientActivityId } }),
     retry: false,
   });
 
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
   const isForm = archetype === "structured_form";
-  const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig & StructuredFormConfig;
+  const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig &
+    StructuredFormConfig;
 
   const getCompletion = useCallback(() => {
     if (configQuery.isLoading) return { allAnswered: false, completion: 0 };
@@ -100,7 +99,15 @@ export function InSessionPlayerDialog({
     queryFn: async () => {
       const result = await loadInSessionDraft({ data: { patientActivityId } });
       if (result.hasDraft && result.draft) {
-        setResponses(result.draft as Record<string, unknown>);
+        const restoredDraft = result.draft as Record<string, unknown>;
+        const restoredMeta = restoredDraft.__terapily_meta as
+          | { formStepIndex?: unknown }
+          | undefined;
+        const restoredStep =
+          typeof restoredMeta?.formStepIndex === "number" ? restoredMeta.formStepIndex : 0;
+        const { __terapily_meta: _meta, ...restoredResponses } = restoredDraft;
+        setResponses(restoredResponses);
+        setFormStepIndex(restoredStep);
         setDraftRestored(true);
         // Skip vinheta + intro when resuming a draft
         setVinhetaDone(true);
@@ -117,28 +124,38 @@ export function InSessionPlayerDialog({
 
   // ── Draft auto-save (debounced 3s) ──────────────────────────────
   const saveDraftNow = useCallback(async () => {
-    const current = responsesRef.current;
-    if (Object.keys(current).length === 0) return;
+    const runSave = async () => {
+      const current = responsesRef.current;
+      if (Object.keys(current).length === 0) return;
 
-    try {
-      setDraftSaving(true);
-      const completion = isForm
-        ? getFormCompletion(config, current).completion
-        : getCompletionStats(config, current as Record<string, number>).completion;
+      try {
+        setDraftSaving(true);
+        const completion = isForm
+          ? getFormCompletion(config, current).completion
+          : getCompletionStats(config, current as Record<string, number>).completion;
 
-      await saveInSessionDraft({
-        data: {
-          patientActivityId,
-          draft: current as Record<string, NonNullable<unknown>>,
-          completionPercent: completion,
-        },
-      });
-      setLastSaved(new Date());
-    } catch (e) {
-      console.warn("[draft] save failed", e);
-    } finally {
-      setDraftSaving(false);
-    }
+        await saveInSessionDraft({
+          data: {
+            patientActivityId,
+            draft: {
+              ...(current as Record<string, NonNullable<unknown>>),
+              __terapily_meta: { formStepIndex: formStepIndexRef.current },
+            },
+            completionPercent: completion,
+          },
+        });
+        setLastSaved(new Date());
+      } catch (e) {
+        console.warn("[draft] save failed", e);
+        throw e;
+      } finally {
+        setDraftSaving(false);
+      }
+    };
+
+    const nextSave = saveQueueRef.current.catch(() => undefined).then(runSave);
+    saveQueueRef.current = nextSave.catch(() => undefined);
+    await nextSave;
   }, [patientActivityId, isForm, config]);
 
   // Schedule auto-save on response change
@@ -165,10 +182,11 @@ export function InSessionPlayerDialog({
   const handleConfirmClose = useCallback(async () => {
     // Save draft before closing
     await saveDraftNow();
+    qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
     toast.success("Rascunho salvo.", { duration: 2000 });
     setShowCloseConfirm(false);
     onClose();
-  }, [saveDraftNow, onClose]);
+  }, [saveDraftNow, qc, patientId, workspaceId, onClose]);
 
   const handleDiscardClose = useCallback(() => {
     deleteInSessionDraft({ data: { patientActivityId } }).catch(() => {});
@@ -177,14 +195,18 @@ export function InSessionPlayerDialog({
   }, [patientActivityId, onClose]);
 
   const [savingAndExiting, setSavingAndExiting] = useState(false);
-  const handleSaveAndExit = useCallback(async (e?: MouseEvent) => {
-    e?.stopPropagation();
-    setSavingAndExiting(true);
-    await saveDraftNow();
-    setSavingAndExiting(false);
-    toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
-    onClose();
-  }, [saveDraftNow, onClose]);
+  const handleSaveAndExit = useCallback(
+    async (e?: MouseEvent) => {
+      e?.stopPropagation();
+      setSavingAndExiting(true);
+      await saveDraftNow();
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
+      setSavingAndExiting(false);
+      toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+      onClose();
+    },
+    [saveDraftNow, qc, patientId, workspaceId, onClose],
+  );
 
   // ── Submit ──────────────────────────────────────────────────────
   const submitMutation = useMutation({
@@ -207,9 +229,7 @@ export function InSessionPlayerDialog({
       }
     },
     onError: (e) => {
-      toast.error(
-        e instanceof Error ? e.message : "Não foi possível registrar.",
-      );
+      toast.error(e instanceof Error ? e.message : "Não foi possível registrar.");
     },
   });
 
@@ -267,7 +287,9 @@ export function InSessionPlayerDialog({
                   </span>
                 )}
                 {draftSaving && !savingAndExiting && (
-                  <span className="hidden sm:inline-flex text-xs text-muted-foreground">Salvando…</span>
+                  <span className="hidden sm:inline-flex text-xs text-muted-foreground">
+                    Salvando…
+                  </span>
                 )}
                 <button
                   onClick={handleCloseAttempt}
@@ -300,9 +322,9 @@ export function InSessionPlayerDialog({
                 <FormRunner
                   config={config}
                   responses={responses}
-                  onResponse={(fId, val) =>
-                    setResponses((prev) => ({ ...prev, [fId]: val }))
-                  }
+                  currentStepIndex={formStepIndex}
+                  onStepChange={setFormStepIndex}
+                  onResponse={(fId, val) => setResponses((prev) => ({ ...prev, [fId]: val }))}
                   onSubmit={() => submitMutation.mutate()}
                   submitting={submitMutation.isPending}
                   submitLabel="Registrar respostas"
@@ -311,9 +333,7 @@ export function InSessionPlayerDialog({
                 <ActivityPlayer
                   config={config}
                   responses={responses as Record<string, number>}
-                  onResponse={(qId, val) =>
-                    setResponses((prev) => ({ ...prev, [qId]: val }))
-                  }
+                  onResponse={(qId, val) => setResponses((prev) => ({ ...prev, [qId]: val }))}
                   onSubmit={() => submitMutation.mutate()}
                   submitting={submitMutation.isPending}
                   submitLabel="Registrar respostas"
@@ -363,7 +383,8 @@ export function InSessionPlayerDialog({
                   Obrigado por responder com atenção.
                 </p>
                 <p className="text-[var(--charcoal)] text-base leading-relaxed">
-                  Suas respostas foram registradas com segurança e já estão disponíveis para o seu terapeuta.
+                  Suas respostas foram registradas com segurança e já estão disponíveis para o seu
+                  terapeuta.
                 </p>
               </div>
 
@@ -413,7 +434,8 @@ export function InSessionPlayerDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Sair da atividade?</AlertDialogTitle>
             <AlertDialogDescription>
-              Você tem respostas em andamento. Deseja salvar um rascunho para continuar depois ou descartar o progresso?
+              Você tem respostas em andamento. Deseja salvar um rascunho para continuar depois ou
+              descartar o progresso?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
