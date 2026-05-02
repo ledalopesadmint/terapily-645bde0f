@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
+import { Route as AuthenticatedWorksheetsRouteImport } from './routes/_authenticated/worksheets'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedScalesRouteImport } from './routes/_authenticated/scales'
@@ -73,6 +74,11 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedWorksheetsRoute = AuthenticatedWorksheetsRouteImport.update({
+  id: '/worksheets',
+  path: '/worksheets',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const AuthenticatedWelcomeRoute = AuthenticatedWelcomeRouteImport.update({
   id: '/welcome',
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/scales': typeof AuthenticatedScalesRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/scales': typeof AuthenticatedScalesRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
+  '/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
@@ -232,6 +240,7 @@ export interface FileRoutesById {
   '/_authenticated/scales': typeof AuthenticatedScalesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
+  '/_authenticated/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/p/$token': typeof PTokenRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
@@ -260,6 +269,7 @@ export interface FileRouteTypes {
     | '/scales'
     | '/settings'
     | '/welcome'
+    | '/worksheets'
     | '/auth/callback'
     | '/p/$token'
     | '/dev/roadmap'
@@ -285,6 +295,7 @@ export interface FileRouteTypes {
     | '/patients'
     | '/scales'
     | '/welcome'
+    | '/worksheets'
     | '/auth/callback'
     | '/p/$token'
     | '/dev/roadmap'
@@ -312,6 +323,7 @@ export interface FileRouteTypes {
     | '/_authenticated/scales'
     | '/_authenticated/settings'
     | '/_authenticated/welcome'
+    | '/_authenticated/worksheets'
     | '/auth/callback'
     | '/p/$token'
     | '/_authenticated/dev/roadmap'
@@ -397,6 +409,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/auth/callback'
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/worksheets': {
+      id: '/_authenticated/worksheets'
+      path: '/worksheets'
+      fullPath: '/worksheets'
+      preLoaderRoute: typeof AuthenticatedWorksheetsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/welcome': {
       id: '/_authenticated/welcome'
@@ -563,6 +582,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedScalesRoute: typeof AuthenticatedScalesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
+  AuthenticatedWorksheetsRoute: typeof AuthenticatedWorksheetsRoute
   AuthenticatedDevRoadmapRoute: typeof AuthenticatedDevRoadmapRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -574,6 +594,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedScalesRoute: AuthenticatedScalesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
+  AuthenticatedWorksheetsRoute: AuthenticatedWorksheetsRoute,
   AuthenticatedDevRoadmapRoute: AuthenticatedDevRoadmapRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
