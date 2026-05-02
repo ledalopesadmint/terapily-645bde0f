@@ -253,6 +253,7 @@ export const revokeActivity = createServerFn({ method: "POST" })
     }
 
     // Revoga: invalida o link (zera hash) mas mantém histórico (id, vínculos, etc.)
+    const previousStatus = pa.status;
     const { error: updErr } = await supabaseAdmin
       .from("patient_activities")
       .update({
@@ -268,8 +269,12 @@ export const revokeActivity = createServerFn({ method: "POST" })
       throw new Error("Não foi possível revogar a atividade.");
     }
 
-    // Audit nominal: além do trigger automático de status_changed, registramos
-    // um evento dedicado `activity.revoked` com o actor explícito. Sem PHI.
+    logStatusTransition(pa.id, previousStatus, "revoked", {
+      trigger: "therapist_revoke",
+      revokedBy: userId,
+    });
+
+    // Audit nominal
     await recordAudit({
       actorId: userId,
       workspaceId: pa.workspace_id,
