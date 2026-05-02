@@ -48,8 +48,22 @@ import {
 export const Route = createFileRoute("/p/$token")({
   head: () => ({
     meta: [
-      { title: "Atividade — Terapily" },
+      { title: "Your therapist sent you an activity — Terapily" },
       { name: "robots", content: "noindex, nofollow" },
+      // Open Graph — rich preview in WhatsApp, iMessage, email, etc.
+      { property: "og:title", content: "Your therapist sent you an activity" },
+      { property: "og:description", content: "Open this secure link to begin. Your responses are encrypted and sent only to your therapist." },
+      { property: "og:image", content: "https://www.terapily.com/brand/og-magic-link.jpg" },
+      { property: "og:image:width", content: "1200" },
+      { property: "og:image:height", content: "630" },
+      { property: "og:image:alt", content: "terapily — therapeutic tools" },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Terapily" },
+      // Twitter Card
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Your therapist sent you an activity" },
+      { name: "twitter:description", content: "Open this secure link to begin. Your responses are encrypted and sent only to your therapist." },
+      { name: "twitter:image", content: "https://www.terapily.com/brand/og-magic-link.jpg" },
     ],
   }),
   component: PublicActivityPage,
