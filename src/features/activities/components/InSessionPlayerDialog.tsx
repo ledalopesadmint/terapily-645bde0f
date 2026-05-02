@@ -163,7 +163,9 @@ export function InSessionPlayerDialog({
     if (submitted || Object.keys(responses).length === 0) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(() => {
-      saveDraftNow();
+      saveDraftNow().catch((err) => {
+        console.error("[autosave] failed", err);
+      });
     }, 3000);
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -180,10 +182,14 @@ export function InSessionPlayerDialog({
   }, [submitted, hasAnyResponse, onClose]);
 
   const handleConfirmClose = useCallback(async () => {
-    // Save draft before closing
-    await saveDraftNow();
-    qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
-    toast.success("Rascunho salvo.", { duration: 2000 });
+    try {
+      await saveDraftNow();
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
+      toast.success("Rascunho salvo.", { duration: 2000 });
+    } catch (err) {
+      console.error("[handleConfirmClose] save failed", err);
+      toast.error("Não foi possível salvar o rascunho.", { duration: 5000 });
+    }
     setShowCloseConfirm(false);
     onClose();
   }, [saveDraftNow, qc, patientId, workspaceId, onClose]);
@@ -199,10 +205,16 @@ export function InSessionPlayerDialog({
     async (e?: MouseEvent) => {
       e?.stopPropagation();
       setSavingAndExiting(true);
-      await saveDraftNow();
-      qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
-      setSavingAndExiting(false);
-      toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+      try {
+        await saveDraftNow();
+        qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
+        toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+      } catch (err) {
+        console.error("[handleSaveAndExit] failed", err);
+        toast.error("Não foi possível salvar o rascunho. Tente novamente.", { duration: 5000 });
+      } finally {
+        setSavingAndExiting(false);
+      }
       onClose();
     },
     [saveDraftNow, qc, patientId, workspaceId, onClose],

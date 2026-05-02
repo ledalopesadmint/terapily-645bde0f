@@ -39,9 +39,9 @@ function logDraftFailure(reason: string) {
 
 function getClientIp(): string {
   try {
-    return getRequestIP({ xForwardedFor: true }) ?? "unknown";
+    return getRequestIP({ xForwardedFor: true }) ?? "0.0.0.0";
   } catch {
-    return "unknown";
+    return "0.0.0.0";
   }
 }
 
@@ -118,6 +118,22 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
     if (error) {
       console.error("[saveActivityDraft] upsert failed", { code: error.code });
       throw new PublicLinkError();
+    }
+
+    // Update patient_activities status to in_progress on first save
+    if (pa.status === "pending") {
+      const { error: statusError } = await supabaseAdmin
+        .from("patient_activities")
+        .update({ status: "in_progress" })
+        .eq("id", pa.id)
+        .eq("status", "pending"); // guard: only flip if still pending
+
+      if (statusError) {
+        console.error("[saveActivityDraft] status update failed", {
+          code: statusError.code,
+        });
+        // Non-blocking: draft saved successfully, status update is best-effort
+      }
     }
 
     return { ok: true, completionPercent: data.completionPercent };

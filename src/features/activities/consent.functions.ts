@@ -32,9 +32,18 @@ class PublicLinkError extends Error {
 
 function getClientIp(): string {
   try {
-    return getRequestIP({ xForwardedFor: true }) ?? "unknown";
+    return getRequestIP({ xForwardedFor: true }) ?? "0.0.0.0";
   } catch {
-    return "unknown";
+    return "0.0.0.0";
+  }
+}
+
+/** Returns a valid inet value or null for DB storage */
+function getClientIpForDb(): string | null {
+  try {
+    return getRequestIP({ xForwardedFor: true }) ?? null;
+  } catch {
+    return null;
   }
 }
 
@@ -121,13 +130,14 @@ export const recordActivityConsent = createServerFn({ method: "POST" })
         consent_version: CONSENT_VERSION,
         consent_text_hash: hashHex,
         accepted: data.accepted,
-        ip,
+        ip: getClientIpForDb(),
         user_agent: ua,
       });
 
     if (insertErr) {
       console.error("[recordActivityConsent] insert failed", {
         code: insertErr.code,
+        message: insertErr.message,
       });
       throw new PublicLinkError();
     }
