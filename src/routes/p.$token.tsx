@@ -129,12 +129,14 @@ function ActivityRunner({
   token: string;
   resolved: ResolvedActivity;
 }) {
-  const config = resolved.activity.config as QuizConfig;
-  const [responses, setResponses] = useState<Record<string, number>>({});
+  const archetype = resolved.activity.archetype;
+  const isForm = archetype === "structured_form";
+  const config = resolved.activity.config as QuizConfig & StructuredFormConfig;
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [phase, setPhase] = useState<PagePhase>("vinheta");
   const [draftPrompt, setDraftPrompt] = useState<{
-    draft: Record<string, number>;
+    draft: Record<string, unknown>;
     completionPercent: number;
   } | null>(null);
 
