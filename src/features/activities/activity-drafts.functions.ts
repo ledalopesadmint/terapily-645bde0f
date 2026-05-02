@@ -234,6 +234,7 @@ export const discardActivityDraft = createServerFn({ method: "POST" })
     });
 
     const pa = await loadActiveActivityByToken(data.token);
+    const log = activityLog(pa.id);
 
     const { error } = await supabaseAdmin
       .from("activity_drafts")
@@ -241,11 +242,11 @@ export const discardActivityDraft = createServerFn({ method: "POST" })
       .eq("patient_activity_id", pa.id);
 
     if (error) {
-      console.error("[discardActivityDraft] delete failed", {
-        code: error.code,
-      });
+      log.error("draft.discard_failed", { code: error.code });
       throw new PublicLinkError();
     }
+
+    log.info("draft.discarded");
 
     return { ok: true };
   });
