@@ -247,7 +247,7 @@ function FieldRenderer({
           <Label className="text-sm font-medium">{field.label}</Label>
           {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <div className="flex flex-wrap gap-2">
-            {(field.options ?? []).map((opt) => {
+            {normalizeOptions(field.options).map((opt) => {
               const selected = Array.isArray(value) && (value as string[]).includes(opt.value);
               return (
                 <button
