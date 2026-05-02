@@ -25,7 +25,17 @@ import {
   Legend,
 } from "recharts";
 import {
+  TrendingUp,
+  TrendingDown,
+  Minus,
   Download,
+  RefreshCw,
+  AlertTriangle,
+  Activity,
+  BarChart3,
+  ShoppingBag,
+  Zap,
+} from "lucide-react";
   RefreshCw,
   AlertTriangle,
   Activity,
