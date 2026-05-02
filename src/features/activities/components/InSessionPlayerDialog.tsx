@@ -57,7 +57,7 @@ export function InSessionPlayerDialog({
 
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
   const isForm = archetype === "structured_form";
-  const config = (configQuery.data?.activity?.config ?? {}) as QuizConfig & StructuredFormConfig;
+  const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig & StructuredFormConfig;
   const allAnswered = isForm
     ? getFormCompletion(config, responses).allAnswered
     : getCompletionStats(config, responses as Record<string, number>).allAnswered;
