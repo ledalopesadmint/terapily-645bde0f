@@ -78,18 +78,19 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
       throw new PublicLinkError();
     }
 
+    const log = activityLog(pa.id);
+
     if (pa.status === "revoked") {
-      logLinkFailure("revoked");
+      log.warn("resolve.denied", { reason: "revoked" });
       throw new PublicLinkError();
     }
 
     if (pa.used_at) {
-      logLinkFailure("already_used");
+      log.warn("resolve.denied", { reason: "already_used" });
       throw new PublicLinkError();
     }
 
     if (!pa.token_expires_at || new Date(pa.token_expires_at).getTime() < Date.now()) {
-      // Marca como expirado (mantém TODOS os registros — só fecha o acesso)
       if (pa.status !== "expired") {
         await withRetry(() =>
           supabaseAdmin
@@ -97,32 +98,44 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
             .update({ status: "expired", token_hash: null })
             .eq("id", pa.id),
         );
+        logStatusTransition(pa.id, pa.status, "expired", { trigger: "resolve_token_expired" });
       }
-      logLinkFailure("expired");
+      log.warn("resolve.denied", { reason: "expired" });
       throw new PublicLinkError();
     }
 
     // OK: marca primeira abertura + bump open count + status in_progress
     const now = new Date().toISOString();
+    const previousStatus = pa.status;
+    const newStatus = pa.status === "pending" ? "in_progress" : pa.status;
+
     await withRetry(() =>
       supabaseAdmin
         .from("patient_activities")
         .update({
           token_first_opened_at: pa.token_first_opened_at ?? now,
           token_open_count: (pa.token_open_count ?? 0) + 1,
-          status: pa.status === "pending" ? "in_progress" : pa.status,
+          status: newStatus,
         })
         .eq("id", pa.id),
     );
 
+    if (previousStatus !== newStatus) {
+      logStatusTransition(pa.id, previousStatus, newStatus, { trigger: "link_opened" });
+    }
+
     const activity = await getActivityFromCatalog(pa.activity_id);
     if (!activity || activity.status !== "published") {
-      logLinkFailure("activity_unavailable");
+      log.warn("resolve.denied", { reason: "activity_unavailable" });
       throw new PublicLinkError();
     }
 
-    // Resposta MÍNIMA. Sem PHI. Sem ids do paciente expostos no front público
-    // — o submit usa o token de novo, não o patient_activity_id direto.
+    log.info("resolve.ok", {
+      openCount: (pa.token_open_count ?? 0) + 1,
+      isFirstOpen: !pa.token_first_opened_at,
+      activitySlug: activity.slug,
+    });
+
     return {
       activity: {
         slug: activity.slug,
