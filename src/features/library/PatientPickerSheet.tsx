@@ -242,7 +242,11 @@ export function PatientPickerSheet({
                       </p>
                     )}
                   </div>
-                  <Play className="h-4 w-4 shrink-0 text-sage" />
+                  {isSharedLink ? (
+                    <Send className="h-4 w-4 shrink-0 text-sage" />
+                  ) : (
+                    <Play className="h-4 w-4 shrink-0 text-sage" />
+                  )}
                 </button>
               ))}
             </div>
