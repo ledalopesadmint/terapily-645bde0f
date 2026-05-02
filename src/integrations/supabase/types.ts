@@ -599,6 +599,39 @@ export type Database = {
           },
         ]
       }
+      platform_analytics: {
+        Row: {
+          created_at: string
+          date: string
+          day_of_week: number | null
+          dimension: string
+          hour_bucket: number | null
+          id: string
+          metric: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          day_of_week?: number | null
+          dimension?: string
+          hour_bucket?: number | null
+          id?: string
+          metric: string
+          value?: number
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          day_of_week?: number | null
+          dimension?: string
+          hour_bucket?: number | null
+          id?: string
+          metric?: string
+          value?: number
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
