@@ -26,6 +26,7 @@ interface ConsentGateProps {
   open: boolean;
   onAccept: () => void;
   onDecline: () => void;
+  onClose: () => void;
   loading?: boolean;
 }
 
@@ -33,6 +34,7 @@ export function ConsentGate({
   open,
   onAccept,
   onDecline,
+  onClose,
   loading = false,
 }: ConsentGateProps) {
   const [state, setState] = useState<ConsentGateState>("reading");
