@@ -76,7 +76,7 @@ export function PatientPickerSheet({
     staleTime: 30_000,
   });
 
-  // Encontrar a atividade real no banco pelo code/slug/uuid
+  // Encontrar a atividade real no banco pelo slug/code/uuid
   const findRealActivityId = (): string | null => {
     if (!activity) return null;
     const catalog = catalogQuery.data?.activities ?? [];
@@ -88,12 +88,20 @@ export function PatientPickerSheet({
       if (exists) return exists.id;
     }
 
-    // Senão, match por code ou slug (atividades do seed)
-    for (const a of catalog) {
-      const code = ((a as Record<string, unknown>).config as Record<string, unknown> | null)?.code as string | undefined;
-      if (code && code.toLowerCase() === activity.code.toLowerCase()) return a.id;
-      if (a.slug?.toLowerCase() === activity.id.toLowerCase()) return a.id;
+    // Prioridade 1: match por slug (mais confiável, 1:1 com seed id)
+    const bySlug = catalog.find(
+      (a) => a.slug?.toLowerCase() === activity.id.toLowerCase(),
+    );
+    if (bySlug) return bySlug.id;
+
+    // Prioridade 2: match por code (pode ter duplicatas — menos confiável)
+    if (activity.code) {
+      for (const a of catalog) {
+        const code = ((a as Record<string, unknown>).config as Record<string, unknown> | null)?.code as string | undefined;
+        if (code && code.toLowerCase() === activity.code.toLowerCase()) return a.id;
+      }
     }
+
     return null;
   };
 
