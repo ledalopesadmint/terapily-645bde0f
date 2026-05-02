@@ -282,8 +282,11 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     // Generate patient PDF (auto-download after submit)
     let pdfBase64: string | null = null;
     try {
-      if (activity.archetype === "quiz_scale") {
-        const pdfBuffer = await buildScaleResultPDF({
+      if (activity.archetype === "quiz_scale" || activity.archetype === "structured_form") {
+        const buildFn = activity.archetype === "structured_form"
+          ? buildWorksheetResultPDF
+          : buildScaleResultPDF;
+        const pdfBuffer = await buildFn({
           activityResponseId: response.id,
           workspaceId: pa.workspace_id,
           variant: "patient",
