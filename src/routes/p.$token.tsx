@@ -58,16 +58,19 @@ export const Route = createFileRoute("/p/$token")({
   head: ({ loaderData }) => {
     const title = loaderData?.meta?.title ?? "Activity";
     const slug = loaderData?.meta?.slug;
+    const token = loaderData?.token ?? "";
     const ogImage = slug
       ? `https://www.terapily.com/brand/og/${slug}.jpg`
       : "https://www.terapily.com/brand/og-magic-link.jpg";
     const ogTitle = `Your therapist sent you: ${title}`;
     const ogDesc = "Open this secure link to begin. Your responses are encrypted and sent only to your therapist.";
+    const ogUrl = `https://www.terapily.com/p/${token}`;
 
     return {
       meta: [
         { title: `${title} — Terapily` },
         { name: "robots", content: "noindex, nofollow" },
+        { property: "og:url", content: ogUrl },
         { property: "og:title", content: ogTitle },
         { property: "og:description", content: ogDesc },
         { property: "og:image", content: ogImage },
