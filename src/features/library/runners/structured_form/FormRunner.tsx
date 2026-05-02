@@ -59,6 +59,24 @@ function getFormCompletion(config: StructuredFormConfig, responses: Record<strin
   };
 }
 
+// ---------- Helpers ----------
+
+/**
+ * Normalizes options from DB format.
+ * DB stores options as plain strings: ["Prazer", "Realização", ...]
+ * FormField type expects: [{value: "Prazer", label: "Prazer"}, ...]
+ * This handles both formats defensively.
+ */
+function normalizeOptions(
+  options: FormField["options"],
+): { value: string; label: string }[] {
+  if (!options || options.length === 0) return [];
+  return options.map((opt) => {
+    if (typeof opt === "string") return { value: opt, label: opt };
+    return { value: opt.value ?? "", label: opt.label ?? opt.value ?? "" };
+  });
+}
+
 // ---------- Field renderers ----------
 
 function FieldRenderer({
