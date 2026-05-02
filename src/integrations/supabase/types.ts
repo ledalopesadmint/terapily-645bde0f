@@ -62,6 +62,48 @@ export type Database = {
         }
         Relationships: []
       }
+      activity_consents: {
+        Row: {
+          accepted: boolean
+          consent_text_hash: string
+          consent_version: string
+          created_at: string
+          decided_at: string
+          id: string
+          ip: unknown
+          patient_activity_id: string
+          patient_id: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          accepted: boolean
+          consent_text_hash: string
+          consent_version?: string
+          created_at?: string
+          decided_at?: string
+          id?: string
+          ip?: unknown
+          patient_activity_id: string
+          patient_id: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          accepted?: boolean
+          consent_text_hash?: string
+          consent_version?: string
+          created_at?: string
+          decided_at?: string
+          id?: string
+          ip?: unknown
+          patient_activity_id?: string
+          patient_id?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       activity_drafts: {
         Row: {
           completion_percent: number
@@ -937,6 +979,7 @@ export type Database = {
         | "completed"
         | "expired"
         | "revoked"
+        | "declined"
       patient_status: "active" | "archived"
       scheduled_application_status:
         | "pending"
@@ -1119,6 +1162,7 @@ export const Constants = {
         "completed",
         "expired",
         "revoked",
+        "declined",
       ],
       patient_status: ["active", "archived"],
       scheduled_application_status: [
