@@ -105,7 +105,7 @@ async function fetchTherapistAnalytics(workspaceId: string): Promise<TherapistAn
   );
 
   const scaleOnly = (allPAs ?? [])
-    .filter((pa) => catalogMap.get(pa.activity_id)?.archetype === "scale")
+    .filter((pa) => catalogMap.get(pa.activity_id)?.archetype === "quiz_scale")
     .map((pa) => ({ ...pa, title: catalogMap.get(pa.activity_id)?.title ?? "Sem título" }));
 
   const totalScalesApplied = scaleOnly.length;
