@@ -698,6 +698,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         <Button
                           size="sm"
                           variant="default"
+                          className="text-xs px-2 sm:px-3"
                           onClick={() =>
                             setInSessionTarget({
                               patientActivityId: a.id,
@@ -705,7 +706,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                             })
                           }
                         >
-                          <Play className="mr-1 h-3.5 w-3.5" /> Aplicar agora
+                          <Play className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Aplicar
                         </Button>
                       )}
                       {/* Ver respostas — completa */}
