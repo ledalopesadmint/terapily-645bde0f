@@ -380,6 +380,7 @@ function PatientDetailPage() {
         patientId={patient.id}
         workspaceId={patient.workspace_id}
         startSession={startSession}
+        openAssign={openAssign}
       />
     </div>
   );
