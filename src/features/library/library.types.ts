@@ -67,5 +67,5 @@ export interface Activity {
     | "compass";
   supportedModes: DeliveryMode[];
   sensitive?: boolean;
-  subcategory?: "breathing" | "grounding" | "relaxation" | "attention";
+  subcategory?: "breathing" | "grounding" | "relaxation" | "attention" | "body-scan" | "meditation" | "informal" | "defusion" | "self-compassion" | "micro-practices";
 }
