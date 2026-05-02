@@ -155,7 +155,7 @@ export const Route = createFileRoute("/h/$token")({
   errorComponent: HabitRouteError,
 });
 
-type ViewState = "exercise" | "completed" | "history";
+type ViewState = "consent" | "exercise" | "completed" | "history";
 
 interface HistoryEntry {
   id: string;
