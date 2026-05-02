@@ -172,12 +172,15 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       logLinkFailure("submit_not_found");
       throw new PublicLinkError();
     }
+
+    const log = activityLog(pa.id);
+
     if (pa.status === "revoked") {
-      logLinkFailure("submit_revoked");
+      log.warn("submit.denied", { reason: "revoked" });
       throw new PublicLinkError();
     }
     if (pa.used_at) {
-      logLinkFailure("submit_already_used");
+      log.warn("submit.denied", { reason: "already_used" });
       throw new PublicLinkError();
     }
     if (!pa.token_expires_at || new Date(pa.token_expires_at).getTime() < Date.now()) {
@@ -188,16 +191,23 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
             .update({ status: "expired", token_hash: null })
             .eq("id", pa.id),
         );
+        logStatusTransition(pa.id, pa.status, "expired", { trigger: "submit_token_expired" });
       }
-      logLinkFailure("submit_expired");
+      log.warn("submit.denied", { reason: "expired" });
       throw new PublicLinkError();
     }
 
     const activity = await getActivityFromCatalog(pa.activity_id);
     if (!activity || activity.status !== "published") {
-      logLinkFailure("submit_activity_unavailable");
+      log.warn("submit.denied", { reason: "activity_unavailable" });
       throw new PublicLinkError();
     }
+
+    log.info("submit.started", {
+      activitySlug: activity.slug,
+      deliveryMode: pa.delivery_mode,
+      responseCount: Object.keys(data.responses).length,
+    });
 
     // 1. Score (sem PHI no metadata)
     const result = scoreActivity(
@@ -243,14 +253,18 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     );
 
     if (respErr || !response) {
-      console.error("[submitActivityResponse] insert response failed", {
-        code: respErr?.code,
-      });
+      log.error("submit.insert_failed", { code: respErr?.code });
       throw new PublicLinkError();
     }
 
+    log.info("submit.response_created", {
+      responseId: response.id,
+      score: response.score,
+      severity: response.severity,
+      flagRaised: flag.raised,
+    });
+
     // 4. Single-use: marca used_at + status completed + zera token_hash
-    //    (acesso fechado, dados permanecem)
     const { error: updErr } = await withRetry(() =>
       supabaseAdmin
         .from("patient_activities")
@@ -265,11 +279,14 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     );
 
     if (updErr) {
-      console.error("[submitActivityResponse] mark used_at failed", {
-        code: updErr.code,
-      });
+      log.error("submit.mark_used_failed", { code: updErr.code });
       throw new PublicLinkError();
     }
+
+    logStatusTransition(pa.id, pa.status, "completed", {
+      trigger: "submit",
+      responseId: response.id,
+    });
 
     // 5. Purga draft (se existir) — regra "EXPIRA O ACESSO → NÃO EXPIRA O DADO".
     //    Resposta final ficou em activity_responses (permanente).
