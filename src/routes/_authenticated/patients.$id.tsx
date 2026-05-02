@@ -768,8 +768,8 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         </Button>
                       )}
                     </div>
-                    {/* M-Linha 5: Botões Paciente + Terapeuta (só se completed) */}
-                    {status === "completed" && response?.id && (
+                    {/* M-Linha 5: Botões Paciente + Terapeuta (só se completed, exceto mindfulness) */}
+                    {status === "completed" && response?.id && !["guided_timer", "guided_script"].includes((a.activity as any)?.archetype) && (
                       <div className="grid grid-cols-2 gap-1.5">
                         <Button
                           size="sm"
