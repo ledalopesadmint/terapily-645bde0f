@@ -462,7 +462,7 @@ export function FormRunner({
                 setDirection(i > currentIdx ? "next" : "prev");
                 setAnimating(true);
                 setTimeout(() => {
-                  setCurrentIdx(i);
+                  commitStepIndex(i);
                   setAnimating(false);
                 }, 200);
               }}
