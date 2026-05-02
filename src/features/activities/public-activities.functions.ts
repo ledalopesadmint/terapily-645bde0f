@@ -17,6 +17,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRetry } from "@/lib/retry/with-retry.server";
 import { encryptPHIServer } from "@/lib/crypto/encryption.server";
 import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
@@ -89,10 +90,12 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
     if (!pa.token_expires_at || new Date(pa.token_expires_at).getTime() < Date.now()) {
       // Marca como expirado (mantém TODOS os registros — só fecha o acesso)
       if (pa.status !== "expired") {
-        await supabaseAdmin
-          .from("patient_activities")
-          .update({ status: "expired", token_hash: null })
-          .eq("id", pa.id);
+        await withRetry(() =>
+          supabaseAdmin
+            .from("patient_activities")
+            .update({ status: "expired", token_hash: null })
+            .eq("id", pa.id),
+        );
       }
       logLinkFailure("expired");
       throw new PublicLinkError();
@@ -100,14 +103,16 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
 
     // OK: marca primeira abertura + bump open count + status in_progress
     const now = new Date().toISOString();
-    await supabaseAdmin
-      .from("patient_activities")
-      .update({
-        token_first_opened_at: pa.token_first_opened_at ?? now,
-        token_open_count: (pa.token_open_count ?? 0) + 1,
-        status: pa.status === "pending" ? "in_progress" : pa.status,
-      })
-      .eq("id", pa.id);
+    await withRetry(() =>
+      supabaseAdmin
+        .from("patient_activities")
+        .update({
+          token_first_opened_at: pa.token_first_opened_at ?? now,
+          token_open_count: (pa.token_open_count ?? 0) + 1,
+          status: pa.status === "pending" ? "in_progress" : pa.status,
+        })
+        .eq("id", pa.id),
+    );
 
     const activity = await getActivityFromCatalog(pa.activity_id);
     if (!activity || activity.status !== "published") {
@@ -163,10 +168,12 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     }
     if (!pa.token_expires_at || new Date(pa.token_expires_at).getTime() < Date.now()) {
       if (pa.status !== "expired") {
-        await supabaseAdmin
-          .from("patient_activities")
-          .update({ status: "expired", token_hash: null })
-          .eq("id", pa.id);
+        await withRetry(() =>
+          supabaseAdmin
+            .from("patient_activities")
+            .update({ status: "expired", token_hash: null })
+            .eq("id", pa.id),
+        );
       }
       logLinkFailure("submit_expired");
       throw new PublicLinkError();
@@ -213,11 +220,13 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       submitted_via: submittedVia,
     };
 
-    const { data: response, error: respErr } = await supabaseAdmin
-      .from("activity_responses")
-      .insert(responseInsert)
-      .select("id, score, severity, submitted_at")
-      .single();
+    const { data: response, error: respErr } = await withRetry(() =>
+      supabaseAdmin
+        .from("activity_responses")
+        .insert(responseInsert)
+        .select("id, score, severity, submitted_at")
+        .single(),
+    );
 
     if (respErr || !response) {
       console.error("[submitActivityResponse] insert response failed", {
@@ -228,16 +237,18 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
 
     // 4. Single-use: marca used_at + status completed + zera token_hash
     //    (acesso fechado, dados permanecem)
-    const { error: updErr } = await supabaseAdmin
-      .from("patient_activities")
-      .update({
-        used_at: new Date().toISOString(),
-        status: "completed",
-        token_hash: null,
-        response_id: response.id,
-      })
-      .eq("id", pa.id)
-      .is("used_at", null); // proteção extra contra race condition
+    const { error: updErr } = await withRetry(() =>
+      supabaseAdmin
+        .from("patient_activities")
+        .update({
+          used_at: new Date().toISOString(),
+          status: "completed",
+          token_hash: null,
+          response_id: response.id,
+        })
+        .eq("id", pa.id)
+        .is("used_at", null),
+    );
 
     if (updErr) {
       console.error("[submitActivityResponse] mark used_at failed", {

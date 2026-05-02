@@ -15,6 +15,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRetry } from "@/lib/retry/with-retry.server";
 import {
   encryptPHIServer,
   decryptPHIServer,
@@ -101,19 +102,21 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
     const encrypted = await encryptPHIServer(JSON.stringify(data.draft));
 
     // Upsert por patient_activity_id (UNIQUE).
-    const { error } = await supabaseAdmin
-      .from("activity_drafts")
-      .upsert(
-        {
-          patient_activity_id: pa.id,
-          workspace_id: pa.workspace_id,
-          patient_id: pa.patient_id,
-          draft_encrypted: encrypted,
-          completion_percent: data.completionPercent,
-          expires_at: pa.token_expires_at!,
-        },
-        { onConflict: "patient_activity_id" },
-      );
+    const { error } = await withRetry(() =>
+      supabaseAdmin
+        .from("activity_drafts")
+        .upsert(
+          {
+            patient_activity_id: pa.id,
+            workspace_id: pa.workspace_id,
+            patient_id: pa.patient_id,
+            draft_encrypted: encrypted,
+            completion_percent: data.completionPercent,
+            expires_at: pa.token_expires_at!,
+          },
+          { onConflict: "patient_activity_id" },
+        ),
+    );
 
     if (error) {
       console.error("[saveActivityDraft] upsert failed", { code: error.code });
@@ -122,11 +125,13 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
 
     // Update patient_activities status to in_progress on first save
     if (pa.status === "pending") {
-      const { error: statusError } = await supabaseAdmin
-        .from("patient_activities")
-        .update({ status: "in_progress" })
-        .eq("id", pa.id)
-        .eq("status", "pending"); // guard: only flip if still pending
+      const { error: statusError } = await withRetry(() =>
+        supabaseAdmin
+          .from("patient_activities")
+          .update({ status: "in_progress" })
+          .eq("id", pa.id)
+          .eq("status", "pending"),
+      );
 
       if (statusError) {
         console.error("[saveActivityDraft] status update failed", {
@@ -155,11 +160,13 @@ export const getActivityDraft = createServerFn({ method: "POST" })
 
     const pa = await loadActiveActivityByToken(data.token);
 
-    const { data: draft, error } = await supabaseAdmin
-      .from("activity_drafts")
-      .select("draft_encrypted, completion_percent, updated_at")
-      .eq("patient_activity_id", pa.id)
-      .maybeSingle();
+    const { data: draft, error } = await withRetry(() =>
+      supabaseAdmin
+        .from("activity_drafts")
+        .select("draft_encrypted, completion_percent, updated_at")
+        .eq("patient_activity_id", pa.id)
+        .maybeSingle(),
+    );
 
     if (error) {
       console.error("[getActivityDraft] select failed", { code: error.code });
