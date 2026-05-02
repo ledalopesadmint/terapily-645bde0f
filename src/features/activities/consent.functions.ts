@@ -137,7 +137,7 @@ export const recordActivityConsent = createServerFn({ method: "POST" })
       await supabaseAdmin
         .from("patient_activities")
         .update({
-          status: "declined" as never,
+          status: "declined" as any,
           token_hash: null,
           used_at: new Date().toISOString(),
         })
