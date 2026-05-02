@@ -415,7 +415,7 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
         : [];
 
       if (isEmotionPicker && emotionList.length > 0) {
-        const emotionH = emotionList.length * 10 + 8;
+        const emotionH = emotionList.length * 10 + 12;
         y = checkPage(y, emotionH + 2);
 
         doc.setFillColor(252, 251, 248);
@@ -423,9 +423,9 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
         doc.setLineWidth(0.3);
         doc.roundedRect(M + 2, y, CW - 4, emotionH, 1.5, 1.5, "FD");
 
-        let ey = y + 5;
+        let ey = y + 7;
         const barX = M + 40;
-        const barW = CW - 48;
+        const barW = CW - 62;
         for (const emo of emotionList) {
           const name = emo.name ?? emo.emotion ?? emo.label ?? "—";
           const intensity = emo.intensity ?? emo.value ?? 0;
