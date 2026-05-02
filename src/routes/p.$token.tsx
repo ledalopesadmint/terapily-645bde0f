@@ -34,6 +34,11 @@ import {
   getFormCompletion,
 } from "@/features/library/runners/structured_form/FormRunner";
 import type { StructuredFormConfig } from "@/features/library/runners/structured_form/form-types";
+import {
+  GuidedScriptRunner,
+  getScriptCompletion,
+} from "@/features/library/runners/guided_script/GuidedScriptRunner";
+import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
 import { ConsentGate } from "@/features/activities/components/ConsentGate";
 import { VinhetaIntro } from "@/features/activities/components/VinhetaIntro";
 import { Button } from "@/components/ui/button";
