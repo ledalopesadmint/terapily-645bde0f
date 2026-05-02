@@ -61,6 +61,7 @@ export function InSessionPlayerDialog({
 }: InSessionPlayerProps) {
   const qc = useQueryClient();
   const [responses, setResponses] = useState<Record<string, unknown>>({});
+  const [formStepIndex, setFormStepIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [vinhetaDone, setVinhetaDone] = useState(false);
   const [introStarted, setIntroStarted] = useState(false);
@@ -72,6 +73,8 @@ export function InSessionPlayerDialog({
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const responsesRef = useRef(responses);
   responsesRef.current = responses;
+  const formStepIndexRef = useRef(formStepIndex);
+  formStepIndexRef.current = formStepIndex;
 
   const configQuery = useQuery({
     queryKey: ["activity-config", patientActivityId],
@@ -100,7 +103,12 @@ export function InSessionPlayerDialog({
     queryFn: async () => {
       const result = await loadInSessionDraft({ data: { patientActivityId } });
       if (result.hasDraft && result.draft) {
-        setResponses(result.draft as Record<string, unknown>);
+        const restoredDraft = result.draft as Record<string, unknown>;
+        const restoredMeta = restoredDraft.__terapily_meta as { formStepIndex?: unknown } | undefined;
+        const restoredStep = typeof restoredMeta?.formStepIndex === "number" ? restoredMeta.formStepIndex : 0;
+        const { __terapily_meta: _meta, ...restoredResponses } = restoredDraft;
+        setResponses(restoredResponses);
+        setFormStepIndex(restoredStep);
         setDraftRestored(true);
         // Skip vinheta + intro when resuming a draft
         setVinhetaDone(true);
@@ -129,7 +137,10 @@ export function InSessionPlayerDialog({
       await saveInSessionDraft({
         data: {
           patientActivityId,
-          draft: current as Record<string, NonNullable<unknown>>,
+          draft: {
+            ...(current as Record<string, NonNullable<unknown>>),
+            __terapily_meta: { formStepIndex: formStepIndexRef.current },
+          },
           completionPercent: completion,
         },
       });
@@ -300,6 +311,8 @@ export function InSessionPlayerDialog({
                 <FormRunner
                   config={config}
                   responses={responses}
+                    currentStepIndex={formStepIndex}
+                    onStepChange={setFormStepIndex}
                   onResponse={(fId, val) =>
                     setResponses((prev) => ({ ...prev, [fId]: val }))
                   }
