@@ -13,6 +13,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRetry } from "@/lib/retry/with-retry.server";
 import { recordAudit } from "@/features/audit/audit.server";
 import { generateMagicLinkToken, hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { getActivePatientForWorkspace, getActivityFromCatalog } from "./activities.server";
