@@ -66,6 +66,7 @@ export function InSessionPlayerDialog({
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const handleVinhetaComplete = useCallback(() => setVinhetaDone(true), []);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const saveQueueRef = useRef<Promise<void>>(Promise.resolve());
   const responsesRef = useRef(responses);
   responsesRef.current = responses;
   const formStepIndexRef = useRef(formStepIndex);
@@ -123,31 +124,38 @@ export function InSessionPlayerDialog({
 
   // ── Draft auto-save (debounced 3s) ──────────────────────────────
   const saveDraftNow = useCallback(async () => {
-    const current = responsesRef.current;
-    if (Object.keys(current).length === 0) return;
+    const runSave = async () => {
+      const current = responsesRef.current;
+      if (Object.keys(current).length === 0) return;
 
-    try {
-      setDraftSaving(true);
-      const completion = isForm
-        ? getFormCompletion(config, current).completion
-        : getCompletionStats(config, current as Record<string, number>).completion;
+      try {
+        setDraftSaving(true);
+        const completion = isForm
+          ? getFormCompletion(config, current).completion
+          : getCompletionStats(config, current as Record<string, number>).completion;
 
-      await saveInSessionDraft({
-        data: {
-          patientActivityId,
-          draft: {
-            ...(current as Record<string, NonNullable<unknown>>),
-            __terapily_meta: { formStepIndex: formStepIndexRef.current },
+        await saveInSessionDraft({
+          data: {
+            patientActivityId,
+            draft: {
+              ...(current as Record<string, NonNullable<unknown>>),
+              __terapily_meta: { formStepIndex: formStepIndexRef.current },
+            },
+            completionPercent: completion,
           },
-          completionPercent: completion,
-        },
-      });
-      setLastSaved(new Date());
-    } catch (e) {
-      console.warn("[draft] save failed", e);
-    } finally {
-      setDraftSaving(false);
-    }
+        });
+        setLastSaved(new Date());
+      } catch (e) {
+        console.warn("[draft] save failed", e);
+        throw e;
+      } finally {
+        setDraftSaving(false);
+      }
+    };
+
+    const nextSave = saveQueueRef.current.catch(() => undefined).then(runSave);
+    saveQueueRef.current = nextSave.catch(() => undefined);
+    await nextSave;
   }, [patientActivityId, isForm, config]);
 
   // Schedule auto-save on response change
