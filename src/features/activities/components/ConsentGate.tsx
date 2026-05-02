@@ -43,7 +43,7 @@ export function ConsentGate({
 
   if (state === "confirming_decline") {
     return (
-      <Dialog open={open} onOpenChange={() => {}}>
+      <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
         <DialogContent
           className="max-w-md"
           onPointerDownOutside={(e) => e.preventDefault()}
