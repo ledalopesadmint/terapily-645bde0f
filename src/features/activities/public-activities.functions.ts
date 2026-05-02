@@ -328,22 +328,26 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
         const buildFn = activity.archetype === "structured_form"
           ? buildWorksheetResultPDF
           : buildScaleResultPDF;
+        log.info("submit.pdf_starting", { archetype: activity.archetype });
         const pdfBuffer = await buildFn({
           activityResponseId: response.id,
           workspaceId: pa.workspace_id,
           variant: "patient",
         });
-        const bytes = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer);
-        let binary = "";
-        for (let i = 0; i < bytes.length; i++) {
-          binary += String.fromCharCode(bytes[i]);
+        // Convert buffer to base64 using chunked approach (avoids stack overflow on large PDFs)
+        const bytes = pdfBuffer instanceof Uint8Array ? pdfBuffer : new Uint8Array(pdfBuffer as ArrayBuffer);
+        const chunks: string[] = [];
+        const CHUNK = 8192;
+        for (let offset = 0; offset < bytes.length; offset += CHUNK) {
+          chunks.push(String.fromCharCode(...bytes.subarray(offset, offset + CHUNK)));
         }
-        pdfBase64 = btoa(binary);
-        log.info("submit.pdf_generated", { variant: "patient" });
+        pdfBase64 = btoa(chunks.join(""));
+        log.info("submit.pdf_generated", { variant: "patient", sizeKB: Math.round(bytes.length / 1024) });
       }
     } catch (err) {
-      log.warn("submit.pdf_failed", {
+      log.error("submit.pdf_failed", {
         error: err instanceof Error ? err.message : "unknown",
+        stack: err instanceof Error ? err.stack?.slice(0, 500) : undefined,
       });
     }
 
