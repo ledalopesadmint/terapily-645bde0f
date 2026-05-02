@@ -162,6 +162,10 @@ function ScalesPage() {
                 const duration = (cfg.estimated_minutes as number) ?? 5;
                 const code = (cfg.code as string) ?? scale.slug.toUpperCase();
 
+                const supportsMagicLink =
+                  Array.isArray(cfg.supported_modes) &&
+                  (cfg.supported_modes as string[]).includes("shared_link");
+
                 return (
                   <ScaleCard
                     key={scale.id}
@@ -172,7 +176,9 @@ function ScalesPage() {
                     shortDescription={scale.short_description}
                     illustration={getScaleIllustration(scale.category)}
                     isExclusive={isExclusive}
+                    supportsMagicLink={supportsMagicLink}
                     onClick={() => handleStartInSession(scale)}
+                    onSendLink={() => handleSendLink(scale)}
                   />
                 );
               })}
