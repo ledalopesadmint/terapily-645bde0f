@@ -2,11 +2,10 @@
  * ResourceBox — box-style section for the library (Acervo).
  *
  * Matches InSessionQuickAccess visual pattern: header row with icon/title/link,
- * subtitle, and up to 3 ScaleCard-style preview cards inside.
+ * subtitle, and up to 3 ScaleCard-style preview cards with hover interactions.
  */
 
 import { Link } from "@tanstack/react-router";
-import { ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { ScaleCard, getScaleIllustration } from "./ScaleCard";
 import type { Activity } from "./library.types";
@@ -18,6 +17,7 @@ export interface PreviewItem {
   durationMin: number;
   shortDescription: string;
   illustration?: Activity["illustration"];
+  supportsMagicLink?: boolean;
 }
 
 interface ResourceBoxProps {
@@ -26,12 +26,14 @@ interface ResourceBoxProps {
   subtitle: string;
   eyebrow?: string;
   href: string;
-  count?: number;
-  countLabel?: string;
   /** Label shown in the chip area instead of "Escala validada". */
   chipLabel?: string;
   /** Up to 3 preview items to show as ScaleCard-style cards inside the box. */
   previewItems?: PreviewItem[];
+  /** Called when "Em sessão" is clicked on a preview card. */
+  onStartInSession?: (code: string) => void;
+  /** Called when "Enviar link" is clicked on a preview card. */
+  onSendLink?: (code: string) => void;
 }
 
 export function ResourceBox({
@@ -40,10 +42,10 @@ export function ResourceBox({
   subtitle,
   eyebrow = "Acervo",
   href,
-  count,
-  countLabel,
   chipLabel,
   previewItems,
+  onStartInSession,
+  onSendLink,
 }: ResourceBoxProps) {
   return (
     <section className="mx-auto max-w-6xl px-4 sm:px-8">
@@ -73,7 +75,7 @@ export function ResourceBox({
           {subtitle}
         </p>
 
-        {/* Preview cards — reuses ScaleCard for visual consistency */}
+        {/* Preview cards — reuses ScaleCard for full visual consistency */}
         {previewItems && previewItems.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {previewItems.map((item) => (
@@ -86,25 +88,12 @@ export function ResourceBox({
                 shortDescription={item.shortDescription}
                 illustration={item.illustration ?? getScaleIllustration(item.category)}
                 chipLabel={chipLabel}
+                supportsMagicLink={item.supportsMagicLink}
+                onClick={onStartInSession ? () => onStartInSession(item.code) : undefined}
+                onSendLink={onSendLink ? () => onSendLink(item.code) : undefined}
               />
             ))}
           </div>
-        )}
-
-        {count != null && countLabel && previewItems && previewItems.length > 0 && count > previewItems.length && (
-          <Link
-            to={href}
-            className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
-          >
-            + {count - previewItems.length} {countLabel}
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
-          </Link>
-        )}
-
-        {count != null && countLabel && (!previewItems || previewItems.length === 0) && (
-          <p className="mt-2 text-xs font-medium text-muted-foreground/70">
-            {count} {countLabel}
-          </p>
         )}
       </div>
     </section>
