@@ -26,6 +26,7 @@ import { buildScaleResultPDF } from "./scale-result-pdf.server";
 import { buildWorksheetResultPDF } from "./worksheet-result-pdf.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
+import { activityLog, logStatusTransition } from "@/lib/logging/activity-logger.server";
 import {
   getPatientActivityByTokenHash,
   getActivityFromCatalog,
@@ -77,18 +78,19 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
       throw new PublicLinkError();
     }
 
+    const log = activityLog(pa.id);
+
     if (pa.status === "revoked") {
-      logLinkFailure("revoked");
+      log.warn("resolve.denied", { reason: "revoked" });
       throw new PublicLinkError();
     }
 
     if (pa.used_at) {
-      logLinkFailure("already_used");
+      log.warn("resolve.denied", { reason: "already_used" });
       throw new PublicLinkError();
     }
 
     if (!pa.token_expires_at || new Date(pa.token_expires_at).getTime() < Date.now()) {
-      // Marca como expirado (mantém TODOS os registros — só fecha o acesso)
       if (pa.status !== "expired") {
         await withRetry(() =>
           supabaseAdmin
@@ -96,32 +98,44 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
             .update({ status: "expired", token_hash: null })
             .eq("id", pa.id),
         );
+        logStatusTransition(pa.id, pa.status, "expired", { trigger: "resolve_token_expired" });
       }
-      logLinkFailure("expired");
+      log.warn("resolve.denied", { reason: "expired" });
       throw new PublicLinkError();
     }
 
     // OK: marca primeira abertura + bump open count + status in_progress
     const now = new Date().toISOString();
+    const previousStatus = pa.status;
+    const newStatus = pa.status === "pending" ? "in_progress" : pa.status;
+
     await withRetry(() =>
       supabaseAdmin
         .from("patient_activities")
         .update({
           token_first_opened_at: pa.token_first_opened_at ?? now,
           token_open_count: (pa.token_open_count ?? 0) + 1,
-          status: pa.status === "pending" ? "in_progress" : pa.status,
+          status: newStatus,
         })
         .eq("id", pa.id),
     );
 
+    if (previousStatus !== newStatus) {
+      logStatusTransition(pa.id, previousStatus, newStatus, { trigger: "link_opened" });
+    }
+
     const activity = await getActivityFromCatalog(pa.activity_id);
     if (!activity || activity.status !== "published") {
-      logLinkFailure("activity_unavailable");
+      log.warn("resolve.denied", { reason: "activity_unavailable" });
       throw new PublicLinkError();
     }
 
-    // Resposta MÍNIMA. Sem PHI. Sem ids do paciente expostos no front público
-    // — o submit usa o token de novo, não o patient_activity_id direto.
+    log.info("resolve.ok", {
+      openCount: (pa.token_open_count ?? 0) + 1,
+      isFirstOpen: !pa.token_first_opened_at,
+      activitySlug: activity.slug,
+    });
+
     return {
       activity: {
         slug: activity.slug,
@@ -158,12 +172,15 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       logLinkFailure("submit_not_found");
       throw new PublicLinkError();
     }
+
+    const log = activityLog(pa.id);
+
     if (pa.status === "revoked") {
-      logLinkFailure("submit_revoked");
+      log.warn("submit.denied", { reason: "revoked" });
       throw new PublicLinkError();
     }
     if (pa.used_at) {
-      logLinkFailure("submit_already_used");
+      log.warn("submit.denied", { reason: "already_used" });
       throw new PublicLinkError();
     }
     if (!pa.token_expires_at || new Date(pa.token_expires_at).getTime() < Date.now()) {
@@ -174,16 +191,23 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
             .update({ status: "expired", token_hash: null })
             .eq("id", pa.id),
         );
+        logStatusTransition(pa.id, pa.status, "expired", { trigger: "submit_token_expired" });
       }
-      logLinkFailure("submit_expired");
+      log.warn("submit.denied", { reason: "expired" });
       throw new PublicLinkError();
     }
 
     const activity = await getActivityFromCatalog(pa.activity_id);
     if (!activity || activity.status !== "published") {
-      logLinkFailure("submit_activity_unavailable");
+      log.warn("submit.denied", { reason: "activity_unavailable" });
       throw new PublicLinkError();
     }
+
+    log.info("submit.started", {
+      activitySlug: activity.slug,
+      deliveryMode: pa.delivery_mode,
+      responseCount: Object.keys(data.responses).length,
+    });
 
     // 1. Score (sem PHI no metadata)
     const result = scoreActivity(
@@ -229,14 +253,18 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     );
 
     if (respErr || !response) {
-      console.error("[submitActivityResponse] insert response failed", {
-        code: respErr?.code,
-      });
+      log.error("submit.insert_failed", { code: respErr?.code });
       throw new PublicLinkError();
     }
 
+    log.info("submit.response_created", {
+      responseId: response.id,
+      score: response.score,
+      severity: response.severity,
+      flagRaised: flag.raised,
+    });
+
     // 4. Single-use: marca used_at + status completed + zera token_hash
-    //    (acesso fechado, dados permanecem)
     const { error: updErr } = await withRetry(() =>
       supabaseAdmin
         .from("patient_activities")
@@ -251,11 +279,14 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
     );
 
     if (updErr) {
-      console.error("[submitActivityResponse] mark used_at failed", {
-        code: updErr.code,
-      });
+      log.error("submit.mark_used_failed", { code: updErr.code });
       throw new PublicLinkError();
     }
+
+    logStatusTransition(pa.id, pa.status, "completed", {
+      trigger: "submit",
+      responseId: response.id,
+    });
 
     // 5. Purga draft (se existir) — regra "EXPIRA O ACESSO → NÃO EXPIRA O DADO".
     //    Resposta final ficou em activity_responses (permanente).
@@ -266,13 +297,13 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       .eq("patient_activity_id", pa.id);
 
     if (draftErr) {
-      // Não falha o submit por causa disso — só registra. Próxima purge job pega.
-      console.warn("[submitActivityResponse] draft purge failed", {
-        code: draftErr.code,
-      });
+      log.warn("submit.draft_purge_failed", { code: draftErr.code });
+    } else {
+      log.info("submit.draft_purged");
     }
 
     if (flag.raised) {
+      log.info("submit.clinical_flag_raised", { flag: flag.flag, itemId: flag.item_id });
       await recordAudit({
         actorId: null,
         workspaceId: pa.workspace_id,
@@ -308,13 +339,18 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
           binary += String.fromCharCode(bytes[i]);
         }
         pdfBase64 = btoa(binary);
+        log.info("submit.pdf_generated", { variant: "patient" });
       }
     } catch (err) {
-      // PDF generation failure should NOT block submit
-      console.warn("[submitActivityResponse] PDF generation failed, continuing without", {
+      log.warn("submit.pdf_failed", {
         error: err instanceof Error ? err.message : "unknown",
       });
     }
+
+    log.info("submit.completed", {
+      responseId: response.id,
+      hasPdf: !!pdfBase64,
+    });
 
     return { ok: true, pdf: pdfBase64 };
   });

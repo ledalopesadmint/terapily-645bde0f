@@ -20,6 +20,7 @@ import { getActivePatientForWorkspace, getActivityFromCatalog } from "./activiti
 import { encryptPHIServer, decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
+import { activityLog, logStatusTransition } from "@/lib/logging/activity-logger.server";
 
 // ----------------------------------------------------------------
 // Tier → janela de shared_link (em horas)
@@ -184,10 +185,17 @@ export const assignActivity = createServerFn({ method: "POST" })
     );
 
     if (error || !created) {
-      // Não logamos PHI nem token. Erro é genérico pra UI.
       console.error("[assignActivity] insert failed", { code: error?.code });
       throw new Error("Não foi possível criar a atividade.");
     }
+
+    const log = activityLog(created.id);
+    log.info("assign.created", {
+      deliveryMode: data.deliveryMode,
+      hasLink: needsLink,
+      expiresAt: created.token_expires_at,
+    });
+    logStatusTransition(created.id, "_new", "pending", { trigger: "assign" });
 
     // 6. Retorna o token cru SOMENTE aqui. Nunca mais será exposto.
     return {
@@ -245,6 +253,7 @@ export const revokeActivity = createServerFn({ method: "POST" })
     }
 
     // Revoga: invalida o link (zera hash) mas mantém histórico (id, vínculos, etc.)
+    const previousStatus = pa.status;
     const { error: updErr } = await supabaseAdmin
       .from("patient_activities")
       .update({
@@ -260,8 +269,12 @@ export const revokeActivity = createServerFn({ method: "POST" })
       throw new Error("Não foi possível revogar a atividade.");
     }
 
-    // Audit nominal: além do trigger automático de status_changed, registramos
-    // um evento dedicado `activity.revoked` com o actor explícito. Sem PHI.
+    logStatusTransition(pa.id, previousStatus, "revoked", {
+      trigger: "therapist_revoke",
+      revokedBy: userId,
+    });
+
+    // Audit nominal
     await recordAudit({
       actorId: userId,
       workspaceId: pa.workspace_id,
@@ -716,9 +729,14 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
       .eq("id", pa.id);
 
     if (updErr) {
-      console.error("[generateInSessionLink] update failed", { code: updErr.code });
+      activityLog(pa.id).error("link_regen.failed", { code: updErr.code });
       throw new Error("Não foi possível gerar o link.");
     }
+
+    if (pa.status !== newStatus) {
+      logStatusTransition(pa.id, pa.status, newStatus, { trigger: "link_regen" });
+    }
+    activityLog(pa.id).info("link_regen.ok", { expiresAt });
 
     return {
       rawToken,
@@ -811,9 +829,17 @@ export const recordInSessionResponse = createServerFn({ method: "POST" })
       .single();
 
     if (respErr || !response) {
-      console.error("[recordInSessionResponse] insert failed", { code: respErr?.code });
+      activityLog(pa.id).error("in_session.insert_failed", { code: respErr?.code });
       throw new Error("Não foi possível salvar a resposta.");
     }
+
+    const log = activityLog(pa.id);
+    log.info("in_session.response_created", {
+      responseId: response.id,
+      score: result.score,
+      severity: result.severity,
+      flagRaised: flag.raised,
+    });
 
     // Marca patient_activity como aplicado + queima token se houver
     const nowIso = new Date().toISOString();
@@ -829,8 +855,14 @@ export const recordInSessionResponse = createServerFn({ method: "POST" })
       })
       .eq("id", pa.id);
 
+    logStatusTransition(pa.id, pa.status, "completed", {
+      trigger: "in_session_submit",
+      responseId: response.id,
+    });
+
     // Audit nominal de Mauve flag (PHI-safe: só UUIDs e enum).
     if (flag.raised) {
+      log.info("in_session.clinical_flag_raised", { flag: flag.flag, itemId: flag.item_id });
       await recordAudit({
         actorId: userId,
         workspaceId: pa.workspace_id,
