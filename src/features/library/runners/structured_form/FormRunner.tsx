@@ -59,6 +59,24 @@ function getFormCompletion(config: StructuredFormConfig, responses: Record<strin
   };
 }
 
+// ---------- Helpers ----------
+
+/**
+ * Normalizes options from DB format.
+ * DB stores options as plain strings: ["Prazer", "Realização", ...]
+ * FormField type expects: [{value: "Prazer", label: "Prazer"}, ...]
+ * This handles both formats defensively.
+ */
+function normalizeOptions(
+  options: FormField["options"],
+): { value: string; label: string }[] {
+  if (!options || options.length === 0) return [];
+  return options.map((opt) => {
+    if (typeof opt === "string") return { value: opt, label: opt };
+    return { value: opt.value ?? "", label: opt.label ?? opt.value ?? "" };
+  });
+}
+
 // ---------- Field renderers ----------
 
 function FieldRenderer({
@@ -172,7 +190,7 @@ function FieldRenderer({
               <SelectValue placeholder={field.placeholder ?? "Selecione…"} />
             </SelectTrigger>
             <SelectContent>
-              {(field.options ?? []).map((opt) => (
+              {normalizeOptions(field.options).map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
@@ -192,7 +210,7 @@ function FieldRenderer({
             onValueChange={(v) => onChange(v)}
             className="space-y-2"
           >
-            {(field.options ?? []).map((opt) => (
+            {normalizeOptions(field.options).map((opt) => (
               <div key={opt.value} className="flex items-center space-x-3">
                 <RadioGroupItem value={opt.value} id={`${field.id}-${opt.value}`} />
                 <Label htmlFor={`${field.id}-${opt.value}`} className="text-sm cursor-pointer">
@@ -229,7 +247,7 @@ function FieldRenderer({
           <Label className="text-sm font-medium">{field.label}</Label>
           {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <div className="flex flex-wrap gap-2">
-            {(field.options ?? []).map((opt) => {
+            {normalizeOptions(field.options).map((opt) => {
               const selected = Array.isArray(value) && (value as string[]).includes(opt.value);
               return (
                 <button

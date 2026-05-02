@@ -91,10 +91,15 @@ function FieldResponse({
     );
   }
 
+  // Normalize options (DB stores plain strings, type expects {value,label})
+  const normOpts = (field.options ?? []).map((o: any) =>
+    typeof o === "string" ? { value: o, label: o } : o,
+  );
+
   // multi_select → array of strings
   if (field.type === "multi_select" && Array.isArray(value)) {
     const labels = value.map((v) => {
-      const opt = field.options?.find((o) => o.value === String(v));
+      const opt = normOpts.find((o: any) => o.value === String(v));
       return opt?.label ?? String(v);
     });
     return (
@@ -112,8 +117,8 @@ function FieldResponse({
   }
 
   // select / radio → resolve label
-  if ((field.type === "select" || field.type === "radio") && field.options) {
-    const opt = field.options.find((o) => o.value === String(value));
+  if ((field.type === "select" || field.type === "radio") && normOpts.length) {
+    const opt = normOpts.find((o: any) => o.value === String(value));
     return (
       <div className="space-y-1">
         <p className="text-sm font-medium text-foreground">{field.label}</p>
