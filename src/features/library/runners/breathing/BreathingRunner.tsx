@@ -26,6 +26,8 @@ interface BreathingRunnerProps {
   onSubmit?: () => void;
   submitting?: boolean;
   submitLabel?: string;
+  /** When true, uses relative positioning (for dialog/embedded use). Default: false (fixed fullscreen). */
+  embedded?: boolean;
 }
 
 // Phase colors (oklch-based for smoothness)
