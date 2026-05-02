@@ -20,7 +20,7 @@ import { getCurrentSubscription } from "@/features/billing/billing.functions";
 
 interface NavItem {
   label: string;
-  to: "/dashboard" | "/welcome" | "/library" | "/admin" | "/patients";
+  to: "/dashboard" | "/welcome" | "/library" | "/admin" | "/patients" | "/settings";
   icon: typeof LayoutDashboard;
   badge?: string;
   adminOnly?: boolean;
