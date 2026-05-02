@@ -99,6 +99,7 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
     });
 
     const pa = await loadActiveActivityByToken(data.token);
+    const log = activityLog(pa.id);
 
     const encrypted = await encryptPHIServer(JSON.stringify(data.draft));
 
@@ -120,9 +121,14 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
     );
 
     if (error) {
-      console.error("[saveActivityDraft] upsert failed", { code: error.code });
+      log.error("draft.save_failed", { code: error.code });
       throw new PublicLinkError();
     }
+
+    log.info("draft.saved", {
+      completionPercent: data.completionPercent,
+      status: pa.status,
+    });
 
     // Update patient_activities status to in_progress on first save
     if (pa.status === "pending") {
@@ -135,10 +141,10 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
       );
 
       if (statusError) {
-        console.error("[saveActivityDraft] status update failed", {
-          code: statusError.code,
-        });
+        log.error("draft.status_update_failed", { code: statusError.code });
         // Non-blocking: draft saved successfully, status update is best-effort
+      } else {
+        logStatusTransition(pa.id, "pending", "in_progress", { trigger: "first_draft_save" });
       }
     }
 
