@@ -256,7 +256,12 @@ export const submitHabitEntry = createServerFn({ method: "POST" })
     const link = await getHabitLinkByTokenHash(data.tokenHash);
     if (!link) throw new Error("Link não encontrado ou expirado.");
 
-    // 2. Check status + expiration
+    // 2. CRITICAL: Check consent — NEVER record data without consent
+    if (!link.consent_accepted_at) {
+      throw new Error("Consentimento não aceito. Não é possível registrar dados sem aceite da política de privacidade.");
+    }
+
+    // 3. Check status + expiration
     if (link.status !== "active") throw new Error("Este link foi revogado.");
     if (new Date(link.expires_at) < new Date()) {
       // Auto-expire
@@ -267,13 +272,13 @@ export const submitHabitEntry = createServerFn({ method: "POST" })
       throw new Error("Este link expirou.");
     }
 
-    // 3. Encrypt metadata if present
+    // 4. Encrypt metadata if present
     let metadataEncrypted: string | undefined;
     if (data.metadata && Object.keys(data.metadata).length > 0) {
       metadataEncrypted = await encryptPHIServer(JSON.stringify(data.metadata));
     }
 
-    // 4. Insert entry (trigger updates counters on habit_links)
+    // 5. Insert entry (trigger updates counters on habit_links)
     const entry = await insertHabitEntry({
       habit_link_id: link.id,
       workspace_id: link.workspace_id,

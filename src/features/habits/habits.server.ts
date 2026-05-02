@@ -19,7 +19,7 @@ export async function getHabitLinkByTokenHash(tokenHash: string) {
     supabaseAdmin
       .from("habit_links")
       .select(
-        "id, workspace_id, patient_id, activity_id, assigned_by, status, expires_at, total_entries, last_entry_at",
+        "id, workspace_id, patient_id, activity_id, assigned_by, status, expires_at, total_entries, last_entry_at, consent_accepted_at",
       )
       .eq("token_hash", tokenHash)
       .maybeSingle(),
