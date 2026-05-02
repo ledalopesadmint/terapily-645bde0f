@@ -182,10 +182,11 @@ export function InSessionPlayerDialog({
   const handleConfirmClose = useCallback(async () => {
     // Save draft before closing
     await saveDraftNow();
+    qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
     toast.success("Rascunho salvo.", { duration: 2000 });
     setShowCloseConfirm(false);
     onClose();
-  }, [saveDraftNow, onClose]);
+  }, [saveDraftNow, qc, patientId, workspaceId, onClose]);
 
   const handleDiscardClose = useCallback(() => {
     deleteInSessionDraft({ data: { patientActivityId } }).catch(() => {});
@@ -199,11 +200,12 @@ export function InSessionPlayerDialog({
       e?.stopPropagation();
       setSavingAndExiting(true);
       await saveDraftNow();
+      qc.invalidateQueries({ queryKey: ["patient-activities", patientId, workspaceId] });
       setSavingAndExiting(false);
       toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
       onClose();
     },
-    [saveDraftNow, onClose],
+    [saveDraftNow, qc, patientId, workspaceId, onClose],
   );
 
   // ── Submit ──────────────────────────────────────────────────────
