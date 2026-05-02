@@ -325,3 +325,33 @@ export const listPatientHabitLinks = createServerFn({ method: "GET" })
 
     return { links: links ?? [] };
   });
+
+// --- getHabitEntriesForLink (therapist view) --------------------------------
+
+const GetHabitEntriesSchema = z.object({
+  habitLinkId: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+  limit: z.number().int().min(1).max(500).optional(),
+});
+
+export const getHabitEntriesForLink = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => GetHabitEntriesSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    const { data: entries, error } = await supabase
+      .from("habit_entries")
+      .select("id, completed_at, duration_seconds, cycles_completed, created_at")
+      .eq("habit_link_id", data.habitLinkId)
+      .eq("workspace_id", data.workspaceId)
+      .order("completed_at", { ascending: false })
+      .limit(data.limit ?? 200);
+
+    if (error) {
+      console.error("[getHabitEntriesForLink] failed", { code: error.code });
+      throw new Error("Não foi possível carregar entradas.");
+    }
+
+    return { entries: entries ?? [] };
+  });
