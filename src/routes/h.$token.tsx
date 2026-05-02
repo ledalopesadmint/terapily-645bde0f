@@ -46,13 +46,14 @@ const resolveHabitToken = createServerFn({ method: "GET" })
       totalEntries: number;
       lastEntryAt: string | null;
       expiresAt: string;
+      consentAccepted: boolean;
     } | null;
   }> => {
     const tokenHash = await hashMagicLinkToken(data.token);
 
     const { data: link, error } = await supabaseAdmin
       .from("habit_links")
-      .select("id, workspace_id, patient_id, activity_id, status, expires_at, total_entries, last_entry_at")
+      .select("id, workspace_id, patient_id, activity_id, status, expires_at, total_entries, last_entry_at, consent_accepted_at")
       .eq("token_hash", tokenHash)
       .maybeSingle();
 
@@ -99,8 +100,39 @@ const resolveHabitToken = createServerFn({ method: "GET" })
         totalEntries: link.total_entries ?? 0,
         lastEntryAt: link.last_entry_at,
         expiresAt: link.expires_at,
+        consentAccepted: !!link.consent_accepted_at,
       },
     };
+  });
+
+// --- Server function: accept consent for a habit link ----------------------
+
+const acceptHabitConsent = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z.object({ tokenHash: z.string().min(1).max(128) }).parse(input),
+  )
+  .handler(async ({ data }) => {
+    const { data: link } = await supabaseAdmin
+      .from("habit_links")
+      .select("id, status, expires_at, consent_accepted_at")
+      .eq("token_hash", data.tokenHash)
+      .maybeSingle();
+
+    if (!link) throw new Error("Link não encontrado.");
+    if (link.status !== "active") throw new Error("Link inativo.");
+    if (new Date(link.expires_at) < new Date()) throw new Error("Link expirado.");
+
+    // Already accepted — idempotent
+    if (link.consent_accepted_at) return { ok: true };
+
+    await supabaseAdmin
+      .from("habit_links")
+      .update({
+        consent_accepted_at: new Date().toISOString(),
+      })
+      .eq("id", link.id);
+
+    return { ok: true };
   });
 
 // --- Route -----------------------------------------------------------------
