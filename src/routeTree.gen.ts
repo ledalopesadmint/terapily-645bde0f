@@ -36,7 +36,9 @@ import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_auth
 import { Route as AuthenticatedPatientsDeletedRouteImport } from './routes/_authenticated/patients.deleted'
 import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
 import { Route as AuthenticatedDevRoadmapRouteImport } from './routes/_authenticated/dev.roadmap'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as ApiPublicHooksPurgePatientsRouteImport } from './routes/api/public/hooks/purge-patients'
+import { Route as ApiPublicHooksAggregateAnalyticsRouteImport } from './routes/api/public/hooks/aggregate-analytics'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -179,10 +181,22 @@ const AuthenticatedDevRoadmapRoute = AuthenticatedDevRoadmapRouteImport.update({
   path: '/dev/roadmap',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/admin/analytics',
+    path: '/admin/analytics',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const ApiPublicHooksPurgePatientsRoute =
   ApiPublicHooksPurgePatientsRouteImport.update({
     id: '/api/public/hooks/purge-patients',
     path: '/api/public/hooks/purge-patients',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicHooksAggregateAnalyticsRoute =
+  ApiPublicHooksAggregateAnalyticsRouteImport.update({
+    id: '/api/public/hooks/aggregate-analytics',
+    path: '/api/public/hooks/aggregate-analytics',
     getParentRoute: () => rootRouteImport,
   } as any)
 
@@ -203,6 +217,7 @@ export interface FileRoutesByFullPath {
   '/auth/callback': typeof AuthCallbackRoute
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
@@ -213,6 +228,7 @@ export interface FileRoutesByFullPath {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/hooks/aggregate-analytics': typeof ApiPublicHooksAggregateAnalyticsRoute
   '/api/public/hooks/purge-patients': typeof ApiPublicHooksPurgePatientsRoute
 }
 export interface FileRoutesByTo {
@@ -231,6 +247,7 @@ export interface FileRoutesByTo {
   '/auth/callback': typeof AuthCallbackRoute
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
@@ -241,6 +258,7 @@ export interface FileRoutesByTo {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/hooks/aggregate-analytics': typeof ApiPublicHooksAggregateAnalyticsRoute
   '/api/public/hooks/purge-patients': typeof ApiPublicHooksPurgePatientsRoute
 }
 export interface FileRoutesById {
@@ -262,6 +280,7 @@ export interface FileRoutesById {
   '/auth/callback': typeof AuthCallbackRoute
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
+  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/_authenticated/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
@@ -272,6 +291,7 @@ export interface FileRoutesById {
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/api/public/hooks/aggregate-analytics': typeof ApiPublicHooksAggregateAnalyticsRoute
   '/api/public/hooks/purge-patients': typeof ApiPublicHooksPurgePatientsRoute
 }
 export interface FileRouteTypes {
@@ -293,6 +313,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/h/$token'
     | '/p/$token'
+    | '/admin/analytics'
     | '/dev/roadmap'
     | '/patients/$id'
     | '/patients/deleted'
@@ -303,6 +324,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/admin/'
     | '/settings/'
+    | '/api/public/hooks/aggregate-analytics'
     | '/api/public/hooks/purge-patients'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -321,6 +343,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/h/$token'
     | '/p/$token'
+    | '/admin/analytics'
     | '/dev/roadmap'
     | '/patients/$id'
     | '/patients/deleted'
@@ -331,6 +354,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/admin'
     | '/settings'
+    | '/api/public/hooks/aggregate-analytics'
     | '/api/public/hooks/purge-patients'
   id:
     | '__root__'
@@ -351,6 +375,7 @@ export interface FileRouteTypes {
     | '/auth/callback'
     | '/h/$token'
     | '/p/$token'
+    | '/_authenticated/admin/analytics'
     | '/_authenticated/dev/roadmap'
     | '/_authenticated/patients/$id'
     | '/_authenticated/patients/deleted'
@@ -361,6 +386,7 @@ export interface FileRouteTypes {
     | '/api/public/stripe-webhook'
     | '/_authenticated/admin/'
     | '/_authenticated/settings/'
+    | '/api/public/hooks/aggregate-analytics'
     | '/api/public/hooks/purge-patients'
   fileRoutesById: FileRoutesById
 }
@@ -375,6 +401,7 @@ export interface RootRouteChildren {
   HTokenRoute: typeof HTokenRoute
   PTokenRoute: typeof PTokenRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
+  ApiPublicHooksAggregateAnalyticsRoute: typeof ApiPublicHooksAggregateAnalyticsRoute
   ApiPublicHooksPurgePatientsRoute: typeof ApiPublicHooksPurgePatientsRoute
 }
 
@@ -569,11 +596,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDevRoadmapRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/analytics': {
+      id: '/_authenticated/admin/analytics'
+      path: '/admin/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/api/public/hooks/purge-patients': {
       id: '/api/public/hooks/purge-patients'
       path: '/api/public/hooks/purge-patients'
       fullPath: '/api/public/hooks/purge-patients'
       preLoaderRoute: typeof ApiPublicHooksPurgePatientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/hooks/aggregate-analytics': {
+      id: '/api/public/hooks/aggregate-analytics'
+      path: '/api/public/hooks/aggregate-analytics'
+      fullPath: '/api/public/hooks/aggregate-analytics'
+      preLoaderRoute: typeof ApiPublicHooksAggregateAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -624,6 +665,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedWelcomeRoute: typeof AuthenticatedWelcomeRoute
   AuthenticatedWorksheetsRoute: typeof AuthenticatedWorksheetsRoute
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
   AuthenticatedDevRoadmapRoute: typeof AuthenticatedDevRoadmapRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
@@ -637,6 +679,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedWelcomeRoute: AuthenticatedWelcomeRoute,
   AuthenticatedWorksheetsRoute: AuthenticatedWorksheetsRoute,
+  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
   AuthenticatedDevRoadmapRoute: AuthenticatedDevRoadmapRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
@@ -656,6 +699,7 @@ const rootRouteChildren: RootRouteChildren = {
   HTokenRoute: HTokenRoute,
   PTokenRoute: PTokenRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
+  ApiPublicHooksAggregateAnalyticsRoute: ApiPublicHooksAggregateAnalyticsRoute,
   ApiPublicHooksPurgePatientsRoute: ApiPublicHooksPurgePatientsRoute,
 }
 export const routeTree = rootRouteImport
