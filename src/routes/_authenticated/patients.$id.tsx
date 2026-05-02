@@ -434,10 +434,14 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
   const downloadScaleResult = async (
     responseId: string,
     variant: "patient" | "therapist",
+    archetype?: string,
   ) => {
     setScaleResultBusy(`${responseId}-${variant}`);
     try {
-      const fn = variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist;
+      const isWorksheet = archetype === "structured_form";
+      const fn = isWorksheet
+        ? (variant === "patient" ? generateWorksheetResultPatient : generateWorksheetResultTherapist)
+        : (variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist);
       const res = await fn({ data: { activityResponseId: responseId, workspaceId } });
       const binary = atob(res.pdf);
       const bytes = new Uint8Array(binary.length);
