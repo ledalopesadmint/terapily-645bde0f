@@ -102,59 +102,57 @@ async function loadAuthData(userId: string): Promise<{
   workspace: AuthWorkspace | null;
 }> {
   const profilePromise = withRetryBackoff(() =>
-    withTimeout(() =>
-      supabase
+    withTimeout(async () => {
+      const r = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url, locale, timezone")
         .eq("id", userId)
-        .maybeSingle()
-        .then((r) => r.data ?? null),
-    ),
+        .maybeSingle();
+      return r.data ?? null;
+    }),
   ).catch((err) => {
     console.warn("[AuthProvider] profile load failed, using fallback", err);
     return null;
   });
 
   const rolesPromise = withRetryBackoff(() =>
-    withTimeout(() =>
-      supabase
+    withTimeout(async () => {
+      const r = await supabase
         .from("user_roles")
         .select("role")
-        .eq("user_id", userId)
-        .then((r) => (r.data ?? []).map((x) => x.role)),
-    ),
+        .eq("user_id", userId);
+      return (r.data ?? []).map((x) => x.role);
+    }),
   ).catch((err) => {
     console.warn("[AuthProvider] roles load failed, using fallback", err);
     return [] as AppRole[];
   });
 
   const workspacePromise = withRetryBackoff(() =>
-    withTimeout(() =>
-      supabase
+    withTimeout(async () => {
+      const r = await supabase
         .from("workspace_members")
         .select("role, workspace:workspaces(id, name, slug, trial_ends_at)")
         .eq("user_id", userId)
         .is("deleted_at", null)
         .order("created_at", { ascending: true })
         .limit(1)
-        .maybeSingle()
-        .then((r) => {
-          if (!r.data?.workspace) return null;
-          const ws = r.data.workspace as {
-            id: string;
-            name: string;
-            slug: string;
-            trial_ends_at: string;
-          };
-          return {
-            id: ws.id,
-            name: ws.name,
-            slug: ws.slug,
-            trial_ends_at: ws.trial_ends_at,
-            role: r.data.role,
-          } as AuthWorkspace;
-        }),
-    ),
+        .maybeSingle();
+      if (!r.data?.workspace) return null;
+      const ws = r.data.workspace as {
+        id: string;
+        name: string;
+        slug: string;
+        trial_ends_at: string;
+      };
+      return {
+        id: ws.id,
+        name: ws.name,
+        slug: ws.slug,
+        trial_ends_at: ws.trial_ends_at,
+        role: r.data.role,
+      } as AuthWorkspace;
+    }),
   ).catch((err) => {
     console.warn("[AuthProvider] workspace load failed, using fallback", err);
     return null;
