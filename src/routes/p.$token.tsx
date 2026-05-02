@@ -68,10 +68,11 @@ function formatExpires(iso: string): { label: string; urgent: boolean } {
   return { label: `Este link expira em ${days} dia${days > 1 ? "s" : ""}.`, urgent: false };
 }
 
-type PagePhase = "vinheta" | "intro" | "consent" | "activity" | "declined" | "submitted";
+type PagePhase = "intro" | "consent" | "activity" | "declined" | "submitted";
 
 function PublicActivityPage() {
   const { token } = useParams({ from: "/p/$token" });
+  const [vinhetaDone, setVinhetaDone] = useState(false);
 
   const resolveQuery = useQuery({
     queryKey: ["public-activity", token],
@@ -86,8 +87,13 @@ function PublicActivityPage() {
     refetchOnWindowFocus: false,
   });
 
-  if (resolveQuery.isLoading) {
-    return <CenterShell><p className="text-muted-foreground">Carregando…</p></CenterShell>;
+  // Vinheta IS the loading state — show it until both vinheta finishes AND data is ready
+  if (!vinhetaDone || resolveQuery.isLoading) {
+    return (
+      <div className="relative min-h-screen bg-[var(--cream)]">
+        <VinhetaIntro onComplete={() => setVinhetaDone(true)} volumePercent={60} />
+      </div>
+    );
   }
 
   if (!resolveQuery.data) {
@@ -134,7 +140,7 @@ function ActivityRunner({
   const config = resolved.activity.config as QuizConfig & StructuredFormConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
-  const [phase, setPhase] = useState<PagePhase>("vinheta");
+  const [phase, setPhase] = useState<PagePhase>("intro");
   const [draftPrompt, setDraftPrompt] = useState<{
     draft: Record<string, unknown>;
     completionPercent: number;
@@ -250,15 +256,6 @@ function ActivityRunner({
   });
 
   const expires = resolved.expiresAt ? formatExpires(resolved.expiresAt) : null;
-
-  // === PHASE: VINHETA ===
-  if (phase === "vinheta") {
-    return (
-      <div className="relative min-h-screen bg-[var(--cream)]">
-        <VinhetaIntro onComplete={() => setPhase("intro")} volumePercent={60} />
-      </div>
-    );
-  }
 
   // === PHASE: DECLINED ===
   if (phase === "declined") {
