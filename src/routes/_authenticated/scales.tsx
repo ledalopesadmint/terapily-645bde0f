@@ -64,6 +64,7 @@ function ScalesPage() {
   const auth = useAuth();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerActivity, setPickerActivity] = useState<ActivityType | null>(null);
+  const [pickerMode, setPickerMode] = useState<"in_session" | "shared_link">("in_session");
 
   const catalogQuery = useQuery({
     queryKey: ["activity-catalog-scales", auth.workspace?.id ?? null],
@@ -104,13 +105,13 @@ function ScalesPage() {
 
   const handleStartInSession = (scale: ScaleRow) => {
     setPickerActivity(toActivityType(scale));
+    setPickerMode("in_session");
     setPickerOpen(true);
   };
 
   const handleSendLink = (scale: ScaleRow) => {
-    // TODO S3: abrir fluxo de magic link (prescrição + seleção de paciente + expiração)
-    // Por agora, reutiliza o PatientPickerSheet com delivery_mode = shared_link
     setPickerActivity(toActivityType(scale));
+    setPickerMode("shared_link");
     setPickerOpen(true);
   };
 
@@ -192,6 +193,7 @@ function ScalesPage() {
         onOpenChange={setPickerOpen}
         activity={pickerActivity}
         workspaceId={auth.workspace?.id}
+        mode={pickerMode}
       />
     </div>
   );
