@@ -28,6 +28,11 @@ import {
   getCompletionStats,
   type QuizConfig,
 } from "@/features/activities/components/ActivityPlayer";
+import {
+  FormRunner,
+  getFormCompletion,
+} from "@/features/library/runners/structured_form/FormRunner";
+import type { StructuredFormConfig } from "@/features/library/runners/structured_form/form-types";
 import { ConsentGate } from "@/features/activities/components/ConsentGate";
 import { VinhetaIntro } from "@/features/activities/components/VinhetaIntro";
 import { Button } from "@/components/ui/button";
