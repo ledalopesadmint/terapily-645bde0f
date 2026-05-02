@@ -49,6 +49,15 @@ const TIER_HABIT_LINK_DAYS: Record<string, number> = {
   clinic: 90,
 };
 
+// Tier → max active habit links per workspace
+const TIER_MAX_HABIT_LINKS: Record<string, number> = {
+  trial: 3,
+  solo: 3,
+  basic: 10,
+  practice: 50,
+  clinic: 100,
+};
+
 async function getWorkspaceTier(workspaceId: string): Promise<string> {
   const { data } = await supabaseAdmin
     .from("subscriptions")
@@ -56,6 +65,15 @@ async function getWorkspaceTier(workspaceId: string): Promise<string> {
     .eq("workspace_id", workspaceId)
     .maybeSingle();
   return data?.tier ?? "trial";
+}
+
+async function countActiveHabitLinks(workspaceId: string): Promise<number> {
+  const { count } = await supabaseAdmin
+    .from("habit_links")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspaceId)
+    .eq("status", "active");
+  return count ?? 0;
 }
 
 // --- createHabitLink -------------------------------------------------------
