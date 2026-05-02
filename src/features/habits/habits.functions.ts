@@ -256,7 +256,12 @@ export const submitHabitEntry = createServerFn({ method: "POST" })
     const link = await getHabitLinkByTokenHash(data.tokenHash);
     if (!link) throw new Error("Link não encontrado ou expirado.");
 
-    // 2. Check status + expiration
+    // 2. CRITICAL: Check consent — NEVER record data without consent
+    if (!link.consent_accepted_at) {
+      throw new Error("Consentimento não aceito. Não é possível registrar dados sem aceite da política de privacidade.");
+    }
+
+    // 3. Check status + expiration
     if (link.status !== "active") throw new Error("Este link foi revogado.");
     if (new Date(link.expires_at) < new Date()) {
       // Auto-expire
