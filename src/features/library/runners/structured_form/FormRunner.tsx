@@ -52,7 +52,7 @@ function getFormCompletion(
   config: StructuredFormConfig,
   responses: Record<string, unknown>,
 ) {
-  const allFields = config.steps.flatMap((s) => s.fields);
+  const allFields = (config.steps ?? []).flatMap((s) => s.fields);
   const required = allFields.filter((f) => f.required !== false);
   const answered = required.filter((f) => {
     const val = responses[f.id];
