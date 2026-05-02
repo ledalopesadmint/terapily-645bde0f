@@ -28,7 +28,6 @@ const securityHeadersMiddleware = createMiddleware().server(
   async ({ next }) => {
     const result = await next();
 
-    // Attach security headers to the response if it's a Response object
     if (result instanceof Response) {
       for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
         result.headers.set(key, value);
@@ -39,6 +38,6 @@ const securityHeadersMiddleware = createMiddleware().server(
   },
 );
 
-export default createStart({
+export default createStart(() => ({
   requestMiddleware: [securityHeadersMiddleware],
-});
+}));
