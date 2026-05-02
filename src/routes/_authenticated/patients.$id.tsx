@@ -432,9 +432,10 @@ interface ActivitiesTabProps {
   patientId: string;
   workspaceId: string;
   startSession?: string;
+  openAssign?: string;
 }
 
-function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabProps) {
+function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: ActivitiesTabProps) {
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [revealedLink, setRevealedLink] = useState<{
