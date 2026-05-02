@@ -510,7 +510,18 @@ function ActivityRunner({
 
       {/* Player */}
       <div className="flex-1 flex flex-col">
-        {isForm ? (
+        {isScript ? (
+          <GuidedScriptRunner
+            config={config}
+            responses={responses}
+            onResponse={(sId, val) =>
+              setResponses((prev) => ({ ...prev, [sId]: val }))
+            }
+            onSubmit={() => submitMutation.mutate()}
+            submitting={submitMutation.isPending}
+            submitLabel="Concluir exercício"
+          />
+        ) : isForm ? (
           <FormRunner
             config={config}
             responses={responses}
