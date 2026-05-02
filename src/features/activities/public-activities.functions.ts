@@ -32,9 +32,9 @@ import {
 
 function getClientIp(): string {
   try {
-    return getRequestIP({ xForwardedFor: true }) ?? "unknown";
+    return getRequestIP({ xForwardedFor: true }) ?? "0.0.0.0";
   } catch {
-    return "unknown";
+    return "0.0.0.0";
   }
 }
 
