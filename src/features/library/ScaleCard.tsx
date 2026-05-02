@@ -59,6 +59,7 @@ export function ScaleCard({
   shortDescription,
   illustration,
   isExclusive,
+  chipLabel,
   supportsMagicLink,
   onClick,
   onSendLink,
