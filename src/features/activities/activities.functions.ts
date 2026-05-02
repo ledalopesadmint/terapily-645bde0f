@@ -1159,6 +1159,14 @@ export const saveInSessionDraft = createServerFn({ method: "POST" })
       throw new Error("Não foi possível salvar rascunho.");
     }
 
+    // Transition status to in_progress if still pending
+    if (pa.status === "pending") {
+      await supabaseAdmin
+        .from("patient_activities")
+        .update({ status: "in_progress" })
+        .eq("id", pa.id);
+    }
+
     return { ok: true };
   });
 
