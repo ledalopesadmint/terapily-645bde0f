@@ -554,7 +554,7 @@ export interface AuditLogRow {
   resource_type: string | null;
   resource_id: string | null;
   // Casamos com o tipo inferido pelo Supabase Generated (jsonb).
-  metadata: { [x: string]: {} };
+  metadata: { [x: string]: NonNullable<unknown> };
   created_at: string;
   actor_id: string | null;
 }
@@ -923,11 +923,11 @@ export const getActivityResponseDetail = createServerFn({ method: "POST" })
     }
 
     // Decifra
-    let decryptedResponses: { [x: string]: {} } = {};
+    let decryptedResponses: { [x: string]: NonNullable<unknown> } = {};
     if (resp.raw_responses_encrypted) {
       try {
         const plain = await decryptPHIServer(resp.raw_responses_encrypted);
-        decryptedResponses = JSON.parse(plain) as { [x: string]: {} };
+        decryptedResponses = JSON.parse(plain) as { [x: string]: NonNullable<unknown> };
       } catch {
         throw new Error("Não foi possível decifrar as respostas.");
       }
