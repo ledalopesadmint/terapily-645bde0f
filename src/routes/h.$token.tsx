@@ -91,7 +91,7 @@ const resolveHabitToken = createServerFn({ method: "GET" })
         slug: activity.slug,
         title: activity.title,
         archetype: activity.archetype as string,
-        config: activity.config as Record<string, unknown>,
+        config: activity.config as Record<string, {}>,
         shortDescription: activity.short_description,
       },
       tokenHash,
