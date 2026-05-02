@@ -208,6 +208,7 @@ function LibraryStandardMode() {
         onOpenChange={setPickerOpen}
         activity={pickerActivity}
         workspaceId={auth.workspace?.id}
+        mode={pickerMode}
       />
     </div>
   );
