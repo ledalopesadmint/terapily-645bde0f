@@ -190,7 +190,7 @@ function FieldRenderer({
               <SelectValue placeholder={field.placeholder ?? "Selecione…"} />
             </SelectTrigger>
             <SelectContent>
-              {(field.options ?? []).map((opt) => (
+              {normalizeOptions(field.options).map((opt) => (
                 <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
