@@ -356,5 +356,12 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       hasPdf: !!pdfBase64,
     });
 
-    return { ok: true, pdf: pdfBase64 };
+    return {
+      ok: true,
+      pdf: pdfBase64,
+      responseId: response.id,
+      workspaceId: pa.workspace_id,
+      archetype: activity.archetype as string,
+      submittedAt: response.submitted_at,
+    };
   });
