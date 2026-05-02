@@ -220,11 +220,13 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       submitted_via: submittedVia,
     };
 
-    const { data: response, error: respErr } = await supabaseAdmin
-      .from("activity_responses")
-      .insert(responseInsert)
-      .select("id, score, severity, submitted_at")
-      .single();
+    const { data: response, error: respErr } = await withRetry(() =>
+      supabaseAdmin
+        .from("activity_responses")
+        .insert(responseInsert)
+        .select("id, score, severity, submitted_at")
+        .single(),
+    );
 
     if (respErr || !response) {
       console.error("[submitActivityResponse] insert response failed", {
