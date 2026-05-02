@@ -738,7 +738,14 @@ const RecordResponseSchema = z.object({
   patientActivityId: z.string().uuid(),
   responses: z.record(
     z.string().min(1).max(64),
-    z.union([z.number(), z.string(), z.boolean(), z.null()]),
+    z.union([
+      z.number(),
+      z.string(),
+      z.boolean(),
+      z.null(),
+      z.array(z.unknown()),
+      z.record(z.string(), z.unknown()),
+    ]),
   ),
 });
 
