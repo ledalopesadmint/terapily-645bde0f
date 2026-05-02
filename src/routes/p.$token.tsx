@@ -283,16 +283,8 @@ function ActivityRunner({
 
   // --- Manual save ("Salvar e continuar depois") ---
   const manualSave = useCallback(() => {
-    if (Object.keys(responses).length === 0) return;
-    saveMutation.mutate(
-      { draft: responses, completionPercent: completion },
-      {
-        onSuccess: () => {
-          setSavedAt(Date.now());
-        },
-      },
-    );
-  }, [responses, completion, saveMutation]);
+    saveDraftNow();
+  }, [saveDraftNow]);
 
   // --- Submit ---
   const submitMutation = useMutation({
