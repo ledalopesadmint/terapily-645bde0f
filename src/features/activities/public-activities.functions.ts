@@ -90,10 +90,12 @@ export const resolvePublicToken = createServerFn({ method: "POST" })
     if (!pa.token_expires_at || new Date(pa.token_expires_at).getTime() < Date.now()) {
       // Marca como expirado (mantém TODOS os registros — só fecha o acesso)
       if (pa.status !== "expired") {
-        await supabaseAdmin
-          .from("patient_activities")
-          .update({ status: "expired", token_hash: null })
-          .eq("id", pa.id);
+        await withRetry(() =>
+          supabaseAdmin
+            .from("patient_activities")
+            .update({ status: "expired", token_hash: null })
+            .eq("id", pa.id),
+        );
       }
       logLinkFailure("expired");
       throw new PublicLinkError();
