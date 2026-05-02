@@ -102,12 +102,16 @@ export function InSessionPlayerDialog({
       if (result.hasDraft && result.draft) {
         setResponses(result.draft as Record<string, unknown>);
         setDraftRestored(true);
-        toast.info("Rascunho restaurado.", { duration: 3000 });
+        // Skip vinheta + intro when resuming a draft
+        setVinhetaDone(true);
+        setIntroStarted(true);
+        toast.info("Bem-vindo de volta! Seu progresso foi restaurado.", { duration: 4000 });
       }
       return result;
     },
     retry: false,
-    staleTime: Infinity,
+    staleTime: 0,
+    gcTime: 0,
     refetchOnWindowFocus: false,
   });
 
