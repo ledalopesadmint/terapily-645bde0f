@@ -17,8 +17,8 @@
  */
 
 import { useEffect, useState } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star, Flame, CheckCircle2, Clock, Hourglass } from "lucide-react";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { Plus, Sparkles, FileText, Archive, ShieldCheck, RefreshCw, Star, Flame, CheckCircle2, Clock, Hourglass, BarChart3 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
