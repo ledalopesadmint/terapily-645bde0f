@@ -206,33 +206,48 @@ function HabitLinkCard({
 
   const activityTitle = link.activity?.title ?? "Atividade";
 
-  const handleGeneratePdf = async () => {
-    setGeneratingPdf(true);
+  const downloadPdf = (bytes: number[], filename: string) => {
+    const byteArray = new Uint8Array(bytes);
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePatientReport = async () => {
+    setGeneratingPatientPdf(true);
     try {
-      const result = await generateHabitProgressReport({
-        data: {
-          habitLinkId: link.id,
-          workspaceId,
-          patientId,
-        },
+      const result = await generateHabitReportPatient({
+        data: { habitLinkId: link.id, workspaceId, patientId },
       });
-      // Download the PDF
-      const byteArray = new Uint8Array(result.pdfBytes);
-      const blob = new Blob([byteArray], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `progresso-praticas-${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Relatório gerado.");
+      downloadPdf(result.pdfBytes, `practice-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success("Relatório do paciente gerado.");
     } catch (e) {
-      console.error("[HabitReport] failed", e);
+      console.error("[HabitReport:patient] failed", e);
       toast.error(e instanceof Error ? e.message : "Não foi possível gerar o relatório.");
     } finally {
-      setGeneratingPdf(false);
+      setGeneratingPatientPdf(false);
+    }
+  };
+
+  const handleTherapistReport = async () => {
+    setGeneratingTherapistPdf(true);
+    try {
+      const result = await generateHabitReportTherapist({
+        data: { habitLinkId: link.id, workspaceId, patientId },
+      });
+      downloadPdf(result.pdfBytes, `adherence-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success("Relatório do terapeuta gerado.");
+    } catch (e) {
+      console.error("[HabitReport:therapist] failed", e);
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar o relatório.");
+    } finally {
+      setGeneratingTherapistPdf(false);
     }
   };
 
