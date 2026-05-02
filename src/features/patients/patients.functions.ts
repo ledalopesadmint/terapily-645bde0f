@@ -18,6 +18,7 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRetry } from "@/lib/retry/with-retry.server";
 import type { Database } from "@/integrations/supabase/types";
 import { withAudit, recordAudit, parseOrAuditValidation } from "@/features/audit/audit.server";
 import { getWorkspacePlan } from "@/features/billing/plan.server";
