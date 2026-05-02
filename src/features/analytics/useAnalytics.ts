@@ -88,15 +88,26 @@ async function fetchTherapistAnalytics(workspaceId: string): Promise<TherapistAn
     .is("deleted_at", null)
     .eq("status", "active");
 
-  // 2. Scales applied — patient_activities joined with activity_catalog where archetype = 'scale'
-  const { data: scaleActivities } = await supabase
-    .from("patient_activities")
-    .select("id, activity_id, activity:activity_catalog!inner(archetype, title)")
-    .eq("workspace_id", workspaceId);
+  // 2. Scales applied — fetch patient_activities + activity_catalog separately (no FK)
+  const [{ data: allPAs }, { data: catalog }] = await Promise.all([
+    supabase
+      .from("patient_activities")
+      .select("id, activity_id")
+      .eq("workspace_id", workspaceId),
+    supabase
+      .from("activity_catalog")
+      .select("id, archetype, title")
+      .eq("status", "published"),
+  ]);
 
-  const scaleOnly = (scaleActivities ?? []).filter(
-    (pa: any) => pa.activity?.archetype === "scale",
+  const catalogMap = new Map(
+    (catalog ?? []).map((c) => [c.id, { archetype: c.archetype, title: c.title }]),
   );
+
+  const scaleOnly = (allPAs ?? [])
+    .filter((pa) => catalogMap.get(pa.activity_id)?.archetype === "scale")
+    .map((pa) => ({ ...pa, title: catalogMap.get(pa.activity_id)?.title ?? "Sem título" }));
+
   const totalScalesApplied = scaleOnly.length;
 
   // 3. Active habit links
