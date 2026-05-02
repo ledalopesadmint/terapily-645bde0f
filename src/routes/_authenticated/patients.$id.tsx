@@ -862,24 +862,28 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                           >
                             <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
                           </Button>
-                          <Button
-                            size="sm"
-                            className="text-xs px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
-                            disabled={scaleResultBusy === `${response.id}-patient`}
-                            onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
-                          >
-                            <Download className="mr-1 h-3.5 w-3.5" />
-                            {scaleResultBusy === `${response.id}-patient` ? "…" : "Relatório Paciente"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="text-xs px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
-                            disabled={scaleResultBusy === `${response.id}-therapist`}
-                            onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
-                          >
-                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                            {scaleResultBusy === `${response.id}-therapist` ? "…" : "Relatório Terapeuta"}
-                          </Button>
+                          {!["guided_timer", "guided_script"].includes((a.activity as any)?.archetype) && (
+                            <>
+                              <Button
+                                size="sm"
+                                className="text-xs px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
+                                disabled={scaleResultBusy === `${response.id}-patient`}
+                                onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
+                              >
+                                <Download className="mr-1 h-3.5 w-3.5" />
+                                {scaleResultBusy === `${response.id}-patient` ? "…" : "Relatório Paciente"}
+                              </Button>
+                              <Button
+                                size="sm"
+                                className="text-xs px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
+                                disabled={scaleResultBusy === `${response.id}-therapist`}
+                                onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
+                              >
+                                <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                                {scaleResultBusy === `${response.id}-therapist` ? "…" : "Relatório Terapeuta"}
+                              </Button>
+                            </>
+                          )}
                         </>
                       )}
                       {canRegenLink && (
