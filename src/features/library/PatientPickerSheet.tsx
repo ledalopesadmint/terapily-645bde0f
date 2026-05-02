@@ -149,6 +149,27 @@ export function PatientPickerSheet({
     },
   });
 
+  const handlePatientSelect = (patientId: string) => {
+    if (mode === "shared_link") {
+      // Navigate to patient page with assign dialog pre-opened
+      const realId = findRealActivityId();
+      if (!realId) {
+        toast.error("Atividade não disponível no workspace.");
+        return;
+      }
+      onOpenChange(false);
+      setSearch("");
+      navigate({
+        to: "/patients/$id",
+        params: { id: patientId },
+        search: { openAssign: realId },
+      });
+    } else {
+      assignMutation.mutate(patientId);
+    }
+  };
+
+  const isSharedLink = mode === "shared_link";
   const patients = patientsQuery.data?.patients ?? [];
   const isLoading = patientsQuery.isLoading || catalogQuery.isLoading;
 
