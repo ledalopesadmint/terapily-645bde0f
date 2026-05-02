@@ -40,19 +40,49 @@ const SUBCATEGORY_CONFIG: Array<{
     description: "Técnicas de respiração controlada para ativar o sistema parassimpático.",
   },
   {
-    key: "grounding",
-    label: "Ancoragem & Regulação",
-    description: "Exercícios sensoriais e de regulação emocional para voltar ao presente.",
+    key: "body-scan",
+    label: "Body Scan & Consciência Corporal",
+    description: "Varredura progressiva do corpo com atenção plena. Protocolos MBSR.",
   },
   {
     key: "relaxation",
-    label: "Relaxamento",
-    description: "Relaxamento muscular progressivo e body scan baseados em MBSR.",
+    label: "Relaxamento Muscular",
+    description: "Relaxamento muscular progressivo (PMR) baseado em Jacobson.",
+  },
+  {
+    key: "grounding",
+    label: "Ancoragem & Estabilização",
+    description: "Exercícios sensoriais para voltar ao presente e regular emoções.",
+  },
+  {
+    key: "meditation",
+    label: "Meditação & Atenção Plena",
+    description: "Práticas de atenção sustentada e compaixão baseadas em MBCT e CFT.",
   },
   {
     key: "attention",
-    label: "Atenção Plena",
-    description: "Práticas de atenção focada para treinar a concentração gentil.",
+    label: "Atenção Focada",
+    description: "Exercícios de observação intencional para treinar a concentração gentil.",
+  },
+  {
+    key: "informal",
+    label: "Mindfulness Informal",
+    description: "Práticas integradas ao cotidiano: comer, caminhar e atividades diárias com atenção.",
+  },
+  {
+    key: "defusion",
+    label: "Defusão Cognitiva",
+    description: "Técnicas ACT e mindfulness para se distanciar de pensamentos difíceis.",
+  },
+  {
+    key: "micro-practices",
+    label: "Micro-Práticas",
+    description: "Exercícios rápidos (≤3 min) para homework e momentos de crise leve.",
+  },
+  {
+    key: "self-compassion",
+    label: "Autocompaixão",
+    description: "Práticas de compaixão focada baseadas em CFT e Mindful Self-Compassion.",
   },
 ];
 
