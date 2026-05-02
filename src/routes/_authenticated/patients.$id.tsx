@@ -543,13 +543,8 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
   });
 
   const regenLinkMutation = useMutation({
-    mutationFn: async (paId: string) => {
-      const result = await generateInSessionLink({ data: { patientActivityId: paId } });
-      if (!result || !result.linkPath) {
-        throw new Error("Resposta inválida do servidor ao gerar link.");
-      }
-      return result;
-    },
+    mutationFn: (paId: string) =>
+      generateInSessionLink({ data: { patientActivityId: paId } }),
     onSuccess: (res, paId) => {
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
       const origin = getPublicOrigin();
@@ -1180,7 +1175,7 @@ function ShareLinkDialog({
 }) {
   const url = payload?.url ?? "";
   const [message, setMessage] = useState(
-    "Seu terapeuta lhe enviou uma atividade. Abra este link seguro para começar. Suas respostas são criptografadas e enviadas somente ao seu terapeuta.",
+    "Oi! Aqui está a atividade pra antes da nossa próxima sessão. Leva poucos minutos. Qualquer dúvida me chama.",
   );
   const [busy, setBusy] = useState<null | "whatsapp" | "sms" | "mailto" | "copy">(null);
 

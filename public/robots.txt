@@ -14,7 +14,6 @@ User-agent: TelegramBot
 Allow: /
 
 User-agent: *
-Allow: /p/
 Disallow: /dashboard
 Disallow: /patients
 Disallow: /settings
