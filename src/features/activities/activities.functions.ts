@@ -157,7 +157,7 @@ export const assignActivity = createServerFn({ method: "POST" })
       const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
       const clampedHours = Math.min(data.expiresInHours, maxHours);
 
-      rawToken = generateMagicLinkToken();
+      rawToken = generateMagicLinkToken(activity.slug);
       tokenHash = await hashMagicLinkToken(rawToken);
       tokenExpiresAt = new Date(Date.now() + clampedHours * 60 * 60 * 1000).toISOString();
     }
