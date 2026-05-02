@@ -297,13 +297,13 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
       .eq("patient_activity_id", pa.id);
 
     if (draftErr) {
-      // Não falha o submit por causa disso — só registra. Próxima purge job pega.
-      console.warn("[submitActivityResponse] draft purge failed", {
-        code: draftErr.code,
-      });
+      log.warn("submit.draft_purge_failed", { code: draftErr.code });
+    } else {
+      log.info("submit.draft_purged");
     }
 
     if (flag.raised) {
+      log.info("submit.clinical_flag_raised", { flag: flag.flag, itemId: flag.item_id });
       await recordAudit({
         actorId: null,
         workspaceId: pa.workspace_id,
@@ -339,13 +339,18 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
           binary += String.fromCharCode(bytes[i]);
         }
         pdfBase64 = btoa(binary);
+        log.info("submit.pdf_generated", { variant: "patient" });
       }
     } catch (err) {
-      // PDF generation failure should NOT block submit
-      console.warn("[submitActivityResponse] PDF generation failed, continuing without", {
+      log.warn("submit.pdf_failed", {
         error: err instanceof Error ? err.message : "unknown",
       });
     }
+
+    log.info("submit.completed", {
+      responseId: response.id,
+      hasPdf: !!pdfBase64,
+    });
 
     return { ok: true, pdf: pdfBase64 };
   });
