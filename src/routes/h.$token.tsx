@@ -325,6 +325,100 @@ function HabitLinkPage() {
   );
 }
 
+// --- Consent Screen --------------------------------------------------------
+
+function ConsentScreen({
+  activityTitle,
+  onAccept,
+  accepting,
+}: {
+  activityTitle: string;
+  onAccept: () => void;
+  accepting: boolean;
+}) {
+  const [declined, setDeclined] = useState(false);
+
+  if (declined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(0.95_0.02_160)] to-[oklch(0.90_0.03_170)] px-6">
+        <div className="max-w-sm text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[oklch(0.90_0.02_160)] mx-auto mb-6">
+            <svg className="w-8 h-8 text-[oklch(0.50_0.04_160)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+            </svg>
+          </div>
+          <h1 className="font-display text-2xl text-[oklch(0.30_0.05_160)] mb-3">
+            Exercício bloqueado
+          </h1>
+          <p className="text-sm text-[oklch(0.45_0.04_160)] mb-4">
+            Sem o aceite da política de privacidade, não é possível iniciar o exercício nem registrar dados de prática.
+          </p>
+          <p className="text-xs text-[oklch(0.55_0.04_160)]">
+            Se você mudou de ideia, feche esta página e acesse o link novamente.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(0.95_0.02_160)] via-[oklch(0.93_0.03_170)] to-[oklch(0.90_0.04_180)] px-6">
+      <div className="max-w-md w-full">
+        <div className="text-center mb-8">
+          <h1 className="font-display text-2xl sm:text-3xl text-[oklch(0.30_0.05_160)] mb-2">
+            {activityTitle}
+          </h1>
+          <p className="text-sm text-[oklch(0.45_0.04_160)]">
+            Antes de iniciar, leia e aceite a política de privacidade.
+          </p>
+        </div>
+
+        <div className="rounded-2xl bg-white/70 backdrop-blur-sm shadow-sm border border-[oklch(0.90_0.02_160)] p-6 mb-6">
+          <h2 className="text-sm font-semibold text-[oklch(0.30_0.05_160)] mb-4">
+            Política de Privacidade — Dados de Prática
+          </h2>
+          <div className="space-y-3 text-xs text-[oklch(0.40_0.04_160)] leading-relaxed">
+            <p>
+              Ao aceitar, você concorda que os dados de execução deste exercício (data, horário, duração e ciclos) serão registrados e compartilhados com seu terapeuta para fins de acompanhamento clínico.
+            </p>
+            <p>
+              Os dados são armazenados de forma segura com criptografia e não incluem informações de identificação pessoal além do vínculo com seu terapeuta.
+            </p>
+            <p>
+              Nenhum dado será utilizado para fins comerciais, publicitários ou compartilhado com terceiros. Seu terapeuta é o único profissional com acesso a estes dados.
+            </p>
+            <p>
+              Você pode solicitar a exclusão dos seus dados a qualquer momento através do seu terapeuta.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <button
+            onClick={onAccept}
+            disabled={accepting}
+            className="w-full px-6 py-3.5 rounded-2xl text-sm font-medium bg-[oklch(0.60_0.08_160)] text-white shadow-md hover:bg-[oklch(0.55_0.08_160)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {accepting ? "Registrando aceite…" : "Aceito a política de privacidade"}
+          </button>
+          <button
+            onClick={() => setDeclined(true)}
+            className="w-full px-6 py-3 rounded-2xl text-sm font-medium bg-white/40 text-[oklch(0.45_0.04_160)] hover:bg-white/60 transition-all"
+          >
+            Não aceito
+          </button>
+        </div>
+
+        <p className="text-center text-[0.6rem] text-[oklch(0.55_0.04_160)] mt-6">
+          Este aceite é registrado uma única vez para este link.
+          <br />
+          Nas próximas visitas, o exercício abrirá diretamente.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 // --- Completed View --------------------------------------------------------
 
 function CompletedView({
