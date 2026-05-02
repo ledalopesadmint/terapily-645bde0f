@@ -249,9 +249,11 @@ function ActivityRunner({
   const responsesRef = useRef(responses);
   responsesRef.current = responses;
 
-  const completion = isForm
-    ? getFormCompletion(config, responses).completion
-    : getCompletionStats(config, responses as Record<string, number>).completion;
+  const completion = isScript
+    ? getScriptCompletion(config, responses).completion
+    : isForm
+      ? getFormCompletion(config, responses).completion
+      : getCompletionStats(config, responses as Record<string, number>).completion;
   const completionRef = useRef(completion);
   completionRef.current = completion;
 
