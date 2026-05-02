@@ -183,8 +183,6 @@ function LibraryStandardMode() {
               title="Worksheets"
               subtitle="Registros guiados que transformam o espaço entre sessões em progresso real. Aplique em sessão ou envie como atividade entre sessões."
               href="/worksheets"
-              count={worksheets.length}
-              countLabel="worksheets"
               chipLabel="Worksheet"
               previewItems={preview.map((w) => ({
                 code: w.code,
@@ -193,7 +191,16 @@ function LibraryStandardMode() {
                 durationMin: w.durationMin,
                 shortDescription: w.shortDescription,
                 illustration: w.illustration,
+                supportsMagicLink: w.supportedModes.includes("shared_link") || w.supportedModes.includes("both"),
               }))}
+              onStartInSession={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "in_session");
+              }}
+              onSendLink={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "shared_link");
+              }}
             />
           );
         })()}
