@@ -1201,7 +1201,7 @@ export const loadInSessionDraft = createServerFn({ method: "GET" })
 
     try {
       const plain = await decryptPHIServer(draft.draft_encrypted);
-      const decoded = JSON.parse(plain) as Record<string, unknown>;
+      const decoded = JSON.parse(plain) as Record<string, NonNullable<unknown>>;
       return {
         hasDraft: true as const,
         draft: decoded,
