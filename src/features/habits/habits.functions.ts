@@ -308,12 +308,10 @@ export const listPatientHabitLinks = createServerFn({ method: "GET" })
   .handler(async ({ data, context }) => {
     const { supabase } = context;
 
-    const { data: links, error } = await supabase
+    // No FK between habit_links and activity_catalog, so query separately
+    const { data: rawLinks, error } = await supabase
       .from("habit_links")
-      .select(`
-        id, status, expires_at, total_entries, last_entry_at, created_at,
-        activity:activity_catalog!inner ( id, slug, title, archetype )
-      `)
+      .select("id, status, expires_at, total_entries, last_entry_at, created_at, activity_id")
       .eq("patient_id", data.patientId)
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false });
@@ -323,5 +321,60 @@ export const listPatientHabitLinks = createServerFn({ method: "GET" })
       throw new Error("Não foi possível carregar links de hábito.");
     }
 
-    return { links: links ?? [] };
+    if (!rawLinks || rawLinks.length === 0) {
+      return { links: [] };
+    }
+
+    // Fetch activity info for all unique activity_ids
+    const activityIds = [...new Set(rawLinks.map((l) => l.activity_id))];
+    const { data: activities } = await supabase
+      .from("activity_catalog")
+      .select("id, slug, title, archetype")
+      .in("id", activityIds);
+
+    const activityMap = new Map(
+      (activities ?? []).map((a) => [a.id, a]),
+    );
+
+    const links = rawLinks.map((l) => ({
+      id: l.id,
+      status: l.status,
+      expires_at: l.expires_at,
+      total_entries: l.total_entries,
+      last_entry_at: l.last_entry_at,
+      created_at: l.created_at,
+      activity: activityMap.get(l.activity_id) ?? null,
+    }));
+
+    return { links };
+  });
+
+// --- getHabitEntriesForLink (therapist view) --------------------------------
+
+const GetHabitEntriesSchema = z.object({
+  habitLinkId: z.string().uuid(),
+  workspaceId: z.string().uuid(),
+  limit: z.number().int().min(1).max(500).optional(),
+});
+
+export const getHabitEntriesForLink = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => GetHabitEntriesSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { supabase } = context;
+
+    const { data: entries, error } = await supabase
+      .from("habit_entries")
+      .select("id, completed_at, duration_seconds, cycles_completed, created_at")
+      .eq("habit_link_id", data.habitLinkId)
+      .eq("workspace_id", data.workspaceId)
+      .order("completed_at", { ascending: false })
+      .limit(data.limit ?? 200);
+
+    if (error) {
+      console.error("[getHabitEntriesForLink] failed", { code: error.code });
+      throw new Error("Não foi possível carregar entradas.");
+    }
+
+    return { entries: entries ?? [] };
   });

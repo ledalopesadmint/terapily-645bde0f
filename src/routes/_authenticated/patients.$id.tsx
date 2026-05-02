@@ -16,6 +16,7 @@ import { z } from "zod";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
+import { HabitTrackingTab } from "@/features/habits/HabitTrackingTab";
 
 
 import { Button } from "@/components/ui/button";
@@ -408,11 +409,16 @@ function PatientTabs({
     <Tabs defaultValue="activities" className="w-full">
       <TabsList>
         <TabsTrigger value="activities">Atividades</TabsTrigger>
+        <TabsTrigger value="habits">Práticas</TabsTrigger>
         {isOwner && <TabsTrigger value="audit">Auditoria</TabsTrigger>}
       </TabsList>
 
       <TabsContent value="activities" className="mt-6">
         <ActivitiesTab patientId={patientId} workspaceId={workspaceId} startSession={startSession} openAssign={openAssign} />
+      </TabsContent>
+
+      <TabsContent value="habits" className="mt-6">
+        <HabitTrackingTab patientId={patientId} workspaceId={workspaceId} />
       </TabsContent>
 
       {isOwner && (
