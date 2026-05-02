@@ -62,6 +62,7 @@ export function BreathingRunner({
   onSubmit,
   submitting,
   submitLabel = "Concluir exercício",
+  embedded = false,
 }: BreathingRunnerProps) {
   const { cycles, phases, spotifyUrl, sounds } = config;
   const totalPhases = phases.length;
