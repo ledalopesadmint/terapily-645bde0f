@@ -31,7 +31,7 @@ function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => vo
             Tentar novamente
           </button>
           <a
-            href="/"
+            href="/acervo"
             className="inline-flex items-center justify-center rounded-md border border-input bg-background px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-accent"
           >
             Voltar pro início
