@@ -16,10 +16,36 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { stripe, getAppOrigin } from "./stripe.server";
 import { recordAudit } from "@/features/audit/audit.server";
 
+/**
+ * Allowlist de origens permitidas para redirect pós-Stripe.
+ * Qualquer Origin fora dessa lista é descartado — proteção contra open redirect.
+ */
+const ALLOWED_ORIGINS = new Set([
+  "https://www.terapily.com",
+  "https://terapily.com",
+  "https://mvp-guardian-ai.lovable.app",
+  // Preview estável do Lovable
+  "https://id-preview--7413e2c8-7654-4145-ab8e-263a6f0f0a33.lovable.app",
+]);
+
+function isAllowedOrigin(origin: string): boolean {
+  // Bloqueia protocol-relative, non-http, ou domínio externo
+  if (!origin.startsWith("https://") && !origin.startsWith("http://")) return false;
+  if (origin.startsWith("//")) return false;
+  // Em dev, aceita localhost
+  try {
+    const url = new URL(origin);
+    if (url.hostname === "localhost" || url.hostname === "127.0.0.1") return true;
+  } catch {
+    return false;
+  }
+  return ALLOWED_ORIGINS.has(origin);
+}
+
 function originFromRequest(): string {
   try {
     const origin = getRequestHeader("origin");
-    if (origin) return origin;
+    if (origin && isAllowedOrigin(origin)) return origin;
   } catch {
     /* fora de request */
   }
@@ -71,7 +97,10 @@ export const getActiveProducts = createServerFn({ method: "GET" })
       )
       .eq("active", true)
       .order("unit_amount", { ascending: true });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[getActiveProducts] query failed", { code: error.code });
+      throw new Error("Não foi possível carregar os planos disponíveis.");
+    }
     return { products: data ?? [] };
   });
 

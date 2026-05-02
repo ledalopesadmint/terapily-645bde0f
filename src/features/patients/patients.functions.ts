@@ -670,7 +670,7 @@ export const restorePatient = createServerFn({ method: "POST" })
         throw new Error(error.message);
       }
       logServerError("restorePatient", error);
-      throw new Error(error.message || "Não foi possível restaurar.");
+      throw new Error("Não foi possível restaurar o paciente.");
     }
 
     await recordAudit({
