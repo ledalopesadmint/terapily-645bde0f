@@ -229,7 +229,7 @@ export function ResponseDetailDrawer({
   const archetype = detail?.activity?.archetype;
   const isStructuredForm = archetype === "structured_form";
 
-  const config = (detail?.activity?.config ?? {}) as QuizConfig & StructuredFormConfig;
+  const config = (detail?.activity?.config ?? {}) as unknown as QuizConfig & StructuredFormConfig;
   const questions: QuizQuestion[] = Array.isArray(config?.questions)
     ? config.questions
     : [];
