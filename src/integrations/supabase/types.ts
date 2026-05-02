@@ -1040,6 +1040,15 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_platform_analytics: {
+        Args: {
+          p_date: string
+          p_dimension?: string
+          p_hour: number
+          p_metric: string
+        }
+        Returns: undefined
+      }
       is_workspace_member: {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
