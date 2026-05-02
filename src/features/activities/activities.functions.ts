@@ -185,10 +185,17 @@ export const assignActivity = createServerFn({ method: "POST" })
     );
 
     if (error || !created) {
-      // Não logamos PHI nem token. Erro é genérico pra UI.
       console.error("[assignActivity] insert failed", { code: error?.code });
       throw new Error("Não foi possível criar a atividade.");
     }
+
+    const log = activityLog(created.id);
+    log.info("assign.created", {
+      deliveryMode: data.deliveryMode,
+      hasLink: needsLink,
+      expiresAt: created.token_expires_at,
+    });
+    logStatusTransition(created.id, "_new", "pending", { trigger: "assign" });
 
     // 6. Retorna o token cru SOMENTE aqui. Nunca mais será exposto.
     return {
