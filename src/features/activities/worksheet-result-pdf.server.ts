@@ -393,7 +393,6 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
     // Fields within the step
     for (const field of step.fields) {
       const responseValue = rawResponses[field.id];
-      const formatted = formatResponseValue(responseValue, field);
 
       // Field label
       y = checkPage(y, 18);
@@ -403,28 +402,126 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
       doc.text(field.label, M + 2, y);
       y += 5;
 
-      // Response content — wrapped in a light box
-      const responseText = formatted;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(...CHARCOAL);
+      // ── emotion_picker: visual emotion bars ──
+      if (field.type === "emotion_picker" && Array.isArray(responseValue) && responseValue.length > 0) {
+        const emotions = responseValue as Array<{ name?: string; emotion?: string; label?: string; intensity?: number; value?: number }>;
+        const emotionH = emotions.length * 10 + 8;
+        y = checkPage(y, emotionH + 2);
 
-      const wrappedLines = doc.splitTextToSize(responseText, CW - 12);
-      const boxH = Math.max(8, wrappedLines.length * 4.5 + 6);
+        doc.setFillColor(252, 251, 248);
+        doc.setDrawColor(220, 218, 210);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(M + 2, y, CW - 4, emotionH, 1.5, 1.5, "FD");
 
-      y = checkPage(y, boxH + 2);
-      doc.setFillColor(252, 251, 248);
-      doc.setDrawColor(220, 218, 210);
-      doc.setLineWidth(0.3);
-      doc.roundedRect(M + 2, y, CW - 4, boxH, 1.5, 1.5, "FD");
+        let ey = y + 5;
+        const barX = M + 40;
+        const barW = CW - 48;
+        for (const emo of emotions) {
+          const name = emo.name ?? emo.emotion ?? emo.label ?? "—";
+          const intensity = emo.intensity ?? emo.value ?? 0;
+          const pct = Math.max(0, Math.min(100, Number(intensity)));
 
-      let ty = y + 4.5;
-      for (const line of wrappedLines) {
-        doc.text(line, M + 6, ty);
-        ty += 4.5;
+          // Emotion name
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(...CHARCOAL);
+          doc.text(name, M + 6, ey + 1);
+
+          // Background bar (light gray)
+          const barH = 4;
+          doc.setFillColor(230, 228, 222);
+          doc.roundedRect(barX, ey - 2.5, barW, barH, 1, 1, "F");
+
+          // Filled bar (Sage)
+          if (pct > 0) {
+            const fillW = Math.max(2, (pct / 100) * barW);
+            doc.setFillColor(...SAGE);
+            doc.roundedRect(barX, ey - 2.5, fillW, barH, 1, 1, "F");
+          }
+
+          // Percentage label
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(7);
+          doc.setTextColor(...NAVY);
+          const pctLabel = `${pct}%`;
+          doc.text(pctLabel, barX + barW + 2, ey + 0.5);
+
+          ey += 10;
+        }
+
+        y += emotionH + 4;
+
+      // ── slider / number: visual bar ──
+      } else if ((field.type === "slider" || field.type === "number") && responseValue != null) {
+        const num = Number(responseValue);
+        const min = (field as any).min ?? 0;
+        const max = (field as any).max ?? 100;
+        const pct = max > min ? ((num - min) / (max - min)) * 100 : 0;
+
+        const barBoxH = 16;
+        y = checkPage(y, barBoxH + 2);
+
+        doc.setFillColor(252, 251, 248);
+        doc.setDrawColor(220, 218, 210);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(M + 2, y, CW - 4, barBoxH, 1.5, 1.5, "FD");
+
+        const barX = M + 6;
+        const barW = CW - 30;
+        const barY = y + barBoxH / 2 - 2;
+        const barH = 4;
+
+        // Background
+        doc.setFillColor(230, 228, 222);
+        doc.roundedRect(barX, barY, barW, barH, 1, 1, "F");
+        // Fill
+        if (pct > 0) {
+          const fillW = Math.max(2, (pct / 100) * barW);
+          doc.setFillColor(...SAGE);
+          doc.roundedRect(barX, barY, fillW, barH, 1, 1, "F");
+        }
+        // Value label
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(9);
+        doc.setTextColor(...NAVY);
+        doc.text(String(num), barX + barW + 3, barY + 3.5);
+
+        // Min/max labels
+        const minLabel = (field as any).minLabel ?? String(min);
+        const maxLabel = (field as any).maxLabel ?? String(max);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(6);
+        doc.setTextColor(153, 153, 153);
+        doc.text(minLabel, barX, barY + barH + 4);
+        const maxLabelW = doc.getTextWidth(maxLabel);
+        doc.text(maxLabel, barX + barW - maxLabelW, barY + barH + 4);
+
+        y += barBoxH + 4;
+
+      // ── Default: text box ──
+      } else {
+        const formatted = formatResponseValue(responseValue, field);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(...CHARCOAL);
+
+        const wrappedLines = doc.splitTextToSize(formatted, CW - 12);
+        const boxH = Math.max(8, wrappedLines.length * 4.5 + 6);
+
+        y = checkPage(y, boxH + 2);
+        doc.setFillColor(252, 251, 248);
+        doc.setDrawColor(220, 218, 210);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(M + 2, y, CW - 4, boxH, 1.5, 1.5, "FD");
+
+        let ty = y + 4.5;
+        for (const line of wrappedLines) {
+          doc.text(line, M + 6, ty);
+          ty += 4.5;
+        }
+
+        y += boxH + 4;
       }
-
-      y += boxH + 4;
 
       // Clinical flag indicator (therapist only)
       if (variant === "therapist" && (field as any).clinical_flag) {
