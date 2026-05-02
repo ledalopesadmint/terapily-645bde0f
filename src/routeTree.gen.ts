@@ -25,6 +25,7 @@ import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as ApiRobotsTxtRouteImport } from './routes/api/robots.txt'
 import { Route as ApiPublicStripeWebhookRouteImport } from './routes/api/public/stripe-webhook'
 import { Route as AuthenticatedSettingsWorkspaceRouteImport } from './routes/_authenticated/settings.workspace'
 import { Route as AuthenticatedSettingsSecurityRouteImport } from './routes/_authenticated/settings.security'
@@ -115,6 +116,11 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/admin/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const ApiRobotsTxtRoute = ApiRobotsTxtRouteImport.update({
+  id: '/api/robots/txt',
+  path: '/api/robots/txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicStripeWebhookRoute = ApiPublicStripeWebhookRouteImport.update({
   id: '/api/public/stripe-webhook',
   path: '/api/public/stripe-webhook',
@@ -189,6 +195,7 @@ export interface FileRoutesByFullPath {
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/settings/workspace': typeof AuthenticatedSettingsWorkspaceRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/robots/txt': typeof ApiRobotsTxtRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
   '/api/public/hooks/purge-patients': typeof ApiPublicHooksPurgePatientsRoute
@@ -214,6 +221,7 @@ export interface FileRoutesByTo {
   '/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/settings/workspace': typeof AuthenticatedSettingsWorkspaceRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/robots/txt': typeof ApiRobotsTxtRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
   '/api/public/hooks/purge-patients': typeof ApiPublicHooksPurgePatientsRoute
@@ -242,6 +250,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/security': typeof AuthenticatedSettingsSecurityRoute
   '/_authenticated/settings/workspace': typeof AuthenticatedSettingsWorkspaceRoute
   '/api/public/stripe-webhook': typeof ApiPublicStripeWebhookRoute
+  '/api/robots/txt': typeof ApiRobotsTxtRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
   '/api/public/hooks/purge-patients': typeof ApiPublicHooksPurgePatientsRoute
@@ -270,6 +279,7 @@ export interface FileRouteTypes {
     | '/settings/security'
     | '/settings/workspace'
     | '/api/public/stripe-webhook'
+    | '/api/robots/txt'
     | '/admin/'
     | '/settings/'
     | '/api/public/hooks/purge-patients'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/settings/security'
     | '/settings/workspace'
     | '/api/public/stripe-webhook'
+    | '/api/robots/txt'
     | '/admin'
     | '/settings'
     | '/api/public/hooks/purge-patients'
@@ -322,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/security'
     | '/_authenticated/settings/workspace'
     | '/api/public/stripe-webhook'
+    | '/api/robots/txt'
     | '/_authenticated/admin/'
     | '/_authenticated/settings/'
     | '/api/public/hooks/purge-patients'
@@ -337,6 +349,7 @@ export interface RootRouteChildren {
   AuthCallbackRoute: typeof AuthCallbackRoute
   PTokenRoute: typeof PTokenRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
+  ApiRobotsTxtRoute: typeof ApiRobotsTxtRoute
   ApiPublicHooksPurgePatientsRoute: typeof ApiPublicHooksPurgePatientsRoute
 }
 
@@ -453,6 +466,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/api/robots/txt': {
+      id: '/api/robots/txt'
+      path: '/api/robots/txt'
+      fullPath: '/api/robots/txt'
+      preLoaderRoute: typeof ApiRobotsTxtRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/stripe-webhook': {
       id: '/api/public/stripe-webhook'
@@ -592,6 +612,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthCallbackRoute: AuthCallbackRoute,
   PTokenRoute: PTokenRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
+  ApiRobotsTxtRoute: ApiRobotsTxtRoute,
   ApiPublicHooksPurgePatientsRoute: ApiPublicHooksPurgePatientsRoute,
 }
 export const routeTree = rootRouteImport
