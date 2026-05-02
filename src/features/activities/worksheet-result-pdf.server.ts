@@ -411,6 +411,9 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
             ? (responseValue as any).emotions
             : [];
         const emotions = rawEmotions as Array<{ name?: string; emotion?: string; label?: string; intensity?: number; value?: number }>;
+        if (emotions.length === 0) {
+          // Fall through to default text box below
+        } else {
         const emotionH = emotions.length * 10 + 8;
         y = checkPage(y, emotionH + 2);
 
