@@ -1,0 +1,336 @@
+<!DOCTYPE>
+<html>
+    <head>
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-CEJ3H507LP"></script>
+        <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-CEJ3H507LP');
+        </script>
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>IES-R: Impact of Events Scale-Revised</title>
+        <link rel="stylesheet" type="text/css" href="style.css">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script>
+            (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+            (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+            m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+            })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+          
+            ga('create', 'UA-105878047-1', 'auto');
+            ga('send', 'pageview');
+          
+        </script>
+        <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css" />
+        <script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js"></script>
+        <script>
+        window.addEventListener("load", function(){
+        window.cookieconsent.initialise({
+          "palette": {
+            "popup": {
+              "background": "#eaf7f7",
+              "text": "#5c7291"
+            },
+            "button": {
+              "background": "#56cbdb",
+              "text": "#ffffff"
+            }
+          },
+          "content": {
+            "message": "This website uses cookies to help us to improve the way it works.",
+            "href": "http://www.onlinecbtresources.co.uk/terms-and-conditions/"
+          }
+        })});
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.min.js"></script>
+    </head>
+    <body>
+        <div class="container">
+        <div id="bluebells">
+        </div>
+        <nav>
+            <ul>
+                <li><a href="https://www.onlinecbtresources.co.uk/">Home</a></li>
+                <li><a href="https://www.onlinecbtresources.co.uk/about/">About</a></li>
+                <li><a href="https://www.onlinecbtresources.co.uk/terms-and-conditions/">Terms and Conditions</a></li>
+            </ul>
+        </nav>
+
+        <div>
+            <h3 id="date"></h3>
+        </div>
+
+        <h1>Impact of Events Scale - Revised</h1>
+        
+        <p>If you would prefer to fill in this questionnaire offline you can download a <a href="impact-of-events-scale.pdf">pdf</a> by clicking on the link.</p>
+
+        <form action="#" method="post" id="myForm" autocomplete="off" onreset="clearTotals()">
+            <table id="myTable_1">
+                <tr>
+                    <th class="ltalign">Below is a list of comments made by people after stressful life events. Please check each item, indicating how frequently these comments were true for you during the past seven days.</th>
+                    <th>Not at all</th>
+                    <th>A little bit</th>
+                    <th>Moderately</th>
+                    <th>Quite a bit</th>
+                    <th>Extremely</th>
+                    
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q1">1. Any reminder brought back feelings about it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q1" value="0" id="IESR_q1_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q1" class="P_1 intrusion" value="1" id="IESR_q1_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q1" class="P_2 intrusion" value="2" id="IESR_q1_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q1" class="P_3 intrusion" value="3" id="IESR_q1_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q1" class="P_4 intrusion" value="4" id="IESR_q1_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q2">2. I had trouble staying asleep</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q2" value="0" id="IESR_q2_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q2" class="P_1 intrusion" value="1" id="IESR_q2_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q2" class="P_2 intrusion" value="2" id="IESR_q2_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q2" class="P_3 intrusion" value="3" id="IESR_q2_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q2" class="P_4 intrusion" value="4" id="IESR_q2_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q3">3. Other things kept making me think about it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q3" value="0" id="IESR_q3_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q3" class="P_1 intrusion" value="1" id="IESR_q3_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q3" class="P_2 intrusion" value="2" id="IESR_q3_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q3" class="P_3 intrusion" value="3" id="IESR_q3_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q3" class="P_4 intrusion" value="4" id="IESR_q3_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q4">4. I felt irritable and angry</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q4" value="0" id="IESR_q4_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q4" class="P_1 hyperarousal" value="1" id="IESR_q4_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q4" class="P_2 hyperarousal" value="2" id="IESR_q4_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q4" class="P_3 hyperarousal" value="3" id="IESR_q4_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q4" class="P_4 hyperarousal" value="4" id="IESR_q4_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q5">5. I avoided letting myself get upset when I thought about it or was reminded of it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q5" value="0" id="IESR_q5_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q5" class="P_1 avoidance" value="1" id="IESR_q5_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q5" class="P_2 avoidance" value="2" id="IESR_q5_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q5" class="P_3 avoidance" value="3" id="IESR_q5_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q5" class="P_4 avoidance" value="4" id="IESR_q5_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q6">6. I thought about it when I didn't mean to</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q6" value="0" id="IESR_q6_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q6" class="P_1 intrusion" value="1" id="IESR_q6_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q6" class="P_2 intrusion" value="2" id="IESR_q6_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q6" class="P_3 intrusion" value="3" id="IESR_q6_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q6" class="P_4 intrusion" value="4" id="IESR_q6_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q7">7. I felt as if it hadn't happened or wasn't real</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q7" value="0" id="IESR_q7_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q7" class="P_1 avoidance" value="1" id="IESR_q7_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q7" class="P_2 avoidance" value="2" id="IESR_q7_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q7" class="P_3 avoidance" value="3" id="IESR_q7_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q7" class="P_4 avoidance" value="4" id="IESR_q7_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q8">8. I stayed away from reminders about it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q8" value="0" id="IESR_q8_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q8" class="P_1 avoidance" value="1" id="IESR_q8_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q8" class="P_2 avoidance" value="2" id="IESR_q8_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q8" class="P_3 avoidance" value="3" id="IESR_q8_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q8" class="P_4 avoidance" value="4" id="IESR_q8_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q9">9. Pictures about it popped into my mind</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q9" value="0" id="IESR_q9_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q9" class="P_1 intrusion" value="1" id="IESR_q9_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q9" class="P_2 intrusion" value="2" id="IESR_q9_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q9" class="P_3 intrusion" value="3" id="IESR_q9_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q9" class="P_4 intrusion" value="4" id="IESR_q9_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q10">10. I was jumpy and easily startled</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q10" value="0" id="IESR_q10_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q10" class="P_1 hyperarousal" value="1" id="IESR_q10_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q10" class="P_2 hyperarousal" value="2" id="IESR_q10_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q10" class="P_3 hyperarousal" value="3" id="IESR_q10_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q10" class="P_4 hyperarousal" value="4" id="IESR_q10_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q11">11. I tried not to think about it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q11" value="0" id="IESR_q11_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q11" class="P_1 avoidance" value="1" id="IESR_q11_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q11" class="P_2 avoidance" value="2" id="IESR_q11_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q11" class="P_3 avoidance" value="3" id="IESR_q11_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q11" class="P_4 avoidance" value="4" id="IESR_q11_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q12">12. I was aware that I still had a lot of feelings about it, but I didn't deal with them</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q12" value="0" id="IESR_q12_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q12" class="P_1 avoidance" value="1" id="IESR_q12_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q12" class="P_2 avoidance" value="2" id="IESR_q12_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q12" class="P_3 avoidance" value="3" id="IESR_q12_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q12" class="P_4 avoidance" value="4" id="IESR_q12_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q13">13. My feelings about it were kind of numb</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q13" value="0" id="IESR_q13_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q13" class="P_1 avoidance" value="1" id="IESR_q13_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q13" class="P_2 avoidance" value="2" id="IESR_q13_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q13" class="P_3 avoidance" value="3" id="IESR_q13_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q13" class="P_4 avoidance" value="4" id="IESR_q13_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q14">14. I found myself acting or feeling like I was back at that time</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q14" value="0" id="IESR_q14_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q14" class="P_1 intrusion" value="1" id="IESR_q14_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q14" class="P_2 intrusion" value="2" id="IESR_q14_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q14" class="P_3 intrusion" value="3" id="IESR_q14_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q14" class="P_4 intrusion" value="4" id="IESR_q14_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q15">15. I had trouble falling asleep</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q15" value="0" id="IESR_q15_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q15" class="P_1 hyperarousal" value="1" id="IESR_q15_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q15" class="P_2 hyperarousal" value="2" id="IESR_q15_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q15" class="P_3 hyperarousal" value="3" id="IESR_q15_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q15" class="P_4 hyperarousal" value="4" id="IESR_q15_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q16">16. I had waves of strong feelings about it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q16" value="0" id="IESR_q16_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q16" class="P_1 intrusion" value="1" id="IESR_q16_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q16" class="P_2 intrusion" value="2" id="IESR_q16_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q16" class="P_3 intrusion" value="3" id="IESR_q16_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q16" class="P_4 intrusion" value="4" id="IESR_q16_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q17">17. I tried to remove it from my memory</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q17" value="0" id="IESR_q17_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q17" class="P_1 avoidance" value="1" id="IESR_q17_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q17" class="P_2 avoidance" value="2" id="IESR_q17_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q17" class="P_3 avoidance" value="3" id="IESR_q17_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q17" class="P_4 avoidance" value="4" id="IESR_q17_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q18">18. I had trouble concentrating</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q18" value="0" id="IESR_q18_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q18" class="P_1 hyperarousal" value="1" id="IESR_q18_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q18" class="P_2 hyperarousal" value="2" id="IESR_q18_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q18" class="P_3 hyperarousal" value="3" id="IESR_q18_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q18" class="P_4 hyperarousal" value="4" id="IESR_q18_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q19">19. Reminders of it caused me to have physical reactions, such as sweating, trouble breathing, nausea, or a pounding heart</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q19" value="0" id="IESR_q19_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q19" class="P_1 hyperarousal" value="1" id="IESR_q19_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q19" class="P_2 hyperarousal" value="2" id="IESR_q19_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q19" class="P_3 hyperarousal" value="3" id="IESR_q19_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q19" class="P_4 hyperarousal" value="4" id="IESR_q19_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q20">20. I had dreams about it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q20" value="0" id="IESR_q20_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q20" class="P_1 intrusion" value="1" id="IESR_q20_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q20" class="P_2 intrusion" value="2" id="IESR_q20_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q20" class="P_3 intrusion" value="3" id="IESR_q20_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q20" class="P_4 intrusion" value="4" id="IESR_q20_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q21">21. I felt watchful or on-guard</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q21" value="0" id="IESR_q21_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q21" class="P_1 hyperarousal" value="1" id="IESR_q21_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q21" class="P_2 hyperarousal" value="2" id="IESR_q21_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q21" class="P_3 hyperarousal" value="3" id="IESR_q21_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q21" class="P_4 hyperarousal" value="4" id="IESR_q21_4"></td>
+                </tr>
+                <tr>
+                    <td class="ltalign red_check" id="IESR_text_q22">22. I tried not to talk about it</td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q22" value="0" id="IESR_q22_0"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q22" class="P_1 avoidance" value="1" id="IESR_q22_1"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q22" class="P_2 avoidance" value="2" id="IESR_q22_2"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q22" class="P_3 avoidance" value="3" id="IESR_q22_3"></td>
+                    <td><input type="radio" onclick="notRed(this)" name="IESR_q22" class="P_4 avoidance" value="4" id="IESR_q22_4"></td>
+                </tr>                
+                <tr>
+                    <td colspan="5" class="rtalign"><input type="button" value="Total" class="buttons" onclick="$score_IESR()" id="score_IESR"></button></td>
+                    <td id="total_IESR" value="0"></td>
+                </tr>
+                
+            </table>
+            <form action="#" method="post" id="myForm_subscales" onreset="clearTotals()">
+                <table id="myTable_2" class="myTable_2">
+                    <tr>
+                        <th>Subscale</th>
+                        <td class="ltalign">Intrusion subscale</td>
+                        <td class="ltalign">Avoidance subscale</td>
+                        <td class="ltalign">Hyperarousal subscale</td>
+                    </tr>
+                    <tr>
+                        <td>Total</td>
+                        <td id="total_intrusion" value="0"></td>
+                        <td id="total_avoidance" value="0"></td>
+                        <td id="total_hyperarousal" value="0"></td>
+                    </tr>
+                    <tr>
+                        <td>Mean<br>(Average)</td>
+                        <td id="mean_intrusion" value="0"></td>
+                        <td id="mean_avoidance" value="0"></td>
+                        <td id="mean_hyperarousal" value="0"></td>
+                    </tr>
+                </table>
+            
+            
+            <p>A total score of 33 or over signifies the likely presence of post-traumatic stress disorder (PTSD).</p>
+
+            <input type="button" value="Email" class="buttons" onclick="$sendEmail()" id="sendEmail">
+            <input type="email" id="emailID" placeholder="Your email address...">    
+            <input type="button" value="Print" class="buttons" onclick="window.print()">            
+            <input type="reset">
+            <input type="button" value="Download" onclick="download()">
+            </form>
+            
+            
+            <h1>Monitoring your progress</h1>
+            <p>To save your scores use the buttons below. If your device supports local storage a copy of your scores will be saved and shown in a table and on a graph. Over time you will see how your scores change. You can delete either individual entries or all your scores in one go. Because your scores are saved locally to update your scores you will need to use the same browser (e.g. Safari, Chrome, Firefox) on the same device. It is important to remember that the security of this data is your responsibility. If this is a shared device or anyone else has access to your browser they will also be able to see your scores. </p>
+            <br>
+            <div id="log"></div>
+            <canvas id="myChart"></canvas>
+
+        <div id="IESR_info">
+            <div>
+                <h2>Important</h2>
+                 <p>Please treat your scores on these or any other online questionnaires with caution. Questionnaires cannot be used to make a diagnosis of a mental health condition. Where a mental health condition has been diagnosed by a suitably qualified and experienced health professional these questionnaires may be used as a guide to the current severity of your condition. Always consult with a qualified health professional if you are concerned in any way about your mental health.<br><br>If you are worried about your safety, you should immediately consult with your GP or another suitably qualified health professional. If you are in the UK the following numbers might be of help to you:</p>
+                 <ul>
+                    <li>NHS Emergencies: call 999.</li>
+                    <li>NHS Non-emergency number: call 111.</li>
+                    <li>Samaritans: call 116 123 or email <a href="mailto:jo@samaritans.org">jo@samaritans.org</a></li>
+                </ul>
+                <p>You can find more guidance and additional helpline numbers on this NHS page: <a href="https://www.nhs.uk/conditions/suicide/">Help for suicidal thoughts</a></p>
+            </div>            
+                  
+        </form>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Disclaimer:</strong> the resources and information contained in this website are for general information purposes only. The information is provided by Online CBT Resources and while we endeavour to keep the information up to date and correct, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, suitability or availability with respect to the website or the information, products, services, or related graphics contained on the website for any purpose. Any reliance you place on such information is therefore strictly at your own risk. Professional good practice guidelines require mental health professionals to work within their scope of competence. The resources and information supplied here are intended to support good practice, not to replace it. In no event will we be liable for any loss or damage including without limitation, indirect or consequential loss or damage, or any loss or damage whatsoever arising from loss of data or profits arising out of, or in connection with, the use of this website. By using the website you are fully accepting the terms, conditions, and disclaimers contained in <a href="https://www.onlinecbtresources.co.uk/terms-and-conditions/">this notice</a>.</p>
+            <p><strong>Acknowledgements/References:</strong> all material supplied by Online CBT Resources is uniquely the work of the author(s). Where material draws on existing work we have tried as far as possible to reference all relevant sources. Please let us know if you believe that we have failed to acknowledge original work or that we have breached an existing copyright so that we can correct it.</p>
+            <div style="float: left; vertical-align: middle">
+            <p>&#169 <span><a class="linkcolour" href="http://www.bristolcbt.co.uk/">Andrew Grimmer</a></span> 2017</p>
+            <p>Contact information: <a href="mailto:info@onlinecbtresources.co.uk">info@onlinecbtresources.co.uk</a></p>
+            <p>Site developed and maintained by <a href="https://www.joelgrimmer.com">Joel Grimmer Websites</a></p>
+            </div>
+            <a href="https://www.joelgrimmer.com"><img src="jglogo.png" width="40px" style="float: right;"></a>
+        </div>
+
+        <script src="progress_tracker.js"></script>
+        <script src="script.js"></script>
+        <script src="jspdf.min.js"></script>
+        <script src="https://unpkg.com/react@16/umd/react.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js" crossorigin></script>
+        
+    </body>
+</html>
