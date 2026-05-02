@@ -182,8 +182,10 @@ export function PatientPickerSheet({
           </SheetTitle>
           <SheetDescription>
             {activity
-              ? `Aplicar ${activity.name} em sessão — escolha quem atender agora.`
-              : "Escolha um paciente para aplicar a atividade em sessão."}
+              ? isSharedLink
+                ? `Enviar ${activity.name} por link — escolha o paciente.`
+                : `Aplicar ${activity.name} em sessão — escolha quem atender agora.`
+              : "Escolha um paciente."}
           </SheetDescription>
         </SheetHeader>
 
