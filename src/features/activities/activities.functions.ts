@@ -155,9 +155,7 @@ export const assignActivity = createServerFn({ method: "POST" })
       // Gating de tier: clamp da janela de expiração ao máximo do plano.
       const tier = await getWorkspaceTier(data.workspaceId);
       const maxHours = TIER_LINK_MAX_HOURS[tier] ?? 24;
-      if (data.expiresInHours > maxHours) {
-        throw new Error(`Seu plano permite no máximo ${maxHours}h de duração para o link.`);
-      }
+      const clampedHours = Math.min(data.expiresInHours, maxHours);
 
       rawToken = generateMagicLinkToken();
       tokenHash = await hashMagicLinkToken(rawToken);
