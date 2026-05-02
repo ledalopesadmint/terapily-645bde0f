@@ -79,8 +79,7 @@ const PERIOD_OPTIONS = [
 ];
 
 function AdminAnalyticsPage() {
-  const { hasRole, isLoading: authLoading } = useAuth();
-  const navigate = useNavigate();
+  const { hasRole } = useAuth();
   const [data, setData] = useState<AnalyticsDashboardPayload | null>(null);
   const [loading, setLoading] = useState(true);
   const [aggregating, setAggregating] = useState(false);
