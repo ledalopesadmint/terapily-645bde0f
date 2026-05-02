@@ -741,11 +741,13 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                       )}
                     </div>
                   </div>
-                  {hasDraft && (
+                  {(hasDraft || displayStatus === "in_progress") && (
                     <div className="space-y-1">
-                      <Progress value={draftPct} className="h-1.5" />
+                      <Progress value={hasDraft ? draftPct : 5} className="h-1.5" />
                       <p className="text-xs text-muted-foreground">
-                        Paciente está respondendo. Conteúdo cifrado — você verá só ao finalizar.
+                        {hasDraft
+                          ? `Paciente está respondendo (${draftPct}%). Conteúdo cifrado — você verá só ao finalizar.`
+                          : "Paciente iniciou a atividade. Conteúdo cifrado — você verá só ao finalizar."}
                       </p>
                     </div>
                   )}
