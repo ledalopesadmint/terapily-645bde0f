@@ -347,6 +347,7 @@ export function InSessionPlayerDialog({
                   onSubmit={() => submitMutation.mutate()}
                   submitting={submitMutation.isPending}
                   submitLabel="Registrar exercício"
+                  embedded
                 />
               ) : isScript ? (
                 <GuidedScriptRunner

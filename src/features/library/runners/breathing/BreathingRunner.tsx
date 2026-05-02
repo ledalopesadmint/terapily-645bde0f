@@ -5,13 +5,19 @@
  * Full-screen animated breathing circle with phase-synced gradients,
  * synthesized bell/breath sounds, Spotify link, and cycle tracking.
  *
+ * UX rules:
+ *  - During exercise (running): header + bottom controls HIDE for immersion.
+ *    A subtle tap anywhere pauses and reveals controls.
+ *  - On idle/paused/done: controls visible.
+ *  - The circle + background fill the ENTIRE viewport on all breakpoints.
+ *  - Circle size scales with viewport height, not fixed pixels.
+ *
  * All animations are pure CSS — zero external dependencies, < 50KB total.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Music, Volume2, VolumeX, Check, Play, Pause, RotateCcw } from "lucide-react";
-import { useIsMobile } from "@/hooks/use-mobile";
 import type { BreathingConfig, BreathingPhase } from "./breathing-types";
 import { playBell, playBreathSound } from "./breathing-sounds";
 
@@ -20,6 +26,8 @@ interface BreathingRunnerProps {
   onSubmit?: () => void;
   submitting?: boolean;
   submitLabel?: string;
+  /** When true, uses relative positioning (for dialog/embedded use). Default: false (fixed fullscreen). */
+  embedded?: boolean;
 }
 
 // Phase colors (oklch-based for smoothness)
@@ -54,11 +62,11 @@ export function BreathingRunner({
   onSubmit,
   submitting,
   submitLabel = "Concluir exercício",
+  embedded = false,
 }: BreathingRunnerProps) {
   const { cycles, phases, spotifyUrl, sounds } = config;
   const totalPhases = phases.length;
   const cycleDuration = phases.reduce((s, p) => s + p.durationSec, 0);
-  const isMobile = useIsMobile();
 
   const [state, setState] = useState<RunnerState>("idle");
   const [currentCycle, setCurrentCycle] = useState(0);
@@ -74,11 +82,12 @@ export function BreathingRunner({
   const phaseProgress = Math.min(phaseElapsed / phaseDuration, 1);
   const style = PHASE_STYLES[phase?.animation ?? "grow"] ?? PHASE_STYLES.grow;
 
-  // Circle scale: much more dramatic range for real breathing guidance
-  // Min 0.35, max 1.0 — the circle breathes WITH you
+  // Controls visibility: HIDDEN during running, VISIBLE otherwise
+  const controlsVisible = state !== "running";
+
+  // Circle scale: dramatic range for real breathing guidance
   const getCircleScale = () => {
     if (!phase) return 0.5;
-    // Ease function for organic feel
     const easeInOut = (t: number) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     const eased = easeInOut(phaseProgress);
     switch (phase.animation) {
@@ -94,10 +103,6 @@ export function BreathingRunner({
   };
 
   const circleScale = getCircleScale();
-
-  // Responsive base size — circle should fill most of the available space
-  // Desktop: 280px, Tablet: 240px, Mobile: 200px base (at scale 1.0)
-  const baseSize = isMobile ? 200 : 280;
 
   // Main loop
   const tick = useCallback(() => {
@@ -184,12 +189,22 @@ export function BreathingRunner({
 
   const phaseRemaining = Math.max(0, Math.ceil(phaseDuration - phaseElapsed));
 
-  const currentSize = baseSize * circleScale;
-  const glowSize = currentSize + 60;
+  // Tap to pause during running (immersive mode)
+  const handleScreenTap = () => {
+    if (state === "running") {
+      pause();
+    }
+  };
 
   return (
-    <div className="flex flex-col h-full min-h-[500px] relative overflow-hidden select-none">
-      {/* Animated gradient background */}
+    <div
+      className={cn(
+        "flex flex-col select-none overflow-hidden",
+        embedded ? "relative h-full min-h-[500px]" : "fixed inset-0",
+      )}
+      style={{ touchAction: "none" }}
+    >
+      {/* Animated gradient background — fills entire viewport */}
       <div
         className={cn(
           "absolute inset-0 bg-gradient-to-br transition-all duration-[2000ms] ease-in-out",
@@ -199,7 +214,7 @@ export function BreathingRunner({
 
       {/* Decorative wave */}
       <svg
-        className="absolute bottom-0 left-0 right-0 h-32 opacity-[0.06] pointer-events-none"
+        className="absolute bottom-0 left-0 right-0 h-24 sm:h-32 opacity-[0.06] pointer-events-none"
         viewBox="0 0 1440 320"
         preserveAspectRatio="none"
       >
@@ -235,8 +250,15 @@ export function BreathingRunner({
         ))}
       </div>
 
-      {/* Top controls */}
-      <div className="relative z-10 flex items-center justify-between px-4 sm:px-6 py-3">
+      {/* Top controls — retractable during exercise */}
+      <div
+        className={cn(
+          "relative z-20 flex items-center justify-between px-4 sm:px-6 py-3 transition-all duration-500",
+          controlsVisible
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 -translate-y-full pointer-events-none",
+        )}
+      >
         <button
           onClick={() => setSoundEnabled(!soundEnabled)}
           className={cn(
@@ -267,20 +289,31 @@ export function BreathingRunner({
         )}
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6">
-        {/* Cycle counter */}
-        {state !== "idle" && state !== "done" && (
-          <p className={cn("text-[0.65rem] font-bold uppercase tracking-[0.16em] opacity-50 mb-3", style.text)}>
+      {/* Tappable area during running (tap to pause) */}
+      {state === "running" && (
+        <div
+          className="absolute inset-0 z-10 cursor-pointer"
+          onClick={handleScreenTap}
+        />
+      )}
+
+      {/* Main content — centered in viewport */}
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center px-6 pointer-events-none">
+        {/* Cycle counter — only visible when NOT running (or on idle/paused/done) */}
+        {state !== "idle" && state !== "done" && controlsVisible && (
+          <p className={cn(
+            "text-[0.65rem] font-bold uppercase tracking-[0.16em] opacity-50 mb-3 transition-opacity duration-500",
+            style.text,
+          )}>
             Ciclo {currentCycle + 1} de {cycles}
           </p>
         )}
 
-        {/* Phase label ABOVE the circle */}
+        {/* Phase label ABOVE the circle — always visible during exercise */}
         {(state === "running" || state === "paused") && phase && (
           <p
             className={cn(
-              "font-display text-2xl sm:text-3xl md:text-4xl tracking-wide mb-6 transition-all duration-700",
+              "font-display text-3xl sm:text-4xl md:text-5xl tracking-wide mb-4 sm:mb-6 transition-all duration-700",
               style.label,
             )}
           >
@@ -290,29 +323,26 @@ export function BreathingRunner({
 
         {/* Idle instruction */}
         {state === "idle" && (
-          <p className={cn("font-display text-2xl sm:text-3xl tracking-wide mb-6 opacity-70", style.label)}>
+          <p className={cn("font-display text-2xl sm:text-3xl md:text-4xl tracking-wide mb-6 opacity-70", style.label)}>
             Encontre uma posição confortável
           </p>
         )}
 
         {/* Done label */}
         {state === "done" && (
-          <p className={cn("font-display text-2xl sm:text-3xl tracking-wide mb-6", style.label)}>
+          <p className={cn("font-display text-2xl sm:text-3xl md:text-4xl tracking-wide mb-6", style.label)}>
             Exercício concluído
           </p>
         )}
 
-        {/* The breathing circle */}
-        <div
-          className="relative flex items-center justify-center"
-          style={{ width: `${baseSize + 80}px`, height: `${baseSize + 80}px` }}
-        >
+        {/* The breathing circle — responsive to viewport */}
+        <div className="relative flex items-center justify-center breathing-circle-container">
           {/* Outer glow */}
           <div
             className="absolute rounded-full transition-opacity duration-700"
             style={{
-              width: `${glowSize}px`,
-              height: `${glowSize}px`,
+              width: `calc(var(--circle-base) * ${circleScale} + 60px)`,
+              height: `calc(var(--circle-base) * ${circleScale} + 60px)`,
               left: '50%',
               top: '50%',
               transform: 'translate(-50%, -50%)',
@@ -321,107 +351,103 @@ export function BreathingRunner({
             }}
           />
 
-          {/* Main circle — size driven by JS for organic feel */}
+          {/* Main circle */}
           <div
-            className={cn("rounded-full flex items-center justify-center", style.circle)}
+            className={cn("rounded-full flex items-center justify-center transition-colors duration-[1500ms]", style.circle)}
             style={{
-              width: `${currentSize}px`,
-              height: `${currentSize}px`,
+              width: `calc(var(--circle-base) * ${circleScale})`,
+              height: `calc(var(--circle-base) * ${circleScale})`,
               boxShadow: `0 0 ${40 * circleScale}px ${10 * circleScale}px ${style.glow}`,
-              transition: "background-color 1.5s ease",
             }}
           >
-            {/* Only the countdown number inside */}
+            {/* Countdown number inside */}
             {(state === "running" || state === "paused") && (
               <span
-                className="text-white/90 font-mono tabular-nums font-light"
-                style={{ fontSize: `${Math.max(32, currentSize * 0.28)}px` }}
+                className="text-white/90 font-mono tabular-nums font-light breathing-countdown"
               >
                 {phaseRemaining}
               </span>
             )}
 
             {state === "idle" && (
-              <span
-                className="text-white/70 font-display"
-                style={{ fontSize: `${Math.max(20, currentSize * 0.18)}px` }}
-              >
+              <span className="text-white/70 font-display breathing-idle-text">
                 Pronto?
               </span>
             )}
 
             {state === "done" && (
-              <Check className="text-white/90" style={{ width: `${currentSize * 0.25}px`, height: `${currentSize * 0.25}px` }} />
+              <Check className="text-white/90 breathing-done-icon" />
             )}
           </div>
         </div>
 
-        {/* Cycle dots */}
+        {/* Cycle dots + progress — visible during exercise */}
         {state !== "idle" && (
-          <div className="flex items-center gap-2 mt-5">
-            {[...Array(cycles)].map((_, i) => (
+          <div className="flex flex-col items-center gap-2 mt-4 sm:mt-5">
+            <div className="flex items-center gap-2">
+              {[...Array(cycles)].map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-2 rounded-full transition-all duration-500",
+                    i < currentCycle
+                      ? "w-2 bg-white/60"
+                      : i === currentCycle && state !== "done"
+                        ? "w-5 bg-white/80"
+                        : i === currentCycle && state === "done"
+                          ? "w-2 bg-white/60"
+                          : "w-2 bg-white/25",
+                  )}
+                />
+              ))}
+            </div>
+            <div className="w-32 h-1 rounded-full bg-white/15 overflow-hidden">
               <div
-                key={i}
-                className={cn(
-                  "h-2 rounded-full transition-all duration-500",
-                  i < currentCycle
-                    ? "w-2 bg-white/60"
-                    : i === currentCycle && state !== "done"
-                      ? "w-5 bg-white/80"
-                      : i === currentCycle && state === "done"
-                        ? "w-2 bg-white/60"
-                        : "w-2 bg-white/25",
-                )}
+                className="h-full rounded-full bg-white/50 transition-all duration-300"
+                style={{ width: `${overallProgress * 100}%` }}
               />
-            ))}
+            </div>
           </div>
         )}
 
-        {/* Progress bar */}
-        {state !== "idle" && (
-          <div className="w-32 h-1 rounded-full bg-white/15 mt-3 overflow-hidden">
-            <div
-              className="h-full rounded-full bg-white/50 transition-all duration-300"
-              style={{ width: `${overallProgress * 100}%` }}
-            />
-          </div>
+        {/* "Toque para pausar" hint — only during running, fades after 3s */}
+        {state === "running" && (
+          <p className={cn(
+            "text-[0.6rem] mt-4 opacity-40 animate-fade-out-delayed",
+            style.text,
+          )}>
+            Toque na tela para pausar
+          </p>
         )}
       </div>
 
-      {/* Bottom controls */}
-      <div className="relative z-10 flex items-center justify-center gap-3 px-6 py-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      {/* Bottom controls — retractable during exercise */}
+      <div
+        className={cn(
+          "relative z-20 flex items-center justify-center gap-3 px-6 py-5 transition-all duration-500",
+          "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
+          controlsVisible
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-full pointer-events-none",
+        )}
+      >
         {state === "idle" && (
           <button
             onClick={start}
             className={cn(
-              "flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-medium transition-all",
+              "flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-medium transition-all pointer-events-auto",
               "bg-white/70 backdrop-blur-sm shadow-lg hover:bg-white/90 hover:shadow-xl",
               "active:scale-[0.97] touch-manipulation",
               style.text,
             )}
           >
             <Play className="w-4 h-4" />
-            Iniciar
-          </button>
-        )}
-
-        {state === "running" && (
-          <button
-            onClick={pause}
-            className={cn(
-              "flex items-center gap-2 px-6 py-3 rounded-2xl text-sm font-medium transition-all",
-              "bg-white/30 backdrop-blur-sm hover:bg-white/50",
-              "active:scale-[0.97] touch-manipulation",
-              style.text,
-            )}
-          >
-            <Pause className="w-4 h-4" />
-            Pausar
+            Iniciar exercício
           </button>
         )}
 
         {state === "paused" && (
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pointer-events-auto">
             <button
               onClick={restart}
               className={cn(
@@ -453,7 +479,7 @@ export function BreathingRunner({
             onClick={() => onSubmit?.()}
             disabled={submitting}
             className={cn(
-              "flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-medium transition-all",
+              "flex items-center gap-2 px-8 py-3.5 rounded-2xl text-sm font-medium transition-all pointer-events-auto",
               submitting
                 ? "bg-white/30 text-white/50 cursor-not-allowed"
                 : "bg-white/70 backdrop-blur-sm shadow-lg hover:bg-white/90 active:scale-[0.97] touch-manipulation",
@@ -473,6 +499,56 @@ export function BreathingRunner({
           50% { transform: translateY(-40px) translateX(-8px); opacity: 0.4; }
           75% { transform: translateY(-18px) translateX(18px); opacity: 0.5; }
         }
+
+        @keyframes fade-out-delayed {
+          0%, 60% { opacity: 0.4; }
+          100% { opacity: 0; }
+        }
+
+        .animate-fade-out-delayed {
+          animation: fade-out-delayed 4s ease-out forwards;
+        }
+
+        /* Viewport-responsive circle sizing */
+        .breathing-circle-container {
+          --circle-base: min(65vw, 55vh, 360px);
+          width: calc(var(--circle-base) + 80px);
+          height: calc(var(--circle-base) + 80px);
+        }
+
+        .breathing-countdown {
+          font-size: calc(var(--circle-base) * 0.22);
+        }
+
+        .breathing-idle-text {
+          font-size: calc(var(--circle-base) * 0.14);
+        }
+
+        .breathing-done-icon {
+          width: calc(var(--circle-base) * 0.18);
+          height: calc(var(--circle-base) * 0.18);
+        }
+
+        /* Mobile: bigger circle relative to screen */
+        @media (max-width: 640px) {
+          .breathing-circle-container {
+            --circle-base: min(75vw, 50vh, 320px);
+          }
+        }
+
+        /* Tablet */
+        @media (min-width: 641px) and (max-width: 1024px) {
+          .breathing-circle-container {
+            --circle-base: min(55vw, 50vh, 380px);
+          }
+        }
+
+        /* Desktop */
+        @media (min-width: 1025px) {
+          .breathing-circle-container {
+            --circle-base: min(40vw, 55vh, 400px);
+          }
+        }
       `}</style>
     </div>
   );
@@ -483,7 +559,6 @@ export function getBreathingCompletion(config: BreathingConfig, state: string) {
   return {
     total: config.cycles,
     completed: state === "done" ? config.cycles : 0,
-    completion: state === "done" ? 100 : 0,
-    allAnswered: state === "done",
+    percent: state === "done" ? 100 : 0,
   };
 }

@@ -219,7 +219,7 @@ function HabitLinkPage() {
   // Exercise view
   if (isBreathing) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <>
         <BreathingRunner
           config={config as unknown as BreathingConfig}
           onSubmit={handleComplete}
@@ -229,13 +229,13 @@ function HabitLinkPage() {
         {link.totalEntries > 0 && (
           <button
             onClick={handleViewHistory}
-            className="fixed bottom-4 right-4 z-20 flex items-center gap-1.5 rounded-xl bg-white/60 backdrop-blur-sm px-3 py-2 text-xs font-medium text-[oklch(0.35_0.05_160)] shadow-sm hover:bg-white/80 transition-all"
+            className="fixed bottom-20 right-4 z-30 flex items-center gap-1.5 rounded-xl bg-white/60 backdrop-blur-sm px-3 py-2 text-xs font-medium text-[oklch(0.35_0.05_160)] shadow-sm hover:bg-white/80 transition-all"
           >
             <BarChart3 className="w-3.5 h-3.5" />
             {link.totalEntries} práticas
           </button>
         )}
-      </div>
+      </>
     );
   }
 
