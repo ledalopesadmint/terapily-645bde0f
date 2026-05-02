@@ -74,7 +74,11 @@ function FieldResponse({
 }) {
   // emotion_picker → array of { name, intensity }
   if (field.type === "emotion_picker") {
-    const emotions = Array.isArray(value) ? value : [];
+    const emotions = Array.isArray(value)
+      ? value
+      : value != null && typeof value === "object" && Array.isArray((value as any).emotions)
+        ? (value as any).emotions
+        : [];
     return (
       <div className="space-y-2">
         <p className="text-sm font-medium text-foreground">{field.label}</p>
