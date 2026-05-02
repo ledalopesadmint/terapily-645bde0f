@@ -194,13 +194,16 @@ export const getFeaturedActivity = createServerFn({ method: "GET" })
     // RLS de activity_catalog já filtra: terapeuta só vê published; admin vê tudo.
     // Aqui apenas adicionamos o gating extra de drafts via feature flag pra
     // espelhar a regra do listAvailableActivities.
-    const { data: row, error } = await supabase
+    const { data: rows, error } = await supabase
       .from("activity_catalog")
       .select(
         "id, slug, title, short_description, archetype, theme, category, status, config",
       )
       .eq("is_featured", true)
-      .maybeSingle();
+      .order("updated_at", { ascending: false })
+      .limit(1);
+
+    const row = rows?.[0] ?? null;
 
     if (error) {
       console.error("[getFeaturedActivity] query failed", { code: error.code });
