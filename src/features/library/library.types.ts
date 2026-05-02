@@ -67,4 +67,5 @@ export interface Activity {
     | "compass";
   supportedModes: DeliveryMode[];
   sensitive?: boolean;
+  subcategory?: "breathing" | "grounding" | "relaxation" | "attention";
 }
