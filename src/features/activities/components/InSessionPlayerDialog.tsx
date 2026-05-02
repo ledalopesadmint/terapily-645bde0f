@@ -337,7 +337,16 @@ export function InSessionPlayerDialog({
             )}
 
             <div className="flex-1 flex flex-col overflow-hidden">
-              {isForm ? (
+              {isScript ? (
+                <GuidedScriptRunner
+                  config={config}
+                  responses={responses}
+                  onResponse={(sId, val) => setResponses((prev) => ({ ...prev, [sId]: val }))}
+                  onSubmit={() => submitMutation.mutate()}
+                  submitting={submitMutation.isPending}
+                  submitLabel="Registrar exercício"
+                />
+              ) : isForm ? (
                 <FormRunner
                   config={config}
                   responses={responses}
