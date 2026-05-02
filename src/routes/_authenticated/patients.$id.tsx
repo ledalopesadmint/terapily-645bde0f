@@ -547,7 +547,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
       generateInSessionLink({ data: { patientActivityId: paId } }),
     onSuccess: (res, paId) => {
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
-      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const origin = getPublicOrigin();
       setRevealedLink({
         url: `${origin}${res.linkPath}`,
         patientActivityId: paId,
