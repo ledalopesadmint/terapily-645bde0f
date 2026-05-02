@@ -80,7 +80,7 @@ export function ConsentGate({
   return (
     <Dialog open={open} onOpenChange={() => {}}>
         <DialogContent
-          className="flex max-h-[88dvh] w-[calc(100vw-2rem)] max-w-lg grid-rows-[auto_minmax(0,1fr)_auto] flex-col gap-0 overflow-hidden p-0 sm:max-h-[85dvh]"
+          className="max-h-[88dvh] w-[calc(100vw-2rem)] max-w-lg grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-h-[85dvh]"
         onPointerDownOutside={(e) => e.preventDefault()}
         onEscapeKeyDown={(e) => e.preventDefault()}
       >
@@ -93,7 +93,7 @@ export function ConsentGate({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-2 [-webkit-overflow-scrolling:touch] sm:px-6">
+        <div className="min-h-0 overflow-y-auto overscroll-contain px-5 py-2 [-webkit-overflow-scrolling:touch] sm:px-6">
           <div className="space-y-4 pb-4 pr-1">
             {paragraphs.map((p, i) => (
               <p
