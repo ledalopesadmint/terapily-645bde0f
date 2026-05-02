@@ -307,6 +307,9 @@ function ActivityRunner({
     onSuccess: (data) => {
       setPhase("submitted");
       if (data.pdf) setResultPdf(data.pdf);
+      if (data.responseId && data.workspaceId && data.archetype) {
+        setSubmitMeta({ responseId: data.responseId, workspaceId: data.workspaceId, archetype: data.archetype });
+      }
     },
   });
 
