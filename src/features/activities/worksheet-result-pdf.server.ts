@@ -403,8 +403,14 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
       y += 5;
 
       // ── emotion_picker: visual emotion bars ──
-      if (field.type === "emotion_picker" && Array.isArray(responseValue) && responseValue.length > 0) {
-        const emotions = responseValue as Array<{ name?: string; emotion?: string; label?: string; intensity?: number; value?: number }>;
+      // Data shape from FormRunner: { emotions: [{ name, intensity }] } OR flat array
+      if (field.type === "emotion_picker" && responseValue != null && typeof responseValue === "object") {
+        const rawEmotions = Array.isArray(responseValue)
+          ? responseValue
+          : Array.isArray((responseValue as any).emotions)
+            ? (responseValue as any).emotions
+            : [];
+        const emotions = rawEmotions as Array<{ name?: string; emotion?: string; label?: string; intensity?: number; value?: number }>;
         const emotionH = emotions.length * 10 + 8;
         y = checkPage(y, emotionH + 2);
 
