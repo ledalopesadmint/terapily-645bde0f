@@ -42,6 +42,8 @@ interface PatientPickerSheetProps {
   /** Atividade selecionada no Acervo (seed/catalog shape). */
   activity: Activity | null;
   workspaceId: string | undefined;
+  /** Modo de entrega — in_session abre player, shared_link navega pro modal de envio. */
+  mode?: "in_session" | "shared_link";
 }
 
 export function PatientPickerSheet({
