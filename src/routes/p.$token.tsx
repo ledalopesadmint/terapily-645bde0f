@@ -72,6 +72,7 @@ type PagePhase = "vinheta" | "intro" | "consent" | "activity" | "declined" | "su
 
 function PublicActivityPage() {
   const { token } = useParams({ from: "/p/$token" });
+  const [vinhetaDone, setVinhetaDone] = useState(false);
 
   const resolveQuery = useQuery({
     queryKey: ["public-activity", token],
@@ -86,8 +87,13 @@ function PublicActivityPage() {
     refetchOnWindowFocus: false,
   });
 
-  if (resolveQuery.isLoading) {
-    return <CenterShell><p className="text-muted-foreground">Carregando…</p></CenterShell>;
+  // Vinheta IS the loading state — show it until both vinheta finishes AND data is ready
+  if (!vinhetaDone || resolveQuery.isLoading) {
+    return (
+      <div className="relative min-h-screen bg-[var(--cream)]">
+        <VinhetaIntro onComplete={() => setVinhetaDone(true)} volumePercent={60} />
+      </div>
+    );
   }
 
   if (!resolveQuery.data) {
