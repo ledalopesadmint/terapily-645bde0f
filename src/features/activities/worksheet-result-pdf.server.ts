@@ -151,16 +151,17 @@ function formatResponseValue(
 
   // emotion_picker: { emotion: string, intensity: number }[] or object
   if (field.type === "emotion_picker") {
-    if (Array.isArray(value)) {
-      return value
-        .map((e: any) => `${e.emotion ?? e.label ?? "?"} (${e.intensity ?? e.value ?? "?"}%)`)
+    const arr = Array.isArray(value)
+      ? value
+      : (typeof value === "object" && Array.isArray((value as any)?.emotions))
+        ? (value as any).emotions
+        : null;
+    if (arr) {
+      return arr
+        .map((e: any) => `${e.name ?? e.emotion ?? e.label ?? "?"} (${e.intensity ?? e.value ?? "?"}%)`)
         .join(", ");
     }
-    if (typeof value === "object") {
-      return Object.entries(value as Record<string, unknown>)
-        .map(([k, v]) => `${k}: ${v}`)
-        .join(", ");
-    }
+    return "—";
   }
 
   // multi_select: array of values
