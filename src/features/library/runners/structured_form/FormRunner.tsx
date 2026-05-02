@@ -210,7 +210,7 @@ function FieldRenderer({
             onValueChange={(v) => onChange(v)}
             className="space-y-2"
           >
-            {(field.options ?? []).map((opt) => (
+            {normalizeOptions(field.options).map((opt) => (
               <div key={opt.value} className="flex items-center space-x-3">
                 <RadioGroupItem value={opt.value} id={`${field.id}-${opt.value}`} />
                 <Label htmlFor={`${field.id}-${opt.value}`} className="text-sm cursor-pointer">
