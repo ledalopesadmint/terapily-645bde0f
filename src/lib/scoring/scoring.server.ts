@@ -46,7 +46,7 @@ interface QuestionSpec {
 
 interface ScoringConfig {
   scoring?: {
-    type?: "sum" | "weighted_sum";
+    type?: "sum" | "weighted_sum" | "mean";
     questions?: QuestionSpec[];
     reverse?: string[];
     max_per_item?: number;
