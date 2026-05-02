@@ -42,7 +42,6 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
     v.volume = clampedVolume;
     v.play()
       .then(() => {
-        setVideoVisible(true);
         // Try to unmute after play starts
         v.muted = false;
       })
@@ -54,6 +53,11 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
   const handleEnded = useCallback(() => {
     finish();
   }, [finish]);
+
+  const handleTimeUpdate = useCallback(() => {
+    const v = videoRef.current;
+    if (v && v.currentTime > 0.12) setVideoVisible(true);
+  }, []);
 
   // Fallback: if video stalls or errors, skip after 5s max
   useEffect(() => {
@@ -75,6 +79,7 @@ export function VinhetaIntro({ onComplete, volumePercent = 80 }: VinhetaIntroPro
         poster="/brand/vinheta-creme-poster.jpg"
         onLoadedData={startPlayback}
         onCanPlay={startPlayback}
+        onTimeUpdate={handleTimeUpdate}
         onEnded={handleEnded}
         onError={finish}
         autoPlay
