@@ -50,7 +50,7 @@ import type { Activity } from "@/features/library/library.types";
 import {
   ACTIVITIES,
 } from "@/features/library/seed-data";
-import { Activity as ActivityIcon, FileText, Sparkles } from "lucide-react";
+
 import { listAvailableActivities } from "@/features/activities/activities.functions";
 import { getFeaturedActivity } from "@/server/admin.functions";
 import { getPatientNickname } from "@/features/patients/patients.functions";
