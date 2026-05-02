@@ -1,17 +1,14 @@
 /**
  * ResourceBox — box-style section for the library (Acervo).
  *
- * Replaces the old Netflix-style CategoryRow carousels with a cleaner
- * box pattern matching InSessionQuickAccess (Escalas validadas).
- *
- * Structure: icon left + title/subtitle + "Ver todas →" link right.
- * Optionally shows up to 3 preview cards inside the box.
+ * Matches InSessionQuickAccess visual pattern: header row with icon/title/link,
+ * subtitle, and up to 3 ScaleCard-style preview cards inside.
  */
 
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, Clock } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { ActivityIllustration } from "./illustrations";
+import { ScaleCard, getScaleIllustration } from "./ScaleCard";
 import type { Activity } from "./library.types";
 
 export interface PreviewItem {
@@ -31,21 +28,11 @@ interface ResourceBoxProps {
   href: string;
   count?: number;
   countLabel?: string;
-  /** Up to 3 preview items to show as mini-cards inside the box. */
+  /** Label shown in the chip area instead of "Escala validada". */
+  chipLabel?: string;
+  /** Up to 3 preview items to show as ScaleCard-style cards inside the box. */
   previewItems?: PreviewItem[];
 }
-
-const CATEGORY_LABEL: Record<string, string> = {
-  anxiety: "Ansiedade",
-  depression: "Depressão",
-  trauma: "Trauma",
-  cbt: "TCC",
-  dbt: "DBT",
-  act: "ACT",
-  wellbeing: "Bem-estar",
-  sleep: "Sono",
-  interpersonal: "Interpessoal",
-};
 
 export function ResourceBox({
   icon: Icon,
@@ -55,6 +42,7 @@ export function ResourceBox({
   href,
   count,
   countLabel,
+  chipLabel,
   previewItems,
 }: ResourceBoxProps) {
   return (
@@ -85,45 +73,20 @@ export function ResourceBox({
           {subtitle}
         </p>
 
-        {/* Preview cards */}
+        {/* Preview cards — reuses ScaleCard for visual consistency */}
         {previewItems && previewItems.length > 0 && (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {previewItems.map((item) => (
-              <div
+              <ScaleCard
                 key={item.code}
-                className="group/card relative overflow-hidden rounded-xl border border-border/40 bg-background/60 transition-all hover:border-border hover:shadow-sm"
-              >
-                {/* Illustration header */}
-                <div className="relative h-24 overflow-hidden bg-[var(--navy)]/5">
-                  <div className="absolute inset-0 flex items-center justify-center opacity-30">
-                    <ActivityIllustration
-                      id={item.illustration ?? "petals"}
-                      className="h-20 w-20 text-sage"
-                    />
-                  </div>
-                  <div className="absolute bottom-2 left-3">
-                    <span className="inline-block rounded-full bg-background/90 px-2 py-0.5 text-[0.625rem] font-bold uppercase tracking-wider text-muted-foreground">
-                      {CATEGORY_LABEL[item.category] ?? item.category}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-3 space-y-1.5">
-                  <p className="text-[0.6875rem] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-                    {item.code}
-                  </p>
-                  <p className="font-medium text-sm text-foreground leading-snug line-clamp-1">
-                    {item.name}
-                  </p>
-                  <p className="text-xs text-muted-foreground line-clamp-2">
-                    {item.shortDescription}
-                  </p>
-                  <div className="flex items-center text-xs text-muted-foreground/70 pt-1">
-                    <Clock className="mr-1 h-3 w-3" /> {item.durationMin} min
-                  </div>
-                </div>
-              </div>
+                code={item.code}
+                name={item.name}
+                category={item.category}
+                durationMin={item.durationMin}
+                shortDescription={item.shortDescription}
+                illustration={item.illustration ?? getScaleIllustration(item.category)}
+                chipLabel={chipLabel}
+              />
             ))}
           </div>
         )}

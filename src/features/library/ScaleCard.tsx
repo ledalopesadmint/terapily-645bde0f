@@ -44,6 +44,8 @@ interface ScaleCardProps {
   shortDescription?: string;
   illustration: Activity["illustration"];
   isExclusive?: boolean;
+  /** Custom chip label (defaults to "Escala validada"). */
+  chipLabel?: string;
   supportsMagicLink?: boolean;
   onClick?: () => void;
   onSendLink?: () => void;
@@ -57,6 +59,7 @@ export function ScaleCard({
   shortDescription,
   illustration,
   isExclusive,
+  chipLabel,
   supportsMagicLink,
   onClick,
   onSendLink,
@@ -108,7 +111,7 @@ export function ScaleCard({
         <div className="flex flex-1 flex-col gap-1.5 px-4 pb-4 pt-3">
           {/* Chip code · duração */}
           <div className="flex items-center gap-2 text-[0.6875rem] font-medium tracking-wide">
-            <span className="text-secondary-foreground/90">Escala validada</span>
+            <span className="text-secondary-foreground/90">{chipLabel ?? "Escala validada"}</span>
             <span aria-hidden className="h-1 w-1 rounded-full bg-mauve" />
             <span className="text-muted-foreground">{durationMin} min</span>
           </div>
