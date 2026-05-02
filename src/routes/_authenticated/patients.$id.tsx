@@ -1174,7 +1174,11 @@ function AssignActivityDialog({
   const [deliveryMode, setDeliveryMode] = useState<DeliveryMode>("shared_link");
   const [expiresInDays, setExpiresInDays] = useState<number>(7);
 
-  const catalogQuery = useQuery({
+  // Sync pre-selected activity from Acervo navigation
+  useEffect(() => {
+    if (defaultActivityId && open) setActivityId(defaultActivityId);
+  }, [defaultActivityId, open]);
+
     queryKey: ["activity-catalog"],
     queryFn: () => listAvailableActivities(),
     enabled: open,
