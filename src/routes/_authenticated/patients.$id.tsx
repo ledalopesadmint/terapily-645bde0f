@@ -90,6 +90,7 @@ import { Progress } from "@/components/ui/progress";
 
 const patientSearchSchema = z.object({
   startSession: z.string().uuid().optional(),
+  openAssign: z.string().uuid().optional(),
 });
 
 export const Route = createFileRoute("/_authenticated/patients/$id")({
