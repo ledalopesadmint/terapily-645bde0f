@@ -454,7 +454,7 @@ export async function buildWorksheetResultPDF(params: WorksheetResultParams): Pr
           doc.setFontSize(7);
           doc.setTextColor(...NAVY);
           const pctLabel = `${pct}%`;
-          doc.text(pctLabel, barX + barW + 2, ey + 0.5);
+          doc.text(pctLabel, barX + barW + 3, ey + 0.5);
 
           ey += 10;
         }
