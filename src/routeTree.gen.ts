@@ -37,6 +37,9 @@ import { Route as AuthenticatedSettingsBillingRouteImport } from './routes/_auth
 import { Route as AuthenticatedPatientsDeletedRouteImport } from './routes/_authenticated/patients.deleted'
 import { Route as AuthenticatedPatientsIdRouteImport } from './routes/_authenticated/patients.$id'
 import { Route as AuthenticatedDevRoadmapRouteImport } from './routes/_authenticated/dev.roadmap'
+import { Route as AuthenticatedAdminInsightsRouteImport } from './routes/_authenticated/admin.insights'
+import { Route as AuthenticatedAdminBillingRouteImport } from './routes/_authenticated/admin.billing'
+import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin.audit'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as ApiPublicHooksPurgePatientsRouteImport } from './routes/api/public/hooks/purge-patients'
 import { Route as ApiPublicHooksAggregateAnalyticsRouteImport } from './routes/api/public/hooks/aggregate-analytics'
@@ -187,6 +190,23 @@ const AuthenticatedDevRoadmapRoute = AuthenticatedDevRoadmapRouteImport.update({
   path: '/dev/roadmap',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedAdminInsightsRoute =
+  AuthenticatedAdminInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminBillingRoute =
+  AuthenticatedAdminBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/audit',
+  path: '/audit',
+  getParentRoute: () => AuthenticatedAdminRoute,
+} as any)
 const AuthenticatedAdminAnalyticsRoute =
   AuthenticatedAdminAnalyticsRouteImport.update({
     id: '/analytics',
@@ -225,6 +245,9 @@ export interface FileRoutesByFullPath {
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/billing': typeof AuthenticatedAdminBillingRoute
+  '/admin/insights': typeof AuthenticatedAdminInsightsRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
@@ -255,6 +278,9 @@ export interface FileRoutesByTo {
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/admin/billing': typeof AuthenticatedAdminBillingRoute
+  '/admin/insights': typeof AuthenticatedAdminInsightsRoute
   '/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
@@ -289,6 +315,9 @@ export interface FileRoutesById {
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin/audit': typeof AuthenticatedAdminAuditRoute
+  '/_authenticated/admin/billing': typeof AuthenticatedAdminBillingRoute
+  '/_authenticated/admin/insights': typeof AuthenticatedAdminInsightsRoute
   '/_authenticated/dev/roadmap': typeof AuthenticatedDevRoadmapRoute
   '/_authenticated/patients/$id': typeof AuthenticatedPatientsIdRoute
   '/_authenticated/patients/deleted': typeof AuthenticatedPatientsDeletedRoute
@@ -323,6 +352,9 @@ export interface FileRouteTypes {
     | '/h/$token'
     | '/p/$token'
     | '/admin/analytics'
+    | '/admin/audit'
+    | '/admin/billing'
+    | '/admin/insights'
     | '/dev/roadmap'
     | '/patients/$id'
     | '/patients/deleted'
@@ -353,6 +385,9 @@ export interface FileRouteTypes {
     | '/h/$token'
     | '/p/$token'
     | '/admin/analytics'
+    | '/admin/audit'
+    | '/admin/billing'
+    | '/admin/insights'
     | '/dev/roadmap'
     | '/patients/$id'
     | '/patients/deleted'
@@ -386,6 +421,9 @@ export interface FileRouteTypes {
     | '/h/$token'
     | '/p/$token'
     | '/_authenticated/admin/analytics'
+    | '/_authenticated/admin/audit'
+    | '/_authenticated/admin/billing'
+    | '/_authenticated/admin/insights'
     | '/_authenticated/dev/roadmap'
     | '/_authenticated/patients/$id'
     | '/_authenticated/patients/deleted'
@@ -613,6 +651,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDevRoadmapRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/admin/insights': {
+      id: '/_authenticated/admin/insights'
+      path: '/insights'
+      fullPath: '/admin/insights'
+      preLoaderRoute: typeof AuthenticatedAdminInsightsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/billing': {
+      id: '/_authenticated/admin/billing'
+      path: '/billing'
+      fullPath: '/admin/billing'
+      preLoaderRoute: typeof AuthenticatedAdminBillingRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/audit': {
+      id: '/_authenticated/admin/audit'
+      path: '/audit'
+      fullPath: '/admin/audit'
+      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/analytics': {
       id: '/_authenticated/admin/analytics'
       path: '/analytics'
@@ -639,11 +698,17 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedAdminRouteChildren {
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
+  AuthenticatedAdminBillingRoute: typeof AuthenticatedAdminBillingRoute
+  AuthenticatedAdminInsightsRoute: typeof AuthenticatedAdminInsightsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
+  AuthenticatedAdminBillingRoute: AuthenticatedAdminBillingRoute,
+  AuthenticatedAdminInsightsRoute: AuthenticatedAdminInsightsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
