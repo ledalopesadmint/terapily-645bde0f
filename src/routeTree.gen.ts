@@ -22,6 +22,7 @@ import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedScalesRouteImport } from './routes/_authenticated/scales'
 import { Route as AuthenticatedPatientsRouteImport } from './routes/_authenticated/patients'
+import { Route as AuthenticatedMindfulnessRouteImport } from './routes/_authenticated/mindfulness'
 import { Route as AuthenticatedLibraryRouteImport } from './routes/_authenticated/library'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings.index'
@@ -100,6 +101,12 @@ const AuthenticatedPatientsRoute = AuthenticatedPatientsRouteImport.update({
   path: '/patients',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedMindfulnessRoute =
+  AuthenticatedMindfulnessRouteImport.update({
+    id: '/mindfulness',
+    path: '/mindfulness',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedLibraryRoute = AuthenticatedLibraryRouteImport.update({
   id: '/library',
   path: '/library',
@@ -181,6 +188,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/mindfulness': typeof AuthenticatedMindfulnessRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/scales': typeof AuthenticatedScalesRoute
   '/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -208,6 +216,7 @@ export interface FileRoutesByTo {
   '/signup': typeof SignupRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/library': typeof AuthenticatedLibraryRoute
+  '/mindfulness': typeof AuthenticatedMindfulnessRoute
   '/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/scales': typeof AuthenticatedScalesRoute
   '/welcome': typeof AuthenticatedWelcomeRoute
@@ -236,6 +245,7 @@ export interface FileRoutesById {
   '/signup': typeof SignupRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/library': typeof AuthenticatedLibraryRoute
+  '/_authenticated/mindfulness': typeof AuthenticatedMindfulnessRoute
   '/_authenticated/patients': typeof AuthenticatedPatientsRouteWithChildren
   '/_authenticated/scales': typeof AuthenticatedScalesRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard'
     | '/library'
+    | '/mindfulness'
     | '/patients'
     | '/scales'
     | '/settings'
@@ -292,6 +303,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/dashboard'
     | '/library'
+    | '/mindfulness'
     | '/patients'
     | '/scales'
     | '/welcome'
@@ -319,6 +331,7 @@ export interface FileRouteTypes {
     | '/signup'
     | '/_authenticated/dashboard'
     | '/_authenticated/library'
+    | '/_authenticated/mindfulness'
     | '/_authenticated/patients'
     | '/_authenticated/scales'
     | '/_authenticated/settings'
@@ -443,6 +456,13 @@ declare module '@tanstack/react-router' {
       path: '/patients'
       fullPath: '/patients'
       preLoaderRoute: typeof AuthenticatedPatientsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/mindfulness': {
+      id: '/_authenticated/mindfulness'
+      path: '/mindfulness'
+      fullPath: '/mindfulness'
+      preLoaderRoute: typeof AuthenticatedMindfulnessRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/library': {
@@ -578,6 +598,7 @@ const AuthenticatedSettingsRouteWithChildren =
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedLibraryRoute: typeof AuthenticatedLibraryRoute
+  AuthenticatedMindfulnessRoute: typeof AuthenticatedMindfulnessRoute
   AuthenticatedPatientsRoute: typeof AuthenticatedPatientsRouteWithChildren
   AuthenticatedScalesRoute: typeof AuthenticatedScalesRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
@@ -590,6 +611,7 @@ interface AuthenticatedRouteChildren {
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedLibraryRoute: AuthenticatedLibraryRoute,
+  AuthenticatedMindfulnessRoute: AuthenticatedMindfulnessRoute,
   AuthenticatedPatientsRoute: AuthenticatedPatientsRouteWithChildren,
   AuthenticatedScalesRoute: AuthenticatedScalesRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,

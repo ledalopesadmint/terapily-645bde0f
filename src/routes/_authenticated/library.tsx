@@ -28,7 +28,7 @@ import { useMemo, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { z } from "zod";
-import { ArrowLeft, BookOpen, Clock, FileText, Sparkles } from "lucide-react";
+import { ArrowLeft, BookOpen, Clock, FileText, Sparkles, Wind } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -192,6 +192,39 @@ function LibraryStandardMode() {
                 shortDescription: w.shortDescription,
                 illustration: w.illustration,
                 supportsMagicLink: w.supportedModes.includes("shared_link") || w.supportedModes.includes("both"),
+              }))}
+              onStartInSession={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "in_session");
+              }}
+              onSendLink={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "shared_link");
+              }}
+            />
+          );
+        })()}
+      </div>
+
+      <div className="mt-6">
+        {(() => {
+          const mindfulness = ACTIVITIES.filter((a) => a.category === "mindfulness");
+          const preview = mindfulness.slice(0, 3);
+          return (
+            <ResourceBox
+              icon={Wind}
+              title="Mindfulness & Grounding"
+              subtitle="Exercícios guiados de respiração, ancoragem e relaxamento. Aplique ao vivo em sessão ou envie como prática entre sessões."
+              href="/mindfulness"
+              chipLabel="Mindfulness"
+              previewItems={preview.map((m) => ({
+                code: m.code,
+                name: m.name,
+                category: m.category,
+                durationMin: m.durationMin,
+                shortDescription: m.shortDescription,
+                illustration: m.illustration,
+                supportsMagicLink: m.supportedModes.includes("shared_link") || m.supportedModes.includes("both"),
               }))}
               onStartInSession={(code) => {
                 const act = ACTIVITIES.find((a) => a.code === code);
