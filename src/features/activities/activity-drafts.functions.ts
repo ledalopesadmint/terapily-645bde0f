@@ -125,11 +125,13 @@ export const saveActivityDraft = createServerFn({ method: "POST" })
 
     // Update patient_activities status to in_progress on first save
     if (pa.status === "pending") {
-      const { error: statusError } = await supabaseAdmin
-        .from("patient_activities")
-        .update({ status: "in_progress" })
-        .eq("id", pa.id)
-        .eq("status", "pending"); // guard: only flip if still pending
+      const { error: statusError } = await withRetry(() =>
+        supabaseAdmin
+          .from("patient_activities")
+          .update({ status: "in_progress" })
+          .eq("id", pa.id)
+          .eq("status", "pending"),
+      );
 
       if (statusError) {
         console.error("[saveActivityDraft] status update failed", {
