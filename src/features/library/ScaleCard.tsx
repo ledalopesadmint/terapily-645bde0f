@@ -44,6 +44,8 @@ interface ScaleCardProps {
   shortDescription?: string;
   illustration: Activity["illustration"];
   isExclusive?: boolean;
+  /** Custom chip label (defaults to "Escala validada"). */
+  chipLabel?: string;
   supportsMagicLink?: boolean;
   onClick?: () => void;
   onSendLink?: () => void;
