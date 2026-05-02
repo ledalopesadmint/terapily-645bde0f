@@ -593,17 +593,26 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground hidden sm:block">
           Atividades aplicadas em sessão e enviadas por link.
         </p>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={downloadReport} disabled={reportBusy}>
-            <Download className="mr-1 h-4 w-4" />
-            {reportBusy ? "Gerando…" : "Compliance Report"}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+          <Button
+            variant="outline"
+            onClick={downloadReport}
+            disabled={reportBusy}
+            className="text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10"
+          >
+            <Download className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate">{reportBusy ? "Gerando…" : "Compliance Report"}</span>
           </Button>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Enviar atividade
+          <Button
+            onClick={() => setOpen(true)}
+            className="text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10"
+          >
+            <Plus className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate">Enviar atividade</span>
           </Button>
         </div>
       </div>
@@ -648,55 +657,56 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
             const share: ShareSummaryRow | undefined = shareSummaries[a.id];
             return (
               <Card key={a.id} className="overflow-hidden">
-                <CardContent className="space-y-2 py-4 px-3 sm:px-6">
-                  {/* Linha 1: Nome do teste (esquerda) + Flag (direita) */}
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-medium text-foreground">
-                      {a.activity?.title ?? "Atividade"}
-                    </p>
-                    {flagInfo && (
-                      <button
-                        type="button"
-                        onClick={() => setViewResponseId(flagInfo.responseId)}
-                        className="inline-flex shrink-0 items-center gap-1.5 rounded-md border-2 border-action-flag bg-action-flag-subtle px-2.5 py-1 text-xs font-bold text-action-flag shadow-sm shadow-action-flag/20 transition-all duration-150 hover:scale-105 hover:shadow-md hover:shadow-action-flag/30 hover:brightness-110 active:scale-95"
-                        aria-label="Abrir resposta com flag clínica"
-                      >
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        {formatClinicalFlagLabel(flagInfo.flag)}
-                      </button>
-                    )}
-                  </div>
-                  {/* Linha 2: Data, horário, modo */}
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
-                  </p>
-                  {/* Linha 3: Justificativa/score */}
-                  {(status === "revoked" && a.revocation_reason) ? (
-                    <p className="truncate text-xs text-muted-foreground italic" title={a.revocation_reason}>
-                      {a.revocation_reason}
-                    </p>
-                  ) : response?.score != null ? (
-                    <span className="text-sm">
-                      Score <strong>{response.score}</strong>
-                      {response.severity && (
-                        <span className="text-muted-foreground"> · {response.severity}</span>
+                <CardContent className="py-4 px-3 sm:px-6">
+                  {/* ===== MOBILE LAYOUT (< sm) ===== */}
+                  <div className="flex flex-col gap-2.5 sm:hidden">
+                    {/* M-Linha 1: Título + Flag */}
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-medium text-foreground text-sm leading-snug">
+                        {a.activity?.title ?? "Atividade"}
+                      </p>
+                      {flagInfo && (
+                        <button
+                          type="button"
+                          onClick={() => setViewResponseId(flagInfo.responseId)}
+                          className="inline-flex shrink-0 items-center gap-1 rounded-md border-2 border-action-flag bg-action-flag-subtle px-2 py-0.5 text-[10px] font-bold text-action-flag shadow-sm shadow-action-flag/20 transition-all duration-150 hover:scale-105 active:scale-95"
+                          aria-label="Abrir resposta com flag clínica"
+                        >
+                          <AlertTriangle className="h-3 w-3" />
+                          {formatClinicalFlagLabel(flagInfo.flag)}
+                        </button>
                       )}
-                    </span>
-                  ) : null}
-                  {/* Ações: wrap livre no mobile */}
-                  <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 max-w-full">
-                      <Badge variant={STATUS_VARIANT[displayStatus]}>
+                    </div>
+                    {/* M-Linha 2: Data, horário, modo */}
+                    <p className="text-[11px] text-muted-foreground leading-tight">
+                      {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
+                    </p>
+                    {/* M-Linha 3: Score + classificação (ou revocation reason) */}
+                    {(status === "revoked" && a.revocation_reason) ? (
+                      <p className="truncate text-xs text-muted-foreground italic" title={a.revocation_reason}>
+                        {a.revocation_reason}
+                      </p>
+                    ) : response?.score != null ? (
+                      <span className="text-xs">
+                        Score <strong>{response.score}</strong>
+                        {response.severity && (
+                          <span className="text-muted-foreground"> · {response.severity}</span>
+                        )}
+                      </span>
+                    ) : null}
+                    {/* M-Linha 4: Status + Ver respostas + Aplicar + Revogar/Novo link */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant={STATUS_VARIANT[displayStatus]} className="text-[10px] px-1.5 py-0.5">
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
-                      {/* Aplicar agora — in_session pendente */}
                       {(status === "pending" || status === "in_progress") &&
                         (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
                         !a.used_at && (
                         <Button
                           size="sm"
                           variant="default"
-                          className="text-xs px-2 sm:px-3"
+                          className="text-[10px] h-6 px-2"
                           onClick={() =>
                             setInSessionTarget({
                               patientActivityId: a.id,
@@ -704,36 +714,151 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                             })
                           }
                         >
-                          <Play className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Aplicar
+                          <Play className="mr-0.5 h-2.5 w-2.5" /> Aplicar
                         </Button>
                       )}
-                      {/* Ver respostas — completa */}
+                      {status === "completed" && response?.id && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setViewResponseId(response.id)}
+                          className="text-[10px] h-6 px-2"
+                        >
+                          <Eye className="mr-0.5 h-2.5 w-2.5" /> Ver
+                        </Button>
+                      )}
+                      {canRegenLink && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={regenLinkMutation.isPending}
+                          onClick={() => regenLinkMutation.mutate(a.id)}
+                          className="text-[10px] h-6 px-2"
+                        >
+                          <RefreshCw className="mr-0.5 h-2.5 w-2.5" /> Novo link
+                        </Button>
+                      )}
+                      {canRevoke && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setRevokeTarget(a.id)}
+                          className="text-[10px] h-6 px-2"
+                        >
+                          <Slash className="mr-0.5 h-2.5 w-2.5" /> Revogar
+                        </Button>
+                      )}
+                    </div>
+                    {/* M-Linha 5: Botões Paciente + Terapeuta (só se completed) */}
+                    {status === "completed" && response?.id && (
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <Button
+                          size="sm"
+                          className="text-[10px] h-7 px-2 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
+                          disabled={scaleResultBusy === `${response.id}-patient`}
+                          onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
+                        >
+                          <Download className="mr-0.5 h-2.5 w-2.5" />
+                          {scaleResultBusy === `${response.id}-patient` ? "…" : "Paciente"}
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="text-[10px] h-7 px-2 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
+                          disabled={scaleResultBusy === `${response.id}-therapist`}
+                          onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
+                        >
+                          <ShieldCheck className="mr-0.5 h-2.5 w-2.5" />
+                          {scaleResultBusy === `${response.id}-therapist` ? "…" : "Terapeuta"}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ===== DESKTOP LAYOUT (>= sm) ===== */}
+                  <div className="hidden sm:block space-y-2">
+                    {/* Linha 1: Nome do teste + Flag */}
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-medium text-foreground">
+                        {a.activity?.title ?? "Atividade"}
+                      </p>
+                      {flagInfo && (
+                        <button
+                          type="button"
+                          onClick={() => setViewResponseId(flagInfo.responseId)}
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-md border-2 border-action-flag bg-action-flag-subtle px-2.5 py-1 text-xs font-bold text-action-flag shadow-sm shadow-action-flag/20 transition-all duration-150 hover:scale-105 hover:shadow-md hover:shadow-action-flag/30 hover:brightness-110 active:scale-95"
+                          aria-label="Abrir resposta com flag clínica"
+                        >
+                          <AlertTriangle className="h-3.5 w-3.5" />
+                          {formatClinicalFlagLabel(flagInfo.flag)}
+                        </button>
+                      )}
+                    </div>
+                    {/* Linha 2: Data, horário, modo */}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
+                    </p>
+                    {/* Linha 3: Score/revocation */}
+                    {(status === "revoked" && a.revocation_reason) ? (
+                      <p className="truncate text-xs text-muted-foreground italic" title={a.revocation_reason}>
+                        {a.revocation_reason}
+                      </p>
+                    ) : response?.score != null ? (
+                      <span className="text-sm">
+                        Score <strong>{response.score}</strong>
+                        {response.severity && (
+                          <span className="text-muted-foreground"> · {response.severity}</span>
+                        )}
+                      </span>
+                    ) : null}
+                    {/* Ações desktop */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant={STATUS_VARIANT[displayStatus]}>
+                        {STATUS_LABEL[displayStatus]}
+                        {hasDraft && ` · ${draftPct}%`}
+                      </Badge>
+                      {(status === "pending" || status === "in_progress") &&
+                        (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
+                        !a.used_at && (
+                        <Button
+                          size="sm"
+                          variant="default"
+                          className="text-xs px-3"
+                          onClick={() =>
+                            setInSessionTarget({
+                              patientActivityId: a.id,
+                              activityTitle: a.activity?.title ?? "Atividade",
+                            })
+                          }
+                        >
+                          <Play className="mr-1 h-3.5 w-3.5" /> Aplicar
+                        </Button>
+                      )}
                       {status === "completed" && response?.id && (
                         <>
-                           <Button
+                          <Button
                             size="sm"
                             variant="outline"
                             onClick={() => setViewResponseId(response.id)}
-                            className="text-xs px-2 sm:px-3"
+                            className="text-xs px-3"
                           >
-                            <Eye className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Ver
+                            <Eye className="mr-1 h-3.5 w-3.5" /> Ver
                           </Button>
                           <Button
                             size="sm"
-                            className="text-xs px-2 sm:px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
+                            className="text-xs px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
                             disabled={scaleResultBusy === `${response.id}-patient`}
                             onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
                           >
-                            <Download className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            <Download className="mr-1 h-3.5 w-3.5" />
                             {scaleResultBusy === `${response.id}-patient` ? "…" : "Paciente"}
                           </Button>
                           <Button
                             size="sm"
-                            className="text-xs px-2 sm:px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
+                            className="text-xs px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
                             disabled={scaleResultBusy === `${response.id}-therapist`}
                             onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
                           >
-                            <ShieldCheck className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                            <ShieldCheck className="mr-1 h-3.5 w-3.5" />
                             {scaleResultBusy === `${response.id}-therapist` ? "…" : "Terapeuta"}
                           </Button>
                         </>
@@ -744,9 +869,9 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                           variant="outline"
                           disabled={regenLinkMutation.isPending}
                           onClick={() => regenLinkMutation.mutate(a.id)}
-                          className="text-xs px-2 sm:px-3"
+                          className="text-xs px-3"
                         >
-                          <RefreshCw className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Novo link
+                          <RefreshCw className="mr-1 h-3.5 w-3.5" /> Novo link
                         </Button>
                       )}
                       {canRevoke && (
@@ -754,11 +879,12 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                           size="sm"
                           variant="outline"
                           onClick={() => setRevokeTarget(a.id)}
-                          className="text-xs px-2 sm:px-3"
+                          className="text-xs px-3"
                         >
-                          <Slash className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5" /> Revogar
+                          <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
                         </Button>
                       )}
+                    </div>
                   </div>
                   {(hasDraft || displayStatus === "in_progress") && (
                     <div className="space-y-1">
