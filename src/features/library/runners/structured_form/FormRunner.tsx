@@ -26,18 +26,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import type {
-  StructuredFormConfig,
-  FormStep,
-  FormField,
-} from "./form-types";
+import type { StructuredFormConfig, FormStep, FormField } from "./form-types";
 
 // ---------- Helpers ----------
 
-function isStepComplete(
-  step: FormStep,
-  responses: Record<string, unknown>,
-): boolean {
+function isStepComplete(step: FormStep, responses: Record<string, unknown>): boolean {
   return step.fields
     .filter((f) => f.required !== false)
     .every((f) => {
@@ -48,10 +41,7 @@ function isStepComplete(
     });
 }
 
-function getFormCompletion(
-  config: StructuredFormConfig,
-  responses: Record<string, unknown>,
-) {
+function getFormCompletion(config: StructuredFormConfig, responses: Record<string, unknown>) {
   const allFields = (config.steps ?? []).flatMap((s) => s.fields);
   const required = allFields.filter((f) => f.required !== false);
   const answered = required.filter((f) => {
@@ -91,9 +81,7 @@ function FieldRenderer({
             )}
           </Label>
           {field.helperText && (
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              {field.helperText}
-            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">{field.helperText}</p>
           )}
           <Textarea
             id={field.id}
@@ -115,9 +103,7 @@ function FieldRenderer({
               <span className="ml-1 text-muted-foreground text-xs">(opcional)</span>
             )}
           </Label>
-          {field.helperText && (
-            <p className="text-xs text-muted-foreground">{field.helperText}</p>
-          )}
+          {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <Input
             id={field.id}
             placeholder={field.placeholder}
@@ -134,9 +120,7 @@ function FieldRenderer({
           <Label htmlFor={field.id} className="text-sm font-medium">
             {field.label}
           </Label>
-          {field.helperText && (
-            <p className="text-xs text-muted-foreground">{field.helperText}</p>
-          )}
+          {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <Input
             id={field.id}
             type="number"
@@ -154,9 +138,7 @@ function FieldRenderer({
       return (
         <div className="space-y-3">
           <Label className="text-sm font-medium">{field.label}</Label>
-          {field.helperText && (
-            <p className="text-xs text-muted-foreground">{field.helperText}</p>
-          )}
+          {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <div className="px-2">
             <Slider
               min={field.min ?? 0}
@@ -184,13 +166,8 @@ function FieldRenderer({
       return (
         <div className="space-y-2">
           <Label className="text-sm font-medium">{field.label}</Label>
-          {field.helperText && (
-            <p className="text-xs text-muted-foreground">{field.helperText}</p>
-          )}
-          <Select
-            value={(value as string) ?? ""}
-            onValueChange={(v) => onChange(v)}
-          >
+          {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
+          <Select value={(value as string) ?? ""} onValueChange={(v) => onChange(v)}>
             <SelectTrigger className="bg-background/50 border-border/60">
               <SelectValue placeholder={field.placeholder ?? "Selecione…"} />
             </SelectTrigger>
@@ -209,9 +186,7 @@ function FieldRenderer({
       return (
         <div className="space-y-2">
           <Label className="text-sm font-medium">{field.label}</Label>
-          {field.helperText && (
-            <p className="text-xs text-muted-foreground">{field.helperText}</p>
-          )}
+          {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <RadioGroup
             value={(value as string) ?? ""}
             onValueChange={(v) => onChange(v)}
@@ -252,9 +227,7 @@ function FieldRenderer({
       return (
         <div className="space-y-2">
           <Label className="text-sm font-medium">{field.label}</Label>
-          {field.helperText && (
-            <p className="text-xs text-muted-foreground">{field.helperText}</p>
-          )}
+          {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <div className="flex flex-wrap gap-2">
             {(field.options ?? []).map((opt) => {
               const selected = Array.isArray(value) && (value as string[]).includes(opt.value);
@@ -265,9 +238,7 @@ function FieldRenderer({
                   onClick={() => {
                     const current = Array.isArray(value) ? (value as string[]) : [];
                     onChange(
-                      selected
-                        ? current.filter((v) => v !== opt.value)
-                        : [...current, opt.value],
+                      selected ? current.filter((v) => v !== opt.value) : [...current, opt.value],
                     );
                   }}
                   className={cn(
@@ -287,10 +258,19 @@ function FieldRenderer({
 
     case "emotion_picker": {
       const emotions = field.emotions ?? [
-        "Tristeza", "Ansiedade", "Raiva", "Culpa", "Vergonha",
-        "Medo", "Frustração", "Esperança", "Alívio",
+        "Tristeza",
+        "Ansiedade",
+        "Raiva",
+        "Culpa",
+        "Vergonha",
+        "Medo",
+        "Frustração",
+        "Esperança",
+        "Alívio",
       ];
-      const emotionData = (value as { emotions: { name: string; intensity: number }[] } | undefined) ?? { emotions: [] };
+      const emotionData = (value as
+        | { emotions: { name: string; intensity: number }[] }
+        | undefined) ?? { emotions: [] };
       const toggleEmotion = (name: string) => {
         const current = emotionData.emotions;
         const exists = current.find((e) => e.name === name);
@@ -302,17 +282,13 @@ function FieldRenderer({
       };
       const updateIntensity = (name: string, intensity: number) => {
         onChange({
-          emotions: emotionData.emotions.map((e) =>
-            e.name === name ? { ...e, intensity } : e,
-          ),
+          emotions: emotionData.emotions.map((e) => (e.name === name ? { ...e, intensity } : e)),
         });
       };
       return (
         <div className="space-y-3">
           <Label className="text-sm font-medium">{field.label}</Label>
-          {field.helperText && (
-            <p className="text-xs text-muted-foreground">{field.helperText}</p>
-          )}
+          {field.helperText && <p className="text-xs text-muted-foreground">{field.helperText}</p>}
           <div className="flex flex-wrap gap-2">
             {emotions.map((em) => {
               const selected = emotionData.emotions.some((e) => e.name === em);
@@ -339,9 +315,7 @@ function FieldRenderer({
                 <div key={em.name} className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-foreground">{em.name}</span>
-                    <span className="text-xs font-medium text-[var(--mauve)]">
-                      {em.intensity}%
-                    </span>
+                    <span className="text-xs font-medium text-[var(--mauve)]">{em.intensity}%</span>
                   </div>
                   <Slider
                     min={0}
@@ -442,8 +416,7 @@ export function FormRunner({
   if (total === 0) {
     return (
       <div className="rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">
-        Esta atividade ainda não está pronta para resposta automática. Fale com
-        sua terapeuta.
+        Esta atividade ainda não está pronta para resposta automática. Fale com sua terapeuta.
       </div>
     );
   }
@@ -542,9 +515,7 @@ export function FormRunner({
           Anterior
         </button>
 
-        <span className="text-xs text-muted-foreground">
-          {completion}% completo
-        </span>
+        <span className="text-xs text-muted-foreground">{completion}% completo</span>
 
         {isLast ? (
           <button

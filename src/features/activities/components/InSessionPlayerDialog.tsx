@@ -15,11 +15,7 @@ import { X, Save, LogOut } from "lucide-react";
 import { VinhetaIntro } from "./VinhetaIntro";
 import { ScaleIntro } from "./ScaleIntro";
 
-import {
-  ActivityPlayer,
-  getCompletionStats,
-  type QuizConfig,
-} from "./ActivityPlayer";
+import { ActivityPlayer, getCompletionStats, type QuizConfig } from "./ActivityPlayer";
 import {
   FormRunner,
   getFormCompletion,
@@ -42,7 +38,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-
 
 interface InSessionPlayerProps {
   patientActivityId: string;
@@ -78,14 +73,14 @@ export function InSessionPlayerDialog({
 
   const configQuery = useQuery({
     queryKey: ["activity-config", patientActivityId],
-    queryFn: () =>
-      getActivityConfig({ data: { patientActivityId } }),
+    queryFn: () => getActivityConfig({ data: { patientActivityId } }),
     retry: false,
   });
 
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
   const isForm = archetype === "structured_form";
-  const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig & StructuredFormConfig;
+  const config = (configQuery.data?.activity?.config ?? {}) as unknown as QuizConfig &
+    StructuredFormConfig;
 
   const getCompletion = useCallback(() => {
     if (configQuery.isLoading) return { allAnswered: false, completion: 0 };
@@ -104,8 +99,11 @@ export function InSessionPlayerDialog({
       const result = await loadInSessionDraft({ data: { patientActivityId } });
       if (result.hasDraft && result.draft) {
         const restoredDraft = result.draft as Record<string, unknown>;
-        const restoredMeta = restoredDraft.__terapily_meta as { formStepIndex?: unknown } | undefined;
-        const restoredStep = typeof restoredMeta?.formStepIndex === "number" ? restoredMeta.formStepIndex : 0;
+        const restoredMeta = restoredDraft.__terapily_meta as
+          | { formStepIndex?: unknown }
+          | undefined;
+        const restoredStep =
+          typeof restoredMeta?.formStepIndex === "number" ? restoredMeta.formStepIndex : 0;
         const { __terapily_meta: _meta, ...restoredResponses } = restoredDraft;
         setResponses(restoredResponses);
         setFormStepIndex(restoredStep);
@@ -188,14 +186,17 @@ export function InSessionPlayerDialog({
   }, [patientActivityId, onClose]);
 
   const [savingAndExiting, setSavingAndExiting] = useState(false);
-  const handleSaveAndExit = useCallback(async (e?: MouseEvent) => {
-    e?.stopPropagation();
-    setSavingAndExiting(true);
-    await saveDraftNow();
-    setSavingAndExiting(false);
-    toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
-    onClose();
-  }, [saveDraftNow, onClose]);
+  const handleSaveAndExit = useCallback(
+    async (e?: MouseEvent) => {
+      e?.stopPropagation();
+      setSavingAndExiting(true);
+      await saveDraftNow();
+      setSavingAndExiting(false);
+      toast.success("Rascunho salvo. Você pode continuar depois.", { duration: 3000 });
+      onClose();
+    },
+    [saveDraftNow, onClose],
+  );
 
   // ── Submit ──────────────────────────────────────────────────────
   const submitMutation = useMutation({
@@ -218,9 +219,7 @@ export function InSessionPlayerDialog({
       }
     },
     onError: (e) => {
-      toast.error(
-        e instanceof Error ? e.message : "Não foi possível registrar.",
-      );
+      toast.error(e instanceof Error ? e.message : "Não foi possível registrar.");
     },
   });
 
@@ -278,7 +277,9 @@ export function InSessionPlayerDialog({
                   </span>
                 )}
                 {draftSaving && !savingAndExiting && (
-                  <span className="hidden sm:inline-flex text-xs text-muted-foreground">Salvando…</span>
+                  <span className="hidden sm:inline-flex text-xs text-muted-foreground">
+                    Salvando…
+                  </span>
                 )}
                 <button
                   onClick={handleCloseAttempt}
@@ -311,11 +312,9 @@ export function InSessionPlayerDialog({
                 <FormRunner
                   config={config}
                   responses={responses}
-                    currentStepIndex={formStepIndex}
-                    onStepChange={setFormStepIndex}
-                  onResponse={(fId, val) =>
-                    setResponses((prev) => ({ ...prev, [fId]: val }))
-                  }
+                  currentStepIndex={formStepIndex}
+                  onStepChange={setFormStepIndex}
+                  onResponse={(fId, val) => setResponses((prev) => ({ ...prev, [fId]: val }))}
                   onSubmit={() => submitMutation.mutate()}
                   submitting={submitMutation.isPending}
                   submitLabel="Registrar respostas"
@@ -324,9 +323,7 @@ export function InSessionPlayerDialog({
                 <ActivityPlayer
                   config={config}
                   responses={responses as Record<string, number>}
-                  onResponse={(qId, val) =>
-                    setResponses((prev) => ({ ...prev, [qId]: val }))
-                  }
+                  onResponse={(qId, val) => setResponses((prev) => ({ ...prev, [qId]: val }))}
                   onSubmit={() => submitMutation.mutate()}
                   submitting={submitMutation.isPending}
                   submitLabel="Registrar respostas"
@@ -376,7 +373,8 @@ export function InSessionPlayerDialog({
                   Obrigado por responder com atenção.
                 </p>
                 <p className="text-[var(--charcoal)] text-base leading-relaxed">
-                  Suas respostas foram registradas com segurança e já estão disponíveis para o seu terapeuta.
+                  Suas respostas foram registradas com segurança e já estão disponíveis para o seu
+                  terapeuta.
                 </p>
               </div>
 
@@ -426,7 +424,8 @@ export function InSessionPlayerDialog({
           <AlertDialogHeader>
             <AlertDialogTitle>Sair da atividade?</AlertDialogTitle>
             <AlertDialogDescription>
-              Você tem respostas em andamento. Deseja salvar um rascunho para continuar depois ou descartar o progresso?
+              Você tem respostas em andamento. Deseja salvar um rascunho para continuar depois ou
+              descartar o progresso?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
