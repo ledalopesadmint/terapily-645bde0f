@@ -104,10 +104,11 @@ function LibraryStandardMode() {
   const navigate = useNavigate();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [pickerActivity, setPickerActivity] = useState<Activity | null>(null);
+  const [pickerMode, setPickerMode] = useState<"in_session" | "shared_link">("in_session");
 
   const handleStart = (activity: Activity, mode: "in_session" | "shared_link") => {
-    // Para in_session: abrir gaveta de seleção de paciente
     setPickerActivity(activity);
+    setPickerMode(mode);
     setPickerOpen(true);
   };
 
