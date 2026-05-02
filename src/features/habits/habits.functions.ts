@@ -272,13 +272,13 @@ export const submitHabitEntry = createServerFn({ method: "POST" })
       throw new Error("Este link expirou.");
     }
 
-    // 3. Encrypt metadata if present
+    // 4. Encrypt metadata if present
     let metadataEncrypted: string | undefined;
     if (data.metadata && Object.keys(data.metadata).length > 0) {
       metadataEncrypted = await encryptPHIServer(JSON.stringify(data.metadata));
     }
 
-    // 4. Insert entry (trigger updates counters on habit_links)
+    // 5. Insert entry (trigger updates counters on habit_links)
     const entry = await insertHabitEntry({
       habit_link_id: link.id,
       workspace_id: link.workspace_id,
