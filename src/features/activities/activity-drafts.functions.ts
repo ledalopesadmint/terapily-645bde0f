@@ -15,6 +15,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequestIP } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { withRetry } from "@/lib/retry/with-retry.server";
 import {
   encryptPHIServer,
   decryptPHIServer,
