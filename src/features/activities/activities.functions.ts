@@ -729,9 +729,14 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
       .eq("id", pa.id);
 
     if (updErr) {
-      console.error("[generateInSessionLink] update failed", { code: updErr.code });
+      activityLog(pa.id).error("link_regen.failed", { code: updErr.code });
       throw new Error("Não foi possível gerar o link.");
     }
+
+    if (pa.status !== newStatus) {
+      logStatusTransition(pa.id, pa.status, newStatus, { trigger: "link_regen" });
+    }
+    activityLog(pa.id).info("link_regen.ok", { expiresAt });
 
     return {
       rawToken,
