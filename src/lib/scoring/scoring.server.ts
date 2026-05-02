@@ -194,7 +194,7 @@ export function scoreActivity(
   }
 
   return {
-    score: total,
+    score: finalScore,
     severity,
     metadata: {
       type,
