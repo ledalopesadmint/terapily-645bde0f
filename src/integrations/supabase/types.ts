@@ -354,6 +354,99 @@ export type Database = {
         }
         Relationships: []
       }
+      habit_entries: {
+        Row: {
+          activity_id: string
+          completed_at: string
+          created_at: string
+          cycles_completed: number | null
+          duration_seconds: number | null
+          habit_link_id: string
+          id: string
+          ip: unknown
+          metadata_encrypted: string | null
+          patient_id: string
+          user_agent: string | null
+          workspace_id: string
+        }
+        Insert: {
+          activity_id: string
+          completed_at?: string
+          created_at?: string
+          cycles_completed?: number | null
+          duration_seconds?: number | null
+          habit_link_id: string
+          id?: string
+          ip?: unknown
+          metadata_encrypted?: string | null
+          patient_id: string
+          user_agent?: string | null
+          workspace_id: string
+        }
+        Update: {
+          activity_id?: string
+          completed_at?: string
+          created_at?: string
+          cycles_completed?: number | null
+          duration_seconds?: number | null
+          habit_link_id?: string
+          id?: string
+          ip?: unknown
+          metadata_encrypted?: string | null
+          patient_id?: string
+          user_agent?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      habit_links: {
+        Row: {
+          activity_id: string
+          assigned_by: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_entry_at: string | null
+          patient_id: string
+          revocation_reason: string | null
+          status: string
+          token_hash: string
+          total_entries: number
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          activity_id: string
+          assigned_by: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_entry_at?: string | null
+          patient_id: string
+          revocation_reason?: string | null
+          status?: string
+          token_hash: string
+          total_entries?: number
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          activity_id?: string
+          assigned_by?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_entry_at?: string | null
+          patient_id?: string
+          revocation_reason?: string | null
+          status?: string
+          token_hash?: string
+          total_entries?: number
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: []
+      }
       patient_activities: {
         Row: {
           activity_id: string

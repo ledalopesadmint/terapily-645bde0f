@@ -5,6 +5,10 @@
  * busca/seleciona paciente ativo → dispara assignActivity(in_session) →
  * navega pro perfil do paciente com o player aberto.
  *
+ * Para atividades de mindfulness com mode=shared_link:
+ * → cria um habit link (reutilizável) em vez do magic link single-use.
+ * → mostra URL para copiar/compartilhar pelo canal preferido.
+ *
  * Regras:
  * - Lista apenas pacientes ativos (status=active, deleted_at IS NULL).
  * - Busca por display_name (não-PHI).
@@ -15,7 +19,7 @@
 import { useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Search, Play, Users, Send } from "lucide-react";
+import { Search, Play, Users, Send, Copy, Check, Link2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -34,6 +38,7 @@ import {
   assignActivity,
   listAvailableActivities,
 } from "@/features/activities/activities.functions";
+import { createHabitLink, HABIT_LINK_CATEGORIES } from "@/features/habits/habits.functions";
 import type { Activity } from "./library.types";
 
 interface PatientPickerSheetProps {
@@ -56,6 +61,14 @@ export function PatientPickerSheet({
   const navigate = useNavigate();
   const qc = useQueryClient();
   const [search, setSearch] = useState("");
+  const [habitLinkUrl, setHabitLinkUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  // Is this a habit-link-eligible activity?
+  const isHabitEligible = activity
+    ? HABIT_LINK_CATEGORIES.has(activity.category)
+    : false;
+  const useHabitLink = isHabitEligible && mode === "shared_link";
 
   // Lista pacientes ativos
   const patientsQuery = useQuery({
@@ -110,10 +123,10 @@ export function PatientPickerSheet({
 
   const [assigningPatientId, setAssigningPatientId] = useState<string | null>(null);
 
+  // Regular in_session assign mutation
   const assignMutation = useMutation({
     mutationKey: ["assign-activity", activity?.id],
     mutationFn: async (patientId: string) => {
-      // Prevent double-fire: if already assigning for this patient, bail
       if (assigningPatientId) throw new Error("Já atribuindo…");
       setAssigningPatientId(patientId);
       const realId = findRealActivityId();
@@ -137,7 +150,6 @@ export function PatientPickerSheet({
       toast.success(`${activity?.name ?? "Atividade"} pronta.`, {
         description: "Abrindo sessão…",
       });
-      // Navega pro perfil do paciente com param pra abrir o player
       navigate({
         to: "/patients/$id",
         params: { id: patientId },
@@ -149,9 +161,48 @@ export function PatientPickerSheet({
     },
   });
 
+  // Habit link creation mutation
+  const habitLinkMutation = useMutation({
+    mutationKey: ["create-habit-link", activity?.id],
+    mutationFn: async (patientId: string) => {
+      const realId = findRealActivityId();
+      if (!realId) throw new Error("Atividade não disponível no workspace.");
+      if (!workspaceId) throw new Error("Workspace não encontrado.");
+      return createHabitLink({
+        data: {
+          patientId,
+          workspaceId,
+          activityId: realId,
+        },
+      });
+    },
+    onSuccess: (res) => {
+      if (res.rawToken) {
+        // New link created — show URL
+        const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+        const url = `${baseUrl}/h/${res.rawToken}`;
+        setHabitLinkUrl(url);
+        toast.success("Link de prática criado.", {
+          description: `Expira em ${formatExpiration(res.expiresAt)}.`,
+        });
+      } else if (res.alreadyExists) {
+        toast.info("Este paciente já tem um link ativo para esta atividade.", {
+          description: "Revogue o atual antes de criar um novo.",
+        });
+        setHabitLinkUrl(null);
+      }
+    },
+    onError: (e) => {
+      toast.error(e instanceof Error ? e.message : "Não foi possível criar o link.");
+    },
+  });
+
   const handlePatientSelect = (patientId: string) => {
-    if (mode === "shared_link") {
-      // Navigate to patient page with assign dialog pre-opened
+    if (useHabitLink) {
+      // Create reusable habit link
+      habitLinkMutation.mutate(patientId);
+    } else if (mode === "shared_link") {
+      // Regular magic link flow (non-mindfulness)
       const realId = findRealActivityId();
       if (!realId) {
         toast.error("Atividade não disponível no workspace.");
@@ -169,12 +220,93 @@ export function PatientPickerSheet({
     }
   };
 
+  const handleCopy = async () => {
+    if (!habitLinkUrl) return;
+    try {
+      await navigator.clipboard.writeText(habitLinkUrl);
+      setCopied(true);
+      toast.success("Link copiado.");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Não foi possível copiar.");
+    }
+  };
+
+  const handleClose = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setHabitLinkUrl(null);
+      setCopied(false);
+      setSearch("");
+    }
+    onOpenChange(nextOpen);
+  };
+
   const isSharedLink = mode === "shared_link";
   const patients = patientsQuery.data?.patients ?? [];
   const isLoading = patientsQuery.isLoading || catalogQuery.isLoading;
+  const isPending = assignMutation.isPending || habitLinkMutation.isPending;
+
+  // If we have a habit link URL, show the share view
+  if (habitLinkUrl) {
+    return (
+      <Sheet open={open} onOpenChange={handleClose}>
+        <SheetContent className="flex w-full flex-col sm:max-w-md">
+          <SheetHeader className="space-y-1 text-left">
+            <SheetTitle className="font-display text-xl">
+              Link de prática criado
+            </SheetTitle>
+            <SheetDescription>
+              Envie pelo seu canal preferido — WhatsApp, SMS ou email.
+              O paciente pode usar quantas vezes quiser até o link expirar.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="mt-6 space-y-4">
+            {/* Activity name */}
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Link2 className="h-4 w-4 text-sage" />
+              <span className="font-medium text-foreground">{activity?.name}</span>
+              <span>· Reutilizável</span>
+            </div>
+
+            {/* URL box */}
+            <div className="rounded-xl border border-sage/20 bg-sage/5 p-4">
+              <p className="break-all text-sm font-mono text-foreground/80 select-all">
+                {habitLinkUrl}
+              </p>
+            </div>
+
+            {/* Copy button */}
+            <Button
+              onClick={handleCopy}
+              className="w-full gap-2"
+              variant={copied ? "outline" : "default"}
+            >
+              {copied ? (
+                <>
+                  <Check className="h-4 w-4" />
+                  Copiado
+                </>
+              ) : (
+                <>
+                  <Copy className="h-4 w-4" />
+                  Copiar link
+                </>
+              )}
+            </Button>
+          </div>
+
+          <p className="mt-auto border-t border-border pt-3 text-[0.6875rem] text-muted-foreground">
+            Este é um link reutilizável — cada prática completada é registrada
+            automaticamente no perfil do paciente. Você pode revogar a qualquer momento.
+          </p>
+        </SheetContent>
+      </Sheet>
+    );
+  }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={handleClose}>
       <SheetContent className="flex w-full flex-col sm:max-w-md">
         <SheetHeader className="space-y-1 text-left">
           <SheetTitle className="font-display text-xl">
@@ -182,9 +314,11 @@ export function PatientPickerSheet({
           </SheetTitle>
           <SheetDescription>
             {activity
-              ? isSharedLink
-                ? `Enviar ${activity.name} por link — escolha o paciente.`
-                : `Aplicar ${activity.name} em sessão — escolha quem atender agora.`
+              ? useHabitLink
+                ? `Criar link de prática de ${activity.name} — escolha o paciente.`
+                : isSharedLink
+                  ? `Enviar ${activity.name} por link — escolha o paciente.`
+                  : `Aplicar ${activity.name} em sessão — escolha quem atender agora.`
               : "Escolha um paciente."}
           </SheetDescription>
         </SheetHeader>
@@ -222,7 +356,7 @@ export function PatientPickerSheet({
                 <button
                   key={p.id}
                   type="button"
-                  disabled={assignMutation.isPending}
+                  disabled={isPending}
                   onClick={() => handlePatientSelect(p.id)}
                   className="
                     flex w-full items-center justify-between gap-3 rounded-lg
@@ -242,7 +376,9 @@ export function PatientPickerSheet({
                       </p>
                     )}
                   </div>
-                  {isSharedLink ? (
+                  {useHabitLink ? (
+                    <Link2 className="h-4 w-4 shrink-0 text-sage" />
+                  ) : isSharedLink ? (
                     <Send className="h-4 w-4 shrink-0 text-sage" />
                   ) : (
                     <Play className="h-4 w-4 shrink-0 text-sage" />
@@ -255,11 +391,26 @@ export function PatientPickerSheet({
 
         {/* Nota de segurança */}
         <p className="mt-auto border-t border-border pt-3 text-[0.6875rem] text-muted-foreground">
-          {isSharedLink
-            ? "Você enviará o link pelo seu canal preferido — WhatsApp, SMS ou email."
-            : "A sessão dura 1 hora. O paciente responde no seu dispositivo — sem criar conta."}
+          {useHabitLink
+            ? "O link é reutilizável — o paciente pratica quantas vezes quiser. Cada execução é registrada."
+            : isSharedLink
+              ? "Você enviará o link pelo seu canal preferido — WhatsApp, SMS ou email."
+              : "A sessão dura 1 hora. O paciente responde no seu dispositivo — sem criar conta."}
         </p>
       </SheetContent>
     </Sheet>
   );
+}
+
+// --- Helpers ---------------------------------------------------------------
+
+function formatExpiration(expiresAt: string): string {
+  const now = new Date();
+  const exp = new Date(expiresAt);
+  const diffMs = exp.getTime() - now.getTime();
+  const days = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  if (days <= 1) return "24 horas";
+  if (days <= 7) return `${days} dias`;
+  if (days <= 30) return `${Math.ceil(days / 7)} semanas`;
+  return `${Math.ceil(days / 30)} meses`;
 }
