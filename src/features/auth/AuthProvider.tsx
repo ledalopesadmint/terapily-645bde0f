@@ -43,55 +43,126 @@ export interface AuthState {
   signOut: () => Promise<void>;
   refresh: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  /** True when hydration is taking unusually long (>3s) */
+  isSlowLoading: boolean;
+  /** Call to force retry hydration */
+  retryHydration: () => void;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
 
+/** Single query with timeout + retry */
+async function withTimeout<T>(
+  fn: () => Promise<T>,
+  timeoutMs = 6000,
+): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error("Query timeout")),
+      timeoutMs,
+    );
+    fn()
+      .then((val) => {
+        clearTimeout(timer);
+        resolve(val);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
+async function withRetryBackoff<T>(
+  fn: () => Promise<T>,
+  retries = 2,
+  delays = [300, 800],
+): Promise<T> {
+  let lastErr: unknown;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      if (i < retries) {
+        await new Promise((r) => setTimeout(r, delays[i] ?? 1500));
+      }
+    }
+  }
+  throw lastErr;
+}
+
 /**
  * Carrega profile + roles + workspace do usuário autenticado.
- * Tudo em queries paralelas, scoped via RLS.
+ * Com retry e timeout por query. Falha em queries não-críticas não bloqueia.
  */
 async function loadAuthData(userId: string): Promise<{
   profile: AuthProfile | null;
   roles: AppRole[];
   workspace: AuthWorkspace | null;
 }> {
-  const [profileRes, rolesRes, membershipRes] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("id, full_name, avatar_url, locale, timezone")
-      .eq("id", userId)
-      .maybeSingle(),
-    supabase.from("user_roles").select("role").eq("user_id", userId),
-    supabase
-      .from("workspace_members")
-      .select("role, workspace:workspaces(id, name, slug, trial_ends_at)")
-      .eq("user_id", userId)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: true })
-      .limit(1)
-      .maybeSingle(),
+  const profilePromise = withRetryBackoff(() =>
+    withTimeout(async () => {
+      const r = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, locale, timezone")
+        .eq("id", userId)
+        .maybeSingle();
+      return r.data ?? null;
+    }),
+  ).catch((err) => {
+    console.warn("[AuthProvider] profile load failed, using fallback", err);
+    return null;
+  });
+
+  const rolesPromise = withRetryBackoff(() =>
+    withTimeout(async () => {
+      const r = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      return (r.data ?? []).map((x) => x.role);
+    }),
+  ).catch((err) => {
+    console.warn("[AuthProvider] roles load failed, using fallback", err);
+    return [] as AppRole[];
+  });
+
+  const workspacePromise = withRetryBackoff(() =>
+    withTimeout(async () => {
+      const r = await supabase
+        .from("workspace_members")
+        .select("role, workspace:workspaces(id, name, slug, trial_ends_at)")
+        .eq("user_id", userId)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      if (!r.data?.workspace) return null;
+      const ws = r.data.workspace as {
+        id: string;
+        name: string;
+        slug: string;
+        trial_ends_at: string;
+      };
+      return {
+        id: ws.id,
+        name: ws.name,
+        slug: ws.slug,
+        trial_ends_at: ws.trial_ends_at,
+        role: r.data.role,
+      } as AuthWorkspace;
+    }),
+  ).catch((err) => {
+    console.warn("[AuthProvider] workspace load failed, using fallback", err);
+    return null;
+  });
+
+  const [profile, roles, workspace] = await Promise.all([
+    profilePromise,
+    rolesPromise,
+    workspacePromise,
   ]);
-
-  const profile = profileRes.data ?? null;
-  const roles = (rolesRes.data ?? []).map((r) => r.role);
-
-  let workspace: AuthWorkspace | null = null;
-  if (membershipRes.data?.workspace) {
-    const ws = membershipRes.data.workspace as {
-      id: string;
-      name: string;
-      slug: string;
-      trial_ends_at: string;
-    };
-    workspace = {
-      id: ws.id,
-      name: ws.name,
-      slug: ws.slug,
-      trial_ends_at: ws.trial_ends_at,
-      role: membershipRes.data.role,
-    };
-  }
 
   return { profile, roles, workspace };
 }
@@ -102,11 +173,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [workspace, setWorkspace] = useState<AuthWorkspace | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSlowLoading, setIsSlowLoading] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
 
-  // Audit anti-duplicate: SIGNED_IN dispara em refresh de token, hidratação
-  // inicial, troca de aba etc. Registramos só uma vez por user_id por
-  // sessão de browser. Logout limpa o ref pra próximo login auditar.
   const lastSigninUserId = useRef<string | null>(null);
+  const slowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const hydrate = useCallback(async (s: Session | null) => {
     if (!s?.user) {
@@ -121,29 +192,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setWorkspace(data.workspace);
   }, []);
 
+  const retryHydration = useCallback(() => {
+    setRetryCount((c) => c + 1);
+  }, []);
+
   useEffect(() => {
-    // CRITICAL: subscribe ANTES de getSession (knowledge: adding-login-logout)
+    // Start slow-loading timer
+    slowTimerRef.current = setTimeout(() => setIsSlowLoading(true), 3000);
+
     const { data: subscription } = supabase.auth.onAuthStateChange(
       (event, newSession) => {
         setSession(newSession);
-        // Defer chamadas ao Supabase pra fora do callback (evita deadlock)
         if (newSession?.user) {
           const userId = newSession.user.id;
           setTimeout(() => {
             void hydrate(newSession);
-            // Audit auth.signin: só no evento SIGNED_IN real e uma vez por
-            // sessão. TOKEN_REFRESHED, INITIAL_SESSION e USER_UPDATED não
-            // geram log (não é um login novo). Falha no audit não bloqueia
-            // hidratação — recordAuthEvent já é tolerante a erro server-side.
             if (
               event === "SIGNED_IN" &&
               lastSigninUserId.current !== userId
             ) {
               lastSigninUserId.current = userId;
               void recordAuthEvent({ data: { action: "auth.signin" } }).catch(
-                () => {
-                  // Silencioso: não quebrar UX por falha de audit.
-                },
+                () => {},
               );
             }
           }, 0);
@@ -159,25 +229,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void supabase.auth.getSession().then(async ({ data }) => {
       setSession(data.session);
       if (data.session) {
-        // INITIAL_SESSION não dispara SIGNED_IN — marca o ref pra evitar
-        // log duplicado se mais tarde rolar refresh+SIGNED_IN com mesmo user.
         lastSigninUserId.current = data.session.user.id;
         await hydrate(data.session);
       }
       setIsLoading(false);
+      setIsSlowLoading(false);
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
     });
 
     return () => {
       subscription.subscription.unsubscribe();
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
     };
-  }, [hydrate]);
+  }, [hydrate, retryCount]);
 
   const signOut = useCallback(async () => {
-    // Registra ANTES de signOut — depois o token JWT é invalidado e
-    // requireSupabaseAuth no server function rejeitaria.
-    await recordAuthEvent({ data: { action: "auth.signout" } }).catch(() => {
-      // Silencioso: nunca bloquear logout por falha de audit.
-    });
+    await recordAuthEvent({ data: { action: "auth.signout" } }).catch(() => {});
     lastSigninUserId.current = null;
     await supabase.auth.signOut();
   }, []);
@@ -203,8 +270,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signOut,
       refresh,
       hasRole,
+      isSlowLoading,
+      retryHydration,
     }),
-    [isLoading, session, profile, roles, workspace, signOut, refresh, hasRole],
+    [isLoading, session, profile, roles, workspace, signOut, refresh, hasRole, isSlowLoading, retryHydration],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -71,8 +71,22 @@ function AuthenticatedLayout() {
 
   if (auth.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background gap-4">
         <p className="eyebrow text-muted-foreground">Um momento</p>
+        {auth.isSlowLoading && (
+          <>
+            <p className="text-sm text-muted-foreground max-w-sm text-center">
+              Estamos carregando sua área com segurança. Isso pode levar alguns
+              segundos após atualizações do sistema.
+            </p>
+            <button
+              onClick={() => auth.retryHydration()}
+              className="mt-2 inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+            >
+              Tentar novamente
+            </button>
+          </>
+        )}
       </div>
     );
   }

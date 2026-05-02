@@ -50,7 +50,10 @@ export const getAdminCatalog = createServerFn({ method: "GET" })
       _user_id: userId,
       _role: "admin",
     });
-    if (roleError) throw new Error(roleError.message);
+    if (roleError) {
+      console.error("[getAdminCatalog] role check failed", { code: roleError.code });
+      throw new Error("Não foi possível verificar permissões.");
+    }
     if (!isAdmin) {
       throw new Error("Acesso negado: apenas o admin pode ver o catálogo.");
     }
@@ -62,7 +65,10 @@ export const getAdminCatalog = createServerFn({ method: "GET" })
       )
       .order("updated_at", { ascending: false });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("[getAdminCatalog] catalog fetch failed", { code: error.code });
+      throw new Error("Não foi possível carregar o catálogo.");
+    }
 
     const items = (data ?? []) as AdminCatalogRow[];
 
@@ -118,7 +124,10 @@ export const setFeaturedActivity = createServerFn({ method: "POST" })
       _user_id: userId,
       _role: "admin",
     });
-    if (roleError) throw new Error(roleError.message);
+    if (roleError) {
+      console.error("[setFeaturedActivity] role check failed", { code: roleError.code });
+      throw new Error("Não foi possível verificar permissões.");
+    }
     if (!isAdmin) throw new Error("Apenas o admin pode definir o destaque.");
 
     // 1. Limpa qualquer destaque anterior (service role pra garantir
@@ -295,7 +304,10 @@ export const getCatalogInsights = createServerFn({ method: "GET" })
       _user_id: userId,
       _role: "admin",
     });
-    if (roleError) throw new Error(roleError.message);
+    if (roleError) {
+      console.error("[getCatalogInsights] role check failed", { code: roleError.code });
+      throw new Error("Não foi possível verificar permissões.");
+    }
     if (!isAdmin) throw new Error("Apenas o admin pode ver os insights do catálogo.");
 
     const since = new Date(Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000).toISOString();

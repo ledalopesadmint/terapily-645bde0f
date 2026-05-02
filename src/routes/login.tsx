@@ -12,23 +12,21 @@ import { CapsLockHint } from "@/components/brand/CapsLockHint";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-// Allowlist of safe internal redirect targets after login.
-// Anything outside this list falls back to `/welcome` — protects against
-// open-redirect (e.g. /login?redirect=https://evil.com).
-const SAFE_REDIRECTS = new Set<string>([
-  "/welcome",
-  "/dashboard",
-  "/settings",
-  "/settings/profile",
-  "/settings/workspace",
-  "/settings/security",
-  "/settings/billing",
-]);
-
+/**
+ * Sanitiza redirect pós-login. Aceita qualquer path interno válido.
+ * Bloqueia open-redirect (domínios externos, protocol-relative, etc.).
+ */
 function sanitizeRedirect(value: unknown): string | undefined {
-  if (typeof value !== "string") return undefined;
-  if (!value.startsWith("/") || value.startsWith("//")) return undefined;
-  return SAFE_REDIRECTS.has(value) ? value : undefined;
+  if (typeof value !== "string" || !value) return undefined;
+  // Deve começar com / (path interno)
+  if (!value.startsWith("/")) return undefined;
+  // Bloqueia protocol-relative (//evil.com)
+  if (value.startsWith("//")) return undefined;
+  // Bloqueia embedded protocol (javascript:, data:, etc.)
+  if (value.includes("://")) return undefined;
+  // Bloqueia backslash trick (\/\evil.com)
+  if (value.includes("\\")) return undefined;
+  return value;
 }
 
 export const Route = createFileRoute("/login")({
