@@ -453,6 +453,14 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
   const [viewResponseId, setViewResponseId] = useState<string | null>(null);
 
   const [startSessionConsumed, setStartSessionConsumed] = useState(false);
+  const [openAssignConsumed, setOpenAssignConsumed] = useState(false);
+
+  // Auto-open assign dialog when navigated from Acervo with openAssign param
+  useEffect(() => {
+    if (!openAssign || openAssignConsumed) return;
+    setOpen(true);
+    setOpenAssignConsumed(true);
+  }, [openAssign, openAssignConsumed]);
 
   const downloadScaleResult = async (
     responseId: string,
