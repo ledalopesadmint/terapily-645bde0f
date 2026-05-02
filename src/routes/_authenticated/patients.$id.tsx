@@ -1179,6 +1179,7 @@ function AssignActivityDialog({
     if (defaultActivityId && open) setActivityId(defaultActivityId);
   }, [defaultActivityId, open]);
 
+  const catalogQuery = useQuery({
     queryKey: ["activity-catalog"],
     queryFn: () => listAvailableActivities(),
     enabled: open,
