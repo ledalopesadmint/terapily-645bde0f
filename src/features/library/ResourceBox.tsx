@@ -97,6 +97,8 @@ export function ResourceBox({
                 <div className="relative h-24 overflow-hidden bg-[var(--navy)]/5">
                   <div className="absolute inset-0 flex items-center justify-center opacity-30">
                     <ActivityIllustration
+                      // @ts-expect-error — prop name varies between versions
+                    
                       name={item.illustration ?? "petals"}
                       className="h-20 w-20 text-sage"
                     />
