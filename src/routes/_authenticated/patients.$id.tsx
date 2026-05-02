@@ -686,7 +686,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                         </span>
                       )}
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+                    <div className="flex shrink-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
                       <Badge variant={STATUS_VARIANT[displayStatus]}>
                         {STATUS_LABEL[displayStatus]}
                         {hasDraft && ` · ${draftPct}%`}
