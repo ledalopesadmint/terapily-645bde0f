@@ -255,8 +255,9 @@ export function PatientPickerSheet({
 
         {/* Nota de segurança */}
         <p className="mt-auto border-t border-border pt-3 text-[0.6875rem] text-muted-foreground">
-          A sessão dura 1 hora. O paciente responde no seu dispositivo — sem
-          criar conta.
+          {isSharedLink
+            ? "Você enviará o link pelo seu canal preferido — WhatsApp, SMS ou email."
+            : "A sessão dura 1 hora. O paciente responde no seu dispositivo — sem criar conta."}
         </p>
       </SheetContent>
     </Sheet>
