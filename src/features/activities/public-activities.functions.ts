@@ -22,6 +22,7 @@ import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { scoreActivity } from "@/lib/scoring/scoring.server";
 import { recordAudit } from "@/features/audit/audit.server";
 import { buildScaleResultPDF } from "./scale-result-pdf.server";
+import { buildWorksheetResultPDF } from "./worksheet-result-pdf.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
 import {
