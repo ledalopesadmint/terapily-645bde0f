@@ -593,17 +593,26 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <p className="text-sm text-muted-foreground">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground hidden sm:block">
           Atividades aplicadas em sessão e enviadas por link.
         </p>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={downloadReport} disabled={reportBusy}>
-            <Download className="mr-1 h-4 w-4" />
-            {reportBusy ? "Gerando…" : "Compliance Report"}
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-2">
+          <Button
+            variant="outline"
+            onClick={downloadReport}
+            disabled={reportBusy}
+            className="text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10"
+          >
+            <Download className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate">{reportBusy ? "Gerando…" : "Compliance Report"}</span>
           </Button>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="mr-1 h-4 w-4" /> Enviar atividade
+          <Button
+            onClick={() => setOpen(true)}
+            className="text-xs sm:text-sm px-2 sm:px-4 h-9 sm:h-10"
+          >
+            <Plus className="mr-1 h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+            <span className="truncate">Enviar atividade</span>
           </Button>
         </div>
       </div>
