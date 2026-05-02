@@ -193,7 +193,18 @@ export function PatientPickerSheet({
       }
     },
     onError: (e) => {
-      toast.error(e instanceof Error ? e.message : "Não foi possível criar o link.");
+      const msg = e instanceof Error ? e.message : "";
+      if (msg.startsWith("__HABIT_LIMIT__")) {
+        const [, tier, max] = msg.split(":");
+        toast.error(`Limite de links de prática atingido (${max}).`, {
+          description:
+            tier === "basic"
+              ? "Faça upgrade para o plano Practice para mais links."
+              : "Revogue links inativos para liberar espaço.",
+        });
+      } else {
+        toast.error(msg || "Não foi possível criar o link.");
+      }
     },
   });
 
