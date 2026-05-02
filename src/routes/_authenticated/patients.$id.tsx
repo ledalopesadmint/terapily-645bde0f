@@ -647,8 +647,8 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
             const displayStatus: ActivityStatus = hasDraft ? "in_progress" : status;
             const share: ShareSummaryRow | undefined = shareSummaries[a.id];
             return (
-              <Card key={a.id}>
-                <CardContent className="space-y-2 py-4">
+              <Card key={a.id} className="overflow-hidden">
+                <CardContent className="space-y-2 py-4 px-3 sm:px-6">
                   {/* Linha 1: Nome do teste (esquerda) + Flag (direita) */}
                   <div className="flex items-center justify-between gap-3">
                     <p className="font-medium text-foreground">
