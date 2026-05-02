@@ -713,7 +713,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
                             size="sm"
                             className="border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
                             disabled={scaleResultBusy === `${response.id}-therapist`}
-                            onClick={() => downloadScaleResult(response.id, "therapist")}
+                            onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
                           >
                             <ShieldCheck className="mr-1 h-3.5 w-3.5" />
                             {scaleResultBusy === `${response.id}-therapist` ? "Gerando…" : "Relatório Terapeuta"}
