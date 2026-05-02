@@ -53,7 +53,7 @@ import {
   getHabitEntriesForLink,
   revokeHabitLink,
 } from "@/features/habits/habits.functions";
-import { generateHabitProgressReport } from "@/features/habits/habit-report.functions";
+import { generateHabitReportPatient, generateHabitReportTherapist } from "@/features/habits/habit-report.functions";
 
 interface HabitTrackingTabProps {
   patientId: string;
