@@ -237,16 +237,18 @@ export const submitActivityResponse = createServerFn({ method: "POST" })
 
     // 4. Single-use: marca used_at + status completed + zera token_hash
     //    (acesso fechado, dados permanecem)
-    const { error: updErr } = await supabaseAdmin
-      .from("patient_activities")
-      .update({
-        used_at: new Date().toISOString(),
-        status: "completed",
-        token_hash: null,
-        response_id: response.id,
-      })
-      .eq("id", pa.id)
-      .is("used_at", null); // proteção extra contra race condition
+    const { error: updErr } = await withRetry(() =>
+      supabaseAdmin
+        .from("patient_activities")
+        .update({
+          used_at: new Date().toISOString(),
+          status: "completed",
+          token_hash: null,
+          response_id: response.id,
+        })
+        .eq("id", pa.id)
+        .is("used_at", null),
+    );
 
     if (updErr) {
       console.error("[submitActivityResponse] mark used_at failed", {
