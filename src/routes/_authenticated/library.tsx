@@ -174,14 +174,28 @@ function LibraryStandardMode() {
       </div>
 
       <div className="mt-6">
-        <ResourceBox
-          icon={FileText}
-          title="Worksheets"
-          subtitle="Registros guiados que transformam o espaço entre sessões em progresso real. Aplique em sessão ou envie como atividade entre sessões."
-          href="/worksheets"
-          count={16}
-          countLabel="worksheets"
-        />
+        {(() => {
+          const worksheets = ACTIVITIES.filter((a) => a.archetype === "structured_form");
+          const preview = worksheets.slice(0, 3);
+          return (
+            <ResourceBox
+              icon={FileText}
+              title="Worksheets"
+              subtitle="Registros guiados que transformam o espaço entre sessões em progresso real. Aplique em sessão ou envie como atividade entre sessões."
+              href="/worksheets"
+              count={worksheets.length}
+              countLabel="worksheets"
+              previewItems={preview.map((w) => ({
+                code: w.code,
+                name: w.name,
+                category: w.category,
+                durationMin: w.durationMin,
+                shortDescription: w.shortDescription,
+                illustration: w.illustration,
+              }))}
+            />
+          );
+        })()}
       </div>
 
       {/* ── Recomendados (S3 — ativo quando houver histórico de uso) ── */}
