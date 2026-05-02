@@ -14,6 +14,7 @@
  */
 
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { getOGMeta } from "@/features/activities/og-meta.functions";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { resolvePublicToken, submitActivityResponse } from "@/features/activities/public-activities.functions";
@@ -46,26 +47,42 @@ import {
 } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/p/$token")({
-  head: () => ({
-    meta: [
-      { title: "Your therapist sent you an activity — Terapily" },
-      { name: "robots", content: "noindex, nofollow" },
-      // Open Graph — rich preview in WhatsApp, iMessage, email, etc.
-      { property: "og:title", content: "Your therapist sent you an activity" },
-      { property: "og:description", content: "Open this secure link to begin. Your responses are encrypted and sent only to your therapist." },
-      { property: "og:image", content: "https://www.terapily.com/brand/og-magic-link.jpg" },
-      { property: "og:image:width", content: "1200" },
-      { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "terapily — therapeutic tools" },
-      { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Terapily" },
-      // Twitter Card
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Your therapist sent you an activity" },
-      { name: "twitter:description", content: "Open this secure link to begin. Your responses are encrypted and sent only to your therapist." },
-      { name: "twitter:image", content: "https://www.terapily.com/brand/og-magic-link.jpg" },
-    ],
-  }),
+  loader: async ({ params }) => {
+    try {
+      const meta = await getOGMeta({ data: { token: params.token } });
+      return { meta };
+    } catch {
+      return { meta: null };
+    }
+  },
+  head: ({ loaderData }) => {
+    const title = loaderData?.meta?.title ?? "Activity";
+    const slug = loaderData?.meta?.slug;
+    const ogImage = slug
+      ? `https://www.terapily.com/brand/og/${slug}.jpg`
+      : "https://www.terapily.com/brand/og-magic-link.jpg";
+    const ogTitle = `Your therapist sent you: ${title}`;
+    const ogDesc = "Open this secure link to begin. Your responses are encrypted and sent only to your therapist.";
+
+    return {
+      meta: [
+        { title: `${title} — Terapily` },
+        { name: "robots", content: "noindex, nofollow" },
+        { property: "og:title", content: ogTitle },
+        { property: "og:description", content: ogDesc },
+        { property: "og:image", content: ogImage },
+        { property: "og:image:width", content: "1200" },
+        { property: "og:image:height", content: "630" },
+        { property: "og:image:alt", content: `terapily — ${title}` },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "Terapily" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:title", content: ogTitle },
+        { name: "twitter:description", content: ogDesc },
+        { name: "twitter:image", content: ogImage },
+      ],
+    };
+  },
   component: PublicActivityPage,
 });
 
