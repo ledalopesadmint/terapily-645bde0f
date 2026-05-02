@@ -185,6 +185,7 @@ function LibraryStandardMode() {
               href="/worksheets"
               count={worksheets.length}
               countLabel="worksheets"
+              chipLabel="Worksheet"
               previewItems={preview.map((w) => ({
                 code: w.code,
                 name: w.name,
