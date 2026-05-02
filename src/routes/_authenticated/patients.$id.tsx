@@ -412,7 +412,7 @@ function PatientTabs({
       </TabsList>
 
       <TabsContent value="activities" className="mt-6">
-        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} startSession={startSession} />
+        <ActivitiesTab patientId={patientId} workspaceId={workspaceId} startSession={startSession} openAssign={openAssign} />
       </TabsContent>
 
       {isOwner && (
