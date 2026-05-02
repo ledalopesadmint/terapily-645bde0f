@@ -157,8 +157,8 @@ function HabitLinkCard({
 }) {
   const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
-  const [revokeOpen, setRevokeOpen] = useState(false);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingPatientPdf, setGeneratingPatientPdf] = useState(false);
+  const [generatingTherapistPdf, setGeneratingTherapistPdf] = useState(false);
 
   const entriesQuery = useQuery({
     queryKey: ["habit-entries", link.id, workspaceId],
