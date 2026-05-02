@@ -107,7 +107,7 @@ export function ConsentGate({
           </div>
         </ScrollArea>
 
-        <DialogFooter className="gap-2 sm:gap-0 pt-4 border-t border-border/40">
+        <DialogFooter className="shrink-0 gap-2 sm:gap-0 pt-4 border-t border-border/40">
           <Button
             variant="outline"
             onClick={() => setState("confirming_decline")}
