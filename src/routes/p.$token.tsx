@@ -210,7 +210,9 @@ function ActivityRunner({
     onSuccess: () => setSavedAt(Date.now()),
   });
 
-  const { completion } = getCompletionStats(config, responses);
+  const completion = isForm
+    ? getFormCompletion(config, responses).completion
+    : getCompletionStats(config, responses as Record<string, number>).completion;
 
   useEffect(() => {
     if (phase !== "activity" || draftPrompt) return;
