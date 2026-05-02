@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * Tests: draft restore → correct question navigation + submit readiness.
  *
