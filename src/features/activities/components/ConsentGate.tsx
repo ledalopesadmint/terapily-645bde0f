@@ -80,7 +80,7 @@ export function ConsentGate({
   }
 
   return (
-    <Dialog open={open} onOpenChange={() => {}}>
+    <Dialog open={open} onOpenChange={(v) => { if (!v) onClose(); }}>
         <DialogContent
           className="max-h-[88dvh] w-[calc(100vw-2rem)] max-w-lg grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-h-[85dvh]"
         onPointerDownOutside={(e) => e.preventDefault()}
