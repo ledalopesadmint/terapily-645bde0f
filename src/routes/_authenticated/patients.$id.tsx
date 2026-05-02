@@ -543,8 +543,13 @@ function ActivitiesTab({ patientId, workspaceId, startSession }: ActivitiesTabPr
   });
 
   const regenLinkMutation = useMutation({
-    mutationFn: (paId: string) =>
-      generateInSessionLink({ data: { patientActivityId: paId } }),
+    mutationFn: async (paId: string) => {
+      const result = await generateInSessionLink({ data: { patientActivityId: paId } });
+      if (!result || !result.linkPath) {
+        throw new Error("Resposta inválida do servidor ao gerar link.");
+      }
+      return result;
+    },
     onSuccess: (res, paId) => {
       qc.invalidateQueries({ queryKey: ["patient-activities", patientId] });
       const origin = getPublicOrigin();
