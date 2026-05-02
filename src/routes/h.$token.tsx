@@ -38,7 +38,7 @@ const resolveHabitToken = createServerFn({ method: "GET" })
       slug: string;
       title: string;
       archetype: string;
-      config: Record<string, unknown>;
+      config: Record<string, {}>;
       shortDescription: string;
     } | null;
     tokenHash: string | null;
