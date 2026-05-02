@@ -26,6 +26,7 @@ import { buildScaleResultPDF } from "./scale-result-pdf.server";
 import { buildWorksheetResultPDF } from "./worksheet-result-pdf.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
+import { activityLog, logStatusTransition } from "@/lib/logging/activity-logger.server";
 import {
   getPatientActivityByTokenHash,
   getActivityFromCatalog,

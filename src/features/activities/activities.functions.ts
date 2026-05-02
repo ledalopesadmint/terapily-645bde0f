@@ -20,6 +20,7 @@ import { getActivePatientForWorkspace, getActivityFromCatalog } from "./activiti
 import { encryptPHIServer, decryptPHIServer } from "@/lib/crypto/encryption.server";
 import { scoreActivity, type Severity } from "@/lib/scoring/scoring.server";
 import { detectClinicalFlag } from "@/server/clinical-flag.server";
+import { activityLog, logStatusTransition } from "@/lib/logging/activity-logger.server";
 
 // ----------------------------------------------------------------
 // Tier → janela de shared_link (em horas)

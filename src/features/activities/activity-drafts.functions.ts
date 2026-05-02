@@ -23,6 +23,7 @@ import {
 import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { getPatientActivityByTokenHash } from "./activities.server";
 import { checkPublicLinkRateLimit } from "@/lib/rate-limit/public-link.server";
+import { activityLog, logStatusTransition } from "@/lib/logging/activity-logger.server";
 
 const NEUTRAL_ERROR =
   "Este link não está disponível. Peça um novo link ao seu terapeuta.";
