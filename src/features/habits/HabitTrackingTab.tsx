@@ -53,7 +53,7 @@ import {
   getHabitEntriesForLink,
   revokeHabitLink,
 } from "@/features/habits/habits.functions";
-import { generateHabitProgressReport } from "@/features/habits/habit-report.functions";
+import { generateHabitReportPatient, generateHabitReportTherapist } from "@/features/habits/habit-report.functions";
 
 interface HabitTrackingTabProps {
   patientId: string;
@@ -158,7 +158,8 @@ function HabitLinkCard({
   const qc = useQueryClient();
   const [expanded, setExpanded] = useState(false);
   const [revokeOpen, setRevokeOpen] = useState(false);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [generatingPatientPdf, setGeneratingPatientPdf] = useState(false);
+  const [generatingTherapistPdf, setGeneratingTherapistPdf] = useState(false);
 
   const entriesQuery = useQuery({
     queryKey: ["habit-entries", link.id, workspaceId],
@@ -205,33 +206,48 @@ function HabitLinkCard({
 
   const activityTitle = link.activity?.title ?? "Atividade";
 
-  const handleGeneratePdf = async () => {
-    setGeneratingPdf(true);
+  const downloadPdf = (bytes: number[], filename: string) => {
+    const byteArray = new Uint8Array(bytes);
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handlePatientReport = async () => {
+    setGeneratingPatientPdf(true);
     try {
-      const result = await generateHabitProgressReport({
-        data: {
-          habitLinkId: link.id,
-          workspaceId,
-          patientId,
-        },
+      const result = await generateHabitReportPatient({
+        data: { habitLinkId: link.id, workspaceId, patientId },
       });
-      // Download the PDF
-      const byteArray = new Uint8Array(result.pdfBytes);
-      const blob = new Blob([byteArray], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `progresso-praticas-${new Date().toISOString().slice(0, 10)}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      toast.success("Relatório gerado.");
+      downloadPdf(result.pdfBytes, `practice-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success("Relatório do paciente gerado.");
     } catch (e) {
-      console.error("[HabitReport] failed", e);
+      console.error("[HabitReport:patient] failed", e);
       toast.error(e instanceof Error ? e.message : "Não foi possível gerar o relatório.");
     } finally {
-      setGeneratingPdf(false);
+      setGeneratingPatientPdf(false);
+    }
+  };
+
+  const handleTherapistReport = async () => {
+    setGeneratingTherapistPdf(true);
+    try {
+      const result = await generateHabitReportTherapist({
+        data: { habitLinkId: link.id, workspaceId, patientId },
+      });
+      downloadPdf(result.pdfBytes, `adherence-report-${new Date().toISOString().slice(0, 10)}.pdf`);
+      toast.success("Relatório do terapeuta gerado.");
+    } catch (e) {
+      console.error("[HabitReport:therapist] failed", e);
+      toast.error(e instanceof Error ? e.message : "Não foi possível gerar o relatório.");
+    } finally {
+      setGeneratingTherapistPdf(false);
     }
   };
 
@@ -271,16 +287,28 @@ function HabitLinkCard({
             </div>
             <div className="flex items-center gap-1">
               {link.total_entries > 0 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs gap-1"
-                  onClick={handleGeneratePdf}
-                  disabled={generatingPdf}
-                >
-                  <Download className="h-3.5 w-3.5" />
-                  {generatingPdf ? "Gerando…" : "Relatório"}
-                </Button>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-[oklch(0.55_0.12_180)] hover:text-[oklch(0.45_0.12_180)]"
+                    onClick={handlePatientReport}
+                    disabled={generatingPatientPdf}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {generatingPatientPdf ? "Gerando…" : "Paciente"}
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 text-xs gap-1 text-[oklch(0.55_0.10_15)] hover:text-[oklch(0.45_0.10_15)]"
+                    onClick={handleTherapistReport}
+                    disabled={generatingTherapistPdf}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    {generatingTherapistPdf ? "Gerando…" : "Terapeuta"}
+                  </Button>
+                </>
               )}
               {isActive && (
                 <Button

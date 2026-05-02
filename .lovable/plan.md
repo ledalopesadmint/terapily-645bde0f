@@ -1,239 +1,90 @@
-# Semana 1 — Fundação Terapily (versão final, future-proof)
 
-Objetivo: entregar a base segura, multi-tenant, visualmente alinhada ao brand book e arquiteturalmente preparada pra todas as features do roadmap de 6 semanas — sem refatoração estrutural futura, sem soluções fake, sem páginas inseguras.
+# Habit Progress Report — Redesign com 2 variantes
 
----
+## Problema atual
 
-## Regra de governança permanente (vale pra sempre)
-
-**Antes de implementar qualquer feature futura, validar:**
-
-1. Está no plano da semana atual? (se não → avisar Leda)
-2. Quebra alguma tabela/policy/contrato existente? (se sim → discutir antes)
-3. É frontend-only ou tem backend real? (frontend-only → reformular como stub honesto com badge "Em breve")
-4. Tem RLS, validação Zod, audit log onde precisa? (se não → bloquear)
-5. Encaixa em pasta `/features/X/` existente ou cria nova seguindo template?
-6. Quando a feature seguinte do roadmap chegar, esta decisão atrapalha?
-
-**Princípios não-negociáveis:**
-- Nada de UI sem backend real (proibido mock no front)
-- Nada de "quase funcionando" — ou é ponta-a-ponta ou é stub explícito
-- Toda mutação: Zod → server function autenticada → RLS → audit log
-- Autorização sempre no banco/server, nunca só no client
-- Toda tabela nova: `id`, `workspace_id`, `created_at`, `updated_at`, `deleted_at?`, RLS habilitada, índice em workspace_id
-- Server-only é server-only (`.server.ts` nunca em rotas)
+O relatório atual é um PDF único, genérico, com visual básico (barras Sage monocromáticas, heatmap pequeno, footer simplificado). Não segue o template travado dos outros PDFs (Navy header 18mm com icon+wordmark, watermark 4.5%, footer completo com paginação dinâmica, clinician copy band, etc.). Não diferencia paciente de terapeuta.
 
 ---
 
-## Decisões travadas (memória permanente)
+## Proposta: 2 variantes
 
-### Marca e naming
-- Nome único: **Terapily** (sem hífen, pronúncia teh-ra-PAI-li)
-- Wordmark sempre minúsculo (`terapily`), capitalizado em prosa
-- Domínio: terapily.com (Theratasks só como possível 301 redirect pós-launch)
-- Slogan: "Onde começa uma terapia melhor."
-- Voz: autoridade calma, microcopy mínimo. Falar com pessoas, nunca "usuários"
+### Variante PACIENTE — "Mindfulness Practice Summary"
 
-### Visual (brand book v3)
-- Paleta: Sage `#7E9B86` · Navy `#1F2A36` · Cream `#F4EFE6` · Mauve `#B89BA3` · Charcoal `#3A3F47`
-- Preto puro `#000` proibido (usar Navy)
-- Mauve só decorativo (≤8%, nunca em corpo); Sage e Mauve nunca lado a lado
-- Proporção 60% Cream / 30% Navy / 10% Sage ou Mauve
-- Tipografia: Cormorant (display) + Inter (UI). Body 1.5×, Display 1.05×. Eyebrow ALL CAPS tracked +120
+**Objetivo**: Motivar, reforçar consistência, celebrar progresso.
 
-### Arquitetura e segurança
-- Multi-tenant (workspaces) desde dia 1
-- Roles em tabela separada (`user_roles`) com `has_role()` SECURITY DEFINER, enum `app_role` com `therapist` e `admin`
-- `audit_logs` com INSERT REVOKED — só via trigger SECURITY DEFINER ou server function
-- `profiles.id = auth.users.id` (1:1, ON DELETE CASCADE)
-- Campos `country`, `license_number`, `npi` opcionais
-- `/settings/security` como stub (MFA real → S5)
-- Soft delete (`deleted_at`) em todas as tabelas de domínio
-- Encryption stub na S1 (interface pronta, implementação na S2)
-- Feature flags por workspace desde dia 1
-- Tabela `workspace_invitations` criada vazia (UI fica pra M3+)
+| Seção | Conteúdo |
+|-------|----------|
+| Header | Navy bar 18mm + icon + wordmark `terapily.` (padrão travado) |
+| Título | "Mindfulness Practice Summary" + subtítulo "Your practice journey at a glance" |
+| Info box | Participant (display_name), Activity, Period (first–last entry), Total sessions, Generated |
+| Streak hero | Box grande com streak atual em destaque (número grande Navy) + "longest streak" ao lado, + % aderência com mini barra circular |
+| Stats cards | 5 cards coloridos (backgrounds Sage, Mauve, Cream, soft-blue, soft-amber): Total sessions, Active days, Total time, Avg duration, Avg sessions/day |
+| Heatmap (8 semanas) | Grid maior (5mm cells), 5 intensidades de cor (Cream vazio → Sage escuro cheio), labels de dia da semana à esquerda, meses no topo |
+| Gráfico de frequência (30d) | Barras com gradiente Sage→Navy, grid de referência pontilhada, labels de data legíveis, valor sobre a barra nos dias com atividade |
+| Timeline (últimas 10) | Dots Sage com linha vertical, data + hora + duração + ciclos, layout limpo |
+| "About This Report" notice | Box amarelo padrão: "This report shows your practice frequency..." (sem diagnóstico, sem recomendação) |
+| Footer | Padrão travado (icon + wordmark + ano, paginação central, disclaimer direita) |
+| Watermark | Padrão travado (4.5% opacity, toda página) |
 
----
+### Variante TERAPEUTA — "Mindfulness Adherence Report"
 
-## Estrutura de pastas (GitHub-ready, future-proof)
+Tudo do paciente MAIS:
 
-```text
-src/
-  routes/
-    __root.tsx
-    index.tsx                       # Landing pública
-    auth.login.tsx
-    auth.signup.tsx
-    auth.callback.tsx
-    auth.reset-password.tsx
-    _authenticated.tsx              # Layout guard (redireciona pra /auth/login)
-    _authenticated.welcome.tsx      # Onboarding
-    _authenticated.dashboard.tsx
-    _authenticated.settings.tsx
-    _authenticated.settings.profile.tsx
-    _authenticated.settings.workspace.tsx
-    _authenticated.settings.security.tsx   # STUB
-    _authenticated.settings.billing.tsx    # STUB
-
-  features/
-    auth/                           # components, hooks, services, types
-    workspace/
-    subscription/
-    feature-flags/                  # useFeatureFlag hook + types
-    audit/
-      audit.server.ts               # SERVER-ONLY
-    games/
-      _core/                        # GameShell, useGameSession, ShareableLink, types, README
-
-  components/
-    ui/                             # shadcn customizado (Sage/Navy/Cream)
-    brand/                          # Logo, Eyebrow, PullQuote
-    layout/                         # AppShell, Sidebar, Header
-    feedback/                       # ErrorBoundary, EmptyState, Spinner
-
-  integrations/
-    supabase/
-      client.ts                     # Browser (anon)
-      client.server.ts              # Server (service_role) — server-only
-      auth-middleware.ts            # requireSupabaseAuth
-      types.ts
-
-  lib/
-    crypto/
-      encryption.ts                 # encryptPHI/decryptPHI (passthrough na S1, AES-GCM na S2)
-    validation/                     # Zod schemas compartilhados
-    constants.ts
-    utils.ts
-
-  hooks/
-  styles.css                        # Tailwind v4 + tokens Terapily
-  router.tsx
-
-docs/
-  brand.md
-  database-schema.md
-  rls-policies.md
-  auth-flow.md
-  decisions/                        # ADRs
-```
+| Seção extra | Conteúdo |
+|-------------|----------|
+| Clinician copy band | Red band 10mm: "CLINICIAN COPY — NOT INTENDED FOR PATIENT DISTRIBUTION" |
+| Info box expandido | + Therapist name, Practice name, License, NPI |
+| Análise de padrões | Tabela de frequência por dia da semana (seg–dom), horário preferido (manhã/tarde/noite), sessão mais longa / mais curta |
+| Gráfico semanal comparativo | Barras agrupadas por semana (últimas 8 semanas) mostrando evolução da frequência semana a semana |
+| Gaps de inatividade | Lista de períodos sem prática > 3 dias, com duração do gap — dado clínico relevante para o terapeuta |
+| Tabela completa de entries | Todas as entradas (paginada), não só as últimas 10: data, hora, duração, ciclos |
+| Notices | "Platform-generated adherence summary. Does not replace clinical documentation in your EHR." |
+| Footer | Disclaimer terapeuta padrão |
 
 ---
 
-## Cronograma (5 dias úteis)
+## Diferenças-chave entre os relatórios
 
-### Segunda — Infraestrutura, naming, fundação visual
-- Configurar Lovable Cloud
-- Limpar template, ajustar `__root.tsx`
-- Carregar Cormorant + Inter (preload, display swap)
-- `styles.css` com tokens semânticos do brand book (cores hex, escala tipográfica, line-heights, eyebrow)
-- Customizar variantes shadcn (Button, Card, Input, Badge) pra paleta Terapily
-- Componentes `<Logo />`, `<Eyebrow />`, `<EmptyState />` em `components/brand/` e `components/feedback/`
-- README profissional + `docs/brand.md`
-- **Salvar memórias permanentes do projeto** (regra future-proof, brand, roadmap, out-of-scope)
-
-### Terça — Migrations + RLS (sem UI)
-- Migration 001: enum `app_role` (therapist, admin)
-- Migration 002: `profiles` (id = auth.users.id, full_name, country?, license_number?, npi?, avatar_url?, locale, timezone, mfa_enabled default false, deleted_at?). COMMENT documentando 1:1 com auth.users
-- Migration 003: `user_roles` + `has_role(uuid, app_role)` SECURITY DEFINER
-- Migration 004: `workspaces` + `workspace_members` + `is_workspace_member(uuid, uuid)` SECURITY DEFINER. Ambas com `deleted_at?`
-- Migration 005: `subscriptions` (workspace_id, status, trial_ends_at, plan, lemonsqueezy_customer_id?, lemonsqueezy_subscription_id?). Campos LemonSqueezy criados nullable, populados na S2
-- Migration 006: `audit_logs` + `REVOKE INSERT FROM authenticated, anon`
-- Migration 007: `workspace_invitations` (id, workspace_id, email, invited_by, role, token, expires_at, accepted_at, created_at) + RLS. Vazia na S1, UI em M3+
-- Migration 008: `feature_flags` (workspace_id, flag_name, enabled, created_at) + função `has_feature(workspace_id, text)` SECURITY DEFINER
-- Migration 009: trigger `handle_new_user()` SECURITY DEFINER (cria profile + role therapist + workspace solo + subscription trial 14d + audit log "user_created" — atômico)
-- RLS policies em todas as tabelas usando `is_workspace_member()` e `has_role()`, todas filtrando `deleted_at IS NULL`
-- `lib/crypto/encryption.ts` com `encryptPHI()`/`decryptPHI()` passthrough + TODO S2
-
-### Quarta — Auth ponta-a-ponta com identidade visual
-- `auth.login.tsx` e `auth.signup.tsx` (Cormorant nas manchetes, Inter no formulário, Cream de fundo)
-- Microcopy: "Bem-vinda de volta." / "Pronto. Vamos começar." / "Salvo."
-- `auth.callback.tsx` (confirmação de e-mail)
-- `auth.reset-password.tsx` (com `/reset-password` como rota pública)
-- `_authenticated.tsx` com `beforeLoad` redirect pra `/auth/login`
-- Hook `useAuth` + provider integrado ao router context
-- Cliente Supabase browser + auth-middleware
-- Validação Zod em todos os formulários
-- Teste manual: signup → e-mail confirm → login → workspace solo criada com trial
-
-### Quinta — Onboarding + Dashboard
-- `/welcome` — formulário de perfil (full_name obrigatório; country/license/npi opcionais com label "Recomendado para perfil completo")
-- Server function `updateProfile` com Zod + `requireSupabaseAuth` + audit log
-- `/dashboard` — saudação editorial, eyebrow "PAINEL", card de status do trial com countdown, EmptyStates honestos das próximas seções (Pacientes/Tarefas/Jogos com badge "Em breve · Semana X")
-- `_authenticated.tsx` — sidebar Navy sobre Cream, header com avatar e WorkspaceSwitcher (read-only)
-- Landing `index.tsx` com slogan "Onde começa uma terapia melhor." em Cormorant 56pt
-- Hook `useFeatureFlag(name)` consumindo `feature_flags` (sempre false na S1, mas API pronta)
-
-### Sexta — Audit, Settings stub, qualidade, docs
-- `audit.server.ts` com `createServerFn` + `supabaseAdmin` + helper `withAudit(action, fn)` que envolve qualquer server function
-- Trigger de audit em `subscriptions` (mudança de status)
-- `/settings/profile` — editar full_name, avatar, locale, timezone, campos opcionais (server function + audit)
-- `/settings/workspace` — renomear workspace, ver membros (read-only, server function + audit)
-- `/settings/security` — STUB: toggle MFA disabled + badge "Em breve · Semana 5", delete account disabled
-- `/settings/billing` — STUB: card "Trial ativo, X dias restantes" + "Ver planos" disabled
-- ErrorBoundary global + 404 customizado com voz Terapily
-- Sentry configurado (server + client)
-- Documentação completa: `docs/brand.md`, `docs/database-schema.md`, `docs/rls-policies.md`, `docs/auth-flow.md`, `docs/decisions/`
-- Smoke test ponta-a-ponta com 2 contas (verificar isolamento RLS)
-- **Security scan** rodado e findings revisados
+| Dado | Paciente | Terapeuta |
+|------|----------|-----------|
+| Streak + aderência | Sim (motivacional) | Sim (analítico) |
+| Padrões por dia da semana/horário | Não | Sim |
+| Gaps de inatividade | Não | Sim |
+| Todas as entries | Últimas 10 | Todas (paginado) |
+| Clinician copy band | Não | Sim |
+| Info clínico (license, NPI) | Não | Sim |
+| Evolução semanal comparativa | Não | Sim |
 
 ---
 
-## Critérios de sucesso
+## Paleta de cores nos gráficos
 
-- [ ] Signup cria atomicamente: profile + role + workspace + subscription trial + audit log
-- [ ] RLS impede usuário A de ler dados de usuário B (testado com 2 contas)
-- [ ] `audit_logs` rejeita INSERT direto do client (testado via SQL)
-- [ ] Trial de 14 dias visível com countdown
-- [ ] `lib/crypto/encryption.ts` exporta interface final (passthrough OK)
-- [ ] `feature_flags` + `has_feature()` operacionais (sem UI)
-- [ ] `workspace_invitations` existe vazia com RLS pronta
-- [ ] `deleted_at` presente em todas as tabelas de domínio + RLS filtra
-- [ ] Cores aplicadas seguem proporção 60/30/10
-- [ ] Cormorant nas manchetes, Inter no resto
-- [ ] Microcopy em PT-BR seguindo a voz (sem "usuário", sem jargão)
-- [ ] Zero referência a "Sessio" ou `#000` puro
-- [ ] Stubs `/settings/security` e `/settings/billing` claros sem quebrar
-- [ ] Security scan sem findings de severidade error
-- [ ] README + docs completos
-- [ ] Build de produção passa sem erros TypeScript
+Em vez de tudo Sage monocromático:
+- **Stats cards**: cada card com cor de fundo diferente (variações suaves de Sage, Mauve, Cream, soft-teal, soft-amber)
+- **Heatmap**: 5 níveis — `#F4EFE6` (vazio) → `#C8DCC9` → `#7E9B86` → `#5A7C63` → `#3A5C43`
+- **Barras do gráfico**: gradiente Sage→Navy nos dias mais ativos
+- **Streak**: número em Navy grande, aro circular Sage
+- **Gaps (terapeuta)**: highlight em Mauve suave para chamar atenção
 
 ---
 
-## O que NÃO entra na Semana 1
+## Implementação técnica
 
-| Feature | Quando entra | Por quê |
-|---|---|---|
-| Tabelas de jogos (sessions/results/events) | S3 | Só faz sentido depois do tabuleiro |
-| Magic link de jogos pra paciente | S3-S4 | Depende das tabelas |
-| MFA real (TOTP, recovery codes) | S5 | 1,5 dia, exige re-auth |
-| Delete account | S5 | Cascata + grace period + export |
-| LemonSqueezy / billing real | S2 | Webhook + portal |
-| Encryption AES-GCM-256 implementação | S2 | Interface pronta na S1 |
-| Multi-workspace por terapeuta na UI | M3+ | Schema suporta, UI fica solo |
-| Convite de membros (UI) | M3+ | Tabela criada na S1, fluxo depois |
-| Resend / e-mails customizados | S2 | Default Supabase basta |
-| PostHog | S2 | Não bloqueia auth |
-| Modo escuro completo | S4 | Tokens prontos, só light na S1 |
-| SVG final do logo | Quando Leda enviar | Wordmark Cormorant é placeholder |
-| Pacientes (CRUD) | S2 | Primeira feature de domínio |
-| Tarefas / homework | S3 | Depois de pacientes |
-| Notas de sessão | S4 | Depois de tarefas |
-| Agenda / calendário | S5 | Última feature antes do polimento |
-
-Lembrete pra você, Leda: se durante a semana você pedir qualquer coisa dessa lista, eu vou avisar **"Leda, isso atrasaria a S1 por X dias, vamos manter pra Semana Y?"**
+1. **Refatorar** `habit-report.server.ts` → criar `buildHabitReportPDF(params, variant: 'patient' | 'therapist')`
+2. **Criar** `habit-report.functions.ts` → 2 server functions: `generateHabitReportPatient` e `generateHabitReportTherapist`
+3. **Seguir 100%** as regras do template travado: header 18mm com icon real, watermark 4.5%, footer completo com paginação dinâmica 2-pass, checkPage antes de todo bloco fixo, font reset após page break
+4. **Integrar** na aba de Habit Tracking do perfil do paciente: 2 botões (Relatório Paciente / Relatório Terapeuta) nos padrões de cor existentes (teal / rosa queimado)
+5. **Audit log**: `habit_report.patient_generated` / `habit_report.therapist_generated`
+6. **Salvar template** em memory como design travado
 
 ---
 
-## Detalhes técnicos
+## O que NÃO muda
 
-- **Stack:** React 19 + TanStack Start (file-based routing) + Tailwind v4 + shadcn/ui + Supabase (Lovable Cloud) + TanStack Query
-- **Tokens Tailwind v4 (`styles.css`):** `--color-sage`, `--color-navy`, `--color-cream`, `--color-mauve`, `--color-charcoal` + variantes (50…900) via `@theme`
-- **Fontes:** Google Fonts com preload, `font-display: swap`, fallback `serif`/`sans-serif`
-- **Auth guard:** layout pathless `_authenticated.tsx` com `beforeLoad` + `redirect()`
-- **Multi-tenant RLS:** toda tabela sensível tem `workspace_id` + `USING (is_workspace_member(auth.uid(), workspace_id) AND deleted_at IS NULL)`
-- **Audit hardening:** REVOKE INSERT + triggers SECURITY DEFINER + server functions com service_role + helper `withAudit()`
-- **Trigger atômico:** `handle_new_user()` em `auth.users` AFTER INSERT roda toda a cadeia numa transação
-- **Encryption stub:** `encryptPHI(text): Promise<string>` retorna o input na S1, AES-GCM-256 com chave em env var na S2
-- **Feature flags:** `has_feature(workspace_id, flag_name)` SECURITY DEFINER + hook `useFeatureFlag()` no client
-- **TanStack Start:** loaders rodam client+server (cuidado com `window`); QueryClient dentro de `getRouter()` (nunca singleton); `<HeadContent />` com title "Terapily · Onde começa uma terapia melhor."
-- **Server functions:** padrão único `.inputValidator(zod).handler()` com `requireSupabaseAuth` middleware
+- Fluxo de magic link existente (escalas/worksheets)
+- PatientPickerSheet e geração de habit links
+- Tabelas no banco (habit_links, habit_entries)
+- Nenhum outro PDF existente é alterado
+
+Leda, aprova essa estrutura? Quer ajustar alguma seção, adicionar/remover dados, ou mudar a hierarquia visual?
