@@ -708,6 +708,7 @@ export const generateInSessionLink = createServerFn({ method: "POST" })
         token_expires_at: expiresAt,
         token_sent_at: new Date().toISOString(),
         delivery_mode: "shared_link",
+        status: newStatus,
       })
       .eq("id", pa.id);
 
