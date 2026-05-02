@@ -257,15 +257,6 @@ function ActivityRunner({
 
   const expires = resolved.expiresAt ? formatExpires(resolved.expiresAt) : null;
 
-  // === PHASE: VINHETA ===
-  if (phase === "vinheta") {
-    return (
-      <div className="relative min-h-screen bg-[var(--cream)]">
-        <VinhetaIntro onComplete={() => setPhase("intro")} volumePercent={60} />
-      </div>
-    );
-  }
-
   // === PHASE: DECLINED ===
   if (phase === "declined") {
     return (
