@@ -20,7 +20,7 @@ import { getCurrentSubscription } from "@/features/billing/billing.functions";
 
 interface NavItem {
   label: string;
-  to: "/dashboard" | "/welcome" | "/library" | "/admin" | "/patients";
+  to: "/dashboard" | "/welcome" | "/library" | "/admin" | "/patients" | "/settings";
   icon: typeof LayoutDashboard;
   badge?: string;
   adminOnly?: boolean;
@@ -40,12 +40,11 @@ const liveItems: NavItem[] = [
   { label: "Painel", to: "/dashboard", icon: LayoutDashboard },
   { label: "Pacientes", to: "/patients", icon: Users },
   { label: "Acervo", to: "/library", icon: GamepadIcon, badge: "Visualização" },
+  { label: "Ajustes", to: "/settings", icon: Settings },
   { label: "Admin", to: "/admin", icon: ShieldCheck, adminOnly: true },
 ];
 
-const upcomingItems: ComingSoonItem[] = [
-  { label: "Ajustes", icon: Settings, comingSoonWeek: "S1" },
-];
+const upcomingItems: ComingSoonItem[] = [];
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const { workspace, profile, signOut, hasRole, session } = useAuth();
