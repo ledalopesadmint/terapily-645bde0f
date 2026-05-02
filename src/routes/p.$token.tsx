@@ -373,6 +373,7 @@ function ActivityRunner({
           loading={consentMutation.isPending}
           onAccept={() => consentMutation.mutate(true)}
           onDecline={() => consentMutation.mutate(false)}
+          onClose={() => setPhase("intro")}
         />
       </div>
     );
