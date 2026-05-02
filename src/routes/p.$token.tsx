@@ -69,7 +69,7 @@ export const Route = createFileRoute("/p/$token")({
     return {
       meta: [
         { title: `${title} — Terapily` },
-        { name: "robots", content: "noindex, nofollow" },
+        { name: "robots", content: "noindex" },
         { property: "og:url", content: ogUrl },
         { property: "og:title", content: ogTitle },
         { property: "og:description", content: ogDesc },
