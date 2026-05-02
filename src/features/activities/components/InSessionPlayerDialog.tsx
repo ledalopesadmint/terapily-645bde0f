@@ -42,7 +42,7 @@ export function InSessionPlayerDialog({
   onClose,
 }: InSessionPlayerProps) {
   const qc = useQueryClient();
-  const [responses, setResponses] = useState<Record<string, number>>({});
+  const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [submitted, setSubmitted] = useState(false);
   const [vinhetaDone, setVinhetaDone] = useState(false);
   const [introStarted, setIntroStarted] = useState(false);
@@ -55,8 +55,12 @@ export function InSessionPlayerDialog({
     retry: false,
   });
 
-  const config = (configQuery.data?.activity?.config ?? {}) as QuizConfig;
-  const { allAnswered } = getCompletionStats(config, responses);
+  const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
+  const isForm = archetype === "structured_form";
+  const config = (configQuery.data?.activity?.config ?? {}) as QuizConfig & StructuredFormConfig;
+  const allAnswered = isForm
+    ? getFormCompletion(config, responses).allAnswered
+    : getCompletionStats(config, responses as Record<string, number>).allAnswered;
 
   const submitMutation = useMutation({
     mutationFn: () =>
