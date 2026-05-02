@@ -1208,11 +1208,12 @@ function ShareLinkDialog({
     if (!payload) return;
     setBusy("copy");
     try {
-      await navigator.clipboard.writeText(url);
-      toast.success("Link copiado.");
+      // Always copy message + link so the recipient gets context, not just a bare URL
+      await navigator.clipboard.writeText(composedBody);
+      toast.success("Mensagem e link copiados.");
       await logIntent("copy");
     } catch {
-      toast.error("Não foi possível copiar o link.");
+      toast.error("Não foi possível copiar.");
     } finally {
       setBusy(null);
     }
