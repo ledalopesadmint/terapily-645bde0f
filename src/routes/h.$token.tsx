@@ -428,15 +428,18 @@ function CompletedView({
   activityTitle,
   totalEntries,
   entries,
+  tokenHash,
   onViewHistory,
   onRepeat,
 }: {
   activityTitle: string;
   totalEntries: number;
   entries: HistoryEntry[];
+  tokenHash: string;
   onViewHistory: () => void;
   onRepeat: () => void;
 }) {
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const streak = useMemo(() => {
     const uniqueDays = [...new Set(entries.map((e) => new Date(e.completedAt).toISOString().slice(0, 10)))].sort().reverse();
     return calculateStreak(uniqueDays);
