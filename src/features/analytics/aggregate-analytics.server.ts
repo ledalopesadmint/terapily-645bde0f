@@ -97,8 +97,10 @@ export async function aggregatePlatformAnalytics(
     switch (log.action) {
       case "auth.signin":
         inc("therapist.logins", "total", hour);
-        if (log.workspace_id) {
-          workspacesDay.add(log.workspace_id);
+        // DAU: count unique therapists (actor_id), not workspace_id
+        // because auth.signin is logged with workspace_id=null
+        if (log.actor_id) {
+          therapistsDay.add(log.actor_id);
         }
         break;
 
