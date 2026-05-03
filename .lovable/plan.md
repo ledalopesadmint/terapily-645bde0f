@@ -1,64 +1,85 @@
 
-# Analytics: Links Efêmeros + PWA Install Tracking + Regra Obrigatória
+# Admin Audit Console — Proteção Jurídica Completa
 
-## O que será feito
+## Análise da sua pergunta
 
-### 1. Métricas de links efêmeros no aggregator
+**Vai contra alguma política?** Não. Pelo contrário — é um controle operacional obrigatório. Razões:
 
-Novas métricas na agregação diária (`aggregate-analytics.server.ts`) baseadas em audit_logs das ações `ephemeral.*`:
+1. **Admin é único** (Leda, enforced pelo banco). Sem risco de acesso indevido por terceiros.
+2. **HIPAA permite** acesso do processador (Terapily) a PHI para "health care operations" e defesa legal.
+3. **Audit logs de pacientes excluídos são permanentes** por design (purge apaga PHI, mas audit_logs ficam com UUIDs).
+4. Os dados PHI continuam cifrados — o admin vê registros estruturais (scores, timestamps, status), não texto livre de pacientes.
 
-| Métrica | Fonte (audit action) | O que mede |
-|---|---|---|
-| `ephemeral.assigned` | `ephemeral.assigned` | Quantos links efêmeros foram prescritos |
-| `ephemeral.consent_acknowledged` | `ephemeral.consent_acknowledged` | Terapeutas que aceitaram política 24h |
-| `ephemeral.link_opened` | `ephemeral.link_opened` | Links abertos pelo paciente |
-| `ephemeral.submitted` | `ephemeral.submitted` | Respostas submetidas |
-| `ephemeral.pdf_downloaded` | `ephemeral.pdf_downloaded` | PDFs baixados antes da expiração |
-| `ephemeral.expired` | `ephemeral.purged` | Dados purgados (expirados) |
-| `ephemeral.expired_without_download` | Derivado: purged sem pdf_downloaded | Terapeutas que perderam o prazo |
-| `ephemeral.completion_rate` | Derivado: submitted/link_opened | Taxa de conclusão efêmera |
-| `ephemeral.download_rate` | Derivado: downloaded/submitted | % que baixou antes de expirar |
-| `ephemeral.avg_download_delay_hours` | Derivado: tempo entre submit e download | Quanto tempo o terapeuta demora pra baixar |
+## O que será implementado
 
-### 2. PWA Install Tracking (quantidade apenas)
+### 1. RLS: Admin read-only em todas as tabelas
 
-O app não tem PWA/service worker hoje. Vamos adicionar tracking do evento `beforeinstallprompt` e `appinstalled` do browser:
+Uma migration adicionando policy `"tabela: admin read all"` (SELECT only) em 10 tabelas que hoje bloqueiam o admin:
 
-- Listener no `__root.tsx` para `beforeinstallprompt` (prompt disponível = dispositivo elegível)
-- Listener para `appinstalled` (instalação confirmada)
-- Ao detectar instalação, dispara audit log `platform.pwa_installed` via server function (fire-and-forget, sem PHI — só device_type: mobile/desktop/tablet via user-agent parsing)
-- Métrica agregada: `platform.pwa_installs` por dia + dimensão device_type
-- Métrica: `platform.pwa_eligible` (quantos viram o prompt)
+- `patient_activities`, `activity_responses`, `activity_consents`, `activity_drafts`
+- `patients`, `ephemeral_activities`, `ephemeral_responses`
+- `workspaces`, `workspace_members`, `subscriptions`
 
-Zero dados pessoais — só contagem por tipo de dispositivo.
+Zero impacto nos terapeutas — policies são permissivas (somam-se às existentes).
 
-### 3. Dashboard admin — nova seção
+### 2. Nova aba: `/admin/compliance` — Compliance Console
 
-Na aba de Engajamento do dashboard admin:
-- Card "Links Efêmeros" com: assigned, completion_rate, download_rate, expired_without_download
-- Card "Instalações PWA" com: total installs, split por device
-- Gráfico de linha: efêmeros prescritos vs completados vs expirados (últimos 30d)
+Painel de navegação hierárquico para o admin acessar dados completos:
 
-### 4. Regra obrigatória no código (memory + comentário)
+**Nível 1 — Lista de Workspaces**
+- Todas as workspaces com: nome, owner, plano, quantidade de pacientes ativos, total de atividades
+- Busca por nome/ID
 
-Salvar em `mem://preferences/analytics-mandatory-checklist`:
+**Nível 2 — Workspace selecionado**
+- Membros (terapeutas) com role e data de entrada
+- Lista de pacientes (display_name + initials + ID único — sem PHI exposto)
+- Contadores: pacientes ativos, excluídos (na janela 30d), purgados
+- Filtro por terapeuta (preparado para multi-terapeuta futuro)
 
-> **Regra**: Toda nova feature, link, ou fluxo DEVE incluir analytics antes de merge. Checklist:
-> 1. Listar eventos relevantes (criação, uso, erro, expiração)
-> 2. Definir métricas derivadas (rates, médias, contagens)
-> 3. Adicionar cases no aggregator (`aggregate-analytics.server.ts`)
-> 4. Adicionar cards/gráficos no dashboard admin
-> 5. Atualizar `mem://features/platform-analytics` com as novas métricas
-> 6. Zero PHI — só contagens e percentuais
+**Nível 3 — Paciente selecionado (por ID)**
+- Histórico completo de atividades (patient_activities + ephemeral_activities + habit_links)
+- Status de cada atividade (pending/completed/expired/revoked)
+- Registros de consentimento (activity_consents)
+- Registros de auditoria filtrados por esse paciente
+- Flag: paciente excluído/purgado (dados de audit permanecem)
 
-Comentário no topo do aggregator referenciando esta regra.
+**Navegação**: Workspace → Terapeuta (opcional) → Paciente (por ID) → Atividades + Audit trail
 
-## Arquivos modificados/criados
+### 3. Dados de pacientes excluídos
 
-- `src/features/analytics/aggregate-analytics.server.ts` — novos cases ephemeral.* + pwa
-- `src/features/analytics/pwa-install-tracker.ts` — listeners beforeinstallprompt/appinstalled + server function call
-- `src/routes/__root.tsx` — importar e inicializar PWA tracker
-- `src/features/analytics/analytics.functions.ts` — nova server function `trackPwaInstall`
-- `src/routes/_authenticated/admin.analytics.tsx` — cards e gráficos efêmeros + PWA
-- `mem://preferences/analytics-mandatory-checklist` — regra obrigatória
-- `mem://features/platform-analytics` — atualizar com novas métricas
+- Audit logs de pacientes purgados continuam acessíveis (por design, audit nunca é apagado)
+- O admin verá registros com display_name `[purged]` e initials `••` — identifica pelo UUID
+- Isso garante que mesmo após exclusão, o histórico de ações existe para defesa
+
+### 4. Exportação de evidência
+
+- Botão "Exportar relatório completo" que gera PDF com todos os registros de um workspace/paciente
+- Inclui: timeline de atividades, consentimentos, audit trail, timestamps
+- Carimbo anti-adulteração (hash chain dos registros incluídos)
+- Formato consistente com o template de Audit Report PDF já aprovado
+
+### 5. Memória
+
+Salvar regra em `mem://features/admin-compliance-console`: admin tem SELECT em todas as tabelas, painel `/admin/compliance` com navegação hierárquica, exportação de evidência, justificativa legal HIPAA. Toda nova tabela com dados de workspace DEVE incluir policy `admin read all`.
+
+## Detalhes técnicos
+
+### Migration SQL (~10 policies)
+```sql
+CREATE POLICY "patient_activities: admin read all"
+  ON public.patient_activities FOR SELECT
+  TO authenticated
+  USING (has_role(auth.uid(), 'admin'::app_role));
+-- repetido para as 9 tabelas restantes
+```
+
+### Arquivos
+- **Migration**: 1 arquivo SQL com as 10 policies
+- **Nova rota**: `src/routes/_authenticated/admin.compliance.tsx`
+- **Server functions**: `src/server/admin-compliance.functions.ts` + `.server.ts` (queries agregadas)
+- **Aba no layout admin**: adicionar "Compliance" ao array de tabs em `admin.tsx`
+
+### Segurança
+- Toda ação do admin no console é auditada (audit_logs já registra queries do admin)
+- Acesso é read-only — admin não modifica dados de nenhum workspace
+- PHI cifrado permanece cifrado — admin vê scores, status e timestamps, não texto livre
