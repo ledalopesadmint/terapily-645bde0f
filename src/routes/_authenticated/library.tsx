@@ -239,6 +239,38 @@ function LibraryStandardMode() {
         })()}
       </div>
 
+      <div className="mt-6">
+        {(() => {
+          const cbt = ACTIVITIES.filter((a) => a.category === "cbt");
+          const preview = cbt.slice(0, 3);
+          return (
+            <ResourceBox
+              icon={Brain}
+              title="CBT Essentials"
+              subtitle="Reestruturação cognitiva — identifique distorções, examine evidências e reestruture pensamentos. O coração do método."
+              href="/cbt"
+              chipLabel="CBT"
+              previewItems={preview.map((c) => ({
+                code: c.code,
+                name: c.name,
+                category: c.category,
+                durationMin: c.durationMin,
+                shortDescription: c.shortDescription,
+                illustration: c.illustration,
+                supportsMagicLink: c.supportedModes.includes("shared_link") || c.supportedModes.includes("both"),
+              }))}
+              onStartInSession={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "in_session");
+              }}
+              onSendLink={(code) => {
+                const act = ACTIVITIES.find((a) => a.code === code);
+                if (act) handleStart(act, "shared_link");
+              }}
+            />
+          );
+        })()}
+      </div>
       {/* ── Recomendados (S3 — ativo quando houver histórico de uso) ── */}
       <div className="mt-10 mx-auto max-w-6xl px-4 sm:px-8">
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-5 sm:p-7">
