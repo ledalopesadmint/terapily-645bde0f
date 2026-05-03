@@ -695,7 +695,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
               <Card key={a.id} className="overflow-hidden">
                 <CardContent className="py-4 px-3 sm:px-6">
                   {/* ===== MOBILE LAYOUT (< sm) ===== */}
-                  <div className="flex flex-col gap-2.5 sm:hidden">
+                  <div className="sm:hidden space-y-1.5">
                     {/* M-Linha 1: Título + Flag */}
                     <div className="flex items-start justify-between gap-2">
                       <p className="font-medium text-foreground text-sm leading-snug">
@@ -730,7 +730,11 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         )}
                       </span>
                     ) : null}
-                    {/* M-Linha 4: Todos os botões — grid 3 colunas, mesma largura */}
+                    {/* M-Linha 4: Share history */}
+                    {share && share.total > 0 && (
+                      <ShareSummaryLine summary={share} />
+                    )}
+                    {/* M-Linha 5: Botões — grid 3 colunas, mesma largura, alinhados à direita */}
                     {(() => {
                       const arch = (a.activity as any)?.archetype;
                       const isMindful = arch === "guided_timer" || arch === "guided_script";
@@ -740,7 +744,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                       const btnBase = "text-[10px] h-7 px-1 flex items-center justify-center gap-0.5 w-full";
                       return (
                         <div className="grid grid-cols-3 gap-1.5">
-                          {/* 1. Status badge como botão */}
+                          {/* 1. Status badge */}
                           <Badge variant={STATUS_VARIANT[displayStatus]} className={`${btnBase} rounded-md`}>
                             {STATUS_LABEL[displayStatus]}
                             {hasDraft && ` · ${draftPct}%`}
@@ -832,6 +836,17 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         </div>
                       );
                     })()}
+                    {/* M-Linha 6-7: Barra de progresso temporária — 30% padding acima */}
+                    {(hasDraft || displayStatus === "in_progress") && (
+                      <div className="pt-3 space-y-1">
+                        <Progress value={hasDraft ? draftPct : 5} className="h-1.5" />
+                        <p className="text-xs text-muted-foreground text-left">
+                          {hasDraft
+                            ? `Paciente está respondendo (${draftPct}%). Conteúdo cifrado — você verá só ao finalizar.`
+                            : "Paciente iniciou a atividade. Conteúdo cifrado — você verá só ao finalizar."}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* ===== DESKTOP LAYOUT (>= sm) ===== */}
@@ -854,23 +869,27 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                       )}
                     </div>
                     {/* Linha 2: Data, horário, modo */}
-                    <p className="text-xs text-muted-foreground">
+                    <p className="text-xs text-muted-foreground text-left">
                       {new Date(a.created_at).toLocaleString("pt-BR")} · modo {a.delivery_mode}
                     </p>
                     {/* Linha 3: Score/revocation */}
                     {(status === "revoked" && a.revocation_reason) ? (
-                      <p className="truncate text-xs text-muted-foreground italic" title={a.revocation_reason}>
+                      <p className="truncate text-xs text-muted-foreground italic text-left" title={a.revocation_reason}>
                         {a.revocation_reason}
                       </p>
                     ) : response?.score != null ? (
-                      <span className="text-sm">
+                      <span className="text-sm text-left block">
                         Score <strong>{response.score}</strong>
                         {response.severity && (
                           <span className="text-muted-foreground"> · {response.severity}</span>
                         )}
                       </span>
                     ) : null}
-                    {/* Ações desktop — ordem fixa, alinhados à DIREITA */}
+                    {/* Linha 4: Share history */}
+                    {share && share.total > 0 && (
+                      <ShareSummaryLine summary={share} />
+                    )}
+                    {/* Linha 5: Ações desktop — ordem fixa, alinhados à DIREITA */}
                     <div className="flex flex-wrap items-center justify-end gap-2">
                       {/* 1. Relatório Terapeuta + Paciente */}
                       {(() => {
@@ -961,20 +980,18 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         {hasDraft && ` · ${draftPct}%`}
                       </Badge>
                     </div>
+                    {/* Linha 6-7: Barra de progresso temporária — 30% padding acima */}
+                    {(hasDraft || displayStatus === "in_progress") && (
+                      <div className="pt-3 space-y-1">
+                        <Progress value={hasDraft ? draftPct : 5} className="h-1.5" />
+                        <p className="text-xs text-muted-foreground text-left">
+                          {hasDraft
+                            ? `Paciente está respondendo (${draftPct}%). Conteúdo cifrado — você verá só ao finalizar.`
+                            : "Paciente iniciou a atividade. Conteúdo cifrado — você verá só ao finalizar."}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  {(hasDraft || displayStatus === "in_progress") && (
-                    <div className="space-y-1">
-                      <Progress value={hasDraft ? draftPct : 5} className="h-1.5" />
-                      <p className="text-xs text-muted-foreground">
-                        {hasDraft
-                          ? `Paciente está respondendo (${draftPct}%). Conteúdo cifrado — você verá só ao finalizar.`
-                          : "Paciente iniciou a atividade. Conteúdo cifrado — você verá só ao finalizar."}
-                      </p>
-                    </div>
-                  )}
-                  {share && share.total > 0 && (
-                    <ShareSummaryLine summary={share} />
-                  )}
                 </CardContent>
               </Card>
             );
