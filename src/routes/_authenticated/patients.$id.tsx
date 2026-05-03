@@ -500,7 +500,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
         for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       }
 
-      const blob = new Blob([bytes], { type: "application/pdf" });
+      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
