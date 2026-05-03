@@ -17,6 +17,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PTokenRouteImport } from './routes/p.$token'
 import { Route as HTokenRouteImport } from './routes/h.$token'
+import { Route as ETokenRouteImport } from './routes/e.$token'
 import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedWorksheetsRouteImport } from './routes/_authenticated/worksheets'
 import { Route as AuthenticatedWelcomeRouteImport } from './routes/_authenticated/welcome'
@@ -82,6 +83,11 @@ const PTokenRoute = PTokenRouteImport.update({
 const HTokenRoute = HTokenRouteImport.update({
   id: '/h/$token',
   path: '/h/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ETokenRoute = ETokenRouteImport.update({
+  id: '/e/$token',
+  path: '/e/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
@@ -249,6 +255,7 @@ export interface FileRoutesByFullPath {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/e/$token': typeof ETokenRoute
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -283,6 +290,7 @@ export interface FileRoutesByTo {
   '/welcome': typeof AuthenticatedWelcomeRoute
   '/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/e/$token': typeof ETokenRoute
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -321,6 +329,7 @@ export interface FileRoutesById {
   '/_authenticated/welcome': typeof AuthenticatedWelcomeRoute
   '/_authenticated/worksheets': typeof AuthenticatedWorksheetsRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/e/$token': typeof ETokenRoute
   '/h/$token': typeof HTokenRoute
   '/p/$token': typeof PTokenRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -359,6 +368,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/worksheets'
     | '/auth/callback'
+    | '/e/$token'
     | '/h/$token'
     | '/p/$token'
     | '/admin/analytics'
@@ -393,6 +403,7 @@ export interface FileRouteTypes {
     | '/welcome'
     | '/worksheets'
     | '/auth/callback'
+    | '/e/$token'
     | '/h/$token'
     | '/p/$token'
     | '/admin/analytics'
@@ -430,6 +441,7 @@ export interface FileRouteTypes {
     | '/_authenticated/welcome'
     | '/_authenticated/worksheets'
     | '/auth/callback'
+    | '/e/$token'
     | '/h/$token'
     | '/p/$token'
     | '/_authenticated/admin/analytics'
@@ -458,6 +470,7 @@ export interface RootRouteChildren {
   ResetPasswordRoute: typeof ResetPasswordRoute
   SignupRoute: typeof SignupRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  ETokenRoute: typeof ETokenRoute
   HTokenRoute: typeof HTokenRoute
   PTokenRoute: typeof PTokenRoute
   ApiPublicStripeWebhookRoute: typeof ApiPublicStripeWebhookRoute
@@ -521,6 +534,13 @@ declare module '@tanstack/react-router' {
       path: '/h/$token'
       fullPath: '/h/$token'
       preLoaderRoute: typeof HTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/e/$token': {
+      id: '/e/$token'
+      path: '/e/$token'
+      fullPath: '/e/$token'
+      preLoaderRoute: typeof ETokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
@@ -810,6 +830,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResetPasswordRoute: ResetPasswordRoute,
   SignupRoute: SignupRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  ETokenRoute: ETokenRoute,
   HTokenRoute: HTokenRoute,
   PTokenRoute: PTokenRoute,
   ApiPublicStripeWebhookRoute: ApiPublicStripeWebhookRoute,
