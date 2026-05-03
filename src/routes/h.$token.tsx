@@ -22,7 +22,8 @@ import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
 import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
 import { submitHabitEntry, getHabitHistory } from "@/features/habits/habits.functions";
-import { Check, BarChart3, Clock, Flame, ArrowLeft, Calendar, TrendingUp } from "lucide-react";
+import { generateHabitReportPublic } from "@/features/habits/habit-report.functions";
+import { Check, BarChart3, Clock, Download, Flame, ArrowLeft, Calendar, TrendingUp } from "lucide-react";
 
 // --- Server function: resolve token → activity data -----------------------
 
@@ -155,6 +156,19 @@ export const Route = createFileRoute("/h/$token")({
   errorComponent: HabitRouteError,
 });
 
+function downloadPdfBlob(bytes: number[], filename: string) {
+  const byteArray = new Uint8Array(bytes);
+  const blob = new Blob([byteArray], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 type ViewState = "consent" | "exercise" | "completed" | "history";
 
 interface HistoryEntry {
@@ -266,6 +280,7 @@ function HabitLinkPage() {
         activityTitle={activity.title}
         totalEntries={historyData?.totalEntries ?? link.totalEntries + 1}
         entries={historyData?.entries ?? []}
+        tokenHash={tokenHash}
         onViewHistory={handleViewHistory}
         onRepeat={() => setView("exercise")}
       />
@@ -279,6 +294,7 @@ function HabitLinkPage() {
         entries={historyData?.entries ?? []}
         totalEntries={historyData?.totalEntries ?? 0}
         expiresAt={link.expiresAt}
+        tokenHash={tokenHash}
         onBack={() => setView("exercise")}
       />
     );
@@ -425,15 +441,18 @@ function CompletedView({
   activityTitle,
   totalEntries,
   entries,
+  tokenHash,
   onViewHistory,
   onRepeat,
 }: {
   activityTitle: string;
   totalEntries: number;
   entries: HistoryEntry[];
+  tokenHash: string;
   onViewHistory: () => void;
   onRepeat: () => void;
 }) {
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const streak = useMemo(() => {
     const uniqueDays = [...new Set(entries.map((e) => new Date(e.completedAt).toISOString().slice(0, 10)))].sort().reverse();
     return calculateStreak(uniqueDays);
@@ -489,6 +508,26 @@ function CompletedView({
             <BarChart3 className="w-4 h-4 inline mr-1.5" />
             Ver histórico
           </button>
+          {totalEntries >= 3 && (
+            <button
+              onClick={async () => {
+                setDownloadingPdf(true);
+                try {
+                  const result = await generateHabitReportPublic({ data: { tokenHash } });
+                  downloadPdfBlob(result.pdfBytes, `practice-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+                } catch (e) {
+                  console.error("[HabitLink] PDF download failed", e);
+                } finally {
+                  setDownloadingPdf(false);
+                }
+              }}
+              disabled={downloadingPdf}
+              className="w-full px-6 py-3 rounded-2xl text-sm font-medium bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-all text-[oklch(0.45_0.04_160)] disabled:opacity-50"
+            >
+              <Download className="w-4 h-4 inline mr-1.5" />
+              {downloadingPdf ? "Gerando PDF…" : "Baixar relatório"}
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -504,14 +543,17 @@ function HistoryView({
   entries,
   totalEntries,
   expiresAt,
+  tokenHash,
   onBack,
 }: {
   activityTitle: string;
   entries: HistoryEntry[];
   totalEntries: number;
   expiresAt: string;
+  tokenHash: string;
   onBack: () => void;
 }) {
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [period, setPeriod] = useState<PeriodFilter>("30d");
 
   const filteredEntries = useMemo(() => {
@@ -589,12 +631,36 @@ function HistoryView({
           <ArrowLeft className="w-4 h-4" />
           Voltar ao exercício
         </button>
-        <h1 className="font-display text-2xl sm:text-3xl text-[oklch(0.30_0.05_160)]">
-          {activityTitle}
-        </h1>
-        <p className="text-sm text-[oklch(0.45_0.04_160)] mt-1">
-          Seu histórico de práticas
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl sm:text-3xl text-[oklch(0.30_0.05_160)]">
+              {activityTitle}
+            </h1>
+            <p className="text-sm text-[oklch(0.45_0.04_160)] mt-1">
+              Seu histórico de práticas
+            </p>
+          </div>
+          {entries.length >= 3 && (
+            <button
+              onClick={async () => {
+                setDownloadingPdf(true);
+                try {
+                  const result = await generateHabitReportPublic({ data: { tokenHash } });
+                  downloadPdfBlob(result.pdfBytes, `practice-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+                } catch (e) {
+                  console.error("[HabitLink] PDF download failed", e);
+                } finally {
+                  setDownloadingPdf(false);
+                }
+              }}
+              disabled={downloadingPdf}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-white/60 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-all text-[oklch(0.40_0.04_160)] disabled:opacity-50 shrink-0"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {downloadingPdf ? "Gerando…" : "PDF"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Period filter */}
