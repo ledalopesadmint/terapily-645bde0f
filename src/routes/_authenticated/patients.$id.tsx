@@ -17,6 +17,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, ArrowLeft, Copy, Download, Eye, Mail, MessageCircle, Play, Plus, RefreshCw, Send, ShieldCheck, Slash, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 import { HabitTrackingTab } from "@/features/habits/HabitTrackingTab";
+import {
+  generateHabitReportByActivityPatient,
+  generateHabitReportByActivityTherapist,
+} from "@/features/habits/habit-report.functions";
 
 
 import { Button } from "@/components/ui/button";
@@ -472,18 +476,31 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
     responseId: string,
     variant: "patient" | "therapist",
     archetype?: string,
+    activityId?: string,
   ) => {
     setScaleResultBusy(`${responseId}-${variant}`);
     try {
-      const isWorksheet = archetype === "structured_form";
-      const fn = isWorksheet
-        ? (variant === "patient" ? generateWorksheetResultPatient : generateWorksheetResultTherapist)
-        : (variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist);
-      const res = await fn({ data: { activityResponseId: responseId, workspaceId } });
-      const binary = atob(res.pdf);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const blob = new Blob([bytes], { type: "application/pdf" });
+      const isMindfulness = archetype === "guided_timer" || archetype === "guided_script";
+      let bytes: Uint8Array;
+
+      if (isMindfulness && activityId) {
+        const fn = variant === "patient"
+          ? generateHabitReportByActivityPatient
+          : generateHabitReportByActivityTherapist;
+        const res = await fn({ data: { workspaceId, patientId, activityId } });
+        bytes = new Uint8Array(res.pdfBytes);
+      } else {
+        const isWorksheet = archetype === "structured_form";
+        const fn = isWorksheet
+          ? (variant === "patient" ? generateWorksheetResultPatient : generateWorksheetResultTherapist)
+          : (variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist);
+        const res = await fn({ data: { activityResponseId: responseId, workspaceId } });
+        const binary = atob(res.pdf);
+        bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      }
+
+      const blob = new Blob([bytes.buffer as ArrayBuffer], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -768,29 +785,37 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         </Button>
                       )}
                     </div>
-                    {/* M-Linha 5: Botões Paciente + Terapeuta (só se completed, exceto mindfulness) */}
-                    {status === "completed" && response?.id && !["guided_timer", "guided_script"].includes((a.activity as any)?.archetype) && (
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <Button
-                          size="sm"
-                          className="text-[10px] h-7 px-2 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
-                          disabled={scaleResultBusy === `${response.id}-patient`}
-                          onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
-                        >
-                          <Download className="mr-0.5 h-2.5 w-2.5" />
-                          {scaleResultBusy === `${response.id}-patient` ? "…" : "Paciente"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="text-[10px] h-7 px-2 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
-                          disabled={scaleResultBusy === `${response.id}-therapist`}
-                          onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
-                        >
-                          <ShieldCheck className="mr-0.5 h-2.5 w-2.5" />
-                          {scaleResultBusy === `${response.id}-therapist` ? "…" : "Terapeuta"}
-                        </Button>
-                      </div>
-                    )}
+                    {/* M-Linha 5: Botões Paciente + Terapeuta */}
+                    {(() => {
+                      const arch = (a.activity as any)?.archetype;
+                      const isMindful = arch === "guided_timer" || arch === "guided_script";
+                      const showReports = isMindful || (status === "completed" && response?.id);
+                      if (!showReports) return null;
+                      const busyKey = response?.id ?? a.activity?.id ?? a.id;
+                      const actId = a.activity?.id;
+                      return (
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <Button
+                            size="sm"
+                            className="text-[10px] h-7 px-2 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
+                            disabled={scaleResultBusy === `${busyKey}-patient`}
+                            onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
+                          >
+                            <Download className="mr-0.5 h-2.5 w-2.5" />
+                            {scaleResultBusy === `${busyKey}-patient` ? "…" : "Paciente"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="text-[10px] h-7 px-2 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
+                            disabled={scaleResultBusy === `${busyKey}-therapist`}
+                            onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
+                          >
+                            <ShieldCheck className="mr-0.5 h-2.5 w-2.5" />
+                            {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Terapeuta"}
+                          </Button>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* ===== DESKTOP LAYOUT (>= sm) ===== */}
@@ -862,30 +887,38 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                           >
                             <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
                           </Button>
-                          {!["guided_timer", "guided_script"].includes((a.activity as any)?.archetype) && (
-                            <>
-                              <Button
-                                size="sm"
-                                className="text-xs px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
-                                disabled={scaleResultBusy === `${response.id}-patient`}
-                                onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
-                              >
-                                <Download className="mr-1 h-3.5 w-3.5" />
-                                {scaleResultBusy === `${response.id}-patient` ? "…" : "Relatório Paciente"}
-                              </Button>
-                              <Button
-                                size="sm"
-                                className="text-xs px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
-                                disabled={scaleResultBusy === `${response.id}-therapist`}
-                                onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
-                              >
-                                <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                                {scaleResultBusy === `${response.id}-therapist` ? "…" : "Relatório Terapeuta"}
-                              </Button>
-                            </>
-                          )}
                         </>
                       )}
+                      {(() => {
+                        const arch = (a.activity as any)?.archetype;
+                        const isMindful = arch === "guided_timer" || arch === "guided_script";
+                        const showReports = isMindful || (status === "completed" && response?.id);
+                        if (!showReports) return null;
+                        const busyKey = response?.id ?? a.activity?.id ?? a.id;
+                        const actId = a.activity?.id;
+                        return (
+                          <>
+                            <Button
+                              size="sm"
+                              className="text-xs px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
+                              disabled={scaleResultBusy === `${busyKey}-patient`}
+                              onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
+                            >
+                              <Download className="mr-1 h-3.5 w-3.5" />
+                              {scaleResultBusy === `${busyKey}-patient` ? "…" : "Relatório Paciente"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="text-xs px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
+                              disabled={scaleResultBusy === `${busyKey}-therapist`}
+                              onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
+                            >
+                              <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                              {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Relatório Terapeuta"}
+                            </Button>
+                          </>
+                        );
+                      })()}
                       {canRegenLink && (
                         <Button
                           size="sm"
