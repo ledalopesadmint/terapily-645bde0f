@@ -1,118 +1,78 @@
 
-# DragDropRunner — Player do arquétipo `drag_drop`
+# Drag & Drop Result PDF — Templates Paciente e Terapeuta
 
-Completar o único arquétipo que ainda não tem runner implementado e já tem atividade no seed (CBT-03 Distorções Cognitivas). Segue o mesmo padrão dos runners existentes (BreathingRunner, GuidedScriptRunner, FormRunner).
+## Visão geral
 
----
+Criar `drag-drop-result-pdf.server.ts` e `drag-drop-result-pdf.functions.ts` seguindo exatamente o padrão dos PDFs existentes (scale-result-pdf e worksheet-result-pdf). Gerar amostras visuais em PDF com dados fictícios do CBT-03 (Cognitive Distortions) para aprovação antes de travar o template.
 
-## O que será construído
+## Passo 1 — Gerar PDFs de amostra (dados fictícios)
 
-### 1. DragDropRunner com 3 sub-modos (via config JSON)
+Criar um script Python com jsPDF-equivalent (reportlab) que gera 2 PDFs de exemplo usando dados simulados do CBT-03:
+- `/mnt/documents/drag-drop-result-patient-sample.pdf`
+- `/mnt/documents/drag-drop-result-therapist-sample.pdf`
 
-**`card_sort`** -- Arrastar cards em colunas/categorias
-- Exemplo: CBT-03 (Distorções Cognitivas) -- pensamentos em categorias como "Catastrofização", "Leitura mental", "Generalização"
-- Exemplo futuro: Values Card Sort (ACT) -- valores em "Muito importante" / "Importante" / "Pouco importante"
+Os PDFs seguem 100% o brand: header Navy, watermark, footer com paginação anti-adulteração, cores Terapily.
 
-**`ranking_ladder`** -- Reordenar cards verticalmente por intensidade
-- Exemplo: Exposure Hierarchy -- ordenar situações de menor a maior ansiedade
-- Drag vertical, posição = rank
+### Relatório Paciente (sample)
+1. Header Navy com ícone + wordmark "terapily."
+2. Título: "Activity Results" (Times bold 20pt Navy)
+3. Info box (Participant, Activity, Date, Mode, Generated)
+4. **Seção "Your Results"**: diagrama visual das zonas com cards posicionados — cada zona tem header Sage com nome, cards listados dentro como boxes Cream
+5. **Seção "Highlights"**: 3-4 bullets motivacionais ("You identified X of Y patterns", "Most recognized pattern: [zona]", "Time: X minutes")
+6. **Seção "Next Steps"**: texto genérico não-clínico
+7. Notice box "About Your Data" (amarelo, mesmo template worksheet)
+8. Footer com disclaimer paciente
 
-**`cycle_builder`** -- Posicionar cards em slots de um ciclo visual
-- Exemplo: Ciclo de Beck -- preencher Situacao > Pensamento > Emocao > Corpo > Comportamento
-- Slots fixos dispostos em círculo/fluxo, paciente arrasta ou seleciona
+### Relatório Terapeuta (sample)
+1. Header Navy + clinician copy band vermelha
+2. Título: "Clinical Activity Record"
+3. PHI warning (quando aplicável)
+4. Info box expandido (+Therapist, Practice, License, NPI)
+5. **Seção "Structured Results"**: tabela completa (Card | Assigned Zone | Reference Zone | Match ✓/✗)
+6. **Seção "Derived Metrics"**: Concentration Index, Blind Spots Index, Accuracy %, Hesitation outliers
+7. **Seção "Clinical Observations"** (auto-geradas dos dados): "Concentration of X% in [zone]. Pattern consistent with [reference]." + citação bibliográfica
+8. **Seção "Clinical Flags"** (se aplicável): boxes laranja com flag
+9. **Seção "Longitudinal Comparison"** (se houver aplicações anteriores): tabela data|resumo|delta
+10. **Seção "Raw Data"**: JSON resumido com timestamps
+11. Notice "Notices" (mesmo template worksheet)
+12. Footer com disclaimer terapeuta + referência bibliográfica
 
-### 2. Visual diferenciado ("post-it" tátil)
+## Passo 2 — Implementar no código (após aprovação visual)
 
-- Cards com micro-rotacao aleatoria (+-2deg), sombra 3D sutil, bordas arredondadas
-- Paleta Terracotta como tema padrão do arquétipo (diferencia visualmente de escalas Navy e worksheets Cream)
-- Drop zones com feedback visual (highlight Sage ao arrastar sobre)
-- Animacao de "encaixe" suave no drop
-- Barra de progresso mostrando cards posicionados / total
-- Zero gamificacao competitiva: sem score, sem timer, sem ranking
+### Novos arquivos
+- `src/features/activities/drag-drop-result-pdf.server.ts` — `buildDragDropResultPDF()` com as 2 variantes
+- `src/features/activities/drag-drop-result-pdf.functions.ts` — `generateDragDropResultPatient` / `generateDragDropResultTherapist`
 
-### 3. Dados estruturados no relatório
+### Lógica por sub-modo
 
-Response data salvo em `activity_responses.response_data`:
-```json
-{
-  "mode": "card_sort",
-  "placements": {
-    "card-1": { "zone": "catastrophizing", "order": 0 },
-    "card-2": { "zone": "mind-reading", "order": 1 }
-  },
-  "duration_seconds": 240
-}
-```
+**card_sort** (CBT-03, CBT-06, ACT-01, ACT-02, DBT-06):
+- Diagrama de zonas + cards
+- Tabela card→zona (com gabarito quando disponível)
+- Métricas: Concentration Index, Blind Spots, Accuracy
 
-Compativel com os PDFs existentes (Worksheet Result PDF template) -- cada zona vira uma seção, cards listados dentro.
+**ranking_ladder** (CBT-04):
+- Escada visual com SUDS
+- Tabela ordenada com valores SUDS
+- Métricas: SUDS médio, clusters, coerência rank-SUDS
 
----
+**cycle_builder** (CBT-05):
+- Diagrama do ciclo com slots preenchidos
+- Tabela slot→card
+- Métrica: completude (slots preenchidos / total)
 
-## Arquivos novos
+### Edições em arquivos existentes
+- `src/routes/p.$token.tsx` — adicionar roteamento para `drag_drop` archetype na geração auto-PDF
+- `src/routes/_authenticated/patients.$id.tsx` — importar e chamar as novas functions nos botões de relatório
 
-```text
-src/features/library/runners/drag_drop/
-  DragDropRunner.tsx          -- Orchestrator: le config, renderiza sub-modo
-  drag-drop-types.ts          -- DragDropConfig, CardDef, ZoneDef, etc
-  CardSortLayout.tsx           -- Sub-modo card_sort (colunas)
-  RankingLadderLayout.tsx      -- Sub-modo ranking_ladder (lista vertical)
-  CycleBuilderLayout.tsx       -- Sub-modo cycle_builder (slots em ciclo)
-  DraggableCard.tsx            -- Card visual "post-it" compartilhado
-```
+## Passo 3 — Registrar template travado
 
-### Dependencia
+Criar `mem://features/drag-drop-result-pdf` com todas as especificações visuais (cores, espaçamentos, renderers por sub-modo, notices, paginação). Source of truth para todo drag_drop futuro.
 
-`@dnd-kit/core` + `@dnd-kit/sortable` + `@dnd-kit/utilities` -- lib leve, acessivel (keyboard drag), React 19 compativel.
+## Detalhes técnicos
 
----
-
-## O que NAO muda
-
-- Nenhuma tabela nova (usa `activity_catalog.config` JSONB existente + `activity_responses`)
-- Nenhuma RLS nova (mesmo padrao de patient_activities)
-- Consent layer ja obrigatorio pra todas atividades
-- Fluxo magic link + in_session inalterado
-- Relatorios PDF usam o template de worksheet existente
-
----
-
-## Config JSON de exemplo (CBT-03 Distorcoes Cognitivas)
-
-```json
-{
-  "mode": "card_sort",
-  "instruction": "Arraste cada pensamento para a categoria que melhor descreve o padrao.",
-  "cards": [
-    { "id": "c1", "text": "Se eu errar, todo mundo vai me julgar." },
-    { "id": "c2", "text": "Nada nunca da certo pra mim." },
-    { "id": "c3", "text": "Eu sei que ele esta com raiva de mim." }
-  ],
-  "zones": [
-    { "id": "catastrophizing", "label": "Catastrofizacao", "color": "#E8D5C4" },
-    { "id": "overgeneralization", "label": "Generalizacao excessiva", "color": "#D4C5B9" },
-    { "id": "mind-reading", "label": "Leitura mental", "color": "#C9B8A8" }
-  ]
-}
-```
-
----
-
-## Integracao com o fluxo existente
-
-O DragDropRunner sera carregado nos mesmos pontos que o FormRunner:
-- Rota `/p/$token` (magic link publico) -- detecta `archetype === 'drag_drop'` e renderiza DragDropRunner
-- Modal in_session no `/patients/$id` -- mesmo padrao
-- PatientPickerSheet no Acervo -- ja funciona pra qualquer arquetipo
-
----
-
-## Ordem de implementacao
-
-1. Instalar `@dnd-kit`
-2. Criar types (`drag-drop-types.ts`)
-3. Criar `DraggableCard.tsx` (componente visual)
-4. Criar `CardSortLayout.tsx` (primeiro sub-modo, mais simples)
-5. Criar `DragDropRunner.tsx` (orchestrator)
-6. Integrar no `/p/$token` e modal in_session
-7. Criar config JSON da CBT-03
-8. Criar `RankingLadderLayout.tsx` e `CycleBuilderLayout.tsx`
+- Reutiliza `pdf-brand-assets.server.ts` (ICON_PNG_B64, WATERMARK_PNG_B64)
+- Reutiliza helpers compartilhados (drawHeader, drawFooter, drawWatermark, checkPage) — mesma assinatura dos outros PDFs
+- Dados vêm de `activity_responses.response_data` (tipo `DragDropResponseData`)
+- Gabarito vem de `activity_catalog.config.reference_key` (quando existe)
+- PHI decrypted via `decryptPHIServer`
+- Audit log: `drag_drop_result.patient_generated` / `drag_drop_result.therapist_generated`
