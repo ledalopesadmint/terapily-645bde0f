@@ -49,18 +49,27 @@ export const getAnalyticsDashboard = createServerFn({ method: "POST" })
     z
       .object({
         days: z.number().min(1).max(90).default(30),
+        specificDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
       })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<AnalyticsDashboardPayload> => {
     await assertAdmin(undefined, context.userId);
 
-    const end = new Date();
-    const start = new Date();
-    start.setUTCDate(end.getUTCDate() - data.days);
+    let startStr: string;
+    let endStr: string;
 
-    const startStr = start.toISOString().slice(0, 10);
-    const endStr = end.toISOString().slice(0, 10);
+    if (data.specificDate) {
+      // Query only the specific date
+      startStr = data.specificDate;
+      endStr = data.specificDate;
+    } else {
+      const end = new Date();
+      const start = new Date();
+      start.setUTCDate(end.getUTCDate() - data.days);
+      startStr = start.toISOString().slice(0, 10);
+      endStr = end.toISOString().slice(0, 10);
+    }
 
     const { data: rows, error } = await supabaseAdmin
       .from("platform_analytics")
