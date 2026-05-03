@@ -396,11 +396,13 @@ function PatientDetailPage() {
 function PatientTabs({
   patientId,
   workspaceId,
+  patientDisplayName,
   startSession,
   openAssign,
 }: {
   patientId: string;
   workspaceId: string;
+  patientDisplayName: string;
   startSession?: string;
   openAssign?: string;
 }) {
