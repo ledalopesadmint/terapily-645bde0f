@@ -495,6 +495,26 @@ function CompletedView({
             <BarChart3 className="w-4 h-4 inline mr-1.5" />
             Ver histórico
           </button>
+          {totalEntries >= 3 && (
+            <button
+              onClick={async () => {
+                setDownloadingPdf(true);
+                try {
+                  const result = await generateHabitReportPublic({ data: { tokenHash } });
+                  downloadPdfBlob(result.pdfBytes, `practice-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+                } catch (e) {
+                  console.error("[HabitLink] PDF download failed", e);
+                } finally {
+                  setDownloadingPdf(false);
+                }
+              }}
+              disabled={downloadingPdf}
+              className="w-full px-6 py-3 rounded-2xl text-sm font-medium bg-white/20 backdrop-blur-sm hover:bg-white/40 transition-all text-[oklch(0.45_0.04_160)] disabled:opacity-50"
+            >
+              <Download className="w-4 h-4 inline mr-1.5" />
+              {downloadingPdf ? "Gerando PDF…" : "Baixar relatório"}
+            </button>
+          )}
         </div>
       </div>
     </div>
