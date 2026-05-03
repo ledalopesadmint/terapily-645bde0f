@@ -28,6 +28,8 @@ import {
 import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
 import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
 import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
+import { DragDropRunner } from "@/features/library/runners/drag_drop/DragDropRunner";
+import type { DragDropConfig, DragDropResponseData } from "@/features/library/runners/drag_drop/drag-drop-types";
 import {
   getActivityConfig,
   recordInSessionResponse,
