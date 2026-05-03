@@ -70,7 +70,7 @@ export async function aggregatePlatformAnalytics(
   }
 
   // --- Process audit_logs ---
-  const workspacesDay = new Set<string>();
+  const therapistsDay = new Set<string>();
 
   // Track by resource_id (patient_activity_id) for accurate completion_rate
   const activitiesOpened = new Set<string>();
