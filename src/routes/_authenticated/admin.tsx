@@ -10,6 +10,7 @@ import {
   CreditCard,
   Sparkles,
   ScrollText,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
