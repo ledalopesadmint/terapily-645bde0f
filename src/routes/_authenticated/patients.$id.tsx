@@ -785,29 +785,36 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         </Button>
                       )}
                     </div>
-                    {/* M-Linha 5: Botões Paciente + Terapeuta (só se completed, exceto mindfulness) */}
-                    {status === "completed" && response?.id && !["guided_timer", "guided_script"].includes((a.activity as any)?.archetype) && (
-                      <div className="grid grid-cols-2 gap-1.5">
-                        <Button
-                          size="sm"
-                          className="text-[10px] h-7 px-2 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
-                          disabled={scaleResultBusy === `${response.id}-patient`}
-                          onClick={() => downloadScaleResult(response.id, "patient", (a.activity as any)?.archetype)}
-                        >
-                          <Download className="mr-0.5 h-2.5 w-2.5" />
-                          {scaleResultBusy === `${response.id}-patient` ? "…" : "Paciente"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          className="text-[10px] h-7 px-2 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
-                          disabled={scaleResultBusy === `${response.id}-therapist`}
-                          onClick={() => downloadScaleResult(response.id, "therapist", (a.activity as any)?.archetype)}
-                        >
-                          <ShieldCheck className="mr-0.5 h-2.5 w-2.5" />
-                          {scaleResultBusy === `${response.id}-therapist` ? "…" : "Terapeuta"}
-                        </Button>
-                      </div>
-                    )}
+                    {/* M-Linha 5: Botões Paciente + Terapeuta */}
+                    {(() => {
+                      const arch = (a.activity as any)?.archetype;
+                      const isMindful = arch === "guided_timer" || arch === "guided_script";
+                      const showReports = isMindful || (status === "completed" && response?.id);
+                      if (!showReports) return null;
+                      const busyKey = response?.id ?? a.activity_id;
+                      return (
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <Button
+                            size="sm"
+                            className="text-[10px] h-7 px-2 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
+                            disabled={scaleResultBusy === `${busyKey}-patient`}
+                            onClick={() => downloadScaleResult(busyKey, "patient", arch, a.activity_id)}
+                          >
+                            <Download className="mr-0.5 h-2.5 w-2.5" />
+                            {scaleResultBusy === `${busyKey}-patient` ? "…" : "Paciente"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="text-[10px] h-7 px-2 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
+                            disabled={scaleResultBusy === `${busyKey}-therapist`}
+                            onClick={() => downloadScaleResult(busyKey, "therapist", arch, a.activity_id)}
+                          >
+                            <ShieldCheck className="mr-0.5 h-2.5 w-2.5" />
+                            {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Terapeuta"}
+                          </Button>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   {/* ===== DESKTOP LAYOUT (>= sm) ===== */}
