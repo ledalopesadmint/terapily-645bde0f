@@ -108,16 +108,16 @@ export async function aggregatePlatformAnalytics(
         const dm = (meta.delivery_mode as string) ?? "unknown";
         inc("therapist.activities_assigned", "total", hour);
         inc(`therapist.delivery_mode.${dm}`, "total", hour);
+        // Track links_shared from activities that have a link token
+        if (meta.has_link === true) {
+          inc("therapist.links_shared", "total", hour);
+        }
         break;
       }
 
       case "activity.share_intent":
         inc("therapist.links_shared", "total", hour);
         break;
-
-      // Also track links_shared from assigned activities that have a link
-      // (share_intent may not always be emitted, but has_link in metadata is reliable)
-      // Note: activity.assigned already increments activities_assigned above,
       // so this is additive tracking for links_shared specifically.
 
       case "patient.created":
