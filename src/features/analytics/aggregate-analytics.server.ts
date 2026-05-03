@@ -115,6 +115,11 @@ export async function aggregatePlatformAnalytics(
         inc("therapist.links_shared", "total", hour);
         break;
 
+      // Also track links_shared from assigned activities that have a link
+      // (share_intent may not always be emitted, but has_link in metadata is reliable)
+      // Note: activity.assigned already increments activities_assigned above,
+      // so this is additive tracking for links_shared specifically.
+
       case "patient.created":
         inc("therapist.patients_created", "total", hour);
         break;
