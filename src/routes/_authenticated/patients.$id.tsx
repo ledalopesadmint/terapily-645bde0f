@@ -88,6 +88,7 @@ import {
   generateWorksheetResultPatient,
   generateWorksheetResultTherapist,
 } from "@/features/activities/worksheet-result-pdf.functions";
+import { exportAuditLogs } from "@/features/activities/audit-export.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
@@ -384,6 +385,7 @@ function PatientDetailPage() {
       <PatientTabs
         patientId={patient.id}
         workspaceId={patient.workspace_id}
+        patientDisplayName={patient.display_name}
         startSession={startSession}
         openAssign={openAssign}
       />
@@ -394,11 +396,13 @@ function PatientDetailPage() {
 function PatientTabs({
   patientId,
   workspaceId,
+  patientDisplayName,
   startSession,
   openAssign,
 }: {
   patientId: string;
   workspaceId: string;
+  patientDisplayName: string;
   startSession?: string;
   openAssign?: string;
 }) {
@@ -427,7 +431,7 @@ function PatientTabs({
 
       {isOwner && (
         <TabsContent value="audit" className="mt-6">
-          <AuditTab patientId={patientId} workspaceId={workspaceId} />
+          <AuditTab patientId={patientId} workspaceId={workspaceId} patientName={patientDisplayName} />
         </TabsContent>
       )}
     </Tabs>
@@ -1689,17 +1693,69 @@ const AUDIT_LABEL: Record<string, string> = {
   "clinical_flag.acknowledged": "Flag clínica reconhecida",
 };
 
-function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: string }) {
+function AuditTab({ patientId, workspaceId, patientName }: { patientId: string; workspaceId: string; patientName: string }) {
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [actionFilter, setActionFilter] = useState<string[]>([]);
+  const [exporting, setExporting] = useState<"pdf" | "csv" | null>(null);
+
   const auditQuery = useQuery({
     queryKey: ["patient-audit", patientId, workspaceId],
-    queryFn: () => listPatientAuditLogs({ data: { patientId, workspaceId, limit: 100 } }),
+    queryFn: () => listPatientAuditLogs({ data: { patientId, workspaceId, limit: 200 } }),
   });
 
   if (auditQuery.isLoading) {
     return <p className="text-sm text-muted-foreground">Carregando auditoria…</p>;
   }
 
-  const logs = auditQuery.data?.logs ?? [];
+  const allLogs = auditQuery.data?.logs ?? [];
+
+  // Client-side filtering for display
+  const logs = allLogs.filter((l) => {
+    if (actionFilter.length > 0 && !actionFilter.includes(l.action)) return false;
+    if (fromDate && l.created_at < fromDate) return false;
+    if (toDate && l.created_at > toDate + "T23:59:59.999Z") return false;
+    return true;
+  });
+
+  // Unique actions for filter dropdown
+  const uniqueActions = Array.from(new Set(allLogs.map((l) => l.action))).sort();
+
+  const handleExport = async (format: "pdf" | "csv") => {
+    setExporting(format);
+    try {
+      const result = await exportAuditLogs({
+        data: {
+          patientId,
+          workspaceId,
+          patientDisplayName: patientName,
+          format,
+          fromDate: fromDate || undefined,
+          toDate: toDate || undefined,
+          actions: actionFilter.length > 0 ? actionFilter : undefined,
+        },
+      });
+
+      // Download
+      const blob = (() => {
+        const bytes = Uint8Array.from(atob(result.base64), (c) => c.charCodeAt(0));
+        return new Blob([bytes], { type: result.mimeType });
+      })();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = result.filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success(`${format.toUpperCase()} baixado.`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao exportar.");
+    } finally {
+      setExporting(null);
+    }
+  };
 
   return (
     <div className="space-y-4">
@@ -1710,30 +1766,90 @@ function AuditTab({ patientId, workspaceId }: { patientId: string; workspaceId: 
         </p>
       </div>
 
+      {/* Filters + Export */}
+      <div className="flex flex-wrap items-end gap-2">
+        <div className="space-y-1">
+          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">De</label>
+          <input
+            type="date"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Até</label>
+          <input
+            type="date"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+            className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+          />
+        </div>
+        <div className="space-y-1">
+          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Tipo</label>
+          <select
+            value={actionFilter.length === 1 ? actionFilter[0] : ""}
+            onChange={(e) => setActionFilter(e.target.value ? [e.target.value] : [])}
+            className="h-8 rounded-md border border-input bg-background px-2 text-xs min-w-[140px]"
+          >
+            <option value="">Todos</option>
+            {uniqueActions.map((a) => (
+              <option key={a} value={a}>{AUDIT_LABEL[a] ?? a}</option>
+            ))}
+          </select>
+        </div>
+        <div className="ml-auto flex gap-1.5">
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs gap-1"
+            disabled={exporting !== null || logs.length === 0}
+            onClick={() => handleExport("csv")}
+          >
+            <Download className="h-3 w-3" />
+            {exporting === "csv" ? "…" : "CSV"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 text-xs gap-1"
+            disabled={exporting !== null || logs.length === 0}
+            onClick={() => handleExport("pdf")}
+          >
+            <Download className="h-3 w-3" />
+            {exporting === "pdf" ? "…" : "PDF"}
+          </Button>
+        </div>
+      </div>
+
       {logs.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center text-sm text-muted-foreground">
-            Nenhum evento registrado pra este paciente ainda.
+            {allLogs.length > 0 ? "Nenhum evento com os filtros selecionados." : "Nenhum evento registrado pra este paciente ainda."}
           </CardContent>
         </Card>
       ) : (
-        <ul className="divide-y divide-border rounded-md border border-border">
-          {logs.map((log) => (
-            <li key={log.id} className="flex items-start justify-between gap-3 px-4 py-3">
-              <div className="space-y-0.5">
-                <p className="text-sm font-medium text-foreground">
-                  {AUDIT_LABEL[log.action] ?? log.action}
-                </p>
-                <p className="text-xs text-muted-foreground font-mono">
-                  {log.action}
-                </p>
-              </div>
-              <time className="text-xs text-muted-foreground whitespace-nowrap">
-                {new Date(log.created_at).toLocaleString("pt-BR")}
-              </time>
-            </li>
-          ))}
-        </ul>
+        <>
+          <p className="text-xs text-muted-foreground">{logs.length} evento{logs.length !== 1 ? "s" : ""}</p>
+          <ul className="divide-y divide-border rounded-md border border-border">
+            {logs.map((log) => (
+              <li key={log.id} className="flex items-start justify-between gap-3 px-4 py-3">
+                <div className="space-y-0.5">
+                  <p className="text-sm font-medium text-foreground">
+                    {AUDIT_LABEL[log.action] ?? log.action}
+                  </p>
+                  <p className="text-xs text-muted-foreground font-mono">
+                    {log.action}
+                  </p>
+                </div>
+                <time className="text-xs text-muted-foreground whitespace-nowrap">
+                  {new Date(log.created_at).toLocaleString("pt-BR")}
+                </time>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </div>
   );
