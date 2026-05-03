@@ -47,6 +47,31 @@ export async function getActiveHabitLink(
   return data;
 }
 
+/**
+ * Find the most recent habit_link for a patient+activity combo that has entries.
+ * Used by report buttons on activity boxes — works regardless of link status.
+ */
+export async function findHabitLinkWithEntries(
+  workspaceId: string,
+  patientId: string,
+  activityId: string,
+) {
+  const { data, error } = await withRetry(() =>
+    supabaseAdmin
+      .from("habit_links")
+      .select("id, workspace_id, patient_id, total_entries, status")
+      .eq("workspace_id", workspaceId)
+      .eq("patient_id", patientId)
+      .eq("activity_id", activityId)
+      .gt("total_entries", 0)
+      .order("last_entry_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  );
+  if (error) throw new Error("Falha ao buscar link de hábito.");
+  return data;
+}
+
 export async function insertHabitEntry(entry: {
   habit_link_id: string;
   workspace_id: string;
