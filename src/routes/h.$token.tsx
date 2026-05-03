@@ -171,8 +171,7 @@ function downloadPdfBlob(bytes: number[], filename: string) {
 
 type ViewState = "consent" | "exercise" | "completed" | "history";
 
-
-  id: string;
+interface HistoryEntry {
   completedAt: string;
   durationSeconds: number | null;
   cyclesCompleted: number | null;
