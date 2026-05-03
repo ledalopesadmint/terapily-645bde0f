@@ -428,7 +428,7 @@ function PatientTabs({
 
       {isOwner && (
         <TabsContent value="audit" className="mt-6">
-          <AuditTab patientId={patientId} workspaceId={workspaceId} />
+          <AuditTab patientId={patientId} workspaceId={workspaceId} patientName={patient.display_name} />
         </TabsContent>
       )}
     </Tabs>
