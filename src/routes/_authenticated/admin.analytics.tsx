@@ -803,14 +803,26 @@ function ErrorsTab({ rows }: { rows: AnalyticsRow[] }) {
               <AlertTriangle className="h-4 w-4 text-coral" />
               Erros por Operação
             </h3>
+            <p className="text-xs text-muted-foreground mt-1">Clique no nome do erro para ver a sugestão de ação.</p>
           </div>
           <div className="divide-y">
-            {sortedErrors.map(([metric, total]) => (
-              <div key={metric} className="flex items-center justify-between px-5 py-2.5">
-                <code className="text-xs text-muted-foreground font-mono">{metric}</code>
-                <span className="text-sm font-medium tabular-nums">{total}</span>
-              </div>
-            ))}
+            {sortedErrors.map(([metric, total]) => {
+              const info = getErrorInfo(metric);
+              return (
+                <div key={metric} className="px-5 py-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{info.label}</p>
+                      <code className="text-[0.625rem] text-muted-foreground font-mono">{metric}</code>
+                    </div>
+                    <span className="text-sm font-semibold tabular-nums text-destructive">{total}×</span>
+                  </div>
+                  {info.suggestion && (
+                    <p className="mt-1 text-xs text-muted-foreground italic">💡 {info.suggestion}</p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
@@ -822,6 +834,35 @@ function ErrorsTab({ rows }: { rows: AnalyticsRow[] }) {
       )}
     </div>
   );
+}
+
+/** Map technical error metrics to human-readable labels + suggestions */
+function getErrorInfo(metric: string): { label: string; suggestion?: string } {
+  const map: Record<string, { label: string; suggestion?: string }> = {
+    "error.server.resolveToken": { label: "Token inválido ou expirado", suggestion: "Paciente tentou acessar link já usado ou expirado. Normal se o link foi usado com sucesso antes." },
+    "error.server.submitActivity": { label: "Falha ao salvar resposta", suggestion: "Verificar se a atividade ainda está ativa e se o banco está acessível." },
+    "error.server.assignActivity": { label: "Falha ao prescrever atividade", suggestion: "Pode ser limite de plano atingido ou paciente excluído." },
+    "error.server.createPatient": { label: "Falha ao criar paciente", suggestion: "Verificar limite de pacientes do plano ou dados inválidos." },
+    "error.server.generateLink": { label: "Falha ao gerar link", suggestion: "Token pode ter colidido (raro) ou atividade não está publicada." },
+    "error.server.decryptPHI": { label: "Falha ao descriptografar PHI", suggestion: "Chave de criptografia pode estar incorreta. Verificar PHI_ENCRYPTION_KEY." },
+  };
+
+  // Check exact match first
+  if (map[metric]) return map[metric];
+
+  // Client errors: extract route
+  if (metric.startsWith("error.client.")) {
+    const route = metric.replace("error.client.", "");
+    return { label: `Erro de página: ${route}`, suggestion: "A página travou para o terapeuta. Verificar console de erros." };
+  }
+
+  // Server errors: extract operation
+  if (metric.startsWith("error.server.")) {
+    const op = metric.replace("error.server.", "");
+    return { label: `Erro server: ${op}`, suggestion: "Operação falhou no servidor. Verificar logs." };
+  }
+
+  return { label: metric };
 }
 
 // ─── Insights Panel ──────────────────────────────────────────
