@@ -156,7 +156,19 @@ export const Route = createFileRoute("/h/$token")({
   errorComponent: HabitRouteError,
 });
 
-type ViewState = "consent" | "exercise" | "completed" | "history";
+function downloadPdfBlob(bytes: number[], filename: string) {
+  const byteArray = new Uint8Array(bytes);
+  const blob = new Blob([byteArray], { type: "application/pdf" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 
 interface HistoryEntry {
   id: string;
