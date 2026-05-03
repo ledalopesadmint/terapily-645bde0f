@@ -582,6 +582,16 @@ function ActivityRunner({
             submitting={submitMutation.isPending}
             submitLabel="Concluir exercício"
           />
+        ) : isDragDrop ? (
+          <DragDropRunner
+            config={config as DragDropConfig}
+            onSubmit={(data: DragDropResponseData) => {
+              setResponses(data as unknown as Record<string, unknown>);
+              setTimeout(() => submitMutation.mutate(), 0);
+            }}
+            submitting={submitMutation.isPending}
+            submitLabel="Enviar respostas"
+          />
         ) : isScript ? (
           <GuidedScriptRunner
             config={config}
