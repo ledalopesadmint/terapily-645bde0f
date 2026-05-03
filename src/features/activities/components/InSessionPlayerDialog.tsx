@@ -352,6 +352,16 @@ export function InSessionPlayerDialog({
                   submitLabel="Registrar exercício"
                   embedded
                 />
+              ) : isDragDrop ? (
+                <DragDropRunner
+                  config={config as DragDropConfig}
+                  onSubmit={(data: DragDropResponseData) => {
+                    setResponses(data as unknown as Record<string, unknown>);
+                    setTimeout(() => submitMutation.mutate(), 0);
+                  }}
+                  submitting={submitMutation.isPending}
+                  submitLabel="Registrar respostas"
+                />
               ) : isScript ? (
                 <GuidedScriptRunner
                   config={config}
