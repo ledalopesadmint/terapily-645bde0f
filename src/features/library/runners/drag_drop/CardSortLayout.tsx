@@ -375,14 +375,11 @@ export function CardSortLayout({ cards, zones, placements, onPlaceCard }: CardSo
                     return (
                       <div
                         key={zone.id}
-                        className="rounded-xl border p-3"
+                        className="rounded-xl border p-3 bg-white"
                         style={{
-                          backgroundColor: placedCards.length > 0
-                            ? `color-mix(in oklch, ${zc.bg} 70%, transparent)`
-                            : "transparent",
                           borderColor: placedCards.length > 0
                             ? zc.border
-                            : "oklch(0.90 0.00 0)",
+                            : "oklch(0.90 0.01 80)",
                         }}
                       >
                         <div className="flex items-center gap-2 mb-1">
