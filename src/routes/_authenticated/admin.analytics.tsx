@@ -577,6 +577,43 @@ function EngagementTab({ rows }: { rows: AnalyticsRow[] }) {
   const loginsData = dailySum(rows.filter((r) => r.metric === "therapist.logins"));
   const assignedData = dailySum(rows.filter((r) => r.metric === "therapist.activities_assigned"));
 
+  // Ephemeral metrics
+  const ephAssigned = rows.filter((r) => r.metric === "ephemeral.assigned").reduce((s, r) => s + r.value, 0);
+  const ephCompletionRows = rows.filter((r) => r.metric === "ephemeral.completion_rate");
+  const ephCompletionRate = ephCompletionRows.length > 0
+    ? Math.round(ephCompletionRows.reduce((s, r) => s + r.value, 0) / ephCompletionRows.length)
+    : 0;
+  const ephDownloadRows = rows.filter((r) => r.metric === "ephemeral.download_rate");
+  const ephDownloadRate = ephDownloadRows.length > 0
+    ? Math.round(ephDownloadRows.reduce((s, r) => s + r.value, 0) / ephDownloadRows.length)
+    : 0;
+  const ephExpiredNoDownload = rows.filter((r) => r.metric === "ephemeral.expired_without_download").reduce((s, r) => s + r.value, 0);
+  const ephAssignedDaily = dailySum(rows.filter((r) => r.metric === "ephemeral.assigned"));
+  const ephSubmittedDaily = dailySum(rows.filter((r) => r.metric === "ephemeral.submitted"));
+  const ephExpiredDaily = dailySum(rows.filter((r) => r.metric === "ephemeral.expired"));
+
+  // PWA metrics
+  const pwaInstallsTotal = rows.filter((r) => r.metric === "platform.pwa_installs_total").reduce((s, r) => s + r.value, 0);
+  const pwaEligibleTotal = rows.filter((r) => r.metric === "platform.pwa_eligible_total").reduce((s, r) => s + r.value, 0);
+  const pwaMobile = rows.filter((r) => r.metric === "platform.pwa_installs" && r.dimension === "mobile").reduce((s, r) => s + r.value, 0);
+  const pwaDesktop = rows.filter((r) => r.metric === "platform.pwa_installs" && r.dimension === "desktop").reduce((s, r) => s + r.value, 0);
+  const pwaTablet = rows.filter((r) => r.metric === "platform.pwa_installs" && r.dimension === "tablet").reduce((s, r) => s + r.value, 0);
+
+  // Merge daily for ephemeral chart
+  const allDates = new Set([
+    ...ephAssignedDaily.map((d) => d.date),
+    ...ephSubmittedDaily.map((d) => d.date),
+    ...ephExpiredDaily.map((d) => d.date),
+  ]);
+  const ephDailyChart = Array.from(allDates)
+    .sort()
+    .map((date) => ({
+      date,
+      assigned: ephAssignedDaily.find((d) => d.date === date)?.value ?? 0,
+      submitted: ephSubmittedDaily.find((d) => d.date === date)?.value ?? 0,
+      expired: ephExpiredDaily.find((d) => d.date === date)?.value ?? 0,
+    }));
+
   return (
     <div className="space-y-6">
       <ChartCard title="Terapeutas Ativos / Dia (DAU)" subtitle="Workspaces distintos com login">
@@ -614,6 +651,57 @@ function EngagementTab({ rows }: { rows: AnalyticsRow[] }) {
           </ResponsiveContainer>
         </ChartCard>
       </div>
+
+      {/* ── Links Efêmeros ─────────────────────────────────────── */}
+      <div className="rounded-lg border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-mauve" />
+          Links Efêmeros (/e/)
+        </h3>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <MiniKPI label="Prescritos" value={ephAssigned} />
+          <MiniKPI label="Taxa conclusão" value={`${ephCompletionRate}%`} />
+          <MiniKPI label="Taxa download" value={`${ephDownloadRate}%`} />
+          <MiniKPI label="Expirados s/ download" value={ephExpiredNoDownload} alert={ephExpiredNoDownload > 0} />
+        </div>
+        {ephDailyChart.length > 0 && (
+          <ResponsiveContainer width="100%" height={180}>
+            <LineChart data={ephDailyChart}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+              <XAxis dataKey="date" fontSize={11} />
+              <YAxis fontSize={11} allowDecimals={false} />
+              <Tooltip />
+              <Line type="monotone" dataKey="assigned" name="Prescritos" stroke={CHART_COLORS.sage} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="submitted" name="Completados" stroke={CHART_COLORS.teal} strokeWidth={2} dot={false} />
+              <Line type="monotone" dataKey="expired" name="Expirados" stroke={CHART_COLORS.coral} strokeWidth={2} dot={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
+      </div>
+
+      {/* ── Instalações PWA ────────────────────────────────────── */}
+      <div className="rounded-lg border bg-card p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <Zap className="h-4 w-4 text-sage" />
+          Instalações PWA
+        </h3>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+          <MiniKPI label="Total instalações" value={pwaInstallsTotal} />
+          <MiniKPI label="Elegíveis" value={pwaEligibleTotal} />
+          <MiniKPI label="Mobile" value={pwaMobile} />
+          <MiniKPI label="Desktop" value={pwaDesktop} />
+          <MiniKPI label="Tablet" value={pwaTablet} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MiniKPI({ label, value, alert }: { label: string; value: string | number; alert?: boolean }) {
+  return (
+    <div className={`rounded-lg px-3 py-2.5 ${alert ? "bg-destructive/5 border border-destructive/20" : "bg-muted/50"}`}>
+      <p className="text-[0.625rem] font-medium uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`mt-0.5 font-display text-lg ${alert ? "text-destructive" : "text-foreground"}`}>{value}</p>
     </div>
   );
 }

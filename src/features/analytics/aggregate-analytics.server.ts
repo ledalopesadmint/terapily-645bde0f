@@ -1,10 +1,16 @@
 /**
- * Daily aggregation of platform analytics from audit_logs + habit_entries.
+ * Daily aggregation of platform analytics from audit_logs + habit_entries + ephemeral_activities.
  *
  * Reads events from a target date, groups by hour/metric, and upserts
  * into platform_analytics. 100% desidentified — no UUIDs in output.
  *
  * NUNCA importar no client.
+ *
+ * ─────────────────────────────────────────────────────────────────
+ * REGRA OBRIGATÓRIA (mem://preferences/analytics-mandatory-checklist):
+ * Toda nova feature/link/fluxo DEVE ter métricas adicionadas aqui
+ * ANTES de merge. Ver checklist completo na memória.
+ * ─────────────────────────────────────────────────────────────────
  */
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
@@ -67,8 +73,22 @@ export async function aggregatePlatformAnalytics(
   const workspacesDay = new Set<string>();
 
   // Track by resource_id (patient_activity_id) for accurate completion_rate
-  const activitiesOpened = new Set<string>();   // patient_activity_ids that were opened
-  const activitiesSubmitted = new Set<string>(); // patient_activity_ids that were submitted
+  const activitiesOpened = new Set<string>();
+  const activitiesSubmitted = new Set<string>();
+
+  // Ephemeral tracking sets
+  const ephemeralOpened = new Set<string>();
+  const ephemeralSubmitted = new Set<string>();
+  const ephemeralDownloaded = new Set<string>();
+  const ephemeralPurged = new Set<string>();
+  // Track download delay: resource_id → { submitted_at, downloaded_at }
+  const ephemeralTimestamps = new Map<string, { submitted_at?: string; downloaded_at?: string }>();
+
+  // PWA tracking
+  let pwaInstallsMobile = 0;
+  let pwaInstallsDesktop = 0;
+  let pwaInstallsTablet = 0;
+  let pwaEligible = 0;
 
   for (const log of logs ?? []) {
     const hour = new Date(log.created_at).getUTCHours();
@@ -99,32 +119,89 @@ export async function aggregatePlatformAnalytics(
 
       case "activity.link_opened":
         inc("patient.links_opened", "total", hour);
-        // resource_id = patient_activity_id
         if (log.resource_id) activitiesOpened.add(log.resource_id);
         break;
 
       case "activity.submitted":
         inc("patient.activities_completed", "total", hour);
-        // resource_id = patient_activity_id
         if (log.resource_id) activitiesSubmitted.add(log.resource_id);
         break;
 
       case "activity.consent_declined":
         inc("patient.consent_declined", "total", hour);
         break;
+
+      // ── Ephemeral link metrics ──────────────────────────────
+      case "ephemeral.assigned":
+        inc("ephemeral.assigned", "total", hour);
+        break;
+
+      case "ephemeral.consent_acknowledged":
+        inc("ephemeral.consent_acknowledged", "total", hour);
+        break;
+
+      case "ephemeral.link_opened":
+        inc("ephemeral.link_opened", "total", hour);
+        if (log.resource_id) ephemeralOpened.add(log.resource_id);
+        break;
+
+      case "ephemeral.submitted":
+        inc("ephemeral.submitted", "total", hour);
+        if (log.resource_id) {
+          ephemeralSubmitted.add(log.resource_id);
+          if (!ephemeralTimestamps.has(log.resource_id)) {
+            ephemeralTimestamps.set(log.resource_id, {});
+          }
+          ephemeralTimestamps.get(log.resource_id)!.submitted_at = log.created_at;
+        }
+        break;
+
+      case "ephemeral.pdf_downloaded":
+        inc("ephemeral.pdf_downloaded", "total", hour);
+        if (log.resource_id) {
+          ephemeralDownloaded.add(log.resource_id);
+          if (!ephemeralTimestamps.has(log.resource_id)) {
+            ephemeralTimestamps.set(log.resource_id, {});
+          }
+          ephemeralTimestamps.get(log.resource_id)!.downloaded_at = log.created_at;
+        }
+        break;
+
+      case "ephemeral.purged":
+        inc("ephemeral.expired", "total", hour);
+        if (log.resource_id) ephemeralPurged.add(log.resource_id);
+        break;
+
+      case "ephemeral.status_changed":
+        // tracked via other specific actions
+        break;
+
+      // ── PWA install metrics ─────────────────────────────────
+      case "platform.pwa_installed": {
+        const deviceType = (meta.device_type as string) ?? "unknown";
+        if (deviceType === "mobile") pwaInstallsMobile++;
+        else if (deviceType === "desktop") pwaInstallsDesktop++;
+        else if (deviceType === "tablet") pwaInstallsTablet++;
+        inc("platform.pwa_installs", deviceType, hour);
+        break;
+      }
+
+      case "platform.pwa_eligible":
+        pwaEligible++;
+        inc("platform.pwa_eligible", "total", hour);
+        break;
     }
   }
 
   // --- Process habit_entries ---
   const habitPatients = new Set<string>();
-  const habitLinkPatients = new Map<string, Set<string>>(); // link_id → set of patient_ids (for return rate)
+  const habitLinkPatients = new Map<string, Set<string>>();
 
   for (const h of habits ?? []) {
     const hour = new Date(h.completed_at).getUTCHours();
     inc("patient.habit_entries", "total", hour);
     habitPatients.add(h.patient_id);
 
-    // Track per habit_link to calculate return rate
     if (!habitLinkPatients.has(h.habit_link_id)) {
       habitLinkPatients.set(h.habit_link_id, new Set());
     }
@@ -140,13 +217,12 @@ export async function aggregatePlatformAnalytics(
   });
 
   // Completion rate — based on distinct patient_activity_ids opened vs submitted
-  // This is accurate: counts individual activities, not patients
   if (activitiesOpened.size > 0) {
     const rate = Math.round((activitiesSubmitted.size / activitiesOpened.size) * 100);
     rows.push({
       date: targetDate, hour_bucket: 0, day_of_week: dow,
       metric: "patient.completion_rate", dimension: "total",
-      value: Math.min(rate, 100), // cap at 100% (submit without open same day is possible)
+      value: Math.min(rate, 100),
     });
   }
 
@@ -157,12 +233,10 @@ export async function aggregatePlatformAnalytics(
     value: habitPatients.size,
   });
 
-  // Habit return rate — % of active habit links that had ≥2 entries today
-  // (proxy for "patients actually returning to practice")
+  // Habit return rate
   if (habitLinkPatients.size > 0) {
     const linksWithReturn = Array.from(habitLinkPatients.values())
-      .filter((patients) => patients.size >= 1).length; // at least used
-    // Query how many habit_links had entries in the previous 7 days too
+      .filter((patients) => patients.size >= 1).length;
     const { data: recentLinks } = await supabaseAdmin
       .from("habit_entries")
       .select("habit_link_id")
@@ -181,6 +255,74 @@ export async function aggregatePlatformAnalytics(
       date: targetDate, hour_bucket: 0, day_of_week: dow,
       metric: "patient.habit_return_rate", dimension: "total",
       value: returnRate,
+    });
+  }
+
+  // ── Ephemeral derived metrics ───────────────────────────────
+
+  // Completion rate (ephemeral): submitted / opened
+  if (ephemeralOpened.size > 0) {
+    const rate = Math.round((ephemeralSubmitted.size / ephemeralOpened.size) * 100);
+    rows.push({
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "ephemeral.completion_rate", dimension: "total",
+      value: Math.min(rate, 100),
+    });
+  }
+
+  // Download rate: downloaded / submitted
+  if (ephemeralSubmitted.size > 0) {
+    const rate = Math.round((ephemeralDownloaded.size / ephemeralSubmitted.size) * 100);
+    rows.push({
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "ephemeral.download_rate", dimension: "total",
+      value: Math.min(rate, 100),
+    });
+  }
+
+  // Expired without download: purged IDs that were NOT in downloaded set
+  const expiredWithoutDownload = Array.from(ephemeralPurged).filter(
+    (id) => !ephemeralDownloaded.has(id),
+  ).length;
+  if (expiredWithoutDownload > 0) {
+    rows.push({
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "ephemeral.expired_without_download", dimension: "total",
+      value: expiredWithoutDownload,
+    });
+  }
+
+  // Average download delay (hours): time between submit and download
+  const delays: number[] = [];
+  for (const [, ts] of ephemeralTimestamps) {
+    if (ts.submitted_at && ts.downloaded_at) {
+      const delayMs = new Date(ts.downloaded_at).getTime() - new Date(ts.submitted_at).getTime();
+      if (delayMs >= 0) delays.push(delayMs / 3600000); // to hours
+    }
+  }
+  if (delays.length > 0) {
+    const avgHours = Math.round((delays.reduce((a, b) => a + b, 0) / delays.length) * 10) / 10;
+    rows.push({
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "ephemeral.avg_download_delay_hours", dimension: "total",
+      value: Math.round(avgHours * 10), // store as tenths of hours for integer field
+    });
+  }
+
+  // ── PWA derived metrics ─────────────────────────────────────
+  const totalPwaInstalls = pwaInstallsMobile + pwaInstallsDesktop + pwaInstallsTablet;
+  if (totalPwaInstalls > 0) {
+    rows.push({
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "platform.pwa_installs_total", dimension: "total",
+      value: totalPwaInstalls,
+    });
+  }
+  if (pwaEligible > 0) {
+    rows.push({
+      date: targetDate, hour_bucket: 0, day_of_week: dow,
+      metric: "platform.pwa_eligible_total", dimension: "total",
+      value: pwaEligible,
     });
   }
 
