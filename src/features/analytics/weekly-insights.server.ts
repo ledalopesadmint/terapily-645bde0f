@@ -121,7 +121,7 @@ const TRACKED_METRICS: Array<{
   { metric: "therapist.delivery_mode.in_session", label: "Uso em sessão", category: "product", isRate: false },
   { metric: "therapist.delivery_mode.shared_link", label: "Uso via link", category: "product", isRate: false },
   { metric: "error.server", label: "Erros server", category: "errors", isRate: false },
-  { metric: "error.magic_link", label: "Erros magic link", category: "errors", isRate: false },
+  { metric: "error.client", label: "Erros client", category: "errors", isRate: false },
 ];
 
 export async function generateWeeklyInsights(): Promise<WeeklyInsight[]> {
