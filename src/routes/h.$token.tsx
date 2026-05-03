@@ -530,14 +530,17 @@ function HistoryView({
   entries,
   totalEntries,
   expiresAt,
+  tokenHash,
   onBack,
 }: {
   activityTitle: string;
   entries: HistoryEntry[];
   totalEntries: number;
   expiresAt: string;
+  tokenHash: string;
   onBack: () => void;
 }) {
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
   const [period, setPeriod] = useState<PeriodFilter>("30d");
 
   const filteredEntries = useMemo(() => {
