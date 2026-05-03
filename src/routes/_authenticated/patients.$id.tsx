@@ -88,6 +88,7 @@ import {
   generateWorksheetResultPatient,
   generateWorksheetResultTherapist,
 } from "@/features/activities/worksheet-result-pdf.functions";
+import { exportAuditLogs } from "@/features/activities/audit-export.functions";
 import { ScoreEvolutionChart } from "@/features/activities/components/ScoreEvolutionChart";
 import { InSessionPlayerDialog } from "@/features/activities/components/InSessionPlayerDialog";
 import { ResponseDetailDrawer } from "@/features/activities/components/ResponseDetailDrawer";
