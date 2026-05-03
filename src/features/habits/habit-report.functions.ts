@@ -116,3 +116,46 @@ export const generateHabitReportPublic = createServerFn({ method: "POST" })
 
 // Legacy compat
 export const generateHabitProgressReport = generateHabitReportPatient;
+
+// --- By activity (used from activity boxes on patient profile) ----------------
+
+const HabitReportByActivitySchema = z.object({
+  workspaceId: z.string().uuid(),
+  patientId: z.string().uuid(),
+  activityId: z.string().uuid(),
+});
+
+export const generateHabitReportByActivityPatient = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => HabitReportByActivitySchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    await checkPermissionAndGetInfo(supabase, userId, data.workspaceId);
+
+    const link = await findHabitLinkWithEntries(data.workspaceId, data.patientId, data.activityId);
+    if (!link) throw new Error("Nenhuma prática registrada para esta atividade.");
+
+    const pdfBytes = await buildHabitReportPDF(
+      { habitLinkId: link.id, workspaceId: data.workspaceId, patientId: data.patientId },
+      "patient",
+    );
+    return { pdfBytes };
+  });
+
+export const generateHabitReportByActivityTherapist = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => HabitReportByActivitySchema.parse(input))
+  .handler(async ({ data, context }) => {
+    const { userId, supabase } = context;
+    const therapistInfo = await checkPermissionAndGetInfo(supabase, userId, data.workspaceId);
+
+    const link = await findHabitLinkWithEntries(data.workspaceId, data.patientId, data.activityId);
+    if (!link) throw new Error("Nenhuma prática registrada para esta atividade.");
+
+    const pdfBytes = await buildHabitReportPDF(
+      { habitLinkId: link.id, workspaceId: data.workspaceId, patientId: data.patientId },
+      "therapist",
+      therapistInfo,
+    );
+    return { pdfBytes };
+  });
