@@ -173,3 +173,33 @@ export const reportClientError = createServerFn({ method: "POST" })
     trackClientError(data.route, data.errorName);
     return { ok: true };
   });
+
+/**
+ * Track PWA install/eligible events. No auth required.
+ * Inserts into audit_logs via supabaseAdmin (no PHI).
+ */
+export const trackPwaEvent = createServerFn({ method: "POST" })
+  .inputValidator((input: unknown) =>
+    z
+      .object({
+        event: z.enum(["installed", "eligible"]),
+        deviceType: z.enum(["mobile", "tablet", "desktop"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const action =
+      data.event === "installed"
+        ? "platform.pwa_installed"
+        : "platform.pwa_eligible";
+
+    await supabaseAdmin.from("audit_logs").insert({
+      actor_id: null,
+      workspace_id: null,
+      action,
+      resource_type: "platform",
+      metadata: { device_type: data.deviceType },
+    });
+
+    return { ok: true };
+  });
