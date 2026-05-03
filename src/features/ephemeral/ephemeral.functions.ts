@@ -196,24 +196,24 @@ export const recordEphemeralPdfDownload = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => PdfDownloadSchema.parse(input))
   .handler(async ({ data }) => {
-    // Increment download count — triggers audit via DB trigger
-    const { error } = await withRetry(() =>
-      supabaseAdmin.rpc("increment_ephemeral_pdf_download", {
-        _ephemeral_activity_id: data.ephemeralActivityId,
-      }),
-    );
+    // Fetch current count, then increment — triggers audit via DB trigger
+    const { data: current } = await supabaseAdmin
+      .from("ephemeral_activities")
+      .select("pdf_download_count")
+      .eq("id", data.ephemeralActivityId)
+      .eq("workspace_id", data.workspaceId)
+      .single();
 
-    // Fallback if RPC doesn't exist yet — direct update
-    if (error) {
-      await supabaseAdmin
-        .from("ephemeral_activities")
-        .update({
-          pdf_download_count: 1, // will be overridden by trigger
-          pdf_downloaded_at: new Date().toISOString(),
-        })
-        .eq("id", data.ephemeralActivityId)
-        .eq("workspace_id", data.workspaceId);
-    }
+    const newCount = (current?.pdf_download_count ?? 0) + 1;
+
+    await supabaseAdmin
+      .from("ephemeral_activities")
+      .update({
+        pdf_download_count: newCount,
+        pdf_downloaded_at: new Date().toISOString(),
+      })
+      .eq("id", data.ephemeralActivityId)
+      .eq("workspace_id", data.workspaceId);
 
     return { success: true };
   });
