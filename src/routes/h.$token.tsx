@@ -631,12 +631,36 @@ function HistoryView({
           <ArrowLeft className="w-4 h-4" />
           Voltar ao exercício
         </button>
-        <h1 className="font-display text-2xl sm:text-3xl text-[oklch(0.30_0.05_160)]">
-          {activityTitle}
-        </h1>
-        <p className="text-sm text-[oklch(0.45_0.04_160)] mt-1">
-          Seu histórico de práticas
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="font-display text-2xl sm:text-3xl text-[oklch(0.30_0.05_160)]">
+              {activityTitle}
+            </h1>
+            <p className="text-sm text-[oklch(0.45_0.04_160)] mt-1">
+              Seu histórico de práticas
+            </p>
+          </div>
+          {entries.length >= 3 && (
+            <button
+              onClick={async () => {
+                setDownloadingPdf(true);
+                try {
+                  const result = await generateHabitReportPublic({ data: { tokenHash } });
+                  downloadPdfBlob(result.pdfBytes, `practice-summary-${new Date().toISOString().slice(0, 10)}.pdf`);
+                } catch (e) {
+                  console.error("[HabitLink] PDF download failed", e);
+                } finally {
+                  setDownloadingPdf(false);
+                }
+              }}
+              disabled={downloadingPdf}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-white/60 backdrop-blur-sm shadow-sm hover:bg-white/80 transition-all text-[oklch(0.40_0.04_160)] disabled:opacity-50 shrink-0"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {downloadingPdf ? "Gerando…" : "PDF"}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Period filter */}
