@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, useRef, type MouseEvent } from "react
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { X, Save, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { VinhetaIntro } from "./VinhetaIntro";
 import { ScaleIntro } from "./ScaleIntro";
 
