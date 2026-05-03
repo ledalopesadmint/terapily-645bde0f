@@ -87,7 +87,12 @@ clinical-references/
 ├── cognitive/       ATQ-30
 ├── mood/            MDQ
 ├── suicide/         C-SSRS
-├── drag-drop/           CBT-03..06 (Burns, Beck, Padesky), ACT-01..02 (Harris), DBT-06 (Linehan)
+├── drag-drop/
+│   ├── README.md                        Overview + activity list
+│   ├── PDF_TEMPLATES_REFERENCE.md       PDF template specs (patient + therapist) — TRAVADO
+│   ├── cbt/                             CBT-03..06 (Burns, Beck, Padesky)
+│   ├── act/                             ACT-01..02 (Harris)
+│   └── dbt/                             DBT-06 (Linehan)
 ├── REFERENCE-INDEX.md
 └── CLINICAL-VALIDATION-CERTIFICATE.md
 ```
