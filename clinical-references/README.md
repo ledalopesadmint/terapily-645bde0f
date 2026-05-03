@@ -87,6 +87,7 @@ clinical-references/
 ├── cognitive/       ATQ-30
 ├── mood/            MDQ
 ├── suicide/         C-SSRS
+├── drag-drop/           CBT-03..06 (Burns, Beck, Padesky), ACT-01..02 (Harris), DBT-06 (Linehan)
 ├── REFERENCE-INDEX.md
 └── CLINICAL-VALIDATION-CERTIFICATE.md
 ```
