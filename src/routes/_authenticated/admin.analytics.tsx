@@ -924,10 +924,15 @@ function generatePDFContent(
 
   const insightsHTML = (platformData?.insights ?? [])
     .filter((i) => i.current > 0 || i.previous > 0)
-    .map(
-      (i) =>
-        `<tr><td style="padding:4px 8px;border-bottom:1px solid #eee">${i.label}</td><td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:right">${i.current}</td><td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:right">${i.change > 0 ? "+" : ""}${i.change}%</td></tr>`,
-    )
+    .map((i) => {
+      const val = i.isRate ? `${i.current}%` : String(i.current);
+      const changeText = i.direction === "new"
+        ? "novo"
+        : i.direction === "flat"
+          ? "—"
+          : `${i.change > 0 ? "+" : ""}${i.change}%`;
+      return `<tr><td style="padding:4px 8px;border-bottom:1px solid #eee">${i.label}</td><td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:right">${val}</td><td style="padding:4px 8px;border-bottom:1px solid #eee;text-align:right">${changeText}</td></tr>`;
+    })
     .join("");
 
   return `<!DOCTYPE html>
