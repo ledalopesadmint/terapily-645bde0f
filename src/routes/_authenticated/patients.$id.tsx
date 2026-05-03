@@ -851,36 +851,50 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         );
                       }
 
+                      // Split items into rows of 3. Last row stretches if incomplete.
                       const total = items.length;
-                      const lastRowCount = total % 3 || 3;
-                      const isLastRowIncomplete = lastRowCount < 3;
+                      const fullRows = Math.floor(total / 3);
+                      const remainder = total % 3;
+
+                      const rows: React.ReactNode[][] = [];
+                      for (let r = 0; r < fullRows; r++) {
+                        rows.push(items.slice(r * 3, r * 3 + 3));
+                      }
+                      if (remainder > 0) {
+                        rows.push(items.slice(fullRows * 3));
+                      }
 
                       return (
-                        <div className="grid grid-cols-3 gap-1.5">
-                          {items.map((item, i) => {
-                            const isInLastRow = i >= total - lastRowCount;
-                            const isLastIncompleteRow = isInLastRow && isLastRowIncomplete;
-                            // If last row has 1 item → span 3; if 2 items → no span (they fill naturally at ~50% via col-span hack is not ideal, keep 1/3 each aligned right)
-                            // Actually: 1 item → span all 3 cols; 2 items → each takes normal 1 col but we want right-aligned
-                            // Best approach: last row with <3 items wraps in a sub-flex justify-end
-                            return isLastIncompleteRow ? null : (
-                              <div key={i} className="w-full">{item}</div>
+                        <div className="flex flex-col gap-1.5">
+                          {rows.map((row, ri) => {
+                            const isLast = ri === rows.length - 1;
+                            const cols = row.length;
+                            // Last incomplete row: 1 item → full width; 2 items → each 50%
+                            // Complete rows (3 items): equal thirds
+                            if (isLast && cols === 1) {
+                              return (
+                                <div key={ri} className="flex justify-end">
+                                  <div className="w-full [&>*]:w-full">{row[0]}</div>
+                                </div>
+                              );
+                            }
+                            if (isLast && cols === 2) {
+                              return (
+                                <div key={ri} className="grid grid-cols-2 gap-1.5">
+                                  {row.map((item, ci) => (
+                                    <div key={ci} className="w-full [&>*]:w-full">{item}</div>
+                                  ))}
+                                </div>
+                              );
+                            }
+                            return (
+                              <div key={ri} className="grid grid-cols-3 gap-1.5">
+                                {row.map((item, ci) => (
+                                  <div key={ci} className="w-full [&>*]:w-full">{item}</div>
+                                ))}
+                              </div>
                             );
                           })}
-                          {/* Last incomplete row: render in a special container */}
-                          {isLastRowIncomplete && (
-                            lastRowCount === 1 ? (
-                              <div className="col-span-3 w-full">
-                                {items[total - 1]}
-                              </div>
-                            ) : (
-                              <>
-                                <div className="w-full">{items[total - 2]}</div>
-                                <div className="w-full">{items[total - 1]}</div>
-                                <div /> {/* empty cell to keep grid alignment right-ish — actually not needed, 2 items start from left in grid */}
-                              </>
-                            )
-                          )}
                         </div>
                       );
                     })()}
