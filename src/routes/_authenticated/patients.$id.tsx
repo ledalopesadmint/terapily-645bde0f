@@ -385,6 +385,7 @@ function PatientDetailPage() {
       <PatientTabs
         patientId={patient.id}
         workspaceId={patient.workspace_id}
+        patientDisplayName={patient.display_name}
         startSession={startSession}
         openAssign={openAssign}
       />
