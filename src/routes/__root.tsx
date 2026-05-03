@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Outlet,
   Link,
@@ -9,6 +10,7 @@ import type { QueryClient } from "@tanstack/react-query";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/features/auth/AuthProvider";
+import { initPwaInstallTracker } from "@/features/analytics/pwa-install-tracker";
 
 import appCss from "../styles.css?url";
 
