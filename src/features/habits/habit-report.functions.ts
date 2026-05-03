@@ -10,7 +10,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { buildHabitReportPDF } from "./habit-report.server";
-import { getHabitLinkByTokenHash } from "./habits.server";
+import { getHabitLinkByTokenHash, findHabitLinkWithEntries } from "./habits.server";
 
 const HabitReportSchema = z.object({
   habitLinkId: z.string().uuid(),
