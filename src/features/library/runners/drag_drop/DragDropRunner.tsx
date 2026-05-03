@@ -193,96 +193,97 @@ export function DragDropRunner({
   }, []);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-6" style={{ maxHeight: "100%", minHeight: 0 }}>
-      {/* Header — instruction only (progress moved to bottom for card_sort) */}
-      <div className="space-y-3">
-        <p className="text-base leading-relaxed text-foreground">
+    <div className="flex h-full w-full flex-col overflow-hidden">
+      {/* Header row — instruction + action buttons */}
+      <div className="flex items-center gap-4 px-5 py-3 border-b border-border/30 bg-white/60">
+        <p className="flex-1 text-sm leading-relaxed text-foreground">
           {config.instruction}
         </p>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            type="button"
+            onClick={handleReset}
+            className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+            Recomeçar
+          </button>
+          <button
+            type="button"
+            disabled={!isComplete || submitting}
+            onClick={handleSubmit}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-semibold transition-all duration-200",
+              isComplete
+                ? "bg-[var(--sage)] text-white shadow-sm hover:shadow-md"
+                : "cursor-not-allowed bg-muted text-muted-foreground",
+            )}
+          >
+            <Check className="h-3.5 w-3.5" aria-hidden />
+            {submitting ? "Salvando..." : submitLabel}
+          </button>
+        </div>
+      </div>
+
+      {/* Content area — fills remaining space */}
+      <div className="flex-1 min-h-0 overflow-y-auto px-4 py-4 sm:px-6">
         {config.mode !== "card_sort" && (
-          <div className="flex items-center gap-3">
+          <div className="mb-4 flex items-center gap-3">
             <Progress value={progress} className="h-2 flex-1" />
             <span className="text-xs font-medium text-muted-foreground">
               {progress}%
             </span>
           </div>
         )}
-      </div>
 
-      {/* Card sort — click-based, no DnD */}
-      {config.mode === "card_sort" && (
-        <CardSortLayout
-          cards={config.cards}
-          zones={config.zones}
-          placements={sortPlacements}
-          onPlaceCard={handlePlaceCard}
-        />
-      )}
+        {/* Card sort — click-based, no DnD */}
+        {config.mode === "card_sort" && (
+          <CardSortLayout
+            cards={config.cards}
+            zones={config.zones}
+            placements={sortPlacements}
+            onPlaceCard={handlePlaceCard}
+          />
+        )}
 
-      {/* Other modes still use DnD */}
-      {config.mode !== "card_sort" && (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
-        >
-          {config.mode === "ranking_ladder" && (
-            <RankingLadderLayout
-              cards={config.cards}
-              order={ladderOrder}
-              topLabel={config.topLabel}
-              bottomLabel={config.bottomLabel}
-            />
-          )}
-
-          {config.mode === "cycle_builder" && (
-            <CycleBuilderLayout
-              cards={config.cards}
-              slots={config.slots}
-              placements={cyclePlacements}
-            />
-          )}
-
-          <DragOverlay>
-            {activeCard && (
-              <div className="rounded-xl border-2 border-[oklch(0.661_0.045_153.6)] px-4 py-3 shadow-[0_16px_40px_oklch(0.40_0.04_65/0.35)] scale-105"
-                style={{ backgroundColor: "oklch(0.94 0.03 80)" }}
-              >
-                <p className="text-[0.9375rem] leading-snug font-medium text-[oklch(0.25_0.02_65)]">
-                  {activeCard.text}
-                </p>
-              </div>
+        {/* Other modes still use DnD */}
+        {config.mode !== "card_sort" && (
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            {config.mode === "ranking_ladder" && (
+              <RankingLadderLayout
+                cards={config.cards}
+                order={ladderOrder}
+                topLabel={config.topLabel}
+                bottomLabel={config.bottomLabel}
+              />
             )}
-          </DragOverlay>
-        </DndContext>
-      )}
 
-      {/* Actions */}
-      <div className="flex items-center justify-between border-t border-border/40 pt-4">
-        <button
-          type="button"
-          onClick={handleReset}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <RotateCcw className="h-3.5 w-3.5" aria-hidden />
-          Recomeçar
-        </button>
+            {config.mode === "cycle_builder" && (
+              <CycleBuilderLayout
+                cards={config.cards}
+                slots={config.slots}
+                placements={cyclePlacements}
+              />
+            )}
 
-        <button
-          type="button"
-          disabled={!isComplete || submitting}
-          onClick={handleSubmit}
-          className={cn(
-            "inline-flex items-center gap-2 rounded-xl px-6 py-2.5 text-sm font-semibold transition-all duration-200",
-            isComplete
-              ? "bg-sage text-sage-foreground shadow-md hover:shadow-lg"
-              : "cursor-not-allowed bg-muted text-muted-foreground",
-          )}
-        >
-          <Check className="h-4 w-4" aria-hidden />
-          {submitting ? "Salvando..." : submitLabel}
-        </button>
+            <DragOverlay>
+              {activeCard && (
+                <div className="rounded-xl border-2 border-[oklch(0.661_0.045_153.6)] px-4 py-3 shadow-[0_16px_40px_oklch(0.40_0.04_65/0.35)] scale-105"
+                  style={{ backgroundColor: "oklch(0.94 0.03 80)" }}
+                >
+                  <p className="text-[0.9375rem] leading-snug font-medium text-[oklch(0.25_0.02_65)]">
+                    {activeCard.text}
+                  </p>
+                </div>
+              )}
+            </DragOverlay>
+          </DndContext>
+        )}
       </div>
     </div>
   );

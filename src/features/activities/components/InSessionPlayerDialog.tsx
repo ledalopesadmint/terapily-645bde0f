@@ -12,6 +12,7 @@ import { useState, useCallback, useEffect, useRef, type MouseEvent } from "react
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { X, Save, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { VinhetaIntro } from "./VinhetaIntro";
 import { ScaleIntro } from "./ScaleIntro";
 
@@ -285,47 +286,51 @@ export function InSessionPlayerDialog({
       <div className="fixed inset-0 z-50 bg-[var(--cream)]">
         {/* Phase: Activity Player */}
         {introStarted && !submitted && (
-          <div className="absolute inset-0 bg-background flex flex-col animate-in fade-in duration-300">
-            <header className="flex items-center justify-between px-6 py-3 border-b border-border/50">
-              <div className="min-w-0 flex-1">
-                <h1 className="font-display text-lg text-foreground truncate">{activityTitle}</h1>
-                <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                  Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.
-                </p>
-              </div>
-              <div className="ml-4 flex items-center gap-2 flex-shrink-0">
-                {/* Save & exit — prominent Navy button */}
-                {hasAnyResponse && (
+          <div className={cn(
+            "absolute inset-0 flex flex-col animate-in fade-in duration-300",
+            isDragDrop ? "bg-[oklch(0.97_0.01_80)]" : "bg-background",
+          )}>
+            {/* Header — hidden for drag_drop (buttons move into runner) */}
+            {!isDragDrop && (
+              <header className="flex items-center justify-between px-6 py-3 border-b border-border/50">
+                <div className="min-w-0 flex-1">
+                  <h1 className="font-display text-lg text-foreground truncate">{activityTitle}</h1>
+                  <p className="text-xs text-muted-foreground mt-0.5 truncate">
+                    Aplicação em sessão · Passe o dispositivo ao paciente ou registre junto.
+                  </p>
+                </div>
+                <div className="ml-4 flex items-center gap-2 flex-shrink-0">
+                  {hasAnyResponse && (
+                    <button
+                      onClick={handleSaveAndExit}
+                      disabled={savingAndExiting}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--navy)] text-white text-sm font-medium hover:bg-[var(--navy)]/90 transition-colors shadow-sm disabled:opacity-60"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {savingAndExiting ? "Salvando…" : "Salvar e sair"}
+                    </button>
+                  )}
+                  {lastSaved && !savingAndExiting && (
+                    <span className="hidden sm:inline-flex items-center gap-1 text-xs text-[var(--sage)]">
+                      <Save className="w-3 h-3" />
+                      Salvo
+                    </span>
+                  )}
+                  {draftSaving && !savingAndExiting && (
+                    <span className="hidden sm:inline-flex text-xs text-muted-foreground">
+                      Salvando…
+                    </span>
+                  )}
                   <button
-                    onClick={handleSaveAndExit}
-                    disabled={savingAndExiting}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--navy)] text-white text-sm font-medium hover:bg-[var(--navy)]/90 transition-colors shadow-sm disabled:opacity-60"
+                    onClick={handleCloseAttempt}
+                    className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
+                    aria-label="Fechar"
                   >
-                    <LogOut className="w-4 h-4" />
-                    {savingAndExiting ? "Salvando…" : "Salvar e sair"}
+                    <X className="w-5 h-5 text-foreground" />
                   </button>
-                )}
-                {/* Auto-save indicator */}
-                {lastSaved && !savingAndExiting && (
-                  <span className="hidden sm:inline-flex items-center gap-1 text-xs text-[var(--sage)]">
-                    <Save className="w-3 h-3" />
-                    Salvo
-                  </span>
-                )}
-                {draftSaving && !savingAndExiting && (
-                  <span className="hidden sm:inline-flex text-xs text-muted-foreground">
-                    Salvando…
-                  </span>
-                )}
-                <button
-                  onClick={handleCloseAttempt}
-                  className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted transition-colors"
-                  aria-label="Fechar"
-                >
-                  <X className="w-5 h-5 text-foreground" />
-                </button>
-              </div>
-            </header>
+                </div>
+              </header>
+            )}
 
             {/* Draft restored banner */}
             {draftRestored && (

@@ -250,7 +250,7 @@ export function CardSortLayout({ cards, zones, placements, onPlaceCard }: CardSo
         <div className="flex flex-1 min-h-0 gap-4 overflow-hidden">
 
           {/* LEFT PANEL — Thoughts (1/3) */}
-          <div className="flex w-1/3 min-w-[200px] flex-col rounded-2xl border border-border/40 bg-white/60">
+          <div className="flex w-1/3 min-w-[200px] flex-col rounded-2xl border border-border/40 bg-white shadow-sm">
             <div className="flex items-center gap-2 border-b border-border/30 px-4 py-3">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Pensamentos
@@ -297,7 +297,7 @@ export function CardSortLayout({ cards, zones, placements, onPlaceCard }: CardSo
           </div>
 
           {/* RIGHT PANEL — Categories (2/3) */}
-          <div className="flex flex-[2] flex-col rounded-2xl border border-border/40 bg-white/40">
+          <div className="flex flex-[2] flex-col rounded-2xl border border-border/40 bg-white shadow-sm">
             {/* Header with explainer */}
             <div className="flex items-center gap-2 border-b border-border/30 px-4 py-3">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
@@ -375,14 +375,11 @@ export function CardSortLayout({ cards, zones, placements, onPlaceCard }: CardSo
                     return (
                       <div
                         key={zone.id}
-                        className="rounded-xl border p-3"
+                        className="rounded-xl border p-3 bg-white"
                         style={{
-                          backgroundColor: placedCards.length > 0
-                            ? `color-mix(in oklch, ${zc.bg} 70%, transparent)`
-                            : "transparent",
                           borderColor: placedCards.length > 0
                             ? zc.border
-                            : "oklch(0.90 0.00 0)",
+                            : "oklch(0.90 0.01 80)",
                         }}
                       >
                         <div className="flex items-center gap-2 mb-1">
