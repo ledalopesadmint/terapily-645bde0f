@@ -187,66 +187,76 @@ export function DragDropRunner({
     ? config.cards.find((c) => c.id === activeId)
     : null;
 
+  // ── Click-based placement for card_sort ──
+  const handlePlaceCard = useCallback((cardId: string, zoneId: string) => {
+    setSortPlacements((prev) => ({ ...prev, [cardId]: zoneId }));
+  }, []);
+
   return (
     <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-6" style={{ maxHeight: "100%", minHeight: 0 }}>
-      {/* Header */}
+      {/* Header — instruction only (progress moved to bottom for card_sort) */}
       <div className="space-y-3">
         <p className="text-base leading-relaxed text-foreground">
           {config.instruction}
         </p>
-        <div className="flex items-center gap-3">
-          <Progress value={progress} className="h-2 flex-1" />
-          <span className="text-xs font-medium text-muted-foreground">
-            {progress}%
-          </span>
-        </div>
+        {config.mode !== "card_sort" && (
+          <div className="flex items-center gap-3">
+            <Progress value={progress} className="h-2 flex-1" />
+            <span className="text-xs font-medium text-muted-foreground">
+              {progress}%
+            </span>
+          </div>
+        )}
       </div>
 
-      {/* Layout */}
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        {config.mode === "card_sort" && (
-          <CardSortLayout
-            cards={config.cards}
-            zones={config.zones}
-            placements={sortPlacements}
-          />
-        )}
+      {/* Card sort — click-based, no DnD */}
+      {config.mode === "card_sort" && (
+        <CardSortLayout
+          cards={config.cards}
+          zones={config.zones}
+          placements={sortPlacements}
+          onPlaceCard={handlePlaceCard}
+        />
+      )}
 
-        {config.mode === "ranking_ladder" && (
-          <RankingLadderLayout
-            cards={config.cards}
-            order={ladderOrder}
-            topLabel={config.topLabel}
-            bottomLabel={config.bottomLabel}
-          />
-        )}
-
-        {config.mode === "cycle_builder" && (
-          <CycleBuilderLayout
-            cards={config.cards}
-            slots={config.slots}
-            placements={cyclePlacements}
-          />
-        )}
-
-        {/* Drag overlay */}
-        <DragOverlay>
-          {activeCard && (
-            <div className="rounded-xl border-2 border-[oklch(0.661_0.045_153.6)] px-4 py-3 shadow-[0_16px_40px_oklch(0.40_0.04_65/0.35)] scale-105"
-              style={{ backgroundColor: "oklch(0.94 0.03 80)" }}
-            >
-              <p className="text-[0.9375rem] leading-snug font-medium text-[oklch(0.25_0.02_65)]">
-                {activeCard.text}
-              </p>
-            </div>
+      {/* Other modes still use DnD */}
+      {config.mode !== "card_sort" && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          {config.mode === "ranking_ladder" && (
+            <RankingLadderLayout
+              cards={config.cards}
+              order={ladderOrder}
+              topLabel={config.topLabel}
+              bottomLabel={config.bottomLabel}
+            />
           )}
-        </DragOverlay>
-      </DndContext>
+
+          {config.mode === "cycle_builder" && (
+            <CycleBuilderLayout
+              cards={config.cards}
+              slots={config.slots}
+              placements={cyclePlacements}
+            />
+          )}
+
+          <DragOverlay>
+            {activeCard && (
+              <div className="rounded-xl border-2 border-[oklch(0.661_0.045_153.6)] px-4 py-3 shadow-[0_16px_40px_oklch(0.40_0.04_65/0.35)] scale-105"
+                style={{ backgroundColor: "oklch(0.94 0.03 80)" }}
+              >
+                <p className="text-[0.9375rem] leading-snug font-medium text-[oklch(0.25_0.02_65)]">
+                  {activeCard.text}
+                </p>
+              </div>
+            )}
+          </DragOverlay>
+        </DndContext>
+      )}
 
       {/* Actions */}
       <div className="flex items-center justify-between border-t border-border/40 pt-4">
