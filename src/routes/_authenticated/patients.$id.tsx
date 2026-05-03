@@ -734,104 +734,152 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                     {share && share.total > 0 && (
                       <ShareSummaryLine summary={share} />
                     )}
-                    {/* M-Linha 5: Botões — grid 3 colunas, mesma largura, alinhados à direita */}
+                    {/* M-Linha 5: Botões — flex dinâmico, sem gaps vazios, alinhados à direita */}
                     {(() => {
                       const arch = (a.activity as any)?.archetype;
                       const isMindful = arch === "guided_timer" || arch === "guided_script";
                       const showReports = isMindful || (status === "completed" && response?.id);
                       const busyKey = response?.id ?? a.activity?.id ?? a.id;
                       const actId = a.activity?.id;
-                      const btnBase = "text-[10px] h-7 px-1 flex items-center justify-center gap-0.5 w-full";
+                      const btnBase = "text-[10px] h-7 px-1 flex items-center justify-center gap-0.5";
+
+                      // Collect visible buttons in order: Status → Aplicar/Ver → Novo link → Revogar → Paciente → Terapeuta
+                      const items: React.ReactNode[] = [];
+
+                      // 1. Status badge (always present)
+                      items.push(
+                        <Badge key="status" variant={STATUS_VARIANT[displayStatus]} className={`${btnBase} rounded-md`}>
+                          {STATUS_LABEL[displayStatus]}
+                          {hasDraft && ` · ${draftPct}%`}
+                        </Badge>
+                      );
+
+                      // 2. Aplicar / Ver
+                      if ((status === "pending" || status === "in_progress") &&
+                        (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
+                        !a.used_at) {
+                        items.push(
+                          <Button
+                            key="apply"
+                            size="sm"
+                            variant="default"
+                            className={btnBase}
+                            onClick={() =>
+                              setInSessionTarget({
+                                patientActivityId: a.id,
+                                activityTitle: a.activity?.title ?? "Atividade",
+                              })
+                            }
+                          >
+                            <Play className="h-2.5 w-2.5 shrink-0" /> Aplicar
+                          </Button>
+                        );
+                      } else if (status === "completed" && response?.id) {
+                        items.push(
+                          <Button
+                            key="view"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setViewResponseId(response.id)}
+                            className={btnBase}
+                          >
+                            <Eye className="h-2.5 w-2.5 shrink-0" /> Ver
+                          </Button>
+                        );
+                      }
+
+                      // 3. Novo link
+                      if (canRegenLink) {
+                        items.push(
+                          <Button
+                            key="newlink"
+                            size="sm"
+                            variant="outline"
+                            disabled={regenLinkMutation.isPending}
+                            onClick={() => regenLinkMutation.mutate(a.id)}
+                            className={btnBase}
+                          >
+                            <RefreshCw className="h-2.5 w-2.5 shrink-0" /> Novo link
+                          </Button>
+                        );
+                      }
+
+                      // 4. Revogar
+                      if (canRevoke) {
+                        items.push(
+                          <Button
+                            key="revoke"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => setRevokeTarget(a.id)}
+                            className={btnBase}
+                          >
+                            <Slash className="h-2.5 w-2.5 shrink-0" /> Revogar
+                          </Button>
+                        );
+                      }
+
+                      // 5. Paciente
+                      if (showReports) {
+                        items.push(
+                          <Button
+                            key="patient"
+                            size="sm"
+                            className={`${btnBase} border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm`}
+                            disabled={scaleResultBusy === `${busyKey}-patient`}
+                            onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
+                          >
+                            <Download className="h-2.5 w-2.5 shrink-0" />
+                            {scaleResultBusy === `${busyKey}-patient` ? "…" : "Paciente"}
+                          </Button>
+                        );
+                      }
+
+                      // 6. Terapeuta
+                      if (showReports) {
+                        items.push(
+                          <Button
+                            key="therapist"
+                            size="sm"
+                            className={`${btnBase} border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm`}
+                            disabled={scaleResultBusy === `${busyKey}-therapist`}
+                            onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
+                          >
+                            <ShieldCheck className="h-2.5 w-2.5 shrink-0" />
+                            {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Terapeuta"}
+                          </Button>
+                        );
+                      }
+
+                      const total = items.length;
+                      const lastRowCount = total % 3 || 3;
+                      const isLastRowIncomplete = lastRowCount < 3;
+
                       return (
                         <div className="grid grid-cols-3 gap-1.5">
-                          {/* 1. Status badge */}
-                          <Badge variant={STATUS_VARIANT[displayStatus]} className={`${btnBase} rounded-md`}>
-                            {STATUS_LABEL[displayStatus]}
-                            {hasDraft && ` · ${draftPct}%`}
-                          </Badge>
-                          {/* 2. Aplicar / Ver */}
-                          {(status === "pending" || status === "in_progress") &&
-                            (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
-                            !a.used_at ? (
-                            <Button
-                              size="sm"
-                              variant="default"
-                              className={btnBase}
-                              onClick={() =>
-                                setInSessionTarget({
-                                  patientActivityId: a.id,
-                                  activityTitle: a.activity?.title ?? "Atividade",
-                                })
-                              }
-                            >
-                              <Play className="h-2.5 w-2.5 shrink-0" /> Aplicar
-                            </Button>
-                          ) : status === "completed" && response?.id ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setViewResponseId(response.id)}
-                              className={btnBase}
-                            >
-                              <Eye className="h-2.5 w-2.5 shrink-0" /> Ver
-                            </Button>
-                          ) : (
-                            <span />
-                          )}
-                          {/* 3. Novo link */}
-                          {canRegenLink ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              disabled={regenLinkMutation.isPending}
-                              onClick={() => regenLinkMutation.mutate(a.id)}
-                              className={btnBase}
-                            >
-                              <RefreshCw className="h-2.5 w-2.5 shrink-0" /> Novo link
-                            </Button>
-                          ) : (
-                            <span />
-                          )}
-                          {/* 4. Revogar */}
-                          {canRevoke ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setRevokeTarget(a.id)}
-                              className={btnBase}
-                            >
-                              <Slash className="h-2.5 w-2.5 shrink-0" /> Revogar
-                            </Button>
-                          ) : (
-                            <span />
-                          )}
-                          {/* 5. Paciente */}
-                          {showReports ? (
-                            <Button
-                              size="sm"
-                              className={`${btnBase} border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm`}
-                              disabled={scaleResultBusy === `${busyKey}-patient`}
-                              onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
-                            >
-                              <Download className="h-2.5 w-2.5 shrink-0" />
-                              {scaleResultBusy === `${busyKey}-patient` ? "…" : "Paciente"}
-                            </Button>
-                          ) : (
-                            <span />
-                          )}
-                          {/* 6. Terapeuta */}
-                          {showReports ? (
-                            <Button
-                              size="sm"
-                              className={`${btnBase} border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm`}
-                              disabled={scaleResultBusy === `${busyKey}-therapist`}
-                              onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
-                            >
-                              <ShieldCheck className="h-2.5 w-2.5 shrink-0" />
-                              {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Terapeuta"}
-                            </Button>
-                          ) : (
-                            <span />
+                          {items.map((item, i) => {
+                            const isInLastRow = i >= total - lastRowCount;
+                            const isLastIncompleteRow = isInLastRow && isLastRowIncomplete;
+                            // If last row has 1 item → span 3; if 2 items → no span (they fill naturally at ~50% via col-span hack is not ideal, keep 1/3 each aligned right)
+                            // Actually: 1 item → span all 3 cols; 2 items → each takes normal 1 col but we want right-aligned
+                            // Best approach: last row with <3 items wraps in a sub-flex justify-end
+                            return isLastIncompleteRow ? null : (
+                              <div key={i} className="w-full">{item}</div>
+                            );
+                          })}
+                          {/* Last incomplete row: render in a special container */}
+                          {isLastRowIncomplete && (
+                            lastRowCount === 1 ? (
+                              <div className="col-span-3 w-full">
+                                {items[total - 1]}
+                              </div>
+                            ) : (
+                              <>
+                                <div className="w-full">{items[total - 2]}</div>
+                                <div className="w-full">{items[total - 1]}</div>
+                                <div /> {/* empty cell to keep grid alignment right-ish — actually not needed, 2 items start from left in grid */}
+                              </>
+                            )
                           )}
                         </div>
                       );
@@ -840,7 +888,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                     {(hasDraft || displayStatus === "in_progress") && (
                       <div className="pt-3 space-y-1">
                         <Progress value={hasDraft ? draftPct : 5} className="h-1.5" />
-                        <p className="text-xs text-muted-foreground text-left">
+                        <p className="text-xs text-muted-foreground text-center">
                           {hasDraft
                             ? `Paciente está respondendo (${draftPct}%). Conteúdo cifrado — você verá só ao finalizar.`
                             : "Paciente iniciou a atividade. Conteúdo cifrado — você verá só ao finalizar."}
