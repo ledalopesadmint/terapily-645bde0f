@@ -730,89 +730,105 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         )}
                       </span>
                     ) : null}
-                    {/* M-Linha 4: Status + Ver respostas + Aplicar + Revogar/Novo link */}
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <Badge variant={STATUS_VARIANT[displayStatus]} className="text-[10px] px-1.5 py-0.5">
-                        {STATUS_LABEL[displayStatus]}
-                        {hasDraft && ` · ${draftPct}%`}
-                      </Badge>
-                      {(status === "pending" || status === "in_progress") &&
-                        (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
-                        !a.used_at && (
-                        <Button
-                          size="sm"
-                          variant="default"
-                          className="text-[10px] h-6 px-2"
-                          onClick={() =>
-                            setInSessionTarget({
-                              patientActivityId: a.id,
-                              activityTitle: a.activity?.title ?? "Atividade",
-                            })
-                          }
-                        >
-                          <Play className="mr-0.5 h-2.5 w-2.5" /> Aplicar
-                        </Button>
-                      )}
-                      {status === "completed" && response?.id && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setViewResponseId(response.id)}
-                          className="text-[10px] h-6 px-2"
-                        >
-                          <Eye className="mr-0.5 h-2.5 w-2.5" /> Ver
-                        </Button>
-                      )}
-                      {canRegenLink && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={regenLinkMutation.isPending}
-                          onClick={() => regenLinkMutation.mutate(a.id)}
-                          className="text-[10px] h-6 px-2"
-                        >
-                          <RefreshCw className="mr-0.5 h-2.5 w-2.5" /> Novo link
-                        </Button>
-                      )}
-                      {canRevoke && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => setRevokeTarget(a.id)}
-                          className="text-[10px] h-6 px-2"
-                        >
-                          <Slash className="mr-0.5 h-2.5 w-2.5" /> Revogar
-                        </Button>
-                      )}
-                    </div>
-                    {/* M-Linha 5: Botões Paciente + Terapeuta */}
+                    {/* M-Linha 4: Todos os botões — grid 3 colunas, mesma largura */}
                     {(() => {
                       const arch = (a.activity as any)?.archetype;
                       const isMindful = arch === "guided_timer" || arch === "guided_script";
                       const showReports = isMindful || (status === "completed" && response?.id);
-                      if (!showReports) return null;
                       const busyKey = response?.id ?? a.activity?.id ?? a.id;
                       const actId = a.activity?.id;
+                      const btnBase = "text-[10px] h-7 px-1 flex items-center justify-center gap-0.5 w-full";
                       return (
-                        <div className="grid grid-cols-2 gap-1.5">
-                          <Button
-                            size="sm"
-                            className="text-[10px] h-7 px-2 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
-                            disabled={scaleResultBusy === `${busyKey}-patient`}
-                            onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
-                          >
-                            <Download className="mr-0.5 h-2.5 w-2.5" />
-                            {scaleResultBusy === `${busyKey}-patient` ? "…" : "Paciente"}
-                          </Button>
-                          <Button
-                            size="sm"
-                            className="text-[10px] h-7 px-2 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 active:scale-95"
-                            disabled={scaleResultBusy === `${busyKey}-therapist`}
-                            onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
-                          >
-                            <ShieldCheck className="mr-0.5 h-2.5 w-2.5" />
-                            {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Terapeuta"}
-                          </Button>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {/* 1. Status badge como botão */}
+                          <Badge variant={STATUS_VARIANT[displayStatus]} className={`${btnBase} rounded-md`}>
+                            {STATUS_LABEL[displayStatus]}
+                            {hasDraft && ` · ${draftPct}%`}
+                          </Badge>
+                          {/* 2. Aplicar / Ver */}
+                          {(status === "pending" || status === "in_progress") &&
+                            (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
+                            !a.used_at ? (
+                            <Button
+                              size="sm"
+                              variant="default"
+                              className={btnBase}
+                              onClick={() =>
+                                setInSessionTarget({
+                                  patientActivityId: a.id,
+                                  activityTitle: a.activity?.title ?? "Atividade",
+                                })
+                              }
+                            >
+                              <Play className="h-2.5 w-2.5 shrink-0" /> Aplicar
+                            </Button>
+                          ) : status === "completed" && response?.id ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setViewResponseId(response.id)}
+                              className={btnBase}
+                            >
+                              <Eye className="h-2.5 w-2.5 shrink-0" /> Ver
+                            </Button>
+                          ) : (
+                            <span />
+                          )}
+                          {/* 3. Novo link */}
+                          {canRegenLink ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              disabled={regenLinkMutation.isPending}
+                              onClick={() => regenLinkMutation.mutate(a.id)}
+                              className={btnBase}
+                            >
+                              <RefreshCw className="h-2.5 w-2.5 shrink-0" /> Novo link
+                            </Button>
+                          ) : (
+                            <span />
+                          )}
+                          {/* 4. Revogar */}
+                          {canRevoke ? (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setRevokeTarget(a.id)}
+                              className={btnBase}
+                            >
+                              <Slash className="h-2.5 w-2.5 shrink-0" /> Revogar
+                            </Button>
+                          ) : (
+                            <span />
+                          )}
+                          {/* 5. Paciente */}
+                          {showReports ? (
+                            <Button
+                              size="sm"
+                              className={`${btnBase} border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm`}
+                              disabled={scaleResultBusy === `${busyKey}-patient`}
+                              onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
+                            >
+                              <Download className="h-2.5 w-2.5 shrink-0" />
+                              {scaleResultBusy === `${busyKey}-patient` ? "…" : "Paciente"}
+                            </Button>
+                          ) : (
+                            <span />
+                          )}
+                          {/* 6. Terapeuta */}
+                          {showReports ? (
+                            <Button
+                              size="sm"
+                              className={`${btnBase} border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm`}
+                              disabled={scaleResultBusy === `${busyKey}-therapist`}
+                              onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
+                            >
+                              <ShieldCheck className="h-2.5 w-2.5 shrink-0" />
+                              {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Terapeuta"}
+                            </Button>
+                          ) : (
+                            <span />
+                          )}
                         </div>
                       );
                     })()}
