@@ -169,8 +169,9 @@ function downloadPdfBlob(bytes: number[], filename: string) {
   URL.revokeObjectURL(url);
 }
 
+type ViewState = "consent" | "exercise" | "completed" | "history";
 
-interface HistoryEntry {
+
   id: string;
   completedAt: string;
   durationSeconds: number | null;
