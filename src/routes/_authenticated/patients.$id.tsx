@@ -476,15 +476,29 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
     responseId: string,
     variant: "patient" | "therapist",
     archetype?: string,
+    activityId?: string,
   ) => {
     setScaleResultBusy(`${responseId}-${variant}`);
     try {
-      const isWorksheet = archetype === "structured_form";
-      const fn = isWorksheet
-        ? (variant === "patient" ? generateWorksheetResultPatient : generateWorksheetResultTherapist)
-        : (variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist);
-      const res = await fn({ data: { activityResponseId: responseId, workspaceId } });
-      const binary = atob(res.pdf);
+      const isMindfulness = archetype === "guided_timer" || archetype === "guided_script";
+      let pdfField: string;
+
+      if (isMindfulness && activityId) {
+        const fn = variant === "patient"
+          ? generateHabitReportByActivityPatient
+          : generateHabitReportByActivityTherapist;
+        const res = await fn({ data: { workspaceId, patientId, activityId } });
+        pdfField = res.pdfBytes;
+      } else {
+        const isWorksheet = archetype === "structured_form";
+        const fn = isWorksheet
+          ? (variant === "patient" ? generateWorksheetResultPatient : generateWorksheetResultTherapist)
+          : (variant === "patient" ? generateScaleResultPatient : generateScaleResultTherapist);
+        const res = await fn({ data: { activityResponseId: responseId, workspaceId } });
+        pdfField = res.pdf;
+      }
+
+      const binary = atob(pdfField);
       const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
       const blob = new Blob([bytes], { type: "application/pdf" });
