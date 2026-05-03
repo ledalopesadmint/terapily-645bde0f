@@ -250,7 +250,7 @@ export function CardSortLayout({ cards, zones, placements, onPlaceCard }: CardSo
         <div className="flex flex-1 min-h-0 gap-4 overflow-hidden">
 
           {/* LEFT PANEL — Thoughts (1/3) */}
-          <div className="flex w-1/3 min-w-[200px] flex-col rounded-2xl border border-border/40 bg-white/60">
+          <div className="flex w-1/3 min-w-[200px] flex-col rounded-2xl border border-border/40 bg-white shadow-sm">
             <div className="flex items-center gap-2 border-b border-border/30 px-4 py-3">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
                 Pensamentos
