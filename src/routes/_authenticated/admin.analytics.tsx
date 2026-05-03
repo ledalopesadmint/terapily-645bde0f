@@ -8,7 +8,7 @@
  * Filtros de período, alertas, exportação CSV + PDF.
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   BarChart,
