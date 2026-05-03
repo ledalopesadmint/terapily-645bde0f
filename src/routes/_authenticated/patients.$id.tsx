@@ -854,12 +854,40 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                         )}
                       </span>
                     ) : null}
-                    {/* Ações desktop */}
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={STATUS_VARIANT[displayStatus]}>
-                        {STATUS_LABEL[displayStatus]}
-                        {hasDraft && ` · ${draftPct}%`}
-                      </Badge>
+                    {/* Ações desktop — ordem fixa, alinhados à DIREITA */}
+                    <div className="flex flex-wrap items-center justify-end gap-2">
+                      {/* 1. Relatório Terapeuta + Paciente */}
+                      {(() => {
+                        const arch = (a.activity as any)?.archetype;
+                        const isMindful = arch === "guided_timer" || arch === "guided_script";
+                        const showReports = isMindful || (status === "completed" && response?.id);
+                        if (!showReports) return null;
+                        const busyKey = response?.id ?? a.activity?.id ?? a.id;
+                        const actId = a.activity?.id;
+                        return (
+                          <>
+                            <Button
+                              size="sm"
+                              className="text-xs px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
+                              disabled={scaleResultBusy === `${busyKey}-therapist`}
+                              onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
+                            >
+                              <ShieldCheck className="mr-1 h-3.5 w-3.5" />
+                              {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Relatório Terapeuta"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              className="text-xs px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
+                              disabled={scaleResultBusy === `${busyKey}-patient`}
+                              onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
+                            >
+                              <Download className="mr-1 h-3.5 w-3.5" />
+                              {scaleResultBusy === `${busyKey}-patient` ? "…" : "Relatório Paciente"}
+                            </Button>
+                          </>
+                        );
+                      })()}
+                      {/* 2. Aplicar */}
                       {(status === "pending" || status === "in_progress") &&
                         (a.delivery_mode === "in_session" || a.delivery_mode === "both") &&
                         !a.used_at && (
@@ -877,48 +905,18 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                           <Play className="mr-1 h-3.5 w-3.5" /> Aplicar
                         </Button>
                       )}
+                      {/* 3. Ver respostas */}
                       {status === "completed" && response?.id && (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => setViewResponseId(response.id)}
-                            className="text-xs px-3"
-                          >
-                            <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
-                          </Button>
-                        </>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setViewResponseId(response.id)}
+                          className="text-xs px-3"
+                        >
+                          <Eye className="mr-1 h-3.5 w-3.5" /> Ver respostas
+                        </Button>
                       )}
-                      {(() => {
-                        const arch = (a.activity as any)?.archetype;
-                        const isMindful = arch === "guided_timer" || arch === "guided_script";
-                        const showReports = isMindful || (status === "completed" && response?.id);
-                        if (!showReports) return null;
-                        const busyKey = response?.id ?? a.activity?.id ?? a.id;
-                        const actId = a.activity?.id;
-                        return (
-                          <>
-                            <Button
-                              size="sm"
-                              className="text-xs px-3 border border-action-patient-report bg-action-patient-report text-action-patient-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-patient-report hover:text-action-patient-report-fg hover:shadow-md hover:shadow-action-patient-report/30 hover:brightness-110 active:scale-95"
-                              disabled={scaleResultBusy === `${busyKey}-patient`}
-                              onClick={() => downloadScaleResult(busyKey, "patient", arch, actId)}
-                            >
-                              <Download className="mr-1 h-3.5 w-3.5" />
-                              {scaleResultBusy === `${busyKey}-patient` ? "…" : "Relatório Paciente"}
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="text-xs px-3 border border-action-therapist-report bg-action-therapist-report text-action-therapist-report-fg shadow-sm transition-all duration-150 hover:scale-105 hover:bg-action-therapist-report hover:text-action-therapist-report-fg hover:shadow-md hover:shadow-action-therapist-report/30 hover:brightness-110 active:scale-95"
-                              disabled={scaleResultBusy === `${busyKey}-therapist`}
-                              onClick={() => downloadScaleResult(busyKey, "therapist", arch, actId)}
-                            >
-                              <ShieldCheck className="mr-1 h-3.5 w-3.5" />
-                              {scaleResultBusy === `${busyKey}-therapist` ? "…" : "Relatório Terapeuta"}
-                            </Button>
-                          </>
-                        );
-                      })()}
+                      {/* 4. Novo link */}
                       {canRegenLink && (
                         <Button
                           size="sm"
@@ -930,6 +928,7 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                           <RefreshCw className="mr-1 h-3.5 w-3.5" /> Novo link
                         </Button>
                       )}
+                      {/* 5. Revogar */}
                       {canRevoke && (
                         <Button
                           size="sm"
@@ -940,6 +939,11 @@ function ActivitiesTab({ patientId, workspaceId, startSession, openAssign }: Act
                           <Slash className="mr-1 h-3.5 w-3.5" /> Revogar
                         </Button>
                       )}
+                      {/* 6. Status badge */}
+                      <Badge variant={STATUS_VARIANT[displayStatus]}>
+                        {STATUS_LABEL[displayStatus]}
+                        {hasDraft && ` · ${draftPct}%`}
+                      </Badge>
                     </div>
                   </div>
                   {(hasDraft || displayStatus === "in_progress") && (
