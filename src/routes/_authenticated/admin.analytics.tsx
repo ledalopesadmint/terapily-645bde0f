@@ -131,9 +131,9 @@ function AdminAnalyticsPage() {
   }, [currentDays]);
 
   // Load platform data when period changes
-  useState(() => {
+  useEffect(() => {
     if (hasRole("admin")) void loadPlatformData();
-  });
+  }, [hasRole, loadPlatformData]);
 
   const handlePeriodChange = (preset: PeriodPreset) => {
     analytics.setPeriod(preset);
