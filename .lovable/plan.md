@@ -1,78 +1,133 @@
 
-# Drag & Drop Result PDF — Templates Paciente e Terapeuta
+# Links Efêmeros + Countdown de Expiração — Implementação Imediata
 
-## Visão geral
+## Resumo
 
-Criar `drag-drop-result-pdf.server.ts` e `drag-drop-result-pdf.functions.ts` seguindo exatamente o padrão dos PDFs existentes (scale-result-pdf e worksheet-result-pdf). Gerar amostras visuais em PDF com dados fictícios do CBT-03 (Cognitive Distortions) para aprovação antes de travar o template.
+Criar a terceira categoria de links (`/e/$token`) para atividades efêmeras (Cognitive Mapping v2.0 e futuras), com dados retidos por 24h após submit, countdown visual no box da atividade, consentimento obrigatório do terapeuta, e audit trail completo para blindagem jurídica.
 
-## Passo 1 — Gerar PDFs de amostra (dados fictícios)
+---
 
-Criar um script Python com jsPDF-equivalent (reportlab) que gera 2 PDFs de exemplo usando dados simulados do CBT-03:
-- `/mnt/documents/drag-drop-result-patient-sample.pdf`
-- `/mnt/documents/drag-drop-result-therapist-sample.pdf`
+## 1. Banco de dados (migração)
 
-Os PDFs seguem 100% o brand: header Navy, watermark, footer com paginação anti-adulteração, cores Terapily.
+### Novas tabelas
 
-### Relatório Paciente (sample)
-1. Header Navy com ícone + wordmark "terapily."
-2. Título: "Activity Results" (Times bold 20pt Navy)
-3. Info box (Participant, Activity, Date, Mode, Generated)
-4. **Seção "Your Results"**: diagrama visual das zonas com cards posicionados — cada zona tem header Sage com nome, cards listados dentro como boxes Cream
-5. **Seção "Highlights"**: 3-4 bullets motivacionais ("You identified X of Y patterns", "Most recognized pattern: [zona]", "Time: X minutes")
-6. **Seção "Next Steps"**: texto genérico não-clínico
-7. Notice box "About Your Data" (amarelo, mesmo template worksheet)
-8. Footer com disclaimer paciente
+**`ephemeral_activities`** — Registro do link efêmero:
+- `id`, `workspace_id`, `patient_id`, `activity_id`, `assigned_by`
+- `token_hash` (SHA-256, nunca o token cru)
+- `token_expires_at` (expiração do acesso ao link)
+- `status` enum: `pending`, `opened`, `completed`, `expired`, `revoked`
+- `therapist_consent_at` (timestamp do consentimento do terapeuta)
+- `therapist_consent_text_hash` (SHA-256 do texto aceito)
+- `purge_after` (timestamp = `used_at + 24h`, calculado no submit)
+- `used_at`, `completed_at`
+- `pdf_downloaded_at` (último download)
+- `pdf_download_count` (int, default 0)
+- RLS: mesma lógica de `patient_activities` (workspace member + assigned therapist or owner)
 
-### Relatório Terapeuta (sample)
-1. Header Navy + clinician copy band vermelha
-2. Título: "Clinical Activity Record"
-3. PHI warning (quando aplicável)
-4. Info box expandido (+Therapist, Practice, License, NPI)
-5. **Seção "Structured Results"**: tabela completa (Card | Assigned Zone | Reference Zone | Match ✓/✗)
-6. **Seção "Derived Metrics"**: Concentration Index, Blind Spots Index, Accuracy %, Hesitation outliers
-7. **Seção "Clinical Observations"** (auto-geradas dos dados): "Concentration of X% in [zone]. Pattern consistent with [reference]." + citação bibliográfica
-8. **Seção "Clinical Flags"** (se aplicável): boxes laranja com flag
-9. **Seção "Longitudinal Comparison"** (se houver aplicações anteriores): tabela data|resumo|delta
-10. **Seção "Raw Data"**: JSON resumido com timestamps
-11. Notice "Notices" (mesmo template worksheet)
-12. Footer com disclaimer terapeuta + referência bibliográfica
+**`ephemeral_responses`** — Dados temporários:
+- `id`, `ephemeral_activity_id`, `workspace_id`, `patient_id`
+- `response_data_encrypted` (text, nullable — será nullificado após 24h)
+- `submitted_at`, `submitted_via`
+- `purged_at` (timestamp de quando foi limpo)
+- RLS: mesma lógica, SELECT only para terapeuta
 
-## Passo 2 — Implementar no código (após aprovação visual)
+### Novo enum
+- `ephemeral_activity_status`: `pending`, `opened`, `completed`, `expired`, `revoked`, `purged`
 
-### Novos arquivos
-- `src/features/activities/drag-drop-result-pdf.server.ts` — `buildDragDropResultPDF()` com as 2 variantes
-- `src/features/activities/drag-drop-result-pdf.functions.ts` — `generateDragDropResultPatient` / `generateDragDropResultTherapist`
+### Triggers (SECURITY DEFINER)
+- `audit_ephemeral_activity_change()` — registra `ephemeral.assigned`, `ephemeral.consent_acknowledged`, `ephemeral.status_changed`, `ephemeral.submitted`
+- `audit_ephemeral_response_insert()` — registra `ephemeral.response_recorded`
 
-### Lógica por sub-modo
+### pg_cron job
+- Roda a cada 15 minutos: `SELECT purge_expired_ephemeral_data()`
+- Função `purge_expired_ephemeral_data()` (SECURITY DEFINER):
+  - WHERE `purge_after < now()` AND `purged_at IS NULL` AND `response_data_encrypted IS NOT NULL`
+  - SET `response_data_encrypted = NULL`, `purged_at = now()`
+  - UPDATE `ephemeral_activities` SET `status = 'purged'`
+  - INSERT audit log: `ephemeral.purged` (sem PHI, só UUIDs + timestamps)
 
-**card_sort** (CBT-03, CBT-06, ACT-01, ACT-02, DBT-06):
-- Diagrama de zonas + cards
-- Tabela card→zona (com gabarito quando disponível)
-- Métricas: Concentration Index, Blind Spots, Accuracy
+---
 
-**ranking_ladder** (CBT-04):
-- Escada visual com SUDS
-- Tabela ordenada com valores SUDS
-- Métricas: SUDS médio, clusters, coerência rank-SUDS
+## 2. Server functions
 
-**cycle_builder** (CBT-05):
-- Diagrama do ciclo com slots preenchidos
-- Tabela slot→card
-- Métrica: completude (slots preenchidos / total)
+**`src/features/ephemeral/ephemeral.functions.ts`**:
+- `assignEphemeralActivity` — cria registro, exige `therapist_consent_at` + `therapist_consent_text_hash`
+- `getEphemeralActivity` — busca por patient_id (para listar no perfil)
+- `revokeEphemeralActivity` — muda status para `revoked`
+- `recordEphemeralPdfDownload` — incrementa contador + registra audit `ephemeral.pdf_downloaded`
+- `recordEphemeralWarningShown` — registra audit `ephemeral.expiration_warning_shown`
 
-### Edições em arquivos existentes
-- `src/routes/p.$token.tsx` — adicionar roteamento para `drag_drop` archetype na geração auto-PDF
-- `src/routes/_authenticated/patients.$id.tsx` — importar e chamar as novas functions nos botões de relatório
+**`src/features/ephemeral/ephemeral.server.ts`**:
+- Helpers de banco (queries, validações)
 
-## Passo 3 — Registrar template travado
+**`src/features/ephemeral/ephemeral-public.functions.ts`**:
+- `getEphemeralByToken` — rota pública para `/e/$token` (valida hash, verifica expiração)
+- `submitEphemeralResponse` — salva response_data_encrypted, marca `used_at`, calcula `purge_after`
 
-Criar `mem://features/drag-drop-result-pdf` com todas as especificações visuais (cores, espaçamentos, renderers por sub-modo, notices, paginação). Source of truth para todo drag_drop futuro.
+---
+
+## 3. Rota pública `/e/$token`
+
+**`src/routes/e.$token.tsx`** — Player público para atividades efêmeras:
+- Consent gate (reutiliza `ConsentGate`)
+- Player da atividade (Card Sort / Cognitive Mapping)
+- Ao submeter: gera PDF visual do quadro + salva encrypted
+- Mensagem pós-submit: "Suas respostas foram registradas. O terapeuta receberá o resultado."
+
+---
+
+## 4. Componente `EphemeralCountdownBadge`
+
+**`src/features/ephemeral/components/EphemeralCountdownBadge.tsx`**:
+- Props: `purgeAfter: string` (ISO timestamp), `onDownloadPdf: () => void`
+- `useEffect` + `setInterval(1000)` — calcula diferença entre `now()` e `purgeAfter`
+- Formatação: `XXh XXm XXs`
+- Escala de cores (3 fases):
+  - `>12h`: fundo sage-claro, texto sage-escuro, ícone relógio
+  - `2h–12h`: fundo âmbar-claro, texto âmbar-escuro
+  - `<2h`: fundo coral-claro, texto coral-escuro, animação pulse suave
+  - `≤0`: fundo cinza, texto "Dados expirados", ícone cadeado, botão desabilitado
+- Botão "Baixar PDF" integrado (atalho direto)
+- Tooltip: "Após a expiração, os dados desta atividade serão permanentemente removidos e não poderão ser recuperados."
+- Ao renderizar pela primeira vez: chama `recordEphemeralWarningShown` (1x por sessão, debounce)
+
+### Toast de última hora
+- Quando countdown atinge 1h restante: `toast.warning("Atividade [nome] expira em menos de 1h — baixe o PDF agora")`
+- Disparado 1x (flag ref)
+
+---
+
+## 5. Integração no perfil do paciente
+
+No `patients.$id.tsx`, na seção de atividades:
+- Query adicional para `ephemeral_activities` do paciente
+- Renderizar cards de atividades efêmeras com o `EphemeralCountdownBadge` (quando `status === 'completed'` e `purged_at IS NULL`)
+- Cards de efêmeras purged: mostrar badge cinza "Dados expirados" sem botão de download
+
+---
+
+## 6. Modal de consentimento do terapeuta
+
+Ao prescrever atividade efêmera (no `AssignActivityDialog` ou equivalente):
+- Modal intermediário antes de confirmar:
+  - Texto: "Entendo que os dados desta atividade serão permanentemente removidos 24 horas após o preenchimento pelo paciente, e que é minha responsabilidade baixar o resultado antes desse prazo."
+  - Checkbox + botão "Concordo e prescrevo"
+- Hash SHA-256 do texto salvo no `therapist_consent_text_hash`
+- Audit log: `ephemeral.consent_acknowledged`
+
+---
+
+## 7. Memórias
+
+Salvar `mem://features/ephemeral-links-architecture` com todas as regras, schema, audit events e política de 24h.
+
+---
 
 ## Detalhes técnicos
 
-- Reutiliza `pdf-brand-assets.server.ts` (ICON_PNG_B64, WATERMARK_PNG_B64)
-- Reutiliza helpers compartilhados (drawHeader, drawFooter, drawWatermark, checkPage) — mesma assinatura dos outros PDFs
-- Dados vêm de `activity_responses.response_data` (tipo `DragDropResponseData`)
-- Gabarito vem de `activity_catalog.config.reference_key` (quando existe)
-- PHI decrypted via `decryptPHIServer`
-- Audit log: `drag_drop_result.patient_generated` / `drag_drop_result.therapist_generated`
+- Todas as server functions usam `requireSupabaseAuth` middleware
+- Rota `/e/$token` é pública (sem auth), mesma segurança do `/p/$token`
+- PHI cifrado com AES-256 usando `PHI_ENCRYPTION_KEY` (já configurado)
+- Audit logs nunca contêm PHI — apenas UUIDs, timestamps e contadores
+- Código organizado em `src/features/ephemeral/` para manter separação clara
+- pg_cron usa `purge_expired_ephemeral_data()` SECURITY DEFINER (sem acesso client)
