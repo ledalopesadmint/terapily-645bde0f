@@ -22,7 +22,8 @@ import { hashMagicLinkToken } from "@/lib/tokens/magic-link.server";
 import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
 import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
 import { submitHabitEntry, getHabitHistory } from "@/features/habits/habits.functions";
-import { Check, BarChart3, Clock, Flame, ArrowLeft, Calendar, TrendingUp } from "lucide-react";
+import { generateHabitReportPublic } from "@/features/habits/habit-report.functions";
+import { Check, BarChart3, Clock, Download, Flame, ArrowLeft, Calendar, TrendingUp } from "lucide-react";
 
 // --- Server function: resolve token → activity data -----------------------
 
