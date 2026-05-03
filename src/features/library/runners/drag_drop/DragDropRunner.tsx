@@ -188,7 +188,7 @@ export function DragDropRunner({
     : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-6" style={{ maxHeight: "100%", minHeight: 0 }}>
       {/* Header */}
       <div className="space-y-3">
         <p className="text-base leading-relaxed text-foreground">
