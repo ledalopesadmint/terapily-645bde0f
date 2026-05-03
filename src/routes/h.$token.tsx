@@ -267,6 +267,7 @@ function HabitLinkPage() {
         activityTitle={activity.title}
         totalEntries={historyData?.totalEntries ?? link.totalEntries + 1}
         entries={historyData?.entries ?? []}
+        tokenHash={tokenHash}
         onViewHistory={handleViewHistory}
         onRepeat={() => setView("exercise")}
       />
@@ -280,6 +281,7 @@ function HabitLinkPage() {
         entries={historyData?.entries ?? []}
         totalEntries={historyData?.totalEntries ?? 0}
         expiresAt={link.expiresAt}
+        tokenHash={tokenHash}
         onBack={() => setView("exercise")}
       />
     );
