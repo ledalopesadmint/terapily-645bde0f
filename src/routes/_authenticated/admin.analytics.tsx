@@ -115,6 +115,7 @@ function AdminAnalyticsPage() {
   const [aggregating, setAggregating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [customDate, setCustomDate] = useState("");
 
   const currentDays = PERIOD_OPTIONS.find((p) => p.key === analytics.period)?.days ?? 30;
 
