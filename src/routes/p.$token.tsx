@@ -251,9 +251,10 @@ function ActivityRunner({
   const archetype = resolved.activity.archetype;
   const rawConfig = resolved.activity.config as Record<string, unknown>;
   const isBreathing = rawConfig?.runner === "breathing";
+  const isDragDrop = archetype === "drag_drop";
   const isForm = archetype === "structured_form";
   const isScript = !isBreathing && (archetype === "guided_script" || archetype === "guided_timer");
-  const config = rawConfig as unknown as QuizConfig & StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
+  const config = rawConfig as unknown as QuizConfig & StructuredFormConfig & GuidedScriptConfig & BreathingConfig & DragDropConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [submitMeta, setSubmitMeta] = useState<{ responseId: string; workspaceId: string; archetype: string } | null>(null);
