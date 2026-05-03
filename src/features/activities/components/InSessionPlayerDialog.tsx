@@ -90,10 +90,11 @@ export function InSessionPlayerDialog({
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
   const rawConfig = (configQuery.data?.activity?.config ?? {}) as Record<string, unknown>;
   const isBreathing = rawConfig.runner === "breathing";
+  const isDragDrop = archetype === "drag_drop";
   const isForm = archetype === "structured_form";
   const isScript = !isBreathing && (archetype === "guided_script" || archetype === "guided_timer");
   const config = rawConfig as unknown as QuizConfig &
-    StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
+    StructuredFormConfig & GuidedScriptConfig & BreathingConfig & DragDropConfig;
 
   const getCompletion = useCallback(() => {
     if (configQuery.isLoading) return { allAnswered: false, completion: 0 };
