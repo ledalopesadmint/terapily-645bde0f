@@ -18,6 +18,7 @@ drag-drop/
 │   └── ACT-02_COSTS-OF-AVOIDANCE_REFERENCE.md     — Harris (2008)
 ├── dbt/
 │   └── DBT-06_PROS-CONS_REFERENCE.md              — Linehan (2015)
+├── PDF_TEMPLATES_REFERENCE.md                     — PDF report templates (patient + therapist) TRAVADO
 └── README.md (this file)
 ```
 
