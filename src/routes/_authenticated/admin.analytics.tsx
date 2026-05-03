@@ -41,6 +41,7 @@ import {
   CheckCircle2,
   Target,
   AlertCircle,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
@@ -114,6 +115,7 @@ function AdminAnalyticsPage() {
   const [aggregating, setAggregating] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
+  const [customDate, setCustomDate] = useState("");
 
   const currentDays = PERIOD_OPTIONS.find((p) => p.key === analytics.period)?.days ?? 30;
 
@@ -137,10 +139,25 @@ function AdminAnalyticsPage() {
 
   const handlePeriodChange = (preset: PeriodPreset) => {
     analytics.setPeriod(preset);
+    setCustomDate("");
     // Reload platform data with corresponding days
     const days = PERIOD_OPTIONS.find((p) => p.key === preset)?.days ?? 30;
     setPlatformLoading(true);
     getAnalyticsDashboard({ data: { days } })
+      .then((result) => setPlatformData(result))
+      .catch(() => toast.error("Erro ao recarregar dados."))
+      .finally(() => setPlatformLoading(false));
+  };
+
+  const handleCustomDate = (dateStr: string) => {
+    setCustomDate(dateStr);
+    if (!dateStr) return;
+    const selected = new Date(dateStr + "T00:00:00Z");
+    const endOfDay = new Date(dateStr + "T23:59:59.999Z");
+    analytics.setCustomPeriod(selected, endOfDay);
+    // Reload platform data for that specific date
+    setPlatformLoading(true);
+    getAnalyticsDashboard({ data: { days: 1, specificDate: dateStr } })
       .then((result) => setPlatformData(result))
       .catch(() => toast.error("Erro ao recarregar dados."))
       .finally(() => setPlatformLoading(false));
@@ -240,6 +257,20 @@ function AdminAnalyticsPage() {
               {opt.label}
             </button>
           ))}
+          <div className="relative inline-flex items-center">
+            <Calendar className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => handleCustomDate(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              className={`rounded-md pl-8 pr-3 py-1.5 text-sm border transition-colors w-[160px] ${
+                analytics.period === "custom"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-input hover:bg-accent"
+              }`}
+            />
+          </div>
           <button
             onClick={handleAggregate}
             disabled={aggregating}
