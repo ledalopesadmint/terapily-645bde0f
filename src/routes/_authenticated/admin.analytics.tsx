@@ -138,11 +138,33 @@ function AdminAnalyticsPage() {
 
   const handlePeriodChange = (preset: PeriodPreset) => {
     analytics.setPeriod(preset);
+    setCustomDate("");
     // Reload platform data with corresponding days
     const days = PERIOD_OPTIONS.find((p) => p.key === preset)?.days ?? 30;
     setPlatformLoading(true);
     getAnalyticsDashboard({ data: { days } })
       .then((result) => setPlatformData(result))
+      .catch(() => toast.error("Erro ao recarregar dados."))
+      .finally(() => setPlatformLoading(false));
+  };
+
+  const handleCustomDate = (dateStr: string) => {
+    setCustomDate(dateStr);
+    if (!dateStr) return;
+    const selected = new Date(dateStr + "T00:00:00Z");
+    const endOfDay = new Date(dateStr + "T23:59:59.999Z");
+    analytics.setCustomPeriod(selected, endOfDay);
+    // Reload platform data for that single day
+    setPlatformLoading(true);
+    getAnalyticsDashboard({ data: { days: 1 } })
+      .then((result) => {
+        // Filter platform rows to only the selected date
+        const filtered = {
+          ...result,
+          rows: result.rows.filter((r) => r.date === dateStr),
+        };
+        setPlatformData(filtered);
+      })
       .catch(() => toast.error("Erro ao recarregar dados."))
       .finally(() => setPlatformLoading(false));
   };
