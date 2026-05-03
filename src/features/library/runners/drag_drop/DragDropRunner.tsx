@@ -188,7 +188,7 @@ export function DragDropRunner({
     : null;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 overflow-y-auto px-4 py-6 sm:px-6" style={{ maxHeight: "100%", minHeight: 0 }}>
       {/* Header */}
       <div className="space-y-3">
         <p className="text-base leading-relaxed text-foreground">
@@ -237,8 +237,10 @@ export function DragDropRunner({
         {/* Drag overlay */}
         <DragOverlay>
           {activeCard && (
-            <div className="rounded-xl border-2 border-sage bg-[oklch(0.94_0.025_65)] px-4 py-3 shadow-[0_12px_32px_oklch(0.50_0.04_65/0.3)]">
-              <p className="text-[0.9375rem] leading-snug text-[oklch(0.30_0.02_65)]">
+            <div className="rounded-xl border-2 border-[oklch(0.661_0.045_153.6)] px-4 py-3 shadow-[0_16px_40px_oklch(0.40_0.04_65/0.35)] scale-105"
+              style={{ backgroundColor: "oklch(0.94 0.03 80)" }}
+            >
+              <p className="text-[0.9375rem] leading-snug font-medium text-[oklch(0.25_0.02_65)]">
                 {activeCard.text}
               </p>
             </div>
