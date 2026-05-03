@@ -297,7 +297,7 @@ export function CardSortLayout({ cards, zones, placements, onPlaceCard }: CardSo
           </div>
 
           {/* RIGHT PANEL — Categories (2/3) */}
-          <div className="flex flex-[2] flex-col rounded-2xl border border-border/40 bg-white/40">
+          <div className="flex flex-[2] flex-col rounded-2xl border border-border/40 bg-white shadow-sm">
             {/* Header with explainer */}
             <div className="flex items-center gap-2 border-b border-border/30 px-4 py-3">
               <span className="text-xs font-bold uppercase tracking-[0.14em] text-muted-foreground">
