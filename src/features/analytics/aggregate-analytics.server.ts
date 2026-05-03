@@ -41,7 +41,7 @@ export async function aggregatePlatformAnalytics(
   // --- Fetch audit_logs for the day ---
   const { data: logs, error: logsErr } = await supabaseAdmin
     .from("audit_logs")
-    .select("action, created_at, metadata, workspace_id, resource_id")
+    .select("action, created_at, metadata, workspace_id, resource_id, actor_id")
     .gte("created_at", dayStart)
     .lte("created_at", dayEnd)
     .order("created_at", { ascending: true });
