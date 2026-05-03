@@ -10,6 +10,7 @@ import {
   CreditCard,
   Sparkles,
   ScrollText,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/features/auth/AuthProvider";
 import { Eyebrow } from "@/components/brand/Eyebrow";
@@ -20,6 +21,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const ADMIN_TABS = [
   { to: "/admin" as const, label: "Acervo", icon: BookOpen, exact: true },
+  { to: "/admin/compliance" as const, label: "Compliance", icon: Shield, exact: false },
   { to: "/admin/insights" as const, label: "Insights", icon: Sparkles, exact: false },
   { to: "/admin/analytics" as const, label: "Analytics", icon: BarChart3, exact: false },
   { to: "/admin/billing" as const, label: "Billing", icon: CreditCard, exact: false },
