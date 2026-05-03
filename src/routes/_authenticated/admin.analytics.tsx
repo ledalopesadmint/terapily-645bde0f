@@ -264,6 +264,20 @@ function AdminAnalyticsPage() {
               {opt.label}
             </button>
           ))}
+          <div className="relative inline-flex items-center">
+            <Calendar className="pointer-events-none absolute left-2.5 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="date"
+              value={customDate}
+              onChange={(e) => handleCustomDate(e.target.value)}
+              max={new Date().toISOString().slice(0, 10)}
+              className={`rounded-md pl-8 pr-3 py-1.5 text-sm border transition-colors w-[160px] ${
+                analytics.period === "custom"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-input hover:bg-accent"
+              }`}
+            />
+          </div>
           <button
             onClick={handleAggregate}
             disabled={aggregating}
