@@ -155,8 +155,6 @@ function generatePdf(
   const MR = 15;
   const contentW = W - ML - MR;
 
-  let pageNum = 1;
-
   function drawHeader() {
     // Navy header bar
     doc.setFillColor(...NAVY);
@@ -194,24 +192,8 @@ function generatePdf(
     );
   }
 
-  function drawFooter() {
-    doc.setFillColor(...CREAM);
-    doc.rect(0, H - 12, W, 12, "F");
-    doc.setFontSize(7);
-    doc.setTextColor(...CHARCOAL);
-    doc.text("terapily", ML, H - 5);
-    doc.text(
-      "Registros sem dados clínicos — apenas IDs, ações e horários.",
-      W / 2,
-      H - 5,
-      { align: "center" },
-    );
-    doc.text(`${pageNum}`, W - MR, H - 5, { align: "right" });
-  }
-
   function newPage() {
     doc.addPage();
-    pageNum++;
     drawHeader();
   }
 
@@ -245,7 +227,6 @@ function generatePdf(
     const log = logs[i];
 
     if (y + ROW_H > H - 18) {
-      drawFooter();
       newPage();
       y = 34;
       y = drawTableHeader(y);
@@ -276,7 +257,6 @@ function generatePdf(
   // Summary
   y += 4;
   if (y > H - 30) {
-    drawFooter();
     newPage();
     y = 34;
   }
@@ -285,7 +265,23 @@ function generatePdf(
   doc.setFont("helvetica", "bold");
   doc.text(`Total: ${logs.length} evento${logs.length !== 1 ? "s" : ""}`, ML, y);
 
-  drawFooter();
+  // ── Draw footers on ALL pages with "X de Y" pagination ──
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+    doc.setFillColor(...CREAM);
+    doc.rect(0, H - 12, W, 12, "F");
+    doc.setFontSize(7);
+    doc.setTextColor(...CHARCOAL);
+    doc.text("terapily", ML, H - 5);
+    doc.text(
+      "Registros sem dados clínicos — apenas IDs, ações e horários.",
+      W / 2,
+      H - 5,
+      { align: "center" },
+    );
+    doc.text(`${p} de ${totalPages}`, W - MR, H - 5, { align: "right" });
+  }
 
   const b64 = doc.output("datauristring").split(",")[1];
 
