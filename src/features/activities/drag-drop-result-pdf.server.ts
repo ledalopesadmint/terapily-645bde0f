@@ -219,12 +219,13 @@ export async function buildDragDropResultPDF(params: DragDropResultParams): Prom
   const slots = config.slots ?? [];
   const referenceKey = config.reference_key ?? {};
 
-  // 4. Parse response data
+  // 4. Parse response data (stored encrypted in raw_responses_encrypted)
   let responseData: { mode?: string; placements?: CardPlacement[]; duration_seconds?: number } = {};
-  if (resp.response_data) {
-    responseData = typeof resp.response_data === "string"
-      ? JSON.parse(resp.response_data)
-      : resp.response_data as any;
+  if (resp.raw_responses_encrypted) {
+    try {
+      const decrypted = await decryptPHIServer(resp.raw_responses_encrypted);
+      if (decrypted) responseData = JSON.parse(decrypted);
+    } catch (err) { logServerError("drag-drop-result-pdf.decrypt-responses", err); }
   }
 
   const placements: CardPlacement[] = responseData.placements ?? [];
@@ -425,7 +426,8 @@ export async function buildDragDropResultPDF(params: DragDropResultParams): Prom
         doc.text((zoneMap[refZone] ?? refZone).slice(0, 18), colX[2], y);
         const isMatch = p.zoneId === refZone;
         const hasRef = !!referenceKey[p.cardId];
-        doc.setTextColor(...(hasRef ? (isMatch ? SAGE : RED) : CHARCOAL));
+        const matchColor = hasRef ? (isMatch ? SAGE : RED) : CHARCOAL;
+        doc.setTextColor(matchColor[0], matchColor[1], matchColor[2]);
         doc.text(hasRef ? (isMatch ? "Yes" : "No") : "N/A", colX[3], y);
         y += 4.5;
       }
