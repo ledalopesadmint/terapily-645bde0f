@@ -41,7 +41,7 @@ export async function aggregatePlatformAnalytics(
   // --- Fetch audit_logs for the day ---
   const { data: logs, error: logsErr } = await supabaseAdmin
     .from("audit_logs")
-    .select("action, created_at, metadata, workspace_id, resource_id")
+    .select("action, created_at, metadata, workspace_id, resource_id, actor_id")
     .gte("created_at", dayStart)
     .lte("created_at", dayEnd)
     .order("created_at", { ascending: true });
@@ -70,7 +70,7 @@ export async function aggregatePlatformAnalytics(
   }
 
   // --- Process audit_logs ---
-  const workspacesDay = new Set<string>();
+  const therapistsDay = new Set<string>();
 
   // Track by resource_id (patient_activity_id) for accurate completion_rate
   const activitiesOpened = new Set<string>();
@@ -97,8 +97,10 @@ export async function aggregatePlatformAnalytics(
     switch (log.action) {
       case "auth.signin":
         inc("therapist.logins", "total", hour);
-        if (log.workspace_id) {
-          workspacesDay.add(log.workspace_id);
+        // DAU: count unique therapists (actor_id), not workspace_id
+        // because auth.signin is logged with workspace_id=null
+        if (log.actor_id) {
+          therapistsDay.add(log.actor_id);
         }
         break;
 
@@ -106,12 +108,17 @@ export async function aggregatePlatformAnalytics(
         const dm = (meta.delivery_mode as string) ?? "unknown";
         inc("therapist.activities_assigned", "total", hour);
         inc(`therapist.delivery_mode.${dm}`, "total", hour);
+        // Track links_shared from activities that have a link token
+        if (meta.has_link === true) {
+          inc("therapist.links_shared", "total", hour);
+        }
         break;
       }
 
       case "activity.share_intent":
         inc("therapist.links_shared", "total", hour);
         break;
+      // so this is additive tracking for links_shared specifically.
 
       case "patient.created":
         inc("therapist.patients_created", "total", hour);
@@ -213,7 +220,7 @@ export async function aggregatePlatformAnalytics(
   // DAU (workspaces with login)
   rows.push({
     date: targetDate, hour_bucket: 0, day_of_week: dow,
-    metric: "therapist.dau", dimension: "total", value: workspacesDay.size,
+    metric: "therapist.dau", dimension: "total", value: therapistsDay.size,
   });
 
   // Completion rate — based on distinct patient_activity_ids opened vs submitted
