@@ -28,6 +28,8 @@ import {
 import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
 import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
 import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
+import { DragDropRunner } from "@/features/library/runners/drag_drop/DragDropRunner";
+import type { DragDropConfig, DragDropResponseData } from "@/features/library/runners/drag_drop/drag-drop-types";
 import {
   getActivityConfig,
   recordInSessionResponse,
@@ -88,10 +90,11 @@ export function InSessionPlayerDialog({
   const archetype = configQuery.data?.activity?.archetype ?? "quiz_scale";
   const rawConfig = (configQuery.data?.activity?.config ?? {}) as Record<string, unknown>;
   const isBreathing = rawConfig.runner === "breathing";
+  const isDragDrop = archetype === "drag_drop";
   const isForm = archetype === "structured_form";
   const isScript = !isBreathing && (archetype === "guided_script" || archetype === "guided_timer");
   const config = rawConfig as unknown as QuizConfig &
-    StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
+    StructuredFormConfig & GuidedScriptConfig & BreathingConfig & DragDropConfig;
 
   const getCompletion = useCallback(() => {
     if (configQuery.isLoading) return { allAnswered: false, completion: 0 };
@@ -348,6 +351,16 @@ export function InSessionPlayerDialog({
                   submitting={submitMutation.isPending}
                   submitLabel="Registrar exercício"
                   embedded
+                />
+              ) : isDragDrop ? (
+                <DragDropRunner
+                  config={config as DragDropConfig}
+                  onSubmit={(data: DragDropResponseData) => {
+                    setResponses(data as unknown as Record<string, unknown>);
+                    setTimeout(() => submitMutation.mutate(), 0);
+                  }}
+                  submitting={submitMutation.isPending}
+                  submitLabel="Registrar respostas"
                 />
               ) : isScript ? (
                 <GuidedScriptRunner

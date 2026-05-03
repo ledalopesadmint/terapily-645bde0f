@@ -41,6 +41,8 @@ import {
 import type { GuidedScriptConfig } from "@/features/library/runners/guided_script/script-types";
 import { BreathingRunner } from "@/features/library/runners/breathing/BreathingRunner";
 import type { BreathingConfig } from "@/features/library/runners/breathing/breathing-types";
+import { DragDropRunner } from "@/features/library/runners/drag_drop/DragDropRunner";
+import type { DragDropConfig, DragDropResponseData } from "@/features/library/runners/drag_drop/drag-drop-types";
 import { ConsentGate } from "@/features/activities/components/ConsentGate";
 import { VinhetaIntro } from "@/features/activities/components/VinhetaIntro";
 import { Button } from "@/components/ui/button";
@@ -249,9 +251,10 @@ function ActivityRunner({
   const archetype = resolved.activity.archetype;
   const rawConfig = resolved.activity.config as Record<string, unknown>;
   const isBreathing = rawConfig?.runner === "breathing";
+  const isDragDrop = archetype === "drag_drop";
   const isForm = archetype === "structured_form";
   const isScript = !isBreathing && (archetype === "guided_script" || archetype === "guided_timer");
-  const config = rawConfig as unknown as QuizConfig & StructuredFormConfig & GuidedScriptConfig & BreathingConfig;
+  const config = rawConfig as unknown as QuizConfig & StructuredFormConfig & GuidedScriptConfig & BreathingConfig & DragDropConfig;
   const [responses, setResponses] = useState<Record<string, unknown>>({});
   const [resultPdf, setResultPdf] = useState<string | null>(null);
   const [submitMeta, setSubmitMeta] = useState<{ responseId: string; workspaceId: string; archetype: string } | null>(null);
@@ -578,6 +581,16 @@ function ActivityRunner({
             onSubmit={() => submitMutation.mutate()}
             submitting={submitMutation.isPending}
             submitLabel="Concluir exercício"
+          />
+        ) : isDragDrop ? (
+          <DragDropRunner
+            config={config as DragDropConfig}
+            onSubmit={(data: DragDropResponseData) => {
+              setResponses(data as unknown as Record<string, unknown>);
+              setTimeout(() => submitMutation.mutate(), 0);
+            }}
+            submitting={submitMutation.isPending}
+            submitLabel="Enviar respostas"
           />
         ) : isScript ? (
           <GuidedScriptRunner
