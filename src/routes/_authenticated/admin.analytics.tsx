@@ -41,6 +41,7 @@ import {
   CheckCircle2,
   Target,
   AlertCircle,
+  Calendar,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/AuthProvider";
