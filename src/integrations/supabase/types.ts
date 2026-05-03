@@ -295,6 +295,134 @@ export type Database = {
         }
         Relationships: []
       }
+      ephemeral_activities: {
+        Row: {
+          activity_id: string
+          assigned_by: string
+          completed_at: string | null
+          created_at: string
+          delivery_mode: Database["public"]["Enums"]["delivery_mode"]
+          id: string
+          patient_id: string
+          pdf_download_count: number
+          pdf_downloaded_at: string | null
+          purge_after: string | null
+          revocation_reason: string | null
+          status: Database["public"]["Enums"]["ephemeral_activity_status"]
+          therapist_consent_at: string
+          therapist_consent_text_hash: string
+          token_expires_at: string
+          token_first_opened_at: string | null
+          token_hash: string
+          token_open_count: number
+          updated_at: string
+          used_at: string | null
+          workspace_id: string
+        }
+        Insert: {
+          activity_id: string
+          assigned_by: string
+          completed_at?: string | null
+          created_at?: string
+          delivery_mode?: Database["public"]["Enums"]["delivery_mode"]
+          id?: string
+          patient_id: string
+          pdf_download_count?: number
+          pdf_downloaded_at?: string | null
+          purge_after?: string | null
+          revocation_reason?: string | null
+          status?: Database["public"]["Enums"]["ephemeral_activity_status"]
+          therapist_consent_at: string
+          therapist_consent_text_hash: string
+          token_expires_at: string
+          token_first_opened_at?: string | null
+          token_hash: string
+          token_open_count?: number
+          updated_at?: string
+          used_at?: string | null
+          workspace_id: string
+        }
+        Update: {
+          activity_id?: string
+          assigned_by?: string
+          completed_at?: string | null
+          created_at?: string
+          delivery_mode?: Database["public"]["Enums"]["delivery_mode"]
+          id?: string
+          patient_id?: string
+          pdf_download_count?: number
+          pdf_downloaded_at?: string | null
+          purge_after?: string | null
+          revocation_reason?: string | null
+          status?: Database["public"]["Enums"]["ephemeral_activity_status"]
+          therapist_consent_at?: string
+          therapist_consent_text_hash?: string
+          token_expires_at?: string
+          token_first_opened_at?: string | null
+          token_hash?: string
+          token_open_count?: number
+          updated_at?: string
+          used_at?: string | null
+          workspace_id?: string
+        }
+        Relationships: []
+      }
+      ephemeral_responses: {
+        Row: {
+          activity_id: string
+          created_at: string
+          ephemeral_activity_id: string
+          id: string
+          patient_id: string
+          purged_at: string | null
+          response_data_encrypted: string | null
+          submitted_at: string
+          submitted_ip: unknown
+          submitted_user_agent: string | null
+          submitted_via: Database["public"]["Enums"]["delivery_mode"]
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          ephemeral_activity_id: string
+          id?: string
+          patient_id: string
+          purged_at?: string | null
+          response_data_encrypted?: string | null
+          submitted_at?: string
+          submitted_ip?: unknown
+          submitted_user_agent?: string | null
+          submitted_via: Database["public"]["Enums"]["delivery_mode"]
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          ephemeral_activity_id?: string
+          id?: string
+          patient_id?: string
+          purged_at?: string | null
+          response_data_encrypted?: string | null
+          submitted_at?: string
+          submitted_ip?: unknown
+          submitted_user_agent?: string | null
+          submitted_via?: Database["public"]["Enums"]["delivery_mode"]
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ephemeral_responses_ephemeral_activity_id_fkey"
+            columns: ["ephemeral_activity_id"]
+            isOneToOne: false
+            referencedRelation: "ephemeral_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       feature_flags: {
         Row: {
           created_at: string
@@ -1053,6 +1181,13 @@ export type Database = {
         Args: { _user_id: string; _workspace_id: string }
         Returns: boolean
       }
+      purge_expired_ephemeral_data: {
+        Args: never
+        Returns: {
+          purged_count: number
+          run_at: string
+        }[]
+      }
       purge_expired_patients: {
         Args: never
         Returns: {
@@ -1116,6 +1251,13 @@ export type Database = {
         | "sage_dark"
       app_role: "admin" | "therapist" | "patient"
       delivery_mode: "in_session" | "shared_link" | "both"
+      ephemeral_activity_status:
+        | "pending"
+        | "opened"
+        | "completed"
+        | "expired"
+        | "revoked"
+        | "purged"
       invitation_status: "pending" | "accepted" | "revoked" | "expired"
       patient_activity_status:
         | "pending"
@@ -1299,6 +1441,14 @@ export const Constants = {
       ],
       app_role: ["admin", "therapist", "patient"],
       delivery_mode: ["in_session", "shared_link", "both"],
+      ephemeral_activity_status: [
+        "pending",
+        "opened",
+        "completed",
+        "expired",
+        "revoked",
+        "purged",
+      ],
       invitation_status: ["pending", "accepted", "revoked", "expired"],
       patient_activity_status: [
         "pending",
