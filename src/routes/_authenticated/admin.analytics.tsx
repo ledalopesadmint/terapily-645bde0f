@@ -155,17 +155,10 @@ function AdminAnalyticsPage() {
     const selected = new Date(dateStr + "T00:00:00Z");
     const endOfDay = new Date(dateStr + "T23:59:59.999Z");
     analytics.setCustomPeriod(selected, endOfDay);
-    // Reload platform data for that single day
+    // Reload platform data for that specific date
     setPlatformLoading(true);
-    getAnalyticsDashboard({ data: { days: 1 } })
-      .then((result) => {
-        // Filter platform rows to only the selected date
-        const filtered = {
-          ...result,
-          rows: result.rows.filter((r) => r.date === dateStr),
-        };
-        setPlatformData(filtered);
-      })
+    getAnalyticsDashboard({ data: { days: 1, specificDate: dateStr } })
+      .then((result) => setPlatformData(result))
       .catch(() => toast.error("Erro ao recarregar dados."))
       .finally(() => setPlatformLoading(false));
   };
