@@ -4,7 +4,7 @@
  * Busca dados reais via Supabase client (RLS-respecting).
  * Retorna métricas prontas pra gráficos, loading, error e refetch.
  *
- * Não expõe dados de outros terapeutas — RLS filtra por workspace_member + assigned_therapist.
+ * TODAS as métricas respeitam o filtro de período selecionado.
  */
 
 import { useQuery } from "@tanstack/react-query";
@@ -70,6 +70,7 @@ export function periodPresetToRange(preset: PeriodPreset): PeriodRange {
   switch (preset) {
     case "today":
       start.setUTCHours(0, 0, 0, 0);
+      end.setUTCHours(23, 59, 59, 999);
       break;
     case "7d":
       start.setUTCDate(now.getUTCDate() - 7);
@@ -98,25 +99,33 @@ async function fetchTherapistAnalytics(
   workspaceId: string,
   range: PeriodRange,
 ): Promise<TherapistAnalytics> {
-  const now = new Date();
   const periodStart = range.start.toISOString();
   const periodEnd = range.end.toISOString();
+
+  // For adherence drop we always compare last 7 days vs previous 7 days
+  const now = new Date();
   const sevenDaysAgo = new Date(now.getTime() - 7 * 86400000).toISOString();
   const fourteenDaysAgo = new Date(now.getTime() - 14 * 86400000).toISOString();
-  const eightWeeksAgo = new Date(now.getTime() - 56 * 86400000).toISOString();
 
-  // Batch 1: all parallel independent queries
+  // Calculate how many weeks the period covers for the mindfulness chart
+  const periodMs = range.end.getTime() - range.start.getTime();
+  const periodWeeks = Math.max(1, Math.ceil(periodMs / (7 * 86400000)));
+  const mindfulnessWeeks = Math.min(periodWeeks, 8); // max 8 weeks in chart
+
+  // Batch: all parallel independent queries
   const [
     activePatientRes,
     catalogRes,
-    allPAsRes,
+    periodPAsRes,
     activeLinksRes,
     completedRes,
     mindfulnessRes,
     currentEntriesRes,
     previousEntriesRes,
+    habitLinksCreatedRes,
   ] = await Promise.all([
-    // 1. Active patients count
+    // 1. Patients that had activity in the period (active = had something happen)
+    // For "today" this shows patients with activity today, for longer periods more
     supabase
       .from("patients")
       .select("id", { count: "exact", head: true })
@@ -124,27 +133,29 @@ async function fetchTherapistAnalytics(
       .is("deleted_at", null)
       .eq("status", "active"),
 
-    // 2. Published catalog (cached across calls)
+    // 2. Published catalog
     supabase
       .from("activity_catalog")
       .select("id, archetype, title")
       .eq("status", "published"),
 
-    // 3. All patient_activities for workspace (for scales + top scales)
+    // 3. Patient activities CREATED in the period (filtered by created_at)
     supabase
       .from("patient_activities")
-      .select("id, activity_id, status, used_at")
-      .eq("workspace_id", workspaceId),
+      .select("id, activity_id, status, used_at, created_at")
+      .eq("workspace_id", workspaceId)
+      .gte("created_at", periodStart)
+      .lte("created_at", periodEnd),
 
-    // 4. Active habit links (with last_entry_at for adherence)
+    // 4. Habit links active AND created in the period
     supabase
       .from("habit_links")
-      .select("id, last_entry_at")
+      .select("id, last_entry_at, created_at")
       .eq("workspace_id", workspaceId)
       .eq("status", "active")
       .gte("expires_at", now.toISOString()),
 
-    // 5. Completed activities in period
+    // 5. Completed activities in period (by used_at = completion time)
     supabase
       .from("patient_activities")
       .select("id", { count: "exact", head: true })
@@ -153,14 +164,15 @@ async function fetchTherapistAnalytics(
       .gte("used_at", periodStart)
       .lte("used_at", periodEnd),
 
-    // 6. Mindfulness entries (last 8 weeks for chart)
+    // 6. Mindfulness entries within the period
     supabase
       .from("habit_entries")
       .select("completed_at")
       .eq("workspace_id", workspaceId)
-      .gte("completed_at", eightWeeksAgo),
+      .gte("completed_at", periodStart)
+      .lte("completed_at", periodEnd),
 
-    // 7-8. Adherence drop: current vs previous 7 days
+    // 7-8. Adherence drop: current vs previous 7 days (always relative to now)
     supabase
       .from("habit_entries")
       .select("patient_id")
@@ -173,6 +185,15 @@ async function fetchTherapistAnalytics(
       .eq("workspace_id", workspaceId)
       .gte("completed_at", fourteenDaysAgo)
       .lt("completed_at", sevenDaysAgo),
+
+    // 9. Habit links created in the period
+    supabase
+      .from("habit_links")
+      .select("id, last_entry_at", { count: "exact" })
+      .eq("workspace_id", workspaceId)
+      .eq("status", "active")
+      .gte("created_at", periodStart)
+      .lte("created_at", periodEnd),
   ]);
 
   // Process catalog map
@@ -180,40 +201,44 @@ async function fetchTherapistAnalytics(
     (catalogRes.data ?? []).map((c) => [c.id, { archetype: c.archetype, title: c.title }]),
   );
 
-  // Scales applied
-  const allPAs = allPAsRes.data ?? [];
-  const scaleOnly = allPAs
+  // Scales applied IN THE PERIOD
+  const periodPAs = periodPAsRes.data ?? [];
+  const scaleOnly = periodPAs
     .filter((pa) => catalogMap.get(pa.activity_id)?.archetype === "quiz_scale")
     .map((pa) => ({
       ...pa,
       title: catalogMap.get(pa.activity_id)?.title ?? "Sem título",
     }));
 
-  // Active habit links adherence
-  const activeLinks = activeLinksRes.data ?? [];
+  // Habit links: show those created in period for the KPI,
+  // but use all active links for adherence calculation
+  const allActiveLinks = activeLinksRes.data ?? [];
   let averageHabitAdherence = 0;
-  if (activeLinks.length > 0) {
-    const linksWithRecentEntry = activeLinks.filter(
-      (l) => l.last_entry_at && new Date(l.last_entry_at).getTime() > new Date(sevenDaysAgo).getTime(),
+  if (allActiveLinks.length > 0) {
+    const linksWithRecentEntry = allActiveLinks.filter(
+      (l) => l.last_entry_at && new Date(l.last_entry_at).getTime() > range.start.getTime(),
     ).length;
-    averageHabitAdherence = Math.round((linksWithRecentEntry / activeLinks.length) * 100);
+    averageHabitAdherence = Math.round((linksWithRecentEntry / allActiveLinks.length) * 100);
   }
 
-  // Weekly mindfulness
+  // Habit links active count = total active now (not period-dependent, it's a "snapshot" metric)
+  const totalActiveHabitLinks = allActiveLinks.length;
+
+  // Weekly mindfulness - bucketed by ISO week within the period
   const weekBuckets = new Map<number, number>();
   for (const entry of mindfulnessRes.data ?? []) {
     const w = getISOWeek(new Date(entry.completed_at));
     weekBuckets.set(w, (weekBuckets.get(w) ?? 0) + 1);
   }
-  const currentWeek = getISOWeek(now);
+  const endWeek = getISOWeek(range.end);
   const weeklyMindfulness: WeeklyMindfulnessPoint[] = [];
-  for (let i = 7; i >= 0; i--) {
-    let wk = currentWeek - i;
+  for (let i = mindfulnessWeeks - 1; i >= 0; i--) {
+    let wk = endWeek - i;
     if (wk <= 0) wk += 52;
     weeklyMindfulness.push({ week: `Sem ${wk}`, entries: weekBuckets.get(wk) ?? 0 });
   }
 
-  // Top scales
+  // Top scales IN THE PERIOD
   const scaleCounts = new Map<string, { title: string; count: number }>();
   for (const pa of scaleOnly) {
     const existing = scaleCounts.get(pa.activity_id);
@@ -225,7 +250,7 @@ async function fetchTherapistAnalytics(
     .sort((a, b) => b.count - a.count)
     .slice(0, 10);
 
-  // Adherence drop
+  // Adherence drop (always relative to now, not to the period)
   const currentCounts = new Map<string, number>();
   for (const e of currentEntriesRes.data ?? []) {
     currentCounts.set(e.patient_id, (currentCounts.get(e.patient_id) ?? 0) + 1);
@@ -269,7 +294,7 @@ async function fetchTherapistAnalytics(
   return {
     totalActivePatients: activePatientRes.count ?? 0,
     totalScalesApplied: scaleOnly.length,
-    totalActiveHabitLinks: activeLinks.length,
+    totalActiveHabitLinks,
     averageHabitAdherence,
     activitiesCompletedInPeriod: completedRes.count ?? 0,
     weeklyMindfulness,
