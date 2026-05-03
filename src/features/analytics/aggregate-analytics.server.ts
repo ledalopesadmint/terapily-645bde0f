@@ -215,7 +215,7 @@ export async function aggregatePlatformAnalytics(
   // DAU (workspaces with login)
   rows.push({
     date: targetDate, hour_bucket: 0, day_of_week: dow,
-    metric: "therapist.dau", dimension: "total", value: workspacesDay.size,
+    metric: "therapist.dau", dimension: "total", value: therapistsDay.size,
   });
 
   // Completion rate — based on distinct patient_activity_ids opened vs submitted
