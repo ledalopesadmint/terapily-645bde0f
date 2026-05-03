@@ -837,26 +837,39 @@ function InsightsPanel({ insights }: { insights: WeeklyInsight[] }) {
         Insights da Semana
       </h2>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {significantInsights.map((insight) => (
-          <div key={insight.metric} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
-            <span className="text-sm text-muted-foreground truncate">{insight.label}</span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-sm font-medium tabular-nums">{insight.current}</span>
-              {insight.direction !== "flat" ? (
-                <span className={`flex items-center text-xs font-medium ${
-                  (insight.direction === "up" && !insight.metric.startsWith("error")) ||
-                  (insight.direction === "down" && insight.metric.startsWith("error"))
-                    ? "text-sage" : "text-mauve"
-                }`}>
-                  {insight.direction === "up" ? <TrendingUp className="h-3 w-3 mr-0.5" /> : <TrendingDown className="h-3 w-3 mr-0.5" />}
-                  {Math.abs(insight.change)}%
-                </span>
-              ) : (
-                <Minus className="h-3 w-3 text-muted-foreground" />
-              )}
+        {significantInsights.map((insight) => {
+          // Display value: append % for rate metrics
+          const displayValue = insight.isRate
+            ? `${insight.current}%`
+            : insight.current;
+
+          // Direction badge
+          const isErrorMetric = insight.metric.startsWith("error");
+          const isPositive =
+            (insight.direction === "up" && !isErrorMetric) ||
+            (insight.direction === "down" && isErrorMetric);
+
+          return (
+            <div key={insight.metric} className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2">
+              <span className="text-sm text-muted-foreground truncate">{insight.label}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-sm font-medium tabular-nums">{displayValue}</span>
+                {insight.direction === "new" ? (
+                  <span className="text-xs font-medium text-sage">novo</span>
+                ) : insight.direction === "up" || insight.direction === "down" ? (
+                  <span className={`flex items-center text-xs font-medium ${isPositive ? "text-sage" : "text-mauve"}`}>
+                    {insight.direction === "up"
+                      ? <TrendingUp className="h-3 w-3 mr-0.5" />
+                      : <TrendingDown className="h-3 w-3 mr-0.5" />}
+                    {Math.abs(insight.change)}%
+                  </span>
+                ) : (
+                  <Minus className="h-3 w-3 text-muted-foreground" />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
