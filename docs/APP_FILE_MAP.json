@@ -1,0 +1,1104 @@
+{
+  "routes": [
+    {
+      "path": "/",
+      "file": "src/routes/index.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Landing page pública (EN-US)",
+      "lines": 1855
+    },
+    {
+      "path": "/login",
+      "file": "src/routes/login.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Login email/senha + Google OAuth"
+    },
+    {
+      "path": "/signup",
+      "file": "src/routes/signup.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Cadastro de terapeuta"
+    },
+    {
+      "path": "/forgot-password",
+      "file": "src/routes/forgot-password.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Solicitar reset de senha"
+    },
+    {
+      "path": "/reset-password",
+      "file": "src/routes/reset-password.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Definir nova senha via token"
+    },
+    {
+      "path": "/auth/callback",
+      "file": "src/routes/auth.callback.tsx",
+      "auth": false,
+      "role": null,
+      "description": "OAuth callback (Google)"
+    },
+    {
+      "path": "/p/$token",
+      "file": "src/routes/p.$token.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Magic link — player de atividade pública (single-use)",
+      "lines": 657,
+      "tables": ["patient_activities", "activity_catalog", "activity_responses", "activity_consents", "activity_drafts"]
+    },
+    {
+      "path": "/h/$token",
+      "file": "src/routes/h.$token.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Habit tracker link público (reutilizável)",
+      "lines": 977,
+      "tables": ["habit_links", "habit_entries", "activity_catalog"]
+    },
+    {
+      "path": "/e/$token",
+      "file": "src/routes/e.$token.tsx",
+      "auth": false,
+      "role": null,
+      "description": "Link efêmero — dados expiram em 24h",
+      "lines": 196,
+      "tables": ["ephemeral_activities", "ephemeral_responses", "activity_catalog"]
+    },
+    {
+      "path": "/_authenticated",
+      "file": "src/routes/_authenticated.tsx",
+      "auth": true,
+      "role": null,
+      "description": "Layout guard — redireciona para /login se não autenticado"
+    },
+    {
+      "path": "/welcome",
+      "file": "src/routes/_authenticated/welcome.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Onboarding pós-signup",
+      "lines": 254
+    },
+    {
+      "path": "/dashboard",
+      "file": "src/routes/_authenticated/dashboard.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Dashboard principal",
+      "lines": 248,
+      "tables": ["patients", "patient_activities", "subscriptions"]
+    },
+    {
+      "path": "/patients",
+      "file": "src/routes/_authenticated/patients.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Lista de pacientes",
+      "lines": 312,
+      "tables": ["patients"]
+    },
+    {
+      "path": "/patients/$id",
+      "file": "src/routes/_authenticated/patients.$id.tsx",
+      "auth": true,
+      "role": "therapist (assigned ou owner)",
+      "description": "Perfil do paciente — atividades, habit, relatórios, actions",
+      "lines": 1882,
+      "tables": ["patients", "patient_activities", "activity_responses", "habit_links", "habit_entries", "activity_consents", "ephemeral_activities", "scheduled_applications"],
+      "risk": "CRÍTICO — maior arquivo de rota, muitas responsabilidades acopladas"
+    },
+    {
+      "path": "/patients/deleted",
+      "file": "src/routes/_authenticated/patients.deleted.tsx",
+      "auth": true,
+      "role": "therapist (assigned ou owner)",
+      "description": "Pacientes soft-deletados (restaurar dentro de 30 dias)",
+      "lines": 169,
+      "tables": ["patients"]
+    },
+    {
+      "path": "/library",
+      "file": "src/routes/_authenticated/library.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Acervo de atividades (catálogo)",
+      "lines": 677,
+      "tables": ["activity_catalog"]
+    },
+    {
+      "path": "/scales",
+      "file": "src/routes/_authenticated/scales.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Escalas validadas (quiz_scale)",
+      "lines": 200,
+      "tables": ["activity_catalog"]
+    },
+    {
+      "path": "/mindfulness",
+      "file": "src/routes/_authenticated/mindfulness.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Atividades de mindfulness (guided_timer + guided_script)",
+      "lines": 226,
+      "tables": ["activity_catalog"]
+    },
+    {
+      "path": "/worksheets",
+      "file": "src/routes/_authenticated/worksheets.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Worksheets (structured_form)",
+      "lines": 195,
+      "tables": ["activity_catalog"]
+    },
+    {
+      "path": "/cbt",
+      "file": "src/routes/_authenticated/cbt.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "CBT essentials (drag_drop + structured_form)",
+      "lines": 118,
+      "tables": ["activity_catalog"]
+    },
+    {
+      "path": "/settings",
+      "file": "src/routes/_authenticated/settings.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Layout settings com Outlet"
+    },
+    {
+      "path": "/settings/profile",
+      "file": "src/routes/_authenticated/settings.profile.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Editar perfil",
+      "tables": ["profiles"]
+    },
+    {
+      "path": "/settings/billing",
+      "file": "src/routes/_authenticated/settings.billing.tsx",
+      "auth": true,
+      "role": "owner",
+      "description": "Plano, checkout Stripe, portal",
+      "lines": 405,
+      "tables": ["subscriptions", "stripe_products"]
+    },
+    {
+      "path": "/settings/workspace",
+      "file": "src/routes/_authenticated/settings.workspace.tsx",
+      "auth": true,
+      "role": "owner",
+      "description": "Configuração do workspace",
+      "tables": ["workspaces", "workspace_members"]
+    },
+    {
+      "path": "/settings/security",
+      "file": "src/routes/_authenticated/settings.security.tsx",
+      "auth": true,
+      "role": "therapist",
+      "description": "Senha e MFA (futuro)"
+    },
+    {
+      "path": "/admin",
+      "file": "src/routes/_authenticated/admin.tsx",
+      "auth": true,
+      "role": "admin",
+      "description": "Layout admin — guard has_role('admin')"
+    },
+    {
+      "path": "/admin (index)",
+      "file": "src/routes/_authenticated/admin.index.tsx",
+      "auth": true,
+      "role": "admin",
+      "description": "Dashboard admin — métricas globais",
+      "lines": 421,
+      "tables": ["platform_analytics", "workspaces", "subscriptions"]
+    },
+    {
+      "path": "/admin/analytics",
+      "file": "src/routes/_authenticated/admin.analytics.tsx",
+      "auth": true,
+      "role": "admin",
+      "description": "Analytics detalhado",
+      "lines": 1064,
+      "tables": ["platform_analytics"]
+    },
+    {
+      "path": "/admin/audit",
+      "file": "src/routes/_authenticated/admin.audit.tsx",
+      "auth": true,
+      "role": "admin",
+      "description": "Audit logs globais",
+      "tables": ["audit_logs"]
+    },
+    {
+      "path": "/admin/billing",
+      "file": "src/routes/_authenticated/admin.billing.tsx",
+      "auth": true,
+      "role": "admin",
+      "description": "Billing admin",
+      "tables": ["subscriptions", "stripe_events"]
+    },
+    {
+      "path": "/admin/compliance",
+      "file": "src/routes/_authenticated/admin.compliance.tsx",
+      "auth": true,
+      "role": "admin",
+      "description": "Compliance console hierárquico (workspace→terapeuta→paciente)",
+      "lines": 640,
+      "tables": ["todas (read-only via service role)"]
+    },
+    {
+      "path": "/admin/insights",
+      "file": "src/routes/_authenticated/admin.insights.tsx",
+      "auth": true,
+      "role": "admin",
+      "description": "Weekly insights",
+      "tables": ["platform_analytics"]
+    },
+    {
+      "path": "/dev/roadmap",
+      "file": "src/routes/_authenticated/dev.roadmap.tsx",
+      "auth": true,
+      "role": null,
+      "description": "Dev-only — roadmap de atividades (estático)"
+    },
+    {
+      "path": "/api/public/stripe-webhook",
+      "file": "src/routes/api/public/stripe-webhook.ts",
+      "auth": false,
+      "role": null,
+      "description": "Webhook Stripe (HMAC-verified)",
+      "type": "server_route"
+    },
+    {
+      "path": "/api/public/hooks/purge-patients",
+      "file": "src/routes/api/public/hooks/purge-patients.ts",
+      "auth": false,
+      "role": null,
+      "description": "Cron: purge pacientes soft-deleted 30+ dias",
+      "type": "server_route",
+      "secret": "PURGE_HOOK_SECRET"
+    },
+    {
+      "path": "/api/public/hooks/aggregate-analytics",
+      "file": "src/routes/api/public/hooks/aggregate-analytics.ts",
+      "auth": false,
+      "role": null,
+      "description": "Cron: agregação diária de métricas",
+      "type": "server_route",
+      "secret": "ANALYTICS_HOOK_SECRET"
+    }
+  ],
+
+  "features": [
+    {
+      "name": "auth",
+      "files": [
+        "src/features/auth/AuthProvider.tsx",
+        "src/features/auth/auth-events.functions.ts",
+        "src/features/auth/profile.functions.ts",
+        "src/features/auth/useRedirectIfAuthenticated.ts",
+        "src/components/brand/AuthShell.tsx",
+        "src/components/brand/GoogleButton.tsx",
+        "src/components/brand/CapsLockHint.tsx"
+      ],
+      "tables": ["profiles", "user_roles"],
+      "status": "functional",
+      "dependencies": ["supabase/client.ts", "supabase/auth-middleware.ts"]
+    },
+    {
+      "name": "patients",
+      "files": [
+        "src/features/patients/patients.functions.ts",
+        "src/features/patients/patients.types.ts",
+        "src/features/patients/components/PatientForm.tsx",
+        "src/features/patients/components/PatientList.tsx",
+        "src/features/patients/components/DeletePatientDialog.tsx",
+        "src/features/patients/components/RevealContactDialog.tsx",
+        "src/features/patients/components/PatientLimitBanner.tsx",
+        "src/features/patients/components/PatientLimitModal.tsx",
+        "src/features/patients/components/utils.ts"
+      ],
+      "tables": ["patients"],
+      "status": "functional",
+      "dependencies": ["crypto/encryption.server.ts", "billing/plan.server.ts"]
+    },
+    {
+      "name": "activities",
+      "files": [
+        "src/features/activities/activities.functions.ts",
+        "src/features/activities/activities.server.ts",
+        "src/features/activities/activity-drafts.functions.ts",
+        "src/features/activities/public-activities.functions.ts",
+        "src/features/activities/consent.functions.ts",
+        "src/features/activities/og-meta.functions.ts",
+        "src/features/activities/og-meta.server.ts",
+        "src/features/activities/components/ActivityPlayer.tsx",
+        "src/features/activities/components/ConsentGate.tsx",
+        "src/features/activities/components/InSessionPlayerDialog.tsx",
+        "src/features/activities/components/ResponseDetailDrawer.tsx",
+        "src/features/activities/components/ScaleIntro.tsx",
+        "src/features/activities/components/ScoreEvolutionChart.tsx",
+        "src/features/activities/components/VinhetaIntro.tsx"
+      ],
+      "tables": ["patient_activities", "activity_responses", "activity_drafts", "activity_consents", "activity_catalog"],
+      "status": "functional",
+      "dependencies": ["crypto/encryption.server.ts", "tokens/magic-link.server.ts", "scoring/scoring.server.ts", "rate-limit/public-link.server.ts"]
+    },
+    {
+      "name": "billing",
+      "files": [
+        "src/features/billing/billing.functions.ts",
+        "src/features/billing/admin.functions.ts",
+        "src/features/billing/plan.server.ts",
+        "src/features/billing/stripe.server.ts",
+        "src/features/billing/trial-status.ts",
+        "src/features/billing/TrialExpiredBanner.tsx",
+        "src/routes/api/public/stripe-webhook.ts"
+      ],
+      "tables": ["subscriptions", "stripe_products", "stripe_events"],
+      "status": "functional",
+      "dependencies": ["stripe (npm)"],
+      "secrets": ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET", "STRIPE_PRICE_BASIC", "STRIPE_PRICE_PRACTICE"]
+    },
+    {
+      "name": "audit",
+      "files": [
+        "src/features/audit/audit.server.ts",
+        "src/features/activities/audit-export.functions.ts"
+      ],
+      "tables": ["audit_logs"],
+      "status": "functional",
+      "dependencies": ["supabase/client.server.ts"]
+    },
+    {
+      "name": "library",
+      "files": [
+        "src/features/library/CategoryBrowser.tsx",
+        "src/features/library/CategoryRow.tsx",
+        "src/features/library/ActivityCard.tsx",
+        "src/features/library/ScaleCard.tsx",
+        "src/features/library/LibraryHero.tsx",
+        "src/features/library/InSessionQuickAccess.tsx",
+        "src/features/library/PatientPickerSheet.tsx",
+        "src/features/library/RecommendedEmpty.tsx",
+        "src/features/library/ResourceBox.tsx",
+        "src/features/library/illustrations.tsx",
+        "src/features/library/archetypes.ts",
+        "src/features/library/library.types.ts",
+        "src/features/library/seed-data.ts"
+      ],
+      "tables": ["activity_catalog"],
+      "status": "functional",
+      "notes": "seed-data.ts é legado declarado (fallback estático)"
+    },
+    {
+      "name": "runners",
+      "files": [
+        "src/features/library/runners/breathing/BreathingRunner.tsx",
+        "src/features/library/runners/breathing/breathing-sounds.ts",
+        "src/features/library/runners/breathing/breathing-types.ts",
+        "src/features/library/runners/guided_script/GuidedScriptRunner.tsx",
+        "src/features/library/runners/guided_script/script-types.ts",
+        "src/features/library/runners/structured_form/FormRunner.tsx",
+        "src/features/library/runners/structured_form/form-types.ts",
+        "src/features/library/runners/drag_drop/DragDropRunner.tsx",
+        "src/features/library/runners/drag_drop/CardSortLayout.tsx",
+        "src/features/library/runners/drag_drop/CycleBuilderLayout.tsx",
+        "src/features/library/runners/drag_drop/RankingLadderLayout.tsx",
+        "src/features/library/runners/drag_drop/DraggableCard.tsx",
+        "src/features/library/runners/drag_drop/drag-drop-types.ts"
+      ],
+      "tables": [],
+      "status": "functional",
+      "notes": "4 runners cobrindo 5 arquétipos (FormRunner serve quiz_scale e structured_form)"
+    },
+    {
+      "name": "habits",
+      "files": [
+        "src/features/habits/HabitTrackingTab.tsx",
+        "src/features/habits/habits.functions.ts",
+        "src/features/habits/habits.server.ts",
+        "src/features/habits/habit-report.functions.ts",
+        "src/features/habits/habit-report.server.ts"
+      ],
+      "tables": ["habit_links", "habit_entries"],
+      "status": "functional",
+      "dependencies": ["crypto/encryption.server.ts", "tokens/magic-link.server.ts"]
+    },
+    {
+      "name": "ephemeral",
+      "files": [
+        "src/features/ephemeral/ephemeral.functions.ts",
+        "src/features/ephemeral/ephemeral-public.functions.ts",
+        "src/features/ephemeral/ephemeral.server.ts",
+        "src/features/ephemeral/components/EphemeralCountdownBadge.tsx"
+      ],
+      "tables": ["ephemeral_activities", "ephemeral_responses"],
+      "status": "functional"
+    },
+    {
+      "name": "analytics",
+      "files": [
+        "src/features/analytics/analytics.functions.ts",
+        "src/features/analytics/aggregate-analytics.server.ts",
+        "src/features/analytics/analytics-alerts.ts",
+        "src/features/analytics/error-tracker.server.ts",
+        "src/features/analytics/pwa-install-tracker.ts",
+        "src/features/analytics/useAnalytics.ts",
+        "src/features/analytics/weekly-insights.server.ts"
+      ],
+      "tables": ["platform_analytics"],
+      "status": "functional"
+    },
+    {
+      "name": "workspace",
+      "files": [
+        "src/features/workspace/workspace.functions.ts"
+      ],
+      "tables": ["workspaces", "workspace_members", "workspace_invitations"],
+      "status": "functional"
+    },
+    {
+      "name": "feature-flags",
+      "files": [
+        "src/features/feature-flags/useFeatureFlag.ts"
+      ],
+      "tables": ["feature_flags"],
+      "status": "functional"
+    },
+    {
+      "name": "admin",
+      "files": [
+        "src/server/admin.functions.ts",
+        "src/server/admin-compliance.functions.ts",
+        "src/server/admin-compliance.server.ts",
+        "src/server/clinical-flag.server.ts"
+      ],
+      "tables": ["todas (read-only)"],
+      "status": "functional",
+      "role": "admin"
+    },
+    {
+      "name": "games",
+      "files": [
+        "src/features/games/_core/GameShell.tsx",
+        "src/features/games/_core/ShareableLink.tsx",
+        "src/features/games/_core/game.types.ts",
+        "src/features/games/_core/useGameSession.ts",
+        "src/features/games/_core/README.md"
+      ],
+      "tables": [],
+      "status": "placeholder",
+      "notes": "Shell vazio — nenhuma atividade usa este módulo"
+    },
+    {
+      "name": "dev",
+      "files": [
+        "src/features/dev/activityRoadmap.ts"
+      ],
+      "tables": [],
+      "status": "dev_only"
+    }
+  ],
+
+  "database": [
+    {
+      "table": "profiles",
+      "phi": true,
+      "rls": true,
+      "triggers": ["handle_new_user (via auth.users)"],
+      "key_columns": ["id", "full_name", "license_number", "npi", "locale", "timezone", "deleted_at"]
+    },
+    {
+      "table": "user_roles",
+      "phi": false,
+      "rls": true,
+      "triggers": ["handle_new_user (via auth.users)"],
+      "key_columns": ["user_id", "role"]
+    },
+    {
+      "table": "workspaces",
+      "phi": false,
+      "rls": true,
+      "triggers": ["handle_new_user (via auth.users)"],
+      "key_columns": ["name", "slug", "trial_ends_at", "deleted_at"]
+    },
+    {
+      "table": "workspace_members",
+      "phi": false,
+      "rls": true,
+      "triggers": ["handle_new_user (via auth.users)"],
+      "key_columns": ["workspace_id", "user_id", "role", "deleted_at"]
+    },
+    {
+      "table": "workspace_invitations",
+      "phi": true,
+      "rls": true,
+      "triggers": [],
+      "key_columns": ["email", "token", "role", "status", "expires_at"]
+    },
+    {
+      "table": "patients",
+      "phi": true,
+      "rls": true,
+      "triggers": ["enforce_patient_limit", "audit_patient_change", "update_updated_at_column"],
+      "key_columns": ["display_name", "initials", "full_name_encrypted", "email_encrypted", "phone_encrypted", "status", "deleted_at", "purged_at", "workspace_id", "assigned_therapist_id"],
+      "encrypted_columns": ["full_name_encrypted", "email_encrypted", "phone_encrypted"]
+    },
+    {
+      "table": "patient_activities",
+      "phi": false,
+      "rls": true,
+      "triggers": ["audit_patient_activity_change", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "patient_id", "activity_id", "delivery_mode", "token_hash", "status", "used_at", "token_expires_at"]
+    },
+    {
+      "table": "activity_responses",
+      "phi": true,
+      "rls": true,
+      "triggers": ["audit_activity_response_insert", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "patient_id", "activity_id", "raw_responses_encrypted", "score", "severity", "scoring_metadata", "submitted_via"],
+      "encrypted_columns": ["raw_responses_encrypted"]
+    },
+    {
+      "table": "activity_drafts",
+      "phi": true,
+      "rls": true,
+      "triggers": ["audit_activity_draft_change", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "patient_id", "patient_activity_id", "draft_encrypted", "completion_percent", "expires_at"],
+      "encrypted_columns": ["draft_encrypted"]
+    },
+    {
+      "table": "activity_consents",
+      "phi": false,
+      "rls": true,
+      "triggers": ["audit_activity_consent_insert"],
+      "key_columns": ["workspace_id", "patient_id", "patient_activity_id", "consent_text_hash", "accepted"]
+    },
+    {
+      "table": "activity_catalog",
+      "phi": false,
+      "rls": true,
+      "triggers": ["update_updated_at_column"],
+      "key_columns": ["slug", "title", "archetype", "theme", "config", "category", "status", "is_featured"]
+    },
+    {
+      "table": "habit_links",
+      "phi": false,
+      "rls": true,
+      "triggers": ["audit_habit_link_change", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "patient_id", "activity_id", "token_hash", "status", "expires_at", "total_entries"]
+    },
+    {
+      "table": "habit_entries",
+      "phi": true,
+      "rls": true,
+      "triggers": ["audit_habit_entry_insert"],
+      "key_columns": ["workspace_id", "patient_id", "habit_link_id", "activity_id", "duration_seconds", "cycles_completed", "metadata_encrypted"],
+      "encrypted_columns": ["metadata_encrypted"]
+    },
+    {
+      "table": "ephemeral_activities",
+      "phi": false,
+      "rls": true,
+      "triggers": ["audit_ephemeral_activity_change", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "patient_id", "activity_id", "token_hash", "status", "purge_after", "therapist_consent_at"]
+    },
+    {
+      "table": "ephemeral_responses",
+      "phi": true,
+      "rls": true,
+      "triggers": ["audit_ephemeral_response_insert", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "patient_id", "ephemeral_activity_id", "response_data_encrypted", "purged_at"],
+      "encrypted_columns": ["response_data_encrypted"],
+      "ephemeral": true,
+      "purge": "purge_expired_ephemeral_data() via pg_cron a cada 15min"
+    },
+    {
+      "table": "subscriptions",
+      "phi": false,
+      "rls": true,
+      "triggers": ["audit_subscription_change", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "tier", "status", "provider", "stripe_customer_id", "stripe_subscription_id", "limits", "trial_ends_at"]
+    },
+    {
+      "table": "stripe_products",
+      "phi": false,
+      "rls": true,
+      "triggers": ["update_updated_at_column"],
+      "key_columns": ["stripe_price_id", "stripe_product_id", "tier", "unit_amount", "active"]
+    },
+    {
+      "table": "stripe_events",
+      "phi": false,
+      "rls": true,
+      "triggers": [],
+      "key_columns": ["id", "type", "payload", "workspace_id"]
+    },
+    {
+      "table": "audit_logs",
+      "phi": false,
+      "rls": true,
+      "triggers": [],
+      "key_columns": ["actor_id", "workspace_id", "action", "resource_type", "resource_id", "metadata"],
+      "notes": "INSERT revogado do client. metadata NUNCA contém PHI."
+    },
+    {
+      "table": "feature_flags",
+      "phi": false,
+      "rls": true,
+      "triggers": ["update_updated_at_column"],
+      "key_columns": ["workspace_id", "flag", "enabled"]
+    },
+    {
+      "table": "platform_analytics",
+      "phi": false,
+      "rls": true,
+      "triggers": [],
+      "key_columns": ["date", "hour_bucket", "metric", "dimension", "value"],
+      "notes": "Desidentificado. Client não pode insert/update/delete."
+    },
+    {
+      "table": "clinic_waitlist",
+      "phi": true,
+      "rls": true,
+      "triggers": [],
+      "key_columns": ["email", "workspace_id", "projected_patient_count"]
+    },
+    {
+      "table": "featured_activity_history",
+      "phi": false,
+      "rls": true,
+      "triggers": [],
+      "key_columns": ["activity_id", "set_by", "set_at"]
+    },
+    {
+      "table": "scheduled_applications",
+      "phi": false,
+      "rls": true,
+      "triggers": ["audit_scheduled_application_change", "update_updated_at_column"],
+      "key_columns": ["workspace_id", "patient_id", "activity_id", "scheduled_for_date", "status"]
+    }
+  ],
+
+  "pdf_generators": [
+    {
+      "name": "Scale Result PDF",
+      "server": "src/features/activities/scale-result-pdf.server.ts",
+      "functions": "src/features/activities/scale-result-pdf.functions.ts",
+      "lines": 717,
+      "variants": ["patient", "therapist"],
+      "archetypes": ["quiz_scale"],
+      "data_type": "filled_responses",
+      "status": "functional",
+      "template_locked": true
+    },
+    {
+      "name": "Worksheet Result PDF",
+      "server": "src/features/activities/worksheet-result-pdf.server.ts",
+      "functions": "src/features/activities/worksheet-result-pdf.functions.ts",
+      "lines": 642,
+      "variants": ["patient", "therapist"],
+      "archetypes": ["structured_form", "guided_script"],
+      "data_type": "filled_responses",
+      "status": "functional",
+      "template_locked": true
+    },
+    {
+      "name": "Drag-Drop Result PDF",
+      "server": "src/features/activities/drag-drop-result-pdf.server.ts",
+      "functions": "src/features/activities/drag-drop-result-pdf.functions.ts",
+      "lines": 845,
+      "variants": ["patient", "therapist"],
+      "archetypes": ["drag_drop"],
+      "sub_modes": ["card_sort", "ranking_ladder", "cycle_builder"],
+      "data_type": "filled_responses",
+      "status": "functional",
+      "template_locked": true
+    },
+    {
+      "name": "Habit Report PDF",
+      "server": "src/features/habits/habit-report.server.ts",
+      "functions": "src/features/habits/habit-report.functions.ts",
+      "lines": 1176,
+      "variants": ["patient", "therapist"],
+      "archetypes": ["guided_timer", "guided_script"],
+      "data_type": "habit_entries_aggregated",
+      "status": "functional",
+      "template_locked": true
+    },
+    {
+      "name": "Compliance Report PDF",
+      "server": "src/features/activities/compliance-report.server.ts",
+      "functions": "src/features/activities/compliance-report.functions.ts",
+      "lines": 1306,
+      "variants": ["single (therapist, gated Practice)"],
+      "archetypes": ["all"],
+      "data_type": "patient_full_history",
+      "status": "functional",
+      "template_locked": true,
+      "risk": "Maior arquivo server — agrega todas as features"
+    },
+    {
+      "name": "Audit Export",
+      "server": null,
+      "functions": "src/features/activities/audit-export.functions.ts",
+      "variants": ["single (admin)"],
+      "data_type": "audit_logs",
+      "status": "functional"
+    },
+    {
+      "name": "PDF Brand Assets (shared)",
+      "server": "src/features/activities/pdf-brand-assets.server.ts",
+      "functions": null,
+      "lines": null,
+      "status": "functional",
+      "notes": "ÚNICO source de base64 para logo/ícones/watermark. SPOF para todos os PDFs."
+    }
+  ],
+
+  "clinical_activities": [
+    { "name": "PHQ-9", "slug": "phq-9", "code": "PHQ-9", "category": "depression", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "GAD-7", "slug": "gad-7", "code": "GAD-7", "category": "anxiety", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "PCL-5", "slug": "pcl-5", "code": "PCL-5", "category": "trauma", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session"] },
+    { "name": "PHQ-2", "slug": "phq-2", "code": "PHQ-2", "category": "depression", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "GAD-2", "slug": "gad-2", "code": "GAD-2", "category": "anxiety", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "C-SSRS Screener", "slug": "c-ssrs", "code": "C-SSRS", "category": "crisis", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session"], "sensitive": true },
+    { "name": "AUDIT", "slug": "audit", "code": "AUDIT", "category": "substance", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "AUDIT-C", "slug": "audit-c", "code": "AUDIT-C", "category": "substance", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "DAST-10", "slug": "dast-10", "code": "DAST-10", "category": "substance", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "PSS-10", "slug": "pss-10", "code": "PSS-10", "category": "stress", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": false, "report": "scale-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "+23 escalas adicionais no banco", "slug": "various", "code": "various", "category": "various", "archetype": "quiz_scale", "collects_data": true, "has_score": true, "has_clinical_flag": true, "report": "scale-result-pdf", "notes": "33 escalas totais no activity_catalog. Scoring genérico via config JSONB." },
+    { "name": "Thought Record 7-col", "slug": "thought-record-7col", "code": "CBT-01", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Behavioral Activation Log", "slug": "behavioral-activation-log", "code": "WS-01", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Worry Time Worksheet", "slug": "worry-time", "code": "WS-02", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Behavioral Experiment", "slug": "behavioral-experiment", "code": "WS-03", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Values Compass", "slug": "values-compass", "code": "WS-04", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Defusion Exercise Log", "slug": "defusion-log", "code": "WS-05", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Emotion Regulation Diary", "slug": "emotion-regulation-diary", "code": "WS-06", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "DEAR MAN", "slug": "dear-man", "code": "WS-07", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Distress Tolerance Plan", "slug": "distress-tolerance-plan", "code": "WS-08", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Safety Plan", "slug": "safety-plan", "code": "WS-09", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session"], "sensitive": true },
+    { "name": "Grounding Journal", "slug": "grounding-journal", "code": "WS-10", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Sleep Hygiene Checklist", "slug": "sleep-hygiene-checklist", "code": "WS-11", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["shared_link", "both"], "psychoeducation": true },
+    { "name": "Gratitude Journal", "slug": "gratitude-journal", "code": "WS-12", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["shared_link", "both"] },
+    { "name": "Self-Compassion Letter", "slug": "self-compassion-letter", "code": "WS-13", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Communication Repair", "slug": "communication-repair", "code": "WS-14", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "SMART Goal Setting", "slug": "smart-goal", "code": "WS-15", "category": "worksheets", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Distorções Cognitivas", "slug": "cognitive-distortions-tagging", "code": "CBT-03", "category": "cbt", "archetype": "drag_drop", "sub_mode": "card_sort", "collects_data": true, "has_score": true, "has_clinical_flag": false, "report": "drag-drop-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Evidências a Favor e Contra", "slug": "evidence-for-against", "code": "CBT-08", "category": "cbt", "archetype": "structured_form", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Respiração 4-7-8", "slug": "respiracao-4-7-8", "code": "MIN-01", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "breathing", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Respiração quadrada", "slug": "respiracao-quadrada", "code": "MIN-02", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "breathing", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Respiração diafragmática", "slug": "respiracao-diafragmatica", "code": "MIN-03", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "breathing", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Respiração alternada", "slug": "respiracao-alternada", "code": "MIN-04", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "breathing", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Body Scan", "slug": "body-scan", "code": "MIN-05", "category": "mindfulness", "archetype": "guided_script", "subcategory": "body-scan", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Body Scan Rápido", "slug": "body-scan-rapido", "code": "MIN-06", "category": "mindfulness", "archetype": "guided_script", "subcategory": "body-scan", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "PMR", "slug": "relaxamento-muscular-progressivo", "code": "MIN-07", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "relaxation", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "PMR Rápido", "slug": "pmr-rapido", "code": "MIN-08", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "relaxation", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Lugar Seguro", "slug": "lugar-seguro", "code": "MIN-09", "category": "mindfulness", "archetype": "guided_script", "subcategory": "grounding", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Grounding Sensorial", "slug": "grounding-sensorial", "code": "MIN-10", "category": "mindfulness", "archetype": "guided_script", "subcategory": "grounding", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Mindful Breathing", "slug": "mindful-breathing", "code": "MIN-11", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "meditation", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Loving-Kindness", "slug": "loving-kindness", "code": "MIN-12", "category": "mindfulness", "archetype": "guided_script", "subcategory": "meditation", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Observação Consciente", "slug": "observacao-consciente", "code": "MIN-13", "category": "mindfulness", "archetype": "guided_script", "subcategory": "attention", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Mindful Eating", "slug": "mindful-eating", "code": "MIN-14", "category": "mindfulness", "archetype": "guided_script", "subcategory": "informal", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Mindful Walking", "slug": "mindful-walking", "code": "MIN-15", "category": "mindfulness", "archetype": "guided_script", "subcategory": "informal", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "R.A.I.N.", "slug": "rain-meditation", "code": "MIN-16", "category": "mindfulness", "archetype": "guided_script", "subcategory": "defusion", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "S.T.O.P.", "slug": "stop-skill", "code": "MIN-17", "category": "mindfulness", "archetype": "guided_script", "subcategory": "micro-practices", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Leaves on a Stream", "slug": "leaves-on-stream", "code": "MIN-18", "category": "mindfulness", "archetype": "guided_script", "subcategory": "defusion", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "3-min Breathing Space", "slug": "3min-breathing-space", "code": "MIN-19", "category": "mindfulness", "archetype": "guided_timer", "subcategory": "micro-practices", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "habit-report", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Body Scan Compassivo", "slug": "compassionate-body-scan", "code": "MIN-20", "category": "mindfulness", "archetype": "guided_script", "subcategory": "self-compassion", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] },
+    { "name": "Ancoragem 5-4-3-2-1", "slug": "ancoragem-5-4-3-2-1", "code": "TRA-02", "category": "mindfulness", "archetype": "guided_script", "subcategory": "grounding", "collects_data": true, "has_score": false, "has_clinical_flag": false, "report": "worksheet-result-pdf", "modes": ["in_session", "shared_link", "both"] }
+  ],
+
+  "legacy_or_duplicate_files": [
+    {
+      "file": "src/features/patients/PatientLimitBanner.tsx",
+      "type": "duplicate",
+      "canonical": "src/features/patients/components/PatientLimitBanner.tsx",
+      "notes": "Mesmo componente duplicado fora da pasta components/"
+    },
+    {
+      "file": "src/features/patients/PatientLimitModal.tsx",
+      "type": "duplicate",
+      "canonical": "src/features/patients/components/PatientLimitModal.tsx",
+      "notes": "Mesmo componente duplicado fora da pasta components/"
+    },
+    {
+      "file": "src/features/library/seed-data.ts",
+      "type": "legacy",
+      "notes": "Fallback estático hardcoded. Fonte de verdade é activity_catalog no banco. Marcado como TEMPORÁRIO no próprio arquivo."
+    },
+    {
+      "file": "src/features/games/_core/GameShell.tsx",
+      "type": "placeholder",
+      "notes": "Shell vazio — nenhuma atividade usa"
+    },
+    {
+      "file": "src/features/games/_core/ShareableLink.tsx",
+      "type": "placeholder",
+      "notes": "Shell vazio — nenhuma atividade usa"
+    },
+    {
+      "file": "src/features/games/_core/game.types.ts",
+      "type": "placeholder",
+      "notes": "Shell vazio — nenhuma atividade usa"
+    },
+    {
+      "file": "src/features/games/_core/useGameSession.ts",
+      "type": "placeholder",
+      "notes": "Shell vazio — nenhuma atividade usa"
+    },
+    {
+      "file": "src/features/dev/activityRoadmap.ts",
+      "type": "dev_only",
+      "notes": "Dados estáticos do roadmap. Não é usado em produção."
+    },
+    {
+      "file": "src/routes/_authenticated/dev.roadmap.tsx",
+      "type": "dev_only",
+      "notes": "Rota dev-only. Remover antes do launch."
+    }
+  ],
+
+  "core_candidates": [
+    {
+      "module": "auth",
+      "files": [
+        "src/features/auth/AuthProvider.tsx",
+        "src/features/auth/auth-events.functions.ts",
+        "src/features/auth/profile.functions.ts",
+        "src/features/auth/useRedirectIfAuthenticated.ts",
+        "src/integrations/supabase/client.ts",
+        "src/integrations/supabase/client.server.ts",
+        "src/integrations/supabase/auth-middleware.ts"
+      ],
+      "reason": "Fundação de toda autenticação. Usado por todas as features."
+    },
+    {
+      "module": "workspace",
+      "files": [
+        "src/features/workspace/workspace.functions.ts"
+      ],
+      "reason": "Multi-tenant é requisito de toda tabela sensível."
+    },
+    {
+      "module": "patients",
+      "files": [
+        "src/features/patients/patients.functions.ts",
+        "src/features/patients/patients.types.ts",
+        "src/features/patients/components/"
+      ],
+      "reason": "CRUD de pacientes é dependência de activities, habits, ephemeral, compliance."
+    },
+    {
+      "module": "billing",
+      "files": [
+        "src/features/billing/billing.functions.ts",
+        "src/features/billing/plan.server.ts",
+        "src/features/billing/stripe.server.ts",
+        "src/features/billing/trial-status.ts",
+        "src/features/billing/TrialExpiredBanner.tsx"
+      ],
+      "reason": "Limites de plano afetam patients, activities, reports."
+    },
+    {
+      "module": "audit",
+      "files": [
+        "src/features/audit/audit.server.ts"
+      ],
+      "reason": "Toda feature gera audit logs."
+    },
+    {
+      "module": "crypto",
+      "files": [
+        "src/lib/crypto/encryption.server.ts"
+      ],
+      "reason": "AES-256-GCM usado por patients, activities, habits, ephemeral."
+    },
+    {
+      "module": "tokens",
+      "files": [
+        "src/lib/tokens/magic-link.server.ts"
+      ],
+      "reason": "Geração e hash de tokens usados por magic link, habit link, ephemeral."
+    },
+    {
+      "module": "rate-limit",
+      "files": [
+        "src/lib/rate-limit/public-link.server.ts"
+      ],
+      "reason": "Proteção de todas as rotas públicas (/p/, /h/, /e/)."
+    },
+    {
+      "module": "scoring",
+      "files": [
+        "src/lib/scoring/scoring.server.ts"
+      ],
+      "reason": "Engine genérica de auto-scoring. Usado por 33 escalas + compliance report."
+    },
+    {
+      "module": "pdf-brand",
+      "files": [
+        "src/features/activities/pdf-brand-assets.server.ts"
+      ],
+      "reason": "Source único de assets base64 para todos os 5 geradores de PDF."
+    },
+    {
+      "module": "validation",
+      "files": [
+        "src/lib/validation/schemas.ts"
+      ],
+      "reason": "Schemas Zod compartilhados por todas as server functions."
+    },
+    {
+      "module": "ui",
+      "files": [
+        "src/components/brand/",
+        "src/components/layout/",
+        "src/components/feedback/",
+        "src/components/ui/"
+      ],
+      "reason": "Componentes visuais compartilhados (shadcn + brand)."
+    }
+  ],
+
+  "module_candidates": [
+    {
+      "module": "quiz-scale",
+      "files": [
+        "src/features/library/runners/structured_form/FormRunner.tsx",
+        "src/features/library/runners/structured_form/form-types.ts",
+        "src/features/activities/scale-result-pdf.server.ts",
+        "src/features/activities/scale-result-pdf.functions.ts"
+      ],
+      "tables": ["activity_catalog (quiz_scale)", "patient_activities", "activity_responses"],
+      "reason": "33 escalas validadas com auto-scoring. Maior volume de atividades."
+    },
+    {
+      "module": "structured-form",
+      "files": [
+        "src/features/library/runners/structured_form/FormRunner.tsx",
+        "src/features/library/runners/structured_form/form-types.ts",
+        "src/features/activities/worksheet-result-pdf.server.ts",
+        "src/features/activities/worksheet-result-pdf.functions.ts"
+      ],
+      "tables": ["activity_catalog (structured_form)", "patient_activities", "activity_responses"],
+      "reason": "15 worksheets. Compartilha FormRunner com quiz-scale (diferenciado por archetype).",
+      "notes": "FormRunner serve quiz_scale E structured_form. Separar exigiria abstrair o runner."
+    },
+    {
+      "module": "guided-timer",
+      "files": [
+        "src/features/library/runners/breathing/BreathingRunner.tsx",
+        "src/features/library/runners/breathing/breathing-sounds.ts",
+        "src/features/library/runners/breathing/breathing-types.ts"
+      ],
+      "tables": ["activity_catalog (guided_timer)", "patient_activities", "activity_responses"],
+      "reason": "8 atividades de respiração/timer com animação de círculo."
+    },
+    {
+      "module": "guided-script",
+      "files": [
+        "src/features/library/runners/guided_script/GuidedScriptRunner.tsx",
+        "src/features/library/runners/guided_script/script-types.ts"
+      ],
+      "tables": ["activity_catalog (guided_script)", "patient_activities", "activity_responses"],
+      "reason": "12 atividades step-by-step com reflexões opcionais."
+    },
+    {
+      "module": "drag-drop",
+      "files": [
+        "src/features/library/runners/drag_drop/DragDropRunner.tsx",
+        "src/features/library/runners/drag_drop/CardSortLayout.tsx",
+        "src/features/library/runners/drag_drop/CycleBuilderLayout.tsx",
+        "src/features/library/runners/drag_drop/RankingLadderLayout.tsx",
+        "src/features/library/runners/drag_drop/DraggableCard.tsx",
+        "src/features/library/runners/drag_drop/drag-drop-types.ts",
+        "src/features/activities/drag-drop-result-pdf.server.ts",
+        "src/features/activities/drag-drop-result-pdf.functions.ts"
+      ],
+      "tables": ["activity_catalog (drag_drop)", "patient_activities", "activity_responses"],
+      "reason": "6+ atividades com 3 sub-modos (card_sort, ranking_ladder, cycle_builder)."
+    },
+    {
+      "module": "habit-tracker",
+      "files": [
+        "src/features/habits/HabitTrackingTab.tsx",
+        "src/features/habits/habits.functions.ts",
+        "src/features/habits/habits.server.ts",
+        "src/features/habits/habit-report.functions.ts",
+        "src/features/habits/habit-report.server.ts",
+        "src/routes/h.$token.tsx"
+      ],
+      "tables": ["habit_links", "habit_entries"],
+      "reason": "Módulo mais isolado. Candidato ideal para piloto de modularização.",
+      "pilot": true
+    },
+    {
+      "module": "ephemeral",
+      "files": [
+        "src/features/ephemeral/ephemeral.functions.ts",
+        "src/features/ephemeral/ephemeral-public.functions.ts",
+        "src/features/ephemeral/ephemeral.server.ts",
+        "src/features/ephemeral/components/EphemeralCountdownBadge.tsx",
+        "src/routes/e.$token.tsx"
+      ],
+      "tables": ["ephemeral_activities", "ephemeral_responses"],
+      "reason": "Links efêmeros com purge automático. Tabelas próprias, rota própria."
+    },
+    {
+      "module": "compliance-report",
+      "files": [
+        "src/features/activities/compliance-report.server.ts",
+        "src/features/activities/compliance-report.functions.ts",
+        "src/features/activities/compliance-report-rules.server.ts"
+      ],
+      "tables": ["todas (leitura agregada)"],
+      "reason": "Relatório que agrega todos os dados do paciente. Gated ao Practice."
+    },
+    {
+      "module": "analytics",
+      "files": [
+        "src/features/analytics/analytics.functions.ts",
+        "src/features/analytics/aggregate-analytics.server.ts",
+        "src/features/analytics/analytics-alerts.ts",
+        "src/features/analytics/error-tracker.server.ts",
+        "src/features/analytics/pwa-install-tracker.ts",
+        "src/features/analytics/useAnalytics.ts",
+        "src/features/analytics/weekly-insights.server.ts"
+      ],
+      "tables": ["platform_analytics"],
+      "reason": "Métricas desidentificadas. Isolado do domínio clínico."
+    },
+    {
+      "module": "library",
+      "files": [
+        "src/features/library/CategoryBrowser.tsx",
+        "src/features/library/CategoryRow.tsx",
+        "src/features/library/ActivityCard.tsx",
+        "src/features/library/ScaleCard.tsx",
+        "src/features/library/LibraryHero.tsx",
+        "src/features/library/InSessionQuickAccess.tsx",
+        "src/features/library/PatientPickerSheet.tsx",
+        "src/features/library/RecommendedEmpty.tsx",
+        "src/features/library/ResourceBox.tsx",
+        "src/features/library/illustrations.tsx",
+        "src/features/library/archetypes.ts",
+        "src/features/library/library.types.ts",
+        "src/features/library/seed-data.ts"
+      ],
+      "tables": ["activity_catalog", "featured_activity_history"],
+      "reason": "Acervo/catálogo. Interface entre terapeuta e atividades."
+    }
+  ]
+}
