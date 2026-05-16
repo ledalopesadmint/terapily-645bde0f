@@ -1,0 +1,364 @@
+================================================================================
+LEGACY DESIGN MIGRATION REPORT
+Terapily — Projeto antigo → Novo core (Supabase BYOS, Module Engine, Contracts)
+Gerado: 2026-05-16
+================================================================================
+
+CONTEXTO
+--------------------------------------------------------------------------------
+Este projeto antigo deixa de ser o core principal da Terapily. Está sendo
+transformado em "Legacy Design Reference System" — sua função única passa a ser
+servir como FONTE DE VERDADE VISUAL para o novo core, que está sendo construído
+do zero com:
+
+  - Supabase BYOS (Bring Your Own Supabase)
+  - auth/runtime novo
+  - RLS nova
+  - legal gate
+  - workspace bootstrap transacional
+  - boundaries rígidos client/server
+  - service_role estritamente server-only
+  - contracts tipados
+  - Module Engine
+  - registry architecture
+  - PDF Engine 2.0 (desacoplada)
+  - activity runtime desacoplada
+  - foundation segura compliance-oriented
+
+O runtime legado deste projeto NÃO é compatível com o novo core. Portanto:
+não exportamos o app inteiro, não copiamos runtime, lógica, auth, stores,
+arquitetura clínica, PDF runtime, hooks acoplados, nem estrutura Supabase
+antiga. Apenas a CAMADA VISUAL.
+
+================================================================================
+1. ARQUITETURA VISUAL ENCONTRADA
+================================================================================
+
+Identidade (Brand Book v3 · 2026):
+  - Paleta: Sage #7E9B86 · Navy #1F2A36 · Cream #F4EFE6 · Mauve #B89BA3 · Charcoal #3A3F47
+  - Auxiliares: Terracotta, Cream-tan, Rust, Cream-light, Cream-deep
+  - Cores exclusivas de ação: Flag (coral), Patient Report (teal), Therapist Report (rosa-q)
+  - Status semáforo: Active (emerald) / Archived (amber) / Deleted (red) com subtle+muted
+  - Sidebar Navy editorial (oklch 0.235 0.025 251.0) + texto Cream + active ink Sage
+  - Tokens em oklch (Tailwind v4 padrão), nunca preto puro
+
+Tipografia:
+  - Display: Cormorant (serif SemiBold), line-height 1.05
+  - Sans: Inter, line-height 1.5, font-feature-settings "ss01" "cv11"
+  - Eyebrow: Inter ExtraBold, 0.6875rem, letter-spacing 0.12em (+120 brand book)
+  - Wordmark "terapily" SEMPRE minúsculo + ponto Sage final
+
+Spacing / Radius / Shadows:
+  - Spacing escala Tailwind v4 (4px base)
+  - --radius base 0.5rem, escala sm/md/lg/xl/2xl/3xl com offset ±4px
+  - Shadows SEMPRE warm-tinted derivadas de Navy oklch (nunca preto)
+  - Gradients: sageGlow radial, hairline horizontal, creamDiagonal
+
+Motion:
+  - Conservador: durations 100-700ms, easings calmos (standard, editorial)
+  - Sem bounce
+  - prefers-reduced-motion respeitado globalmente
+  - Keyframes: fadeIn, fadeOut, scaleIn, slideInRight
+
+Layout:
+  - Breakpoint primário md (768px) — onde sidebar aparece
+  - Auth shell split 5fr/6fr
+  - Landing grid 12 cols
+  - Activity card themes via data-theme (6 paletas: sage/mauve/navy/cream/terracotta/sage-dark)
+
+================================================================================
+2. TOKENS EXTRAÍDOS (camada agnóstica, runtime-free)
+================================================================================
+
+Localização: src/design-system/tokens/
+
+  ├── colors.ts        → palette + editorial + actionColors + statusColors +
+  │                       semantic + sidebarColors + activityThemes
+  ├── typography.ts    → fontFamilies + fontWeights + lineHeights +
+  │                       letterSpacing + fluidScale + eyebrowStyle
+  ├── spacing.ts       → spacing scale + sectionPadding + containerMax
+  ├── radius.ts        → radiusBase + radius scale
+  ├── shadows.ts       → shadows + gradients
+  ├── motion.ts        → durations + easings + keyframes + reducedMotionRule
+  ├── layout.ts        → breakpoints + zIndex + appShell + grids
+  └── index.ts         → re-export agregado
+
+Características:
+  - Zero import de Supabase, auth, hooks, features
+  - Zero dependência do runtime atual
+  - Tudo "as const" tipado
+  - Exportável direto para o novo core via copy-paste de pasta
+
+styles.css de origem incluído em exports/design-system/design-tokens/styles.css
+como referência canônica.
+
+================================================================================
+3. COMPONENTES SEGUROS (visual puro — migrar direto)
+================================================================================
+
+shadcn UI (src/components/ui/*) — 44 componentes Radix-based, todos puros:
+  accordion, alert, alert-dialog, aspect-ratio, avatar, badge, breadcrumb,
+  button, card, carousel, checkbox, collapsible, command, context-menu,
+  dialog, drawer, dropdown-menu, form, hover-card, input, input-otp, label,
+  menubar, navigation-menu, pagination, popover, progress, radio-group,
+  resizable, scroll-area, select, separator, sheet, skeleton, slider, sonner,
+  switch, table, tabs, textarea, toggle, toggle-group, tooltip
+
+  ⚠ Atenção em sidebar.tsx (744 linhas) e chart.tsx (331 linhas) — auditar
+    hooks internos antes do port.
+
+Brand visuais (src/components/brand/*) — 6 componentes:
+  Logo, Eyebrow, SidebarLogo, GoogleButton, CapsLockHint, AuthShell
+  (AuthShell precisa refator do <Link> para componente agnóstico no novo core.)
+
+Feedback (src/components/feedback/EmptyState.tsx) — puro visual.
+
+Utils:
+  src/lib/utils.ts → cn() helper (clsx + twMerge). 100% puro.
+
+Assets brand:
+  src/assets/terapily-icon.webp
+  src/assets/terapily-icon-cream.webp
+  src/assets/terapily-t-cream.png
+
+================================================================================
+4. COMPONENTES INSEGUROS (NÃO migrar — runtime contaminado)
+================================================================================
+
+Auth & sessão: 8 arquivos
+Supabase client/middleware/types: 5 arquivos
+Activity runtime (players, runners, library wrappers): ~40 arquivos
+Magic link / ephemeral / habit server: ~10 arquivos
+Patients / billing / admin: ~25 arquivos
+PDF runtime antigo: ~5 arquivos
+Audit / analytics / logger server: ~10 arquivos
+Migrations Supabase: TODAS (refazer no BYOS novo)
+
+Detalhes completos em: docs/design-system/COUPLING_MAP.md
+
+================================================================================
+5. RUNTIME LEGADO DETECTADO
+================================================================================
+
+Padrões de acoplamento problemáticos encontrados:
+
+  (a) AppShell.tsx consome useAuth(), useQuery(getCurrentSubscription),
+      hasRole() — visual misturado com lógica. Refator obrigatório no
+      novo core: separar <AppShellLayout> visual de <AppShellContainer>
+      que consome contexto.
+
+  (b) Componentes brand importam <Link to="/" /> diretamente do TanStack
+      Router. No novo core, abstrair via <BrandLink> agnóstico.
+
+  (c) Landing (1855 linhas) tem CTAs apontando para rotas legadas
+      (/signup, /login, /dashboard) que não existem no novo core.
+
+  (d) Rotas _authenticated/* presumem AuthProvider legado, RLS antiga e
+      tabelas patients/workspaces/audit_logs antigas. Toda a árvore
+      _authenticated deve ser refeita no novo core.
+
+  (e) src/start.ts registra attachSupabaseAuth como functionMiddleware —
+      acoplado ao auth-attacher legado. Não migrar.
+
+  (f) src/integrations/supabase/types.ts é auto-gerado pelo schema legado.
+      Tipos do novo core serão regenerados contra schema BYOS novo.
+
+================================================================================
+6. RISCOS
+================================================================================
+
+ALTO:
+  - Tentar portar AppShell.tsx ou rotas _authenticated literalmente quebra
+    o novo core (contracts incompatíveis).
+  - Tentar reusar src/integrations/supabase/* vaza service_role e quebra
+    boundaries.
+  - Tentar migrar activity runtime traz dependências de schema antigo.
+
+MÉDIO:
+  - Tokens em src/styles.css usam @theme inline do Tailwind v4. Garantir
+    que o novo core tem Tailwind v4 configurado igual antes de copiar.
+  - shadcn sidebar.tsx (744 linhas) e chart.tsx (331 linhas) podem ter
+    hooks internos com pequenas dependências — auditar.
+
+BAIXO:
+  - Componentes UI puros (button, input, card, etc.) são copiáveis sem
+    risco. Já são padrão shadcn upstream.
+  - Tokens em src/design-system/tokens/* são puros TS as const.
+
+================================================================================
+7. RECOMENDAÇÕES
+================================================================================
+
+(1) Use exports/design-system/ como pacote de migração SEMENTE. Não puxe
+    nada além dessa pasta sem revisão.
+
+(2) No novo core, crie a estrutura espelho:
+      new-core/src/design-system/tokens/   ← copiar tokens 1:1
+      new-core/src/components/ui/          ← copiar shadcn pure
+      new-core/src/components/brand/       ← copiar brand pure (refator <Link>)
+      new-core/src/assets/                 ← copiar assets
+
+(3) Replique styles.css adaptando @import e @source para a estrutura nova.
+    Mantenha @theme inline com os mesmos tokens. Cole o bloco @layer base
+    e os data-theme do activity card sem alteração.
+
+(4) Implemente AppShell visual no novo core a partir do
+    APP_SHELL_REFERENCE.md, mas como componente VISUAL PURO que recebe:
+      - workspace (prop)
+      - profile (prop)
+      - role (prop)
+      - subscription (prop)
+      - activeRoute (prop)
+      - navItems (registry)
+    e jamais chama hooks de auth/billing diretamente.
+
+(5) Reimplemente landing usando LANDING_VISUAL_REFERENCE.md. NÃO copiar
+    src/routes/index.tsx — usar como referência visual e refazer com
+    contracts/CTAs do novo core. Revalidar copy contra pesquisa de
+    mercado v2 antes de fixar.
+
+(6) Mantenha clinical-references/** intacto e copie para o novo core
+    como fonte científica imutável (regra do protocolo de referência).
+
+(7) Para PDFs, mantenha apenas os TEMPLATES VISUAIS documentados (em
+    docs/scale-result-pdf-template.md, compliance-report-template.md,
+    worksheet-result-pdf.md) como referência. Reimplementar engine de
+    geração na PDF Engine 2.0 do novo core.
+
+================================================================================
+8. ORDEM IDEAL DE MIGRAÇÃO
+================================================================================
+
+Fase 0 — Preparação do novo core
+  □ Tailwind v4 configurado idêntico
+  □ Fonte Cormorant + Inter carregadas
+  □ tw-animate-css disponível
+  □ Radix UI instalado (peer deps dos shadcn)
+  □ lucide-react instalado
+
+Fase 1 — Fundação visual
+  □ Copiar design-system/tokens/ inteiro
+  □ Adaptar e colar styles.css (todos os @theme inline + :root + .dark +
+    @layer base + data-theme activity)
+  □ Copiar src/lib/utils.ts (cn helper)
+  □ Copiar src/assets/* brand assets
+
+Fase 2 — Componentes UI puros
+  □ Copiar todos os shadcn em ui-components/ui/
+  □ Auditar sidebar.tsx e chart.tsx (deps internas)
+  □ Smoke test render
+
+Fase 3 — Componentes brand
+  □ Copiar Logo, Eyebrow, SidebarLogo, GoogleButton, CapsLockHint, EmptyState
+  □ Copiar AuthShell COM refator: substituir <Link> por <BrandLink> abstrato
+  □ Smoke test render
+
+Fase 4 — Shell autenticado
+  □ Implementar <AppShellLayout> seguindo APP_SHELL_REFERENCE.md
+  □ Implementar <AppShellContainer> que consome contexto do novo core
+  □ Workspace switcher, nav, rodapé contextual (admin/plano/trial)
+  □ Header mobile-only
+
+Fase 5 — Landing
+  □ Implementar sections seguindo LANDING_VISUAL_REFERENCE.md
+  □ Eyebrow + hero + 5 pilares + how-it-works + stats + compliance + pricing + FAQ + footer
+  □ Reveal-on-scroll via IntersectionObserver
+  □ Revalidar copy com pesquisa de mercado v2
+
+Fase 6 — Páginas internas
+  □ Reimplementar /library (Acervo) usando módulos exportados (escalas, worksheets, mindfulness)
+  □ Reimplementar /patients usando contracts novos
+  □ Reimplementar /settings usando registry novo
+  □ Reimplementar /admin usando admin compliance console novo
+
+Fase 7 — Polish
+  □ Auditoria de acessibilidade (focus rings, contraste, prefers-reduced-motion)
+  □ Smoke test cross-browser
+  □ Lighthouse audit
+
+================================================================================
+9. CHECKLIST DE IMPORTAÇÃO NO NOVO CORE
+================================================================================
+
+[ ] Tailwind v4 configurado com mesma estrutura @theme inline
+[ ] Fontes Cormorant + Inter carregadas (Google Fonts ou self-hosted)
+[ ] tw-animate-css importado
+[ ] Radix UI primitives instalados (peer deps de shadcn)
+[ ] lucide-react instalado
+[ ] tokens/ copiado e exportando via index.ts
+[ ] styles.css adaptado (manter :root vars, .dark vars, @layer base, activity data-theme)
+[ ] src/lib/utils.ts (cn) copiado
+[ ] components/ui/* shadcn copiados (44 arquivos)
+[ ] components/brand/Logo, Eyebrow, SidebarLogo, GoogleButton, CapsLockHint copiados
+[ ] components/brand/AuthShell copiado COM refator de <Link>
+[ ] components/feedback/EmptyState copiado
+[ ] assets brand (3 arquivos) copiados
+[ ] AppShellLayout reimplementado (visual puro, props-driven)
+[ ] Landing reimplementada (não copiada literal — visual referenciado)
+[ ] clinical-references/** copiado intacto
+[ ] Docs visuais (LEGACY_VISUAL_AUDIT, APP_SHELL_REFERENCE, LANDING_VISUAL_REFERENCE) copiados para new-core/docs/design-system/
+
+================================================================================
+10. O QUE NÃO DEVE MIGRAR (resumo executivo)
+================================================================================
+
+❌ Qualquer arquivo dentro de:
+    src/integrations/supabase/*
+    src/features/auth/*
+    src/features/activities/*
+    src/features/library/runners/**
+    src/features/library/[ActivityCard|CategoryBrowser|CategoryRow|ScaleCard|InSessionQuickAccess|LibraryHero|PatientPickerSheet|RecommendedEmpty|ResourceBox|illustrations|archetypes|seed-data|library.types].tsx
+    src/features/games/*
+    src/features/ephemeral/*
+    src/features/habits/*
+    src/features/patients/*
+    src/features/billing/*
+    src/features/audit/*
+    src/features/analytics/*
+    src/features/feature-flags/*
+    src/features/workspace/*
+    src/features/dev/*
+    src/lib/crypto/*
+    src/lib/tokens/*
+    src/lib/scoring/*
+    src/lib/logging/*
+    src/lib/rate-limit/*
+    src/lib/retry/*
+    src/lib/logger.ts
+    src/lib/logger.server.ts
+    src/lib/validation/schemas.ts
+    src/server/*
+    src/routes/_authenticated/*
+    src/routes/api/*
+    src/routes/p.$token.tsx, h.$token.tsx, e.$token.tsx
+    src/routes/login.tsx, signup.tsx, forgot-password.tsx, reset-password.tsx, auth.callback.tsx
+    src/routes/__root.tsx, _authenticated.tsx (refazer)
+    src/router.tsx
+    src/start.ts
+    src/test-setup.ts
+    src/types/lovable-auth-augmentation.d.ts
+    src/integrations/lovable/*
+    supabase/**
+    .env (regerar)
+    wrangler.jsonc (validar contra novo deploy target)
+
+❌ Lockfiles, package.json (refazer com deps mínimas do novo core)
+
+❌ vite.config.ts, tsconfig.json (validar contra config do novo core)
+
+================================================================================
+FIM DO RELATÓRIO
+================================================================================
+
+Para detalhes complementares ver:
+  docs/design-system/LEGACY_VISUAL_AUDIT.md
+  docs/design-system/APP_SHELL_REFERENCE.md
+  docs/design-system/LANDING_VISUAL_REFERENCE.md
+  docs/design-system/COUPLING_MAP.md
+
+Tokens canônicos:
+  src/design-system/tokens/
+
+Export bundle:
+  exports/design-system/
+  /mnt/documents/terapily-legacy-design-system-export.zip
