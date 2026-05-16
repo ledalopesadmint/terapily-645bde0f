@@ -1,0 +1,354 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Terapily Design System (Brand Book v3 · 2026)
+ * --------------------------------------------------
+ * Paleta: Sage · Navy · Cream · Mauve · Charcoal
+ * Tipografia: Cormorant (display, serif) + Inter (UI, sans)
+ * Regras:
+ *   - Preto puro #000 PROIBIDO — usar Navy
+ *   - Mauve só decorativo (≤8% da página, nunca em corpo)
+ *   - Sage e Mauve nunca lado a lado
+ *   - Proporção 60/30/10 (Cream/Navy/Sage ou Mauve)
+ * Cores em oklch (Tailwind v4 padrão).
+ */
+
+@theme inline {
+  /* Radius */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+
+  /* Fontes */
+  --font-display: "Cormorant", "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Tracking pra eyebrow (+120 do brand book = 0.12em) */
+  --tracking-eyebrow: 0.12em;
+
+  /* Tokens semânticos shadcn → mapeados pra paleta Terapily */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-ring-offset-background: var(--background);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Tokens de marca diretos (uso em componentes brand/) */
+  --color-sage: var(--sage);
+  --color-sage-foreground: var(--sage-foreground);
+  --color-navy: var(--navy);
+  --color-navy-foreground: var(--navy-foreground);
+  --color-cream: var(--cream);
+  --color-cream-foreground: var(--cream-foreground);
+  --color-mauve: var(--mauve);
+  --color-mauve-foreground: var(--mauve-foreground);
+  --color-charcoal: var(--charcoal);
+  --color-terracotta: var(--terracotta);
+  --color-cream-tan: var(--cream-tan);
+  --color-rust: var(--rust);
+
+  /* Cores exclusivas de ações críticas na área de pacientes */
+  --color-action-flag: var(--action-flag);
+  --color-action-flag-fg: var(--action-flag-fg);
+  --color-action-flag-subtle: var(--action-flag-subtle);
+  --color-action-patient-report: var(--action-patient-report);
+  --color-action-patient-report-fg: var(--action-patient-report-fg);
+  --color-action-therapist-report: var(--action-therapist-report);
+  --color-action-therapist-report-fg: var(--action-therapist-report-fg);
+
+  /* Status semáforo */
+  --color-status-active: var(--status-active);
+  --color-status-active-fg: var(--status-active-fg);
+  --color-status-active-subtle: var(--status-active-subtle);
+  --color-status-active-muted: var(--status-active-muted);
+  --color-status-archived: var(--status-archived);
+  --color-status-archived-fg: var(--status-archived-fg);
+  --color-status-archived-subtle: var(--status-archived-subtle);
+  --color-status-archived-muted: var(--status-archived-muted);
+  --color-status-deleted: var(--status-deleted);
+  --color-status-deleted-fg: var(--status-deleted-fg);
+  --color-status-deleted-subtle: var(--status-deleted-subtle);
+  --color-status-deleted-muted: var(--status-deleted-muted);
+
+  /* Contact icon buttons */
+  --color-contact-email: var(--contact-email);
+  --color-contact-email-fg: var(--contact-email-fg);
+  --color-contact-email-border: var(--contact-email-border);
+  --color-contact-phone: var(--contact-phone);
+  --color-contact-phone-fg: var(--contact-phone-fg);
+  --color-contact-phone-border: var(--contact-phone-border);
+}
+
+/*
+ * Light mode (padrão) — fundo Cream, texto Charcoal, primária Navy
+ * Hex de origem (Brand Book v3):
+ *   Sage     #7E9B86
+ *   Navy     #1F2A36
+ *   Cream    #F4EFE6
+ *   Mauve    #B89BA3
+ *   Charcoal #3A3F47
+ */
+:root {
+  --radius: 0.5rem;
+
+  /* Cores puras Terapily v3 — oklch convertido dos hex oficiais
+   * Sage     #7E9B86  → oklch(0.661 0.045 153.6)
+   * Navy     #1F2A36  → oklch(0.280 0.027 251.0)
+   * Cream    #F4EFE6  → oklch(0.954 0.013 82.4)
+   * Mauve    #B89BA3  → oklch(0.718 0.036 359.6)
+   * Charcoal #3A3F47  → oklch(0.366 0.015 259.8)
+   */
+  --sage: oklch(0.661 0.045 153.6);
+  --sage-foreground: oklch(0.280 0.027 251.0); /* Navy sobre Sage = AA Large */
+  --navy: oklch(0.280 0.027 251.0);
+  --navy-foreground: oklch(0.954 0.013 82.4); /* Cream sobre Navy */
+  --cream: oklch(0.954 0.013 82.4);
+  --cream-foreground: oklch(0.366 0.015 259.8); /* Charcoal sobre Cream */
+  --mauve: oklch(0.718 0.036 359.6);
+  --mauve-foreground: oklch(0.280 0.027 251.0);
+  --charcoal: oklch(0.366 0.015 259.8);
+
+  /* Tons editoriais auxiliares (não substituem a paleta principal) */
+  --terracotta: oklch(0.665 0.082 65);   /* eyebrow dourado-terra editorial */
+  --cream-tan: oklch(0.918 0.022 82);    /* faixa cream tostada (stats strip) */
+  --rust: oklch(0.52 0.105 35);          /* vermelho queimado dessaturado — sinaliza ausência sem alarmar */
+
+  /* ── Action button tokens (cores ÚNICAS, exclusivas destes botões) ── */
+  /* Regra: estas cores NÃO aparecem em nenhum outro lugar do sistema.
+     Objetivo: memorização por cor → prevenção de erro humano. */
+  --action-flag: oklch(0.58 0.18 22);             /* coral-vermelho vivo — flag clínica / atenção imediata */
+  --action-flag-fg: oklch(0.98 0.005 90);          /* branco quente sobre vermelho */
+  --action-flag-subtle: oklch(0.92 0.04 22);       /* bg sutil para badge inline da flag */
+  --action-patient-report: oklch(0.56 0.10 175);   /* teal-verde — seguro pra compartilhar com paciente */
+  --action-patient-report-fg: oklch(0.98 0.005 175);
+  --action-therapist-report: oklch(0.55 0.12 350);  /* rosa queimado — uso interno terapeuta */
+  --action-therapist-report-fg: oklch(0.98 0.01 350);
+
+  /* ── Status semáforo (filtros Ativos / Arquivados / Excluídos) ── */
+  --status-active: oklch(0.55 0.17 155);             /* emerald-600 — "siga" */
+  --status-active-fg: oklch(0.98 0.005 155);
+  --status-active-subtle: oklch(0.92 0.06 155);      /* bg quando inativo */
+  --status-active-muted: oklch(0.48 0.12 155);       /* texto quando inativo */
+  --status-archived: oklch(0.72 0.17 75);            /* amber-500 — "atenção" */
+  --status-archived-fg: oklch(0.98 0.01 90);
+  --status-archived-subtle: oklch(0.93 0.05 75);
+  --status-archived-muted: oklch(0.52 0.12 75);
+  --status-deleted: oklch(0.53 0.21 27);             /* red-600 — "pare" */
+  --status-deleted-fg: oklch(0.98 0.005 27);
+  --status-deleted-subtle: oklch(0.92 0.05 27);
+  --status-deleted-muted: oklch(0.50 0.18 27);
+
+  /* ── Contact icon buttons (lista de pacientes) ── */
+  --contact-email: var(--navy);                       /* navy sólido */
+  --contact-email-fg: oklch(0.98 0.005 90);           /* branco */
+  --contact-email-border: oklch(0.98 0.005 90);       /* contorno branco */
+  --contact-phone: var(--sage);                       /* sage sólido */
+  --contact-phone-fg: oklch(0.98 0.005 90);           /* branco */
+  --contact-phone-border: var(--navy);                /* contorno navy */
+
+  /* Mapping semântico shadcn → paleta Terapily */
+  --background: var(--cream);
+  --foreground: var(--charcoal);
+  --card: oklch(0.980 0.010 87.5); /* Cream-light #FBF8F1 */
+  --card-foreground: var(--charcoal);
+  --popover: var(--cream);
+  --popover-foreground: var(--charcoal);
+  --primary: var(--navy);
+  --primary-foreground: var(--cream);
+  --secondary: var(--sage);
+  --secondary-foreground: var(--navy);
+  --muted: oklch(0.927 0.020 84.6); /* Cream-deep #EDE6D8 */
+  --muted-foreground: oklch(0.5 0.015 259.8);
+  --accent: var(--sage);
+  --accent-foreground: var(--navy);
+  --destructive: oklch(0.5 0.18 28);
+  --destructive-foreground: var(--cream);
+  --border: oklch(0.887 0.020 84.6); /* Border warm #E0D9CB */
+  --input: oklch(0.887 0.020 84.6);
+  --ring: var(--sage);
+
+  --chart-1: var(--sage);
+  --chart-2: var(--navy);
+  --chart-3: var(--mauve);
+  --chart-4: var(--charcoal);
+  --chart-5: oklch(0.78 0.055 153.6); /* Sage-light */
+
+  /* Sidebar Navy escura — referência editorial premium.
+   * Fundo navy profundo, texto cream, item ativo com tinta sage sutil. */
+  --sidebar: oklch(0.235 0.025 251.0);              /* Navy profundo (mais escuro que --navy) */
+  --sidebar-foreground: oklch(0.92 0.013 82.4);     /* Cream levemente atenuado */
+  --sidebar-primary: var(--sage);
+  --sidebar-primary-foreground: var(--navy);
+  --sidebar-accent: oklch(0.30 0.028 251.0);        /* Navy +1 stop pra hover */
+  --sidebar-accent-foreground: oklch(0.954 0.013 82.4);
+  --sidebar-border: oklch(0.32 0.025 251.0);        /* Hairline sutil */
+  --sidebar-ring: var(--sage);
+}
+
+/*
+ * Dark mode — Cream→Navy de fundo, Charcoal→Cream-Deep de texto
+ * (Tokens preparados na S1, aplicação completa em S4)
+ */
+.dark {
+  --background: var(--navy);
+  --foreground: oklch(0.927 0.020 84.6); /* Cream-deep */
+  --card: oklch(0.330 0.025 251.0);
+  --card-foreground: oklch(0.927 0.020 84.6);
+  --popover: oklch(0.330 0.025 251.0);
+  --popover-foreground: oklch(0.927 0.020 84.6);
+  --primary: var(--cream);
+  --primary-foreground: var(--navy);
+  --secondary: var(--sage);
+  --secondary-foreground: var(--navy);
+  --muted: oklch(0.360 0.025 251.0);
+  --muted-foreground: oklch(0.72 0.015 84.6);
+  --accent: var(--sage);
+  --accent-foreground: var(--navy);
+  --destructive: oklch(0.6 0.18 28);
+  --destructive-foreground: var(--cream);
+  --border: oklch(0.400 0.025 251.0);
+  --input: oklch(0.400 0.025 251.0);
+  --ring: var(--sage);
+
+  --sidebar: oklch(0.310 0.025 251.0);
+  --sidebar-foreground: oklch(0.927 0.020 84.6);
+  --sidebar-primary: var(--sage);
+  --sidebar-primary-foreground: var(--navy);
+  --sidebar-accent: oklch(0.360 0.025 251.0);
+  --sidebar-accent-foreground: oklch(0.927 0.020 84.6);
+  --sidebar-border: oklch(0.400 0.025 251.0);
+  --sidebar-ring: var(--sage);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-feature-settings: "ss01", "cv11";
+    line-height: 1.5;
+  }
+
+  /* Display family pra manchetes editoriais */
+  .font-display {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  /* Eyebrow utility — ALL CAPS tracked +120 (brand book) */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.6875rem;
+    letter-spacing: var(--tracking-eyebrow);
+    text-transform: uppercase;
+    color: var(--color-mauve);
+  }
+
+  /* Body padrão segue brand book: Inter 14pt, line-height 1.5× */
+  p {
+    line-height: 1.5;
+  }
+
+  /*
+   * Library scroller — esconde a scrollbar do webkit no carrossel horizontal.
+   * Tailwind v4 cobre Firefox/IE via [scrollbar-width:none], mas Chrome/Safari
+   * precisam de pseudo-elemento explícito.
+   */
+  .library-scroller::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/*
+ * ============================================================
+ * ACTIVITY THEMES (6 paletas brand-coerentes)
+ * ============================================================
+ * Cada atividade do acervo tem um tema (sage / mauve / navy / cream /
+ * terracotta / sage-dark). O tema controla 3 tokens locais, lidos pelo
+ * ActivityCard via `data-theme="..."`:
+ *   --activity-accent          → faixa hairline no topo + ring de hover
+ *   --activity-illustration-bg → fundo da área de ilustração (pastel da cor)
+ *   --activity-glow            → cor do shadow ao hover
+ *
+ * Regras: tudo derivado da paleta oficial (Sage, Mauve, Navy, Cream,
+ * Terracota). Sem cores fora da brand. Backgrounds são versões pastel/lavadas
+ * pra não competir com o conteúdo. Foreground continua Charcoal/Navy
+ * (vem dos tokens shadcn) — só os acentos mudam.
+ */
+[data-theme="sage"] {
+  --activity-accent: var(--sage);
+  --activity-illustration-bg: oklch(0.93 0.025 153.6); /* sage pastel */
+  --activity-glow: color-mix(in oklab, var(--sage) 45%, transparent);
+}
+[data-theme="mauve"] {
+  --activity-accent: var(--mauve);
+  --activity-illustration-bg: oklch(0.94 0.018 359.6); /* mauve pastel */
+  --activity-glow: color-mix(in oklab, var(--mauve) 50%, transparent);
+}
+[data-theme="navy"] {
+  --activity-accent: var(--navy);
+  --activity-illustration-bg: oklch(0.91 0.018 251.0); /* navy pastel (azul-acinzentado) */
+  --activity-glow: color-mix(in oklab, var(--navy) 35%, transparent);
+}
+[data-theme="cream"] {
+  --activity-accent: var(--terracotta);
+  --activity-illustration-bg: var(--cream-tan); /* faixa cream tostada já definida */
+  --activity-glow: color-mix(in oklab, var(--terracotta) 35%, transparent);
+}
+[data-theme="terracotta"] {
+  --activity-accent: var(--terracotta);
+  --activity-illustration-bg: oklch(0.93 0.035 65); /* terracota pastel */
+  --activity-glow: color-mix(in oklab, var(--terracotta) 40%, transparent);
+}
+[data-theme="sage-dark"] {
+  --activity-accent: oklch(0.45 0.04 153.6); /* sage profundo (sono/noite) */
+  --activity-illustration-bg: oklch(0.88 0.03 230); /* azul-acinzentado noturno */
+  --activity-glow: color-mix(in oklab, oklch(0.45 0.04 153.6) 45%, transparent);
+}
